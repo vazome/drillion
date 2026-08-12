@@ -15,7 +15,7 @@ print(a)
 
 # or
 
-b: list[list[int]] = [
+b = [
     [i, j, k]
     for i in range(x + 1)
     for j in range(y + 1)
