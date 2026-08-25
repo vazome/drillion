@@ -137,12 +137,6 @@ def stub(body):
     return "\n".join(lines[:keep] + [pre + "raise NotImplementedError"])
 
 
-def has_given(body):
-    """True when the region has code above solve() that the learner must keep."""
-    tree = ast.parse(body)
-    above = tree.body[:tree.body.index(_solve(tree))]
-    return any(not isinstance(n, (ast.Import, ast.ImportFrom)) for n in above)
-
 
 def etag(disk_src):
     """Optimistic-lock token over the region only: editing HINTS does not invalidate it."""
