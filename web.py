@@ -1,0 +1,353 @@
+#!/usr/bin/env python3
+"""JSON API over the drill core, and the static page that drives it.
+
+Every route is a plain `def`. They all touch the disk under one lock, and an
+`async def` blocking on a `threading.Lock` would freeze the whole server while
+a 60 s pytest run held it; FastAPI runs sync handlers in a threadpool, where
+blocking is what threads are for.
+
+Nothing here re-implements a rule: `study.py` owns validation, grading and the
+splice, and the exercise files are read as text and run as a subprocess — the
+server never imports them. The browser only ever sees the editor half of the
+region, so `_reference`, `_gen` and the tests cannot leak into it.
+"""
+
+import subprocess
+import threading
+import webbrowser
+from datetime import date
+from pathlib import Path
+
+import uvicorn
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+
+import study
+
+HOST, PORT = "127.0.0.1", 8765
+MAX_BODY = 256 * 1024
+LOCK = threading.Lock()      # read → validate → write → save() is one transaction
+CATALOGUE_ONLY = ("path", "hints", "read_first", "hints_line", "region_start")  # never shipped
+
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+
+
+class Edit(BaseModel):
+    code: str
+    etag: str
+
+
+class Etag(BaseModel):
+    etag: str
+
+
+class Focus(BaseModel):
+    tag: str | None = None
+
+
+# ---------------------------------------------------------------- errors
+@app.exception_handler(study.Invalid)
+async def _rejected(_request, exc):
+    """A refused edit is the learner's problem, not a crash: 400 with coordinates."""
+    return JSONResponse({"error": exc.msg, "line": exc.line, "col": exc.col}, 400)
+
+
+@app.exception_handler(StarletteHTTPException)
+async def _error(_request, exc):
+    """One error shape for the page: {"error": ...} plus whatever the case adds."""
+    body = exc.detail if isinstance(exc.detail, dict) else {"error": exc.detail}
+    return JSONResponse(body, exc.status_code, headers=exc.headers)
+
+
+# ---------------------------------------------------------------- middleware
+@app.middleware("http")
+async def _limit_body(request, call_next):
+    # ponytail: a chunked body carries no length and slips past; the only client
+    # is our own page, and uvicorn already caps headers.
+    length = request.headers.get("content-length", "")
+    if length.isdigit() and int(length) > MAX_BODY:
+        return JSONResponse({"error": "that is more code than any drill needs"}, 413)
+    return await call_next(request)
+
+
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=[HOST, "localhost"])
+
+
+# ---------------------------------------------------------------- helpers
+def _exercise(slug):
+    """The catalogue entry for `slug` — a slug never becomes a path any other way."""
+    exs = study.exercises()
+    if slug not in exs:
+        raise HTTPException(404, f"no exercise {slug!r}")
+    return exs[slug]
+
+
+def _attempt(st, slug):
+    """The open attempt, its timer wound on. The core would raise KeyError."""
+    if slug not in st["open"]:
+        raise HTTPException(409, "no open attempt — open the exercise first")
+    o = st["open"][slug]
+    study.touch(o)
+    return o
+
+
+def _check_etag(src, sent):
+    """Optimistic lock: the editor may only write what it last read."""
+    if sent != study.etag(src):
+        raise HTTPException(409, {"error": "the file changed on disk",
+                                  "etag": study.etag(src),
+                                  "code": study.strip_spec(study.cut(src).body).editor})
+
+
+def _coords(src):
+    """(region_start, doc_offset, hints_line) of the file as it is *now* — pytest
+    reports line numbers in the file it just ran, not the one we first parsed."""
+    meta_end, hints_line = study.bounds(src)
+    region = study.cut(src)
+    return (meta_end + 1 + region.lead.count("\n"),
+            study.strip_spec(region.body).doc_offset, hints_line)
+
+
+def _gate(o):
+    """(unlocked, attempts still owed, active seconds still owed) — pure, unlike
+    `unlock_solution`, which marks the attempt as peeked."""
+    attempts, secs = study.SOLUTION_GATE
+    if o is None:
+        return False, attempts, secs
+    return (o["solution_shown"] or (o["attempts"] >= attempts and o["active"] >= secs),
+            max(0, attempts - o["attempts"]), max(0, secs - o["active"]))
+
+
+def _next_hint_in(o, total):
+    """Seconds until the next hint; 0 if it is ready, None if there is none."""
+    if o is None or o["hints"] >= total:
+        return None
+    return max(0, study.HINT_GAP * (o["hints"] + 1) - o["active"]) if o["hints"] else 0
+
+
+def _status(st, slug):
+    c = study.card(st, slug)
+    if slug in st["open"]:
+        return "open"
+    if not c["seen"]:
+        return "new"
+    return "due" if c["due"] <= study.today() else "done"
+
+
+def _payload(st, slug, meta, src):
+    """Everything the exercise page needs, and nothing the answer lives in."""
+    region = study.cut(src)
+    spec = study.strip_spec(region.body)
+    o = st["open"].get(slug)
+    c = study.card(st, slug)
+    region_start, _, hints_line = _coords(src)
+    unlocked, need_attempts, need_secs = _gate(o)
+    # a due review must not be handed last time's answer; a locked attempt neither
+    show_code = c["seen"] > 0 and (unlocked if o else c["due"] > study.today())
+    return {"slug": slug,
+            "meta": {k: v for k, v in meta.items() if k not in CATALOGUE_ONLY},
+            "spec": spec.spec_text,
+            "read_first": meta["read_first"],
+            "code": spec.editor,
+            "etag": study.etag(src),
+            "has_given": study.has_given(region.body),
+            "doc_offset": spec.doc_offset,
+            "region_start": region_start,
+            "hints_line": hints_line,
+            "status": _status(st, slug),
+            "attempt": {k: o[k] for k in ("attempts", "hints", "active", "seed",
+                                          "solution_shown")} if o else None,
+            "hints": {"total": len(meta["hints"]),
+                      "shown": meta["hints"][:o["hints"]] if o else [],
+                      "next_in": _next_hint_in(o, len(meta["hints"]))},
+            "solution": {"unlocked": unlocked, "need_attempts": need_attempts,
+                         "need_secs": need_secs},
+            "archive": [{"date": a["date"], "grade": a["grade"],
+                         **({"code": a["code"]} if show_code else {})}
+                        for a in st["archive"].get(slug, [])]}
+
+
+def _boxes(st, exs):
+    boxes = [0] * len(study.LADDER)
+    for slug in exs:
+        c = study.card(st, slug)
+        if c["seen"]:
+            boxes[c["box"]] += 1
+    return boxes
+
+
+# ---------------------------------------------------------------- read-only routes
+@app.get("/api/catalogue")
+def catalogue():
+    with LOCK:                                   # GETs never save(): card() only fills blanks
+        st, exs = study.load(), study.exercises()
+        q = study.queue(st, exs)
+        rows = [{"slug": slug, "topic": m["topic"], "title": m["title"],
+                 "minutes": m["minutes"], "tags": m["tags"], "prereqs": m.get("prereqs", []),
+                 "practices": m.get("practices", []), "status": _status(st, slug),
+                 **{k: study.card(st, slug)[k] for k in ("box", "due", "seen")}}
+                for slug, m in exs.items()]
+        boxes = _boxes(st, exs)
+        left = (study.INTERVIEW - date.fromisoformat(study.today())).days
+        return {"focus": st["focus"],
+                "tags": sorted({t for m in exs.values() for t in m["tags"]}),
+                "today": q,
+                "stats": {"boxes": boxes, "due": len(q["review"]), "seen": sum(boxes),
+                          "total": len(exs), "days_left": left},
+                "exercises": rows}
+
+
+@app.get("/api/progress")
+def progress():
+    with LOCK:
+        st, exs = study.load(), study.exercises()
+        per_tag = {}
+        for slug, meta in exs.items():
+            seen = study.card(st, slug)["seen"] > 0
+            for tag in meta["tags"]:
+                t = per_tag.setdefault(tag, {"seen": 0, "total": 0})
+                t["total"], t["seen"] = t["total"] + 1, t["seen"] + seen
+        boxes = _boxes(st, exs)
+        return {"boxes": boxes, "due": len(study.due_today(st, exs)), "seen": sum(boxes),
+                "total": len(exs), "log": st["log"][-30:], "per_tag": per_tag}
+
+
+@app.get("/api/ex/{slug}")
+def get_exercise(slug: str):
+    with LOCK:
+        meta = _exercise(slug)
+        return _payload(study.load(), slug, meta, meta["path"].read_text())
+
+
+# ---------------------------------------------------------------- the attempt
+@app.post("/api/ex/{slug}/open")
+def open_exercise(slug: str):
+    with LOCK:
+        meta = _exercise(slug)
+        st = study.load()
+        study.open_attempt(st, slug)             # the file is already a stub: nothing is written
+        study.save(st)
+        return _payload(st, slug, meta, meta["path"].read_text())
+
+
+@app.put("/api/ex/{slug}")
+def save_exercise(slug: str, edit: Edit):
+    with LOCK:                                   # autosave: the file only, no timer, no save()
+        meta = _exercise(slug)
+        src = meta["path"].read_text()
+        _check_etag(src, edit.etag)
+        new_src = study.validate(edit.code, study.strip_spec(study.cut(src).body).spec_src, src)
+        study.write_region(meta["path"], new_src)
+        return {"etag": study.etag(new_src)}
+
+
+@app.post("/api/ex/{slug}/run")
+def run_exercise(slug: str, edit: Edit):
+    """Save, then run. A rejected save is a 400 and costs no attempt."""
+    with LOCK:
+        meta = _exercise(slug)
+        st = study.load()
+        o = _attempt(st, slug)
+        src = meta["path"].read_text()
+        _check_etag(src, edit.etag)
+        new_src = study.validate(edit.code, study.strip_spec(study.cut(src).body).spec_src, src)
+        study.write_region(meta["path"], new_src)
+        passed, out = study.run_tests(meta["path"], o["seed"])
+        o["attempts"] += 1                       # pytest ran; that is what an attempt is
+        body = study.cut(new_src).body
+        code = study.strip_spec(body).editor
+        resp = {"passed": passed, "attempts": o["attempts"],
+                **study.summarise(out, *_coords(new_src))}
+        if passed:
+            grade, gap, box = study.record_pass(st, slug, meta, code)   # drops the attempt
+            new_src = study.splice(new_src, study.stub(body))
+            study.write_region(meta["path"], new_src)  # back to the stub: reviews start blank
+            resp |= {"grade": grade, "box": box, "due_in": gap, "code": code}
+        study.save(st)
+        return resp | {"etag": study.etag(new_src)}
+
+
+@app.post("/api/ex/{slug}/touch")
+def touch_exercise(slug: str):
+    with LOCK:                                   # no catalogue lookup: this runs every 60 s and
+        st = study.load()                        # only an opened — known — slug can be in `open`
+        active = _attempt(st, slug)["active"]
+        study.save(st)
+        return {"active": active}
+
+
+@app.post("/api/ex/{slug}/hint")
+def hint_exercise(slug: str):
+    with LOCK:
+        meta = _exercise(slug)
+        st = study.load()
+        _attempt(st, slug)
+        try:
+            level, text = study.next_hint(st, slug, meta["hints"])
+        except study.Gated as gate:
+            raise HTTPException(423, {
+                "error": "not yet — sit with it a little longer" if gate.wait_secs
+                         else "no hints left — the solution is the next step",
+                "wait_secs": gate.wait_secs, "exhausted": not gate.wait_secs}) from None
+        study.save(st)
+        return {"level": level, "total": len(meta["hints"]), "text": text}
+
+
+@app.post("/api/ex/{slug}/solution")
+def solution_exercise(slug: str):
+    with LOCK:
+        meta = _exercise(slug)
+        st = study.load()
+        o = _attempt(st, slug)
+        if not study.unlock_solution(st, slug):
+            _, need_attempts, need_secs = _gate(o)
+            raise HTTPException(423, {"error": "the answer opens after real effort",
+                                      "need_attempts": need_attempts, "need_secs": need_secs})
+        study.save(st)
+        return {"code": study._solution(meta["path"])}     # the gate is right above
+
+
+@app.post("/api/ex/{slug}/abandon")
+def abandon_exercise(slug: str, sent: Etag):
+    """Give up: keep the work in the archive, put the stub back, drop the timer."""
+    with LOCK:
+        meta = _exercise(slug)
+        st = study.load()
+        src = meta["path"].read_text()
+        _check_etag(src, sent.etag)
+        new_src = study.abandon(st, slug, src)
+        study.write_region(meta["path"], new_src)
+        study.save(st)
+        return _payload(st, slug, meta, new_src)
+
+
+@app.post("/api/focus")
+def set_focus(focus: Focus):
+    with LOCK:
+        st = study.load()
+        st["focus"] = focus.tag
+        study.save(st)
+        return {"focus": st["focus"]}
+
+
+# The page itself, last: an unmatched /api/... must 404 as JSON, not as a missing file.
+app.mount("/", StaticFiles(directory=study.ROOT / "web", html=True), name="web")
+
+
+def _open_browser(url):
+    version = Path("/proc/version")
+    if version.exists() and "microsoft" in version.read_text().lower():
+        subprocess.Popen(["explorer.exe", url])   # WSL: exit code 1 even when it worked
+    else:
+        webbrowser.open(url)
+
+
+def serve():
+    url = f"http://{HOST}:{PORT}/"
+    print(f"study → {url}   (ctrl-c to stop)", flush=True)   # piped output too
+    threading.Timer(0.7, _open_browser, [url]).start()
+    uvicorn.run(app, host=HOST, port=PORT, log_level="warning")

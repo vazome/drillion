@@ -1,19 +1,24 @@
-"""Tests for the drill core in study.py. Plain functions, no fixtures.
+"""Tests for the drill core in study.py and the API in web.py. Plain functions,
+no fixtures.
 
 The expensive ones sweep every exercise file: splice/stub/spec must be exactly
-reversible or a save would corrupt a drill.
+reversible or a save would corrupt a drill. The API tests drive the real app
+over ASGI, against a throwaway copy of one drill.
 """
 
 import ast
+import asyncio
 import inspect
 import shutil
 import tempfile
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
+import httpx
 import pytest
 
 import study
+import web
 
 FILES = sorted(study.EXDIR.glob("ex_*.py"))
 SRC = (study.EXDIR / "ex_001_fstrings.py").read_text()
@@ -391,3 +396,127 @@ def test_load_fills_in_the_keys_an_older_file_lacks():
     finally:
         study.STATE = keep
         shutil.rmtree(tmp)
+
+
+# ------------------------------------------------------------ the web API
+SLUG = "ex_001_fstrings"
+PASSING = 'return "\\n".join(f"{name:<14}{value:>12,.2f}" for name, value in rows)'
+
+
+def _api(flow):
+    """Run `flow(api, path)` against a throwaway copy of one drill: the API tests
+    write real files, and Daniel's exercises/ and progress.json are not for that."""
+    tmp, keep = Path(tempfile.mkdtemp(prefix="study_api_")), (study.EXDIR, study.STATE)
+    for name in (f"{SLUG}.py", "_lib.py"):
+        shutil.copy(study.EXDIR / name, tmp / name)
+    study.EXDIR, study.STATE = tmp, tmp / "progress.json"
+
+    async def drive():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=web.app),
+                                     base_url="http://127.0.0.1") as api:
+            await flow(api, tmp / f"{SLUG}.py")
+
+    try:
+        asyncio.run(drive())
+    finally:
+        study.EXDIR, study.STATE = keep
+        shutil.rmtree(tmp)
+
+
+async def _stub_to_pass(api, path):
+    cat = (await api.get("/api/catalogue")).json()
+    assert [e["slug"] for e in cat["exercises"]] == [SLUG]
+    assert cat["exercises"][0]["status"] == "new" and cat["today"]["new"] == [SLUG]
+    assert cat["tags"] == ["core"] and cat["stats"]["total"] == 1
+
+    ex = (await api.post(f"/api/ex/{SLUG}/open")).json()
+    assert ex["attempt"]["attempts"] == 0 and ex["status"] == "open"
+    assert ex["spec"].startswith("WHY:") and '"""' not in ex["code"]   # the spec is not editable
+    assert "raise NotImplementedError" in ex["code"] and "_reference" not in ex["code"]
+
+    run = (await api.post(f"/api/ex/{SLUG}/run",
+                          json={"code": ex["code"], "etag": ex["etag"]})).json()
+    assert run["passed"] is False and run["attempts"] == 1
+    assert any("NotImplementedError" in ln for ln in run["headline"])
+
+    two_space = ex["code"].replace("    raise NotImplementedError", "  return ''")
+    put = await api.put(f"/api/ex/{SLUG}", json={"code": two_space, "etag": run["etag"]})
+    assert put.status_code == 200
+    assert '\n  """WHY' in path.read_text()          # the spec went back, at the learner's indent
+
+    stale = await api.put(f"/api/ex/{SLUG}", json={"code": two_space, "etag": run["etag"]})
+    assert stale.status_code == 409                  # that etag is one save out of date
+    assert stale.json()["etag"] == put.json()["etag"] and "return ''" in stale.json()["code"]
+
+    solved = ex["code"].replace("raise NotImplementedError", PASSING)
+    run = (await api.post(f"/api/ex/{SLUG}/run",
+                          json={"code": solved, "etag": put.json()["etag"]})).json()
+    assert run["passed"] is True and run["attempts"] == 2
+    assert run["grade"] in study.GRADES and run["due_in"] == study.LADDER[run["box"]]
+    body = study.cut(path.read_text()).body
+    assert study.stub(body) == body                  # passing puts the stub back on disk
+
+    st = study.load()
+    assert st["open"] == {} and [e["slug"] for e in st["log"]] == [SLUG]
+    assert PASSING in st["archive"][SLUG][0]["code"]
+
+    again = (await api.post(f"/api/ex/{SLUG}/open")).json()
+    assert again["attempt"] == {"attempts": 0, "hints": 0, "active": 0,
+                                "seed": again["attempt"]["seed"], "solution_shown": False}
+    assert "raise NotImplementedError" in again["code"]
+    assert "code" not in again["archive"][0]         # a review never sees last time's answer
+    assert again["solution"] == {"unlocked": False, "need_attempts": 3, "need_secs": 600}
+
+    hint = await api.post(f"/api/ex/{SLUG}/hint")
+    assert hint.status_code == 200 and (hint.json()["level"], hint.json()["total"]) == (1, 3)
+    soon = await api.post(f"/api/ex/{SLUG}/hint")
+    assert soon.status_code == 423 and 0 < soon.json()["wait_secs"] <= 120
+
+    assert (await api.get("/api/catalogue", headers={"Host": "evil.com"})).status_code == 400
+
+
+async def _guards(api, path):
+    assert (await api.get("/api/catalogue")).status_code == 200
+    assert not study.STATE.exists()                  # a GET never writes progress.json
+
+    missing = await api.get("/api/ex/_lib")          # a real file, but not in the catalogue
+    assert missing.status_code == 404 and missing.json()["error"] == "no exercise '_lib'"
+    assert (await api.get("/api/ex/..%2f..%2fetc%2fpasswd")).status_code == 404
+    assert (await api.post("/api/ex/ex_999_nope/open")).status_code == 404
+
+    ex = (await api.get(f"/api/ex/{SLUG}")).json()
+    assert ex["attempt"] is None and ex["hints"]["shown"] == []
+    nobody = await api.post(f"/api/ex/{SLUG}/run", json={"code": ex["code"], "etag": ex["etag"]})
+    assert nobody.status_code == 409                 # no attempt open: nothing to time or count
+
+    huge = await api.put(f"/api/ex/{SLUG}", json={"code": "x" * (web.MAX_BODY + 1), "etag": ""})
+    assert huge.status_code == 413
+
+    await api.post(f"/api/ex/{SLUG}/open")
+    broken = await api.put(f"/api/ex/{SLUG}", json={"code": "def solve(rows):\n    return 1 1",
+                                                   "etag": ex["etag"]})
+    assert broken.status_code == 400 and (broken.json()["line"], broken.json()["col"]) == (2, 14)
+    assert "raise NotImplementedError" in path.read_text()    # a rejected edit never lands
+
+    cheat = await api.put(f"/api/ex/{SLUG}",
+                          json={"code": "def solve(rows):\n    return _reference(rows)",
+                                "etag": ex["etag"]})
+    assert cheat.status_code == 400 and "_reference" in cheat.json()["error"]
+
+    assert (await api.post(f"/api/ex/{SLUG}/solution")).status_code == 423
+    assert (await api.post("/api/focus", json={"tag": "core"})).json() == {"focus": "core"}
+    assert (await api.get("/api/catalogue")).json()["focus"] == "core"
+    assert (await api.get("/api/progress")).json()["per_tag"] == {"core": {"seen": 0, "total": 1}}
+
+    stub_etag = (await api.get(f"/api/ex/{SLUG}")).json()["etag"]
+    gone = await api.post(f"/api/ex/{SLUG}/abandon", json={"etag": stub_etag})
+    assert gone.status_code == 200 and gone.json()["attempt"] is None
+    assert study.load()["archive"] == {}              # an untouched stub is not worth keeping
+
+
+def test_the_api_carries_a_drill_from_stub_to_pass():
+    _api(_stub_to_pass)
+
+
+def test_the_api_guards_its_edges():
+    _api(_guards)
