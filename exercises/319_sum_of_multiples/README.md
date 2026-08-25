@@ -95,7 +95,8 @@ solve(10000, [])    # -> 0
 ### Hint 1
 There are two ways in and they meet in the middle. Either walk the numbers below `level` and ask each one "does any base value divide you?", or walk the base values and collect their multiples. The second is faster but has a trap — write out the multiples of 3 and of 5 below 20 side by side and look at what appears in both lists.
 ### Hint 2
-For the collect-first route, put the multiples in a `set`: `points = set()` and then `points.update(range(base, level, base))` for each base value, so a number that shows up twice is still stored once. `sum(points)` finishes it. For the test-each-number route, `sum(n for n in range(level) if any(n % b == 0 for b in base_values if b > 0))` — note the `if b > 0`, which keeps `0` out and avoids a `ZeroDivisionError`. Either way, `range(level)` stops at `level - 1`, which is the "strictly less than" rule for free.
+Two routes. Collect-first: keep a `set`, and for each base value add every multiple below `level` to it (`range` with a step does the counting), so a number reached from two bases is stored once; then sum the set. Test-each-number: walk every number below `level` and keep it if it is divisible by *any* of the base values. Either way, skip a base value of `0` before you divide by it or step by it — it means "no multiples", not a crash.
+
 ### Hint 3
 Different data, same "union, then total" move — the machines touched by any of several alert rules:
 
