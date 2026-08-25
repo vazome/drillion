@@ -7,50 +7,46 @@ practices: [27, 9, 40]
 ---
 # DRILL: N largest files under a directory tree
 
-Whole-task drill: the disk is full and someone wants the top offenders now.
+*Whole-task drill: the disk is full and someone wants the top offenders now.*
 
 Combines topics 27 (pathlib), 9 (sort key), 40 (tempfile).
 
 ## Why
-A server's disk is almost full and the on-call engineer needs to
-know, right now, which files are eating the space so they can delete or
-move the biggest ones. "Show me the five largest files under /var" is
-the question. A list sorted biggest-first is what they act on.
+A server's disk is almost full and the on-call engineer needs to know, right now, which files are eating the space so they can delete or move the biggest ones. "Show me the five largest files under /var" is the question. A list sorted biggest-first is what they act on.
 
 ## You get
-`root` — a folder path as text, like "/tmp/ex074_abc". The test
-creates a small temporary folder tree with files of different sizes and
-hands you the path; you never build it yourself.
+`root` — a folder path as text, like `"/tmp/ex074_abc"`. The test creates a small temporary folder tree with files of different sizes and hands you the path; you never build it yourself.
 
-`n` — a whole number, like 3: how many of the biggest files to report.
+`n` — a whole number, like `3`: how many of the biggest files to report.
 
 ## You return
-a list of pairs, biggest file first. Each pair is (the
-file's path relative to root, its size in bytes), like
-[("api/logs/app.log", 900), ("web/index.html", 400)].
+a list of pairs, biggest file first. Each pair is (the file's path relative to root, its size in bytes), like `[("api/logs/app.log", 900), ("web/index.html", 400)]`.
 
 ## Rules
 A disk is filling up. Find the n biggest files under `root`.
 
-`root` is a directory path as a STRING. Return a list of
-(relative_path, size_in_bytes) pairs, biggest first:
+`root` is a directory path as a STRING. Return a list of `(relative_path, size_in_bytes)` pairs, biggest first:
 
-```python
+```text
 root/
   api/logs/app.log      900 bytes
   api/logs/old.log      120 bytes
   web/index.html        400 bytes
+```
 
-solve(root, 2)  ->  [("api/logs/app.log", 900), ("web/index.html", 400)]
+```python
+solve(root, 2)  # -> [("api/logs/app.log", 900), ("web/index.html", 400)]
 ```
 
 Details that matter:
-  - Search the whole tree, at any depth. Directories are not files.
-  - The path is relative to root, forward slashes, no leading "./".
-  - Ties: same size, then smaller path first (plain string order).
-  - Fewer than n files in the tree: return all of them.
 
-Say the plan out loud before you type: collect, sort, slice.
+- Search the whole tree, at any depth. Directories are not files.
+- The path is relative to root, forward slashes, no leading `"./"`.
+- Ties: same size, then smaller path first (plain string order).
+- Fewer than n files in the tree: return all of them.
+
+> [!TIP]
+> Say the plan out loud before you type: collect, sort, slice.
 
 ## Hints
 ### Hint 1

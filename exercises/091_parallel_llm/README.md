@@ -9,57 +9,38 @@ tags: [llm, asyncio, langchain]
 *Fan out N model calls at once, keep the order, cap what each one may cost you.*
 
 ## Why
-LangChain is a library for wiring steps together around an AI
-model. A support team wants ten customer tickets summarised by an AI
-model. Sent one after another, each waits for the previous one to
-finish; sent all at once they take about as long as the slowest single
-one. But any single call can hang, so each needs its own time limit, and
-a call that runs out of time must just be marked as such without
-spoiling the other answers.
+LangChain is a library for wiring steps together around an AI model. A support team wants ten customer tickets summarised by an AI model. Sent one after another, each waits for the previous one to finish; sent all at once they take about as long as the slowest single one. But any single call can hang, so each needs its own time limit, and a call that runs out of time must just be marked as such without spoiling the other answers.
 
 ## You get
-nothing — you build the thing from scratch. The function you
-write will later be handed three things: `model` (a stand-in AI model
-whose ainvoke method gives back an answer string), `prompts` (a list of
-strings) and `timeout` (seconds allowed per call). The test's fake model
-only pauses briefly and writes down when each call started and ended; no
-real AI is called.
+nothing — you build the thing from scratch. The function you write will later be handed three things: `model` (a stand-in AI model whose `ainvoke` method gives back an answer string), `prompts` (a list of strings) and `timeout` (seconds allowed per call). The test's fake model only pauses briefly and writes down when each call started and ended; no real AI is called.
 
 ## You return
-an async function named ask_all. Return the function itself;
-do not call it. When the test runs it, it must give back a list of
-answers in the same order as the prompts, with the text "TIMEOUT" in the
-slot of any call that took too long.
+an async function named `ask_all`. Return the function itself; do not call it. When the test runs it, it must give back a list of answers in the same order as the prompts, with the text `"TIMEOUT"` in the slot of any call that took too long.
 
 ## Rules
-Ten prompts answered one after another is ten round trips of sitting
-still. Every Runnable has an async side — `await model.ainvoke(prompt)` —
-so all ten can be in flight at once. And since one prompt can hang, each
-call needs its own time limit rather than one limit for the batch.
+Ten prompts answered one after another is ten round trips of sitting still. Every Runnable has an async side — `await model.ainvoke(prompt)` — so all ten can be in flight at once. And since one prompt can hang, each call needs its own time limit rather than one limit for the batch.
 
 Return an ASYNC function `ask_all(model, prompts, timeout)` where:
 
-  - `model` is a Runnable; `await model.ainvoke(prompt)` returns a string
-  - `prompts` is a list of prompt strings
-  - `timeout` is the seconds allowed for ONE call
+- `model` is a Runnable; `await model.ainvoke(prompt)` returns a string
+- `prompts` is a list of prompt strings
+- `timeout` is the seconds allowed for ONE call
 
-ask_all must:
+`ask_all` must:
 
-  - start every call concurrently, not one after another
-  - return a list of answers in the same order as `prompts`
-  - put the string "TIMEOUT" in the slot of any call that ran longer than
-    `timeout`, and leave the other answers untouched
+- start every call concurrently, not one after another
+- return a list of answers in the same order as `prompts`
+- put the string `"TIMEOUT"` in the slot of any call that ran longer than `timeout`, and leave the other answers untouched
 
-```
+```python
 answers = await ask_all(model, ["a", "b", "c"], 0.03)
-# ["A", "TIMEOUT", "C"]
+# -> ["A", "TIMEOUT", "C"]
 ```
 
-One slow prompt must not delay the others and must not sink the whole
-batch. Return the function itself, not a coroutine: `return ask_all`.
+One slow prompt must not delay the others and must not sink the whole batch.
 
-The test records when each call starts and finishes, and fails a version
-that waits for one call to come back before starting the next.
+> [!WARNING]
+> The test records when each call starts and finishes, and fails a version that waits for one call to come back before starting the next. Return the function itself, not a coroutine: `return ask_all`.
 
 ## Hints
 ### Hint 1

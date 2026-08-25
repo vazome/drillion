@@ -7,59 +7,47 @@ practices: [29, 37, 28]
 ---
 # DRILL: mini-grep with argparse flags
 
-Whole-task drill: rebuild grep, flags and all.
+*Whole-task drill: rebuild grep, flags and all.*
 
 Combines topics 29 (regex), 37 (argparse), 28 (str methods).
 
 ## Why
-grep is the command-line tool every engineer uses to pull
-matching lines out of a log. Interviewers ask you to rebuild a small
-version of it because it combines two everyday skills: reading
-command-line options the standard way, and searching lines for a
-pattern. The ignore-case, invert and line-number options are the ones
-people reach for most on a real shell.
+grep is the command-line tool every engineer uses to pull matching lines out of a log. Interviewers ask you to rebuild a small version of it because it combines two everyday skills: reading command-line options the standard way, and searching lines for a pattern. The ignore-case, invert and line-number options are the ones people reach for most on a real shell.
 
 ## You get
-`lines` — a list of strings, one per log line, with no newline
-characters, like ["INFO ok", "ERROR boom"].
+`lines` — a list of strings, one per log line, with no newline characters, like `["INFO ok", "ERROR boom"]`.
 
-`argv` — the command-line arguments as a list of strings, exactly what a
-user typed after the program name, like ["-n", "-i", "error"]. The test
-builds both and hands them to you.
+`argv` — the command-line arguments as a list of strings, exactly what a user typed after the program name, like `["-n", "-i", "error"]`. The test builds both and hands them to you.
 
 ## You return
-a list of the lines that were kept, as strings, in their
-original order. When the line-number option is on, each kept line is
-prefixed with its number and a colon, like "2:ERROR boom".
+a list of the lines that were kept, as strings, in their original order. When the line-number option is on, each kept line is prefixed with its number and a colon, like `"2:ERROR boom"`.
 
 ## Rules
 Write the guts of grep.
 
-`lines` is a list of strings with no trailing newlines. `argv` is the
-command line as a list, exactly what sys.argv[1:] would hand you.
-Parse it with argparse — do not pick the flags apart by hand:
+`lines` is a list of strings with no trailing newlines. `argv` is the command line as a list, exactly what `sys.argv[1:]` would hand you.
 
-```
-pattern              positional, a regex
--i, --ignore-case    match without regard to case
--v, --invert-match   keep the lines that do NOT match
--n, --line-number    prefix each kept line with "<number>:", 1-based
-```
+| argument | what it does |
+| --- | --- |
+| `pattern` | positional, a regex |
+| `-i`, `--ignore-case` | match without regard to case |
+| `-v`, `--invert-match` | keep the lines that do NOT match |
+| `-n`, `--line-number` | prefix each kept line with `"<number>:"`, 1-based |
 
 Return the kept lines as a list of strings.
 
-```
-lines = ["INFO ok", "ERROR boom", "warn slow"]
-argv  = ["-n", "-i", "error"]
-->  ["2:ERROR boom"]
+```python
+solve(["INFO ok", "ERROR boom", "warn slow"], ["-n", "-i", "error"])
+# -> ["2:ERROR boom"]
 ```
 
-Flags arrive in any order, long or short form, and the pattern may
-come before or after them. A hit anywhere in the line counts, the
-pattern does not have to match the whole line.
+Flags arrive in any order, long or short form, and the pattern may come before or after them. A hit anywhere in the line counts, the pattern does not have to match the whole line.
 
-Interviewers like this one because the invert flag catches people.
-Say out loud what -v does to the decision before you code it.
+> [!TIP]
+> Parse `argv` with argparse — do not pick the flags apart by hand.
+
+> [!TIP]
+> Interviewers like this one because the invert flag catches people. Say out loud what `-v` does to the decision before you code it.
 
 ## Hints
 ### Hint 1

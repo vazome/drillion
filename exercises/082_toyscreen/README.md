@@ -7,74 +7,59 @@ practices: [28, 19, 22]
 ---
 # DRILL: palindrome, anagram, top-N words
 
-Whole-task drill: the three warm-ups that open half of all phone screens.
+*Whole-task drill: the three warm-ups that open half of all phone screens.*
 
 Combines topics 28 (str methods), 19 (Counter), 22 (sets and sorting).
 
 ## Why
-Many phone screens for ops roles open with two or three tiny
-warm-up questions before the real work: is this phrase the same read
-backwards, are these two words made of the same letters, what are the
-most common words in this text. They are not about the job; they check
-that you can state a rule clearly and then write it. Here all three are
-bundled into one function so you can practise them together.
+Many phone screens for ops roles open with two or three tiny warm-up questions before the real work: is this phrase the same read backwards, are these two words made of the same letters, what are the most common words in this text. They are not about the job; they check that you can state a rule clearly and then write it. Here all three are bundled into one function so you can practise them together.
 
 ## You get
-`phrase` — a string like "Nurses, run." to test for reading the
-same backwards.
+`phrase` — a string like `"Nurses, run."` to test for reading the same backwards.
 
-`pair` — two strings packed together, like ("Dirty room", "Dormitory"),
-to test whether they use the same letters.
+`pair` — two strings packed together, like `("Dirty room", "Dormitory")`, to test whether they use the same letters.
 
-`text` — a string of words like "pod pod, POD deploy Deploy node".
+`text` — a string of words like `"pod pod, POD deploy Deploy node"`.
 
-`n` — a whole number, like 2: how many of the most common words to
-report. The test builds all four and hands them to you.
+`n` — a whole number, like `2`: how many of the most common words to report. The test builds all four and hands them to you.
 
 ## You return
-a dictionary with three keys: "palindrome" (True or False),
-"anagram" (True or False) and "top_words" (a list of (word, count)
-pairs, most common first).
+a dictionary with three keys: `"palindrome"` (`True` or `False`), `"anagram"` (`True` or `False`) and `"top_words"` (a list of `(word, count)` pairs, most common first).
 
 ## Rules
 Three small questions, one dict back:
 
-```
-{"palindrome": True,
- "anagram": True,
- "top_words": [("pod", 3), ("deploy", 2)]}
-```
-
-palindrome — is `phrase` the same read backwards, ignoring case and
-
-```
-anything that is not a letter or a digit.
-
-    "Nurses, run."  ->  True
+```python
+solve(phrase, pair, text, n)
+# -> {"palindrome": True,
+#     "anagram": True,
+#     "top_words": [("pod", 3), ("deploy", 2)]}
 ```
 
-anagram — `pair` is (a, b). Same letters rearranged, ignoring case and
+### palindrome
+Is `phrase` the same read backwards, ignoring case and anything that is not a letter or a digit.
 
-```
-spaces.
-
-    ("Dirty room", "Dormitory")  ->  True
-```
-
-top_words — the n most common words in `text`. Lowercase them and
-
-```
-strip the characters .,!?;:'" off both ends of each word. Sort by
-count descending, then by the word alphabetically, so the answer
-never depends on which word you happened to see first. Return
-(word, count) tuples.
-
-    "pod pod, POD deploy Deploy node", 2
-    ->  [("pod", 3), ("deploy", 2)]
+```python
+solve("Nurses, run.", pair, text, n)["palindrome"]   # -> True
 ```
 
-Each one is five lines. The grading here is on how cleanly you say the
-rule before you write it, so narrate all three out loud.
+### anagram
+`pair` is `(a, b)`. Same letters rearranged, ignoring case and spaces.
+
+```python
+solve(phrase, ("Dirty room", "Dormitory"), text, n)["anagram"]   # -> True
+```
+
+### top_words
+The n most common words in `text`. Lowercase them and strip the characters `.,!?;:'"` off both ends of each word. Sort by count descending, then by the word alphabetically, so the answer never depends on which word you happened to see first. Return `(word, count)` tuples.
+
+```python
+solve(phrase, pair, "pod pod, POD deploy Deploy node", 2)["top_words"]
+# -> [("pod", 3), ("deploy", 2)]
+```
+
+> [!TIP]
+> Each one is five lines. The grading here is on how cleanly you say the rule before you write it, so narrate all three out loud.
 
 ## Hints
 ### Hint 1

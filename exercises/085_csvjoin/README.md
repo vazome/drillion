@@ -7,64 +7,62 @@ practices: [32, 18, 20]
 ---
 # DRILL: inner-join two CSVs on a shared key
 
-Whole-task drill: two CSVs, one shared column, join and filter.
+*Whole-task drill: two CSVs, one shared column, join and filter.*
 
 Combines topics 32 (csv), 18 (dict lookups), 20 (defaultdict grouping).
 
 ## Why
-One spreadsheet lists services with the team that owns each and
-its CPU allocation. Another lists which people are on which team. A
-manager asks "for every service using at least 200 CPU, who do I
-contact?" That means matching rows from the two files on the shared
-"team" column, which is the single most common "write a quick script"
-request in ops.
+One spreadsheet lists services with the team that owns each and its CPU allocation. Another lists which people are on which team. A manager asks "for every service using at least 200 CPU, who do I contact?" That means matching rows from the two files on the shared "team" column, which is the single most common "write a quick script" request in ops.
 
 ## You get
-`services_csv` — the first file as one string in CSV form with
-a header, like "service,team,cpu" on the first line and "auth,core,500"
-on the next.
+`services_csv` — the first file as one string in CSV form with a header, like `"service,team,cpu"` on the first line and `"auth,core,500"` on the next.
 
-`members_csv` — the second file as one string, like "team,member" then
-"core,priya". Some names are wrapped in quotes and contain a comma.
+`members_csv` — the second file as one string, like `"team,member"` then `"core,priya"`. Some names are wrapped in quotes and contain a comma.
 
-`min_cpu` — a whole number, like 200: the smallest CPU value to include.
-The test builds all three and hands them to you.
+`min_cpu` — a whole number, like `200`: the smallest CPU value to include. The test builds all three and hands them to you.
 
 ## You return
-a list of dictionaries, one per service that has a known
-team and enough CPU, sorted by service name. Each has "service", "team",
-"cpu" (a number) and "members" (a list of names, alphabetical).
+a list of dictionaries, one per service that has a known team and enough CPU, sorted by service name. Each has `"service"`, `"team"`, `"cpu"` (a number) and `"members"` (a list of names, alphabetical).
 
 ## Rules
-Two CSV strings that share the column "team". Join them.
+Two CSV strings that share the column `"team"`. Join them.
 
-```
-services_csv                members_csv
-service,team,cpu            team,member
-auth,core,500               core,priya
-cron,infra,100              core,"Reyes, Ana"
-search,ghost,900            infra,marcus
-```
+`services_csv`:
 
-Return, for every service whose team appears in members_csv AND whose
-cpu is at least min_cpu:
-
-```
-min_cpu=200
-->  [{"service": "auth", "team": "core", "cpu": 500,
-      "members": ["Reyes, Ana", "priya"]}]
+```text
+service,team,cpu
+auth,core,500
+cron,infra,100
+search,ghost,900
 ```
 
-  - Inner join: "search" is gone, no team "ghost" in the members file.
-    "cron" is gone too, its cpu is below min_cpu.
-  - cpu comes back as an int, not a string.
-  - A team can have several members. Sort them alphabetically.
-  - Sort the result by service name.
-  - Parse both with the csv module and io.StringIO. Some member names
-    are quoted and contain a comma, so split(",") will betray you.
+`members_csv`:
 
-Joining two files on a key is the most common "write a script" task
-there is. Say which side becomes the lookup table, and why, out loud.
+```text
+team,member
+core,priya
+core,"Reyes, Ana"
+infra,marcus
+```
+
+Return, for every service whose team appears in `members_csv` AND whose cpu is at least `min_cpu`:
+
+```python
+solve(services_csv, members_csv, 200)
+# -> [{"service": "auth", "team": "core", "cpu": 500,
+#      "members": ["Reyes, Ana", "priya"]}]
+```
+
+- Inner join: `"search"` is gone, no team `"ghost"` in the members file. `"cron"` is gone too, its cpu is below `min_cpu`.
+- `cpu` comes back as an `int`, not a string.
+- A team can have several members. Sort them alphabetically.
+- Sort the result by service name.
+
+> [!WARNING]
+> Parse both with the `csv` module and `io.StringIO`. Some member names are quoted and contain a comma, so `split(",")` will betray you.
+
+> [!TIP]
+> Joining two files on a key is the most common "write a script" task there is. Say which side becomes the lookup table, and why, out loud.
 
 ## Hints
 ### Hint 1

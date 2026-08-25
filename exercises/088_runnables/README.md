@@ -9,53 +9,43 @@ tags: [llm, langchain]
 *LCEL: `|` glues small steps into one thing you can call.*
 
 ## Why
-LangChain is a library for wiring steps together around an AI
-model, and its core idea is that small steps get joined into one
-pipeline with a single operator. Teams use it to build things like "read
-a metric line, decide whether it is slow, write the report line". Each
-step is small and can be swapped on its own, and the finished pipeline
-can handle one item or a whole list with no extra code. Interviewers ask
-for this to see that you understand the joining idea, not just one big
-function.
+LangChain is a library for wiring steps together around an AI model, and its core idea is that small steps get joined into one pipeline with a single operator. Teams use it to build things like "read a metric line, decide whether it is slow, write the report line". Each step is small and can be swapped on its own, and the finished pipeline can handle one item or a whole list with no extra code. Interviewers ask for this to see that you understand the joining idea, not just one big function.
 
 ## You get
 nothing — you build the thing from scratch.
 
 ## You return
-the pipeline itself (three joined steps), not a result. The
-test will feed it lines like "svc=api latency=250" and expect "api 250ms
-SLOW" back, and it checks that the chain really is three separate steps.
+the pipeline itself (three joined steps), not a result. The test will feed it lines like `"svc=api latency=250"` and expect `"api 250ms SLOW"` back, and it checks that the chain really is three separate steps.
 
 ## Rules
 A "chain" in LangChain is small steps joined by the `|` operator.
 
-Every step is a Runnable, which just means it has the same handful of
-methods: .invoke(one_input) and .batch(list_of_inputs). Join two with `|`
-and you get another Runnable, so the whole pipeline has those methods too
-and you never wrote a loop.
+Every step is a Runnable, which just means it has the same handful of methods: `.invoke(one_input)` and `.batch(list_of_inputs)`. Join two with `|` and you get another Runnable, so the whole pipeline has those methods too and you never wrote a loop.
 
-Return a chain of THREE RunnableLambda steps that turns one raw metric
-line into one report line.
+Return a chain of THREE `RunnableLambda` steps that turns one raw metric line into one report line.
 
-```
-"svc=api latency=250"   ->  "api 250ms SLOW"
-"svc=auth latency=90"   ->  "auth 90ms ok"
+```python
+chain = solve()
+chain.invoke("svc=api latency=250")    # -> "api 250ms SLOW"
+chain.invoke("svc=auth latency=90")    # -> "auth 90ms ok"
 ```
 
 The three steps, in order:
 
-  1. parse      "svc=api latency=250" -> {"svc": "api", "latency": 250}
-                a line is always two key=value pairs in that order, and
-                latency is a whole number
-  2. transform  add a "slow" key: True when latency is over 200, else False
-                (exactly 200 is not slow)
-  3. format     "<svc> <latency>ms SLOW" when slow, "<svc> <latency>ms ok"
-                otherwise
+1. **parse** — a line is always two `key=value` pairs in that order, and latency is a whole number
 
-Wrap each function in RunnableLambda and join them with `|`. Return the
-chain itself, not a result. The test calls .invoke(line) on it, calls
-.batch(lines), and checks it really is three pieces joined with `|` — one
-big RunnableLambda doing all three jobs is the thing this drills against.
+   ```python
+   parse("svc=api latency=250")   # -> {"svc": "api", "latency": 250}
+   ```
+
+2. **transform** — add a `"slow"` key: `True` when latency is over 200, else `False` (exactly 200 is not slow)
+
+3. **format** — `"<svc> <latency>ms SLOW"` when slow, `"<svc> <latency>ms ok"` otherwise
+
+Wrap each function in `RunnableLambda` and join them with `|`. Return the chain itself, not a result.
+
+> [!WARNING]
+> The test calls `.invoke(line)` on it, calls `.batch(lines)`, and checks it really is three pieces joined with `|` — one big `RunnableLambda` doing all three jobs is the thing this drills against.
 
 ## Hints
 ### Hint 1

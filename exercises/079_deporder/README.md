@@ -7,60 +7,40 @@ practices: [18, 20, 22]
 ---
 # DRILL: start-up order, or the cycle that blocks it
 
-Whole-task drill: what order do these services start in, and is it even possible.
+*Whole-task drill: what order do these services start in, and is it even possible.*
 
 Combines topics 18 (dict lookups), 20 (defaultdict grouping), 22 (sets).
 
 ## Why
-A platform has many services, and some cannot start until others
-are already running: the API needs the database, the cache needs the
-database, and so on. After a full outage someone has to bring everything
-back up in an order that works. If two services each wait for the other,
-nothing can start at all, and the team needs to know that before they
-try.
+A platform has many services, and some cannot start until others are already running: the API needs the database, the cache needs the database, and so on. After a full outage someone has to bring everything back up in an order that works. If two services each wait for the other, nothing can start at all, and the team needs to know that before they try.
 
 ## You get
-`graph` — a dictionary where each key is a service name and its
-value is a list of the services it needs running first, like {"api":
-["db", "cache"], "cache": ["db"], "db": []}. The test builds it and
-hands it to you.
+`graph` — a dictionary where each key is a service name and its value is a list of the services it needs running first, like `{"api": ["db", "cache"], "cache": ["db"], "db": []}`. The test builds it and hands it to you.
 
 ## You return
-a dictionary with two keys: "cycle" (True when services wait
-on each other in a loop, otherwise False) and "order" (a list of service
-names in a start-up order that works, or an empty list when there is a
-cycle).
+a dictionary with two keys: `"cycle"` (`True` when services wait on each other in a loop, otherwise `False`) and `"order"` (a list of service names in a start-up order that works, or an empty list when there is a cycle).
 
 ## Rules
-`graph` maps a service to the services it depends on:
+`graph` maps a service to the services it depends on. Everything a service depends on has to be running before it starts. Return an order that respects that:
 
-```
-{"api": ["db", "cache"], "cache": ["db"], "db": []}
-```
-
-Everything a service depends on has to be running before it starts.
-Return an order that respects that:
-
-```
-{"cycle": False, "order": ["db", "cache", "api"]}
+```python
+solve({"api": ["db", "cache"], "cache": ["db"], "db": []})
+# -> {"cycle": False, "order": ["db", "cache", "api"]}
 ```
 
-Any order that satisfies the dependencies is accepted — the test
-checks the constraints, not one fixed list.
+Any order that satisfies the dependencies is accepted — the test checks the constraints, not one fixed list.
 
 If the dependencies loop, nothing can start at all:
 
-```
-{"a": ["b"], "b": ["a"]}  ->  {"cycle": True, "order": []}
+```python
+solve({"a": ["b"], "b": ["a"]})
+# -> {"cycle": True, "order": []}
 ```
 
-Guarantees: every name used as a dependency is also a key, no
-duplicates in a dependency list, and a service with nothing to wait
-for has [].
+Guarantees: every name used as a dependency is also a key, no duplicates in a dependency list, and a service with nothing to wait for has `[]`.
 
-This is a topological sort, but do not lead with the term. Describe
-what you are doing — repeatedly start whatever is unblocked — and say
-where the cycle shows up. Out loud.
+> [!TIP]
+> This is a topological sort, but do not lead with the term. Describe what you are doing — repeatedly start whatever is unblocked — and say where the cycle shows up. Out loud.
 
 ## Hints
 ### Hint 1
