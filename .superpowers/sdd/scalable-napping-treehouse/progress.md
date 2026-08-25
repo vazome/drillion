@@ -193,3 +193,10 @@ Minors: _selfcheck.py gitignored by controller; deferred: guidance() splits on f
 last section), meta denylist vs allowlist, PYTHONPATH overwritten in runner, validate is a gate not a sandbox,
 META["tier"] dropped (dead). Task 10: complete.
 Task 11 dispatched: batch X (17 Exercism verbatim), N1/N2/N3 (native polish, 29 each). Prompts /tmp/task11-*.md.
+Task 11 status (session limit hit again, resets 21:10 Madrid): N1 ✓ af800dd · N2 ✓ 568eca6 · X ✓ 81a5881 + d684d4c
+(controller folded hints.md verbatim as "## Exercism hints" before Read first; mechanical check: every
+introduction/instructions line present in order for 17/17; `~~~~exercism/note` → [!NOTE] callouts, <br> dropped) ·
+N3 part 1 ✓ (20 files, agent died; parse-checked) — REMAINING N3: 093_message_dig 094_await_under_lock 095_semaphore
+096_async_cm 097_lazy_init_lock 098_fixtures 099_asgi_test 100_rerank 101_explain_takehome (special case: ### Q1 headings).
+Still to do for Task 11: dispatch N3 remainder (9 files); one sampling reviewer over N1–N3 (native polish) and an
+accuracy check of You get/You return/split coverage for 206/207/212/213 (X reviewer died before that step).
