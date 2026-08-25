@@ -6,10 +6,10 @@ from study import scheduler, state
 
 
 def _exs():
-    """A tiny catalogue: ex_b needs ex_a, which is not in the rsample track."""
-    return {"ex_a": {"topic": 1, "minutes": 5, "prereqs": [], "tags": ["core"]},
-            "ex_b": {"topic": 2, "minutes": 5, "prereqs": [1], "tags": ["core", "rsample"]},
-            "ex_c": {"topic": 3, "minutes": 5, "prereqs": [], "tags": ["rsample"]}}
+    """A tiny catalogue: 002_b needs 001_a, which is not in the rsample track."""
+    return {"001_a": {"topic": 1, "minutes": 5, "prereqs": [], "tags": ["core"]},
+            "002_b": {"topic": 2, "minutes": 5, "prereqs": [1], "tags": ["core", "rsample"]},
+            "003_c": {"topic": 3, "minutes": 5, "prereqs": [], "tags": ["rsample"]}}
 
 
 def _st(**kw):
@@ -32,27 +32,27 @@ def test_reschedule():
 
 
 def test_unseen_respects_prereqs():
-    assert scheduler.unseen(_st(), _exs()) == ["ex_a", "ex_c"]         # ex_b waits for topic 1
-    st = _st(cards={"ex_a": {"box": 1, "due": "2000-01-01", "seen": 1}})
-    assert scheduler.unseen(st, _exs()) == ["ex_b", "ex_c"]
+    assert scheduler.unseen(_st(), _exs()) == ["001_a", "003_c"]         # 002_b waits for topic 1
+    st = _st(cards={"001_a": {"box": 1, "due": "2000-01-01", "seen": 1}})
+    assert scheduler.unseen(st, _exs()) == ["002_b", "003_c"]
 
 
 def test_focus_ignores_out_of_focus_prereqs():
-    assert scheduler.unseen(_st(focus="rsample"), _exs()) == ["ex_b", "ex_c"]
-    assert scheduler.unseen(_st(focus="core"), _exs()) == ["ex_a"]
+    assert scheduler.unseen(_st(focus="rsample"), _exs()) == ["002_b", "003_c"]
+    assert scheduler.unseen(_st(focus="core"), _exs()) == ["001_a"]
 
 
 def test_queue_caps_new_picks_and_skips_open_attempts():
-    q = scheduler.queue(_st(open={"ex_a": {}}), _exs())
-    assert q == {"review": [], "new": ["ex_c"], "done_today": 0}
-    done = [{"date": state.today(), "slug": "ex_a", "grade": "pass", "attempts": 1, "secs": 9, "new": True},
-            {"date": state.today(), "slug": "ex_z", "grade": "pass", "attempts": 1, "secs": 9, "new": False}]
+    q = scheduler.queue(_st(open={"001_a": {}}), _exs())
+    assert q == {"review": [], "new": ["003_c"], "done_today": 0}
+    done = [{"date": state.today(), "slug": "001_a", "grade": "pass", "attempts": 1, "secs": 9, "new": True},
+            {"date": state.today(), "slug": "009_z", "grade": "pass", "attempts": 1, "secs": 9, "new": False}]
     q = scheduler.queue(_st(log=done), _exs())
-    assert q["done_today"] == 1 and q["new"] == ["ex_a"]            # one new pick left today
+    assert q["done_today"] == 1 and q["new"] == ["001_a"]            # one new pick left today
 
 
 def test_queue_puts_the_most_overdue_review_first():
-    st = _st(cards={"ex_a": {"box": 1, "due": "2020-01-02", "seen": 1},
-                    "ex_c": {"box": 1, "due": "2020-01-01", "seen": 1}})
-    assert scheduler.queue(st, _exs())["review"] == ["ex_c", "ex_a"]
-    assert scheduler.pick(st, _exs()) == ("ex_c", "review")
+    st = _st(cards={"001_a": {"box": 1, "due": "2020-01-02", "seen": 1},
+                    "003_c": {"box": 1, "due": "2020-01-01", "seen": 1}})
+    assert scheduler.queue(st, _exs())["review"] == ["003_c", "001_a"]
+    assert scheduler.pick(st, _exs()) == ("003_c", "review")

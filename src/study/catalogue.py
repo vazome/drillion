@@ -1,57 +1,58 @@
-"""The catalogue: what drills exist, read with `ast` and never executed.
+"""The catalogue: one folder per drill, read from disk and never executed.
 
-A half-edited file is skipped instead of breaking the menu, and nothing in
-`exercises/` is ever imported into this process — the answers stay on disk.
+`<NNN>_<name>/README.md` is the guidance — YAML frontmatter and GitHub-flavoured
+Markdown — and `<NNN>_<name>/drill.py` is the code. A half-written folder is skipped
+instead of breaking the menu, and nothing in `exercises/` is ever imported into this
+process: the answers stay on disk.
 """
 
 import ast
+import re
 
-from .region import _assign, _solve, _str_expr, bounds, cut
+import yaml
+
+from .region import _solve, bounds, cut
 from .settings import settings
 
-
-def has_given(body):
-    """True when the region has code above solve() that the learner must keep."""
-    tree = ast.parse(body)
-    above = tree.body[:tree.body.index(_solve(tree))]
-    return any(not isinstance(n, (ast.Import, ast.ImportFrom)) for n in above)
+REQUIRED = ("title", "minutes", "tags")
+HINT = re.compile(r"^### Hint \d+[ \t]*$", re.MULTILINE)
 
 
-def read_first(src):
-    """The `# READ FIRST:` block after the module docstring, `#` stripped."""
-    tree = ast.parse(src)
-    lines = src.split("\n")
-    at = tree.body[0].end_lineno if tree.body and _str_expr(tree.body[0]) else 0
-    while at < len(lines) and not lines[at].strip():
-        at += 1
-    block = []
-    for line in lines[at:]:
-        if not line.startswith("#"):
-            break
-        block.append(line[1:].removeprefix(" "))
-    if block and block[0].startswith("SOURCE:"):  # exercism attribution line
-        block = block[1:]
-    return block if block and block[0].strip().startswith("READ FIRST") else []
+def frontmatter(md):
+    """(the YAML header as a dict, the Markdown below it)."""
+    if not md.startswith("---\n"):
+        raise ValueError("a README needs a YAML frontmatter block")
+    head, sep, body = md[4:].partition("\n---\n")
+    if not sep:
+        raise ValueError("the frontmatter block is not closed")
+    return yaml.safe_load(head), body.lstrip("\n")
+
+
+def guidance(md):
+    """(spec Markdown, hints) — the spec is everything above `## Hints`."""
+    spec, _, rest = md.partition("\n## Hints\n")
+    return spec.strip(), [h.strip() for h in HINT.split(rest)[1:]]
 
 
 def exercises():
-    """{slug: META + path, hints, read_first, region_start, hints_line}.
+    """{slug: frontmatter + topic, path, dir, spec_md, hints, marker_line}.
 
-    ast only: a half-edited file is skipped instead of breaking the menu, and
+    Text only: a half-edited drill is skipped instead of breaking the menu, and
     nothing in exercises/ is ever imported into this process."""
     out = {}
-    for path in sorted(settings.exercises_dir.glob("ex_*.py")):
+    for folder in sorted(settings.exercises_dir.iterdir()):
         try:
-            src = path.read_text()
-            tree = ast.parse(src)
-            meta = ast.literal_eval(_assign(tree, "META").value)
-            hints = ast.literal_eval(_assign(tree, "HINTS").value)
-            meta_end, hints_line = bounds(src)
-            region = cut(src)
-            _solve(ast.parse(region.body))
-        except Exception:  # noqa: BLE001, S112 — a half-edited file must not break the menu
+            topic = int(folder.name.split("_")[0])
+            src = (folder / "drill.py").read_text()
+            marker_line = bounds(src)
+            _solve(ast.parse(cut(src).body))
+            meta, md = frontmatter((folder / "README.md").read_text())
+            spec_md, hints = guidance(md)
+            if any(meta.get(k) in (None, "", []) for k in REQUIRED) or len(hints) != 3:
+                raise ValueError("a drill needs a title, minutes, tags and 3 hints")
+        except Exception:  # noqa: BLE001, S112 — a half-written folder must not break the menu
             continue
-        out[path.stem] = {**meta, "path": path, "hints": hints, "tags": meta.get("tags", []),
-                          "read_first": read_first(src), "hints_line": hints_line,
-                          "region_start": meta_end + 1 + region.lead.count("\n")}
+        out[folder.name] = {"prereqs": [], "practices": [], **meta, "topic": topic,
+                            "path": folder / "drill.py", "dir": folder, "hints": hints,
+                            "spec_md": spec_md, "marker_line": marker_line}
     return out
