@@ -1,3 +1,6 @@
+> **Status: earlier exploration, superseded as a constraint.** The design handoff is `/DESIGN.md`; this file
+> is one candidate direction (light-only) and may be ignored or reused.
+
 # Design brief — Study (Python drills workbench)
 
 Single user, daily 20–40 min sessions, Windows browser (Chrome/Edge) opened from WSL. Not a marketing

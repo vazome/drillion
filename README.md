@@ -5,6 +5,8 @@ pytest test against a reference solution on **fresh random data every sitting**,
 5-box Leitner ladder, with gated hints and a gated solution. You open it in a browser, write
 `solve()` in the editor, press Run, and the app grades, schedules and archives the attempt.
 
+Design brief for the UI: [DESIGN.md](DESIGN.md).
+
 The exercise files on disk are the source of truth; the app edits only the learner's region of
 each file and never writes a file without its spec docstring.
 
