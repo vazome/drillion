@@ -2,7 +2,7 @@
 Branch: study-ui (in the main working tree; Ruling: no separate worktree — Daniel's editor and
 runner live in ~/study and the migration renames the files he works in; merge to master at the
 end — costs nothing if wrong beyond a branch switch).
-BASE for Task 2: 67d64f5 (checkpoint commit on master, branched to study-ui).
+BASE for Task 2: 67d64f5 (checkpoint commit on main, branched to study-ui).
 Spec: none separate; the plan's design sections (above "## Tasks") are the authority.
 
 ## Pre-flight scan (2026-08-25)
