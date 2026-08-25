@@ -186,3 +186,10 @@ DESIGN.md is the design handoff (screens, data, states, constraints); design-bri
 Spec: content-format-spec.md. Plan: Task 10 (core + migration), Task 11 (Exercism verbatim + native polish).
 exercism-drills merged into main (ff9220a, 104 drills, selfcheck 104/104); worktree and branch deleted;
 batch-B partial files discarded. Phase B continues on main in the folder format after Task 10.
+Task 10: implementer DONE_WITH_CONCERNS (904b528, a0af83d, b146bdb). Rulings: --import-mode=importlib + 059_mock
+patch.object(sys.modules[__name__]) accepted; core commit red in isolation accepted; delete+add not rename accepted.
+Review Approved (all 104 round-trip/stub-identity verified; progress.json values intact; 8-drill fidelity zero loss).
+Minors: _selfcheck.py gitignored by controller; deferred: guidance() splits on first "## Hints" (contract says
+last section), meta denylist vs allowlist, PYTHONPATH overwritten in runner, validate is a gate not a sandbox,
+META["tier"] dropped (dead). Task 10: complete.
+Task 11 dispatched: batch X (17 Exercism verbatim), N1/N2/N3 (native polish, 29 each). Prompts /tmp/task11-*.md.
