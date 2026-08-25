@@ -54,8 +54,9 @@ HINTS = [
     "T become A and then that A become U.)"),
     ("Two routes, both fine. The readable one: a dict {'G': 'C', 'C': 'G', ...} "
     "and \"\".join of the looked-up value for each character. The idiomatic one: "
-    "str.maketrans('AGCT', 'UCGA') builds the table once and str.translate "
-    "applies it in a single pass — worth knowing because interviewers notice it."),
+    "str.maketrans(<the four DNA letters>, <their partners, in the same order>) "
+    "builds the table once and str.translate applies it in a single pass — worth "
+    "knowing because interviewers notice it."),
     ("Different data, same swap:\n"
     "    table = str.maketrans('abc', 'xyz')\n"
     "    'cab'.translate(table)   ->  'zxy'\n"
