@@ -103,7 +103,7 @@ def test_solve():
     assert solve("G", "T") == 1
     assert solve("GGACTGAAATCTG", "GGACTGAAATCTG") == 0
     assert solve("GGACGGATTCTG", "AGGACGGATTCT") == 9
-    with pytest.raises(ValueError, match="Strands must be of equal length."):
+    with pytest.raises(ValueError, match=r"Strands must be of equal length\."):
         solve("AATG", "AAA")
-    with pytest.raises(ValueError, match="Strands must be of equal length."):
+    with pytest.raises(ValueError, match=r"Strands must be of equal length\."):
         solve("G", "")

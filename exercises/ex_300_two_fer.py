@@ -76,7 +76,7 @@ def test_solve():
     r = rng()
     for _ in range(5):
         name = _gen(r)
-        assert solve(name) == _reference(name)
+        assert solve(name) == _reference(name), f"name {name!r}"
 
     # canonical cases (exercism/python practice/two-fer)
     assert solve() == "One for you, one for me."
