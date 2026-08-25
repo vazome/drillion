@@ -267,7 +267,7 @@ stock["decrement_items"]({"coal": 3, "diamond": 1}, ["diamond", "coal"])
 - an item that is not in the inventory yet starts at `0` and becomes `1` when it is added
 - a count never goes below `0`; once it is at `0`, further requests to decrement it are ignored
 - decrementing an item the inventory has never heard of does nothing — it must **not** be created with a negative or zero count
-- all three functions return the dict, and `add_items` / `decrement_items` return the very dict they were handed, updated in place
+- all three functions return the inventory dict (`add_items` / `decrement_items` update the one they were handed; returning a copy also passes)
 
 > [!WARNING]
 > `inventory[item] += 1` raises `KeyError` the first time an item is seen. Make sure the key exists before you add to it.
