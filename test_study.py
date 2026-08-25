@@ -491,6 +491,8 @@ async def _guards(api, path):
     assert ex["attempt"] is None and ex["hints"]["shown"] == []
     nobody = await api.post(f"/api/ex/{SLUG}/run", json={"code": ex["code"], "etag": ex["etag"]})
     assert nobody.status_code == 409                 # no attempt open: nothing to time or count
+    closed = await api.put(f"/api/ex/{SLUG}", json={"code": ex["code"], "etag": ex["etag"]})
+    assert closed.status_code == 409                 # ...and no autosave may un-stub a closed file
 
     huge = await api.put(f"/api/ex/{SLUG}", json={"code": "x" * (web.MAX_BODY + 1), "etag": ""})
     assert huge.status_code == 413
