@@ -37,3 +37,20 @@
 ## Serving (already in web.py pattern; source: Starlette StaticFiles)
 - `app.mount("/", StaticFiles(directory=ROOT/"web"/"dist", html=True))` registered last; hash router
   means no SPA fallback route is needed. Vite `base` stays `/`, assets under `/assets/`.
+
+## Markdown guidance renderer (source: remarkjs/react-markdown README + remark-gfm README via Context7)
+- `react-markdown` + `remark-gfm` → tables, task lists, footnotes, strikethrough, autolinks. Raw HTML
+  is **escaped by default** (no `rehype-raw`) — the READMEs contain none; keep it that way (no XSS
+  surface, the content is ours but the rule is free).
+- `components` prop overrides elements: `img` → if `src` ends in `.webm/.mp4` render
+  `<video autoPlay loop muted playsInline>` else `<img>`; `a` → `target="_blank" rel="noreferrer"`;
+  relative `src`/`href` starting with `assets/` are prefixed with `/api/ex/{slug}/`.
+- Fenced code: `rehype-highlight` (highlight.js, python grammar) or `code` component override that
+  reuses the CodeMirror highlighter for identical colours in both themes — prefer the latter so
+  spec examples and the editor look the same.
+- GitHub alerts (`> [!NOTE]`) are NOT part of remark-gfm: add `remark-github-blockquote-alert`
+  (verify on npm at install time; fallback: a 20-line remark plugin that maps the blockquote's
+  first line) and style `.markdown-alert-note/-tip/-warning` from the tokens.
+- Mermaid: `code` override for `language-mermaid` that calls `mermaid.render` client-side
+  (`mermaid` package, `startOnLoad: false`, theme switched with the app theme); no server render.
+- Hints arrive as Markdown strings — same component, no headings expected inside a hint.
