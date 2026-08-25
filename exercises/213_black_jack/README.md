@@ -410,7 +410,7 @@ hand["can_double_down"]('10', '2')  # -> False  (12 is one too many)
 ## Rules
 - this drill implements **Exercism tasks 4, 5 and 6 only** — `value_of_card`, `higher_card` and `value_of_ace` belong to drill `212_black_jack`
 - the dict keys are exactly the three strings above, and each value is the function itself — no parentheses
-- all three return real `True`/`False`, not `1`/`0`
+- all three return booleans — the tests compare with `==`, so `1`/`0` would pass here, but neighbouring drills check `is True`; write `True`/`False`
 - the casino wants `is_blackjack` checked by looking for an ace AND a ten-card in the hand, not by adding the hand up to 21
 
 ## Exercism hints

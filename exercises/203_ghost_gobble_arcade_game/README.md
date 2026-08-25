@@ -117,7 +117,7 @@ rules["win"](True, False, True)   # -> False  (all dots eaten, but lost anyway)
 
 ## Rules
 - the dict keys are exactly the four strings above, and each value is the function itself — no parentheses
-- every parameter arrives as a real `True`/`False`; return booleans, not ints (neighbouring drills' tests check `is True`) or a string
+- every parameter arrives as a real `True`/`False`; return booleans, not `1`/`0` or a string (the tests compare with `==`, so an int would pass here — but neighbouring drills check `is True`)
 - the parameters are positional and in the order given above
 
 ## Exercism hints
