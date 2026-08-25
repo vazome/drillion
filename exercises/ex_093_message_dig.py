@@ -13,7 +13,27 @@ META = {"topic": 93, "title": "DRILL: dig tool calls out of a model response",
 
 
 def solve(payload):
-    """A chat completion comes back as nested JSON where half the keys are
+    """WHY: A company pipeline sends a question to an AI chat service and
+    gets back a nested answer record. Sometimes the answer is text;
+    sometimes the model asks for a tool to be run instead and the text field
+    is empty; sometimes the token-usage section is missing because the
+    request was cut short. A script that assumes every field is always there
+    crashes at 3am. Someone needs a function that pulls the useful facts out
+    of any of these shapes without crashing.
+
+    YOU GET: `payload` — a nested dictionary (dictionaries and lists inside
+    a dictionary), the shape a chat API returns, like {"choices":
+    [{"finish_reason": "stop", "message": {"content": "all clear"}}],
+    "usage": {"prompt_tokens": 9, "completion_tokens": 4}}. The test builds
+    it, with random pieces missing or broken, and hands it to you.
+
+    YOU RETURN: a dictionary with exactly four keys: "text" (the answer
+    text, or ""), "tools" (a list of dictionaries with "name" and "args",
+    one per tool request), "total_tokens" (a number) and "finish" (the
+    reason the answer ended, or "unknown").
+
+    ─── exact rules ───
+    A chat completion comes back as nested JSON where half the keys are
     conditional. Reaching straight for
 
         payload["choices"][0]["message"]["content"]
@@ -69,19 +89,19 @@ def solve(payload):
 
 
 HINTS = [
-    "Every level of this thing is optional, so the question at each step is "
+    ("Every level of this thing is optional, so the question at each step is "
     "the same: what do I use if this key is not here? Answer it once per level "
     "and the code stops being scary. The trap is that a key being PRESENT is "
     "not the same as it holding something usable — content is routinely there "
-    "and set to None, and usage is routinely there and half empty.",
-    "Two tools cover almost all of it. dict.get(key) returns None instead of "
+    "and set to None, and usage is routinely there and half empty."),
+    ("Two tools cover almost all of it. dict.get(key) returns None instead of "
     "raising, and `x or default` turns None, {}, [] and \"\" into the default "
     "in one go — so `payload.get('choices') or []` handles missing AND empty "
     "in one expression, and you can then index [0] safely after checking it. "
     "For the arguments string, json.loads inside a try/except "
     "json.JSONDecodeError is the only part that needs a real except clause. "
-    "Build the tools list with a plain for loop.",
-    "Different data — same shape of problem, an incident record:\n"
+    "Build the tools list with a plain for loop."),
+    ("Different data — same shape of problem, an incident record:\n"
     "    event = {'alerts': [{'labels': {'sev': None}}]}\n"
     "\n"
     "    alerts = event.get('alerts') or []\n"
@@ -92,7 +112,7 @@ HINTS = [
     "    counts = event.get('counts') or {}\n"
     "    print(counts.get('firing', 0) + counts.get('resolved', 0))   # 0\n"
     "Each line answers 'and if it is not there?' before moving down a level. "
-    "Yours does the same walk, then loops over the tool calls.",
+    "Yours does the same walk, then loops over the tool calls."),
 ]
 
 

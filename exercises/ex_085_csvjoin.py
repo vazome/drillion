@@ -11,7 +11,29 @@ META = {"topic": 85, "title": "DRILL: inner-join two CSVs on a shared key",
 
 
 def solve(services_csv, members_csv, min_cpu):
-    '''Two CSV strings that share the column "team". Join them.
+    '''WHY: One spreadsheet lists services with the team that owns each and
+    its CPU allocation. Another lists which people are on which team. A
+    manager asks "for every service using at least 200 CPU, who do I
+    contact?" That means matching rows from the two files on the shared
+    "team" column, which is the single most common "write a quick script"
+    request in ops.
+
+    YOU GET: `services_csv` — the first file as one string in CSV form with
+    a header, like "service,team,cpu" on the first line and "auth,core,500"
+    on the next.
+
+    `members_csv` — the second file as one string, like "team,member" then
+    "core,priya". Some names are wrapped in quotes and contain a comma.
+
+    `min_cpu` — a whole number, like 200: the smallest CPU value to include.
+    The test builds all three and hands them to you.
+
+    YOU RETURN: a list of dictionaries, one per service that has a known
+    team and enough CPU, sorted by service name. Each has "service", "team",
+    "cpu" (a number) and "members" (a list of names, alphabetical).
+
+    ─── exact rules ───
+    Two CSV strings that share the column "team". Join them.
 
         services_csv                members_csv
         service,team,cpu            team,member
@@ -41,19 +63,19 @@ def solve(services_csv, members_csv, min_cpu):
 
 
 HINTS = [
-    "Two files, two different jobs — do not loop over both at once. The "
+    ("Two files, two different jobs — do not loop over both at once. The "
     "members file has many rows per team, so it becomes a lookup table first: "
     "team to list of members. Then the services file is a single pass where "
     "every row asks the table one question. Building the index once is the "
     "difference between one pass and a scan per service, and saying that out "
-    "loud is the point of the question.",
-    "defaultdict(list) over csv.DictReader(io.StringIO(members_csv)), keyed "
+    "loud is the point of the question."),
+    ("defaultdict(list) over csv.DictReader(io.StringIO(members_csv)), keyed "
     "by row['team'], appending row['member']. Then loop the services rows: "
     "int(row['cpu']) for the number, and by_team.get(team) hands back None "
     "for a team nobody is on — that None IS your inner join, skip the row. "
     "Skip on the cpu filter too, build the dict, and finish with "
-    "result.sort(key=lambda d: d['service']).",
-    "Different data, the index and the miss:\n"
+    "result.sort(key=lambda d: d['service'])."),
+    ("Different data, the index and the miss:\n"
     "    import csv, io\n"
     "    from collections import defaultdict\n"
     "    raw = 'pet,owner\\ncat,\"Diaz, Sam\"\\ncat,jo\\ndog,al'\n"
@@ -63,7 +85,7 @@ HINTS = [
     "    print(dict(by_pet))     # {'cat': ['Diaz, Sam', 'jo'], 'dog': ['al']}\n"
     "    print(by_pet.get('fish'))       # None\n"
     "Use .get for the lookup, not by_pet['fish'] — indexing a defaultdict "
-    "creates the missing key and your inner join quietly stops dropping rows.",
+    "creates the missing key and your inner join quietly stops dropping rows."),
 ]
 
 

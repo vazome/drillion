@@ -7,7 +7,23 @@ META = {"topic": 12, "title": "decorators — record every call, pass everything
 
 
 def solve(calls):
-    """Return a decorator that records every call into the list `calls`.
+    """WHY: An audit team asks: "every time one of our infrastructure tools
+    changes something, we need a record of what was called, with what
+    arguments, and what it returned." The tools are dozens of existing
+    functions and nobody wants to edit each one. You need a single reusable
+    wrapper that can be stuck on any function and quietly logs each call
+    while leaving the function's behaviour exactly as it was.
+
+    YOU GET: `calls` — an empty list like []. Your wrapper appends one record
+    to it per call. The test creates it and hands it to you; you never build
+    it yourself.
+
+    YOU RETURN: a decorator: a thing that takes a function and gives back a
+    replacement function that behaves the same but also appends
+    (name, args, kwargs, result) to `calls` after each call.
+
+    ─── exact rules ───
+    Return a decorator that records every call into the list `calls`.
 
     solve(calls) gives you back a decorator. That decorator takes a function
     and returns a replacement for it. The replacement must:
@@ -36,18 +52,18 @@ def solve(calls):
 
 
 HINTS = [
-    "Three nested layers, and the confusion is always about which layer runs "
+    ("Three nested layers, and the confusion is always about which layer runs "
     "when. The outer call captures the list. The middle one runs once, at "
     "decoration time, and is handed the function. The inner one runs on every "
     "single call and is the thing callers actually reach. Sketch the three defs "
-    "and what each one returns before filling in any bodies.",
-    "def solve(calls): def record(fn): def wrapper(*args, **kwargs): ... ; "
+    "and what each one returns before filling in any bodies."),
+    ("def solve(calls): def record(fn): def wrapper(*args, **kwargs): ... ; "
     "return wrapper ; return record. Inside wrapper: call fn(*args, **kwargs) "
     "and keep the value in a variable, append the tuple to calls, then return "
     "the variable. *args and **kwargs collect anything on the way in and "
     "re-spread it on the way out. fn.__name__ is the original's name, and "
-    "wrapper can still see fn and calls because of closures.",
-    "Different data — a decorator that doubles whatever comes back:\n"
+    "wrapper can still see fn and calls because of closures."),
+    ("Different data — a decorator that doubles whatever comes back:\n"
     "    def doubler(fn):\n"
     "        def wrapper(*args, **kwargs):\n"
     "            return fn(*args, **kwargs) * 2\n"
@@ -60,7 +76,7 @@ HINTS = [
     "    print(add(3, b=4))     # 14 — @doubler means add = doubler(add)\n"
     "That one has two layers because it takes no configuration. Yours has "
     "three, because solve takes the list first and only then meets the "
-    "function.",
+    "function."),
 ]
 
 

@@ -10,7 +10,23 @@ META = {"topic": 35, "title": "subprocess.run — run a command, read the result
 
 
 def solve(argv):
-    """Run the command `argv` (a list like ["echo", "hi"]) and report on it.
+    """WHY: A deploy script has to run other command-line tools (kubectl,
+    terraform, a health check) and decide what to do based on whether each
+    one succeeded and what it printed. The team lead wants one helper that
+    runs a command and reports back in one tidy package: did it succeed, the
+    exit code, its normal output and its error output. It must never glue
+    the command into one string, because that is how attackers sneak extra
+    commands in.
+
+    YOU GET: `argv` — a list of strings: the program name followed by its
+    arguments, like ["echo", "hi"]. The test creates it and hands it to you;
+    you never build it yourself.
+
+    YOU RETURN: a dict with exactly the keys "ok", "code", "out" and "err",
+    as described in the rules below.
+
+    ─── exact rules ───
+    Run the command `argv` (a list like ["echo", "hi"]) and report on it.
 
     Return a dict with exactly these keys:
 
@@ -33,21 +49,21 @@ def solve(argv):
 
 
 HINTS = [
-    "subprocess.run returns a CompletedProcess object. Everything you need — "
+    ("subprocess.run returns a CompletedProcess object. Everything you need — "
     "return code, stdout, stderr — is an attribute on it. By default though, "
     "output goes to the terminal instead of being captured, and it arrives as "
-    "bytes. Two keyword arguments fix that.",
-    "The keywords are capture_output=True and text=True. Then read "
+    "bytes. Two keyword arguments fix that."),
+    ("The keywords are capture_output=True and text=True. Then read "
     ".returncode, .stdout and .stderr off the result. check=True would raise "
     "CalledProcessError on non-zero exit — here you want the code either way, "
-    "so plain run without check is the shorter route.",
-    "Different command, same moves:\n"
+    "so plain run without check is the shorter route."),
+    ("Different command, same moves:\n"
     "    import subprocess, sys\n"
     "    res = subprocess.run([sys.executable, '--version'],\n"
     "                         capture_output=True, text=True)\n"
     "    print(res.returncode)        # 0\n"
     "    print(res.stdout.strip())    # Python 3.12.x\n"
-    "Build your dict from those three attributes.",
+    "Build your dict from those three attributes."),
 ]
 
 
@@ -70,7 +86,7 @@ def _gen(r):
 
 
 def _reference(argv):
-    res = subprocess.run(argv, capture_output=True, text=True)
+    res = subprocess.run(argv, capture_output=True, text=True, check=False)
     return {"ok": res.returncode == 0,
             "code": res.returncode,
             "out": res.stdout.strip(),

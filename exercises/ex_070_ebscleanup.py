@@ -9,9 +9,8 @@ import contextlib
 import os
 
 import boto3
-from moto import mock_aws
-
 from _lib import rng
+from moto import mock_aws
 
 META = {"topic": 72, "title": "boto3 task — find unattached EBS volumes",
         "tier": 4, "minutes": 25, "prereqs": [68],
@@ -19,7 +18,24 @@ META = {"topic": 72, "title": "boto3 task — find unattached EBS volumes",
 
 
 def solve(ec2):
-    """Report the EBS volumes nobody is using, and what dropping them saves.
+    """WHY: The cloud bill keeps growing. One common cause is disk volumes
+    (EBS) that were once attached to servers that have since been deleted.
+    A detached volume still costs full price every month and shows up on no
+    dashboard. The finance lead asks for a report: which volumes are
+    attached to nothing, and how many gigabytes would be freed by removing
+    them. A report only; deleting is a separate, reviewed step.
+
+    YOU GET: `ec2` — an AWS EC2 client object, the thing you call to ask
+    about servers and their disks. The test hands in one connected to a
+    fake in-memory AWS (moto) with a few servers, some attached disks and
+    some orphan disks; nothing real is contacted.
+
+    YOU RETURN: a pair (tuple): a sorted list of (volume_id, size_in_gb)
+    pairs for the unattached volumes, and the total of those sizes as a
+    whole number (0 when there are none).
+
+    ─── exact rules ───
+    Report the EBS volumes nobody is using, and what dropping them saves.
 
     `ec2` is a boto3 EC2 client. `ec2.describe_volumes()` answers with a dict
     holding "Volumes", a list of dicts. The fields that matter:
@@ -55,20 +71,20 @@ def solve(ec2):
 
 
 HINTS = [
-    "The account has more volumes than the ones you would think to look for. "
+    ("The account has more volumes than the ones you would think to look for. "
     "Booting an instance quietly creates a root volume, so 'every volume in "
     "describe_volumes' is never the answer — you need the ones with nothing "
     "hanging off them. The other half of the job is the arithmetic: the sum "
     "has to be over the volumes you selected, not over the whole list, and "
     "that is the mistake that survives review because the number still looks "
-    "plausible.",
-    "One loop over ec2.describe_volumes()[\"Volumes\"]. Keep a volume when its "
+    "plausible."),
+    ("One loop over ec2.describe_volumes()[\"Volumes\"]. Keep a volume when its "
     "\"Attachments\" list is empty — an empty list is falsy, so `if not "
     "vol[\"Attachments\"]` reads fine; testing vol[\"State\"] == \"available\" "
     "gets you the same set. Append (vol[\"VolumeId\"], vol[\"Size\"]) tuples to "
     "a list, .sort() it, then sum the second item of each tuple with a "
-    "generator expression. Return the two as a tuple.",
-    "Different data — the same select-then-total shape over Elastic IPs, "
+    "generator expression. Return the two as a tuple."),
+    ("Different data — the same select-then-total shape over Elastic IPs, "
     "which also bill when nothing is using them:\n"
     "    idle = []\n"
     "    for addr in ec2.describe_addresses()['Addresses']:\n"
@@ -78,7 +94,7 @@ HINTS = [
     "    print(idle, len(idle) * 3.60)\n"
     "Filter first into a list of tuples, sort, then derive the total from "
     "that list and never from the original. Yours totals Size instead of "
-    "multiplying by a monthly rate.",
+    "multiplying by a monthly rate."),
 ]
 
 
@@ -165,7 +181,6 @@ def test_solve():
 
                 assert _reference(ec2) == truth, "fixture drifted"
                 assert solve(ec2) == truth, (
-                    "{} of {} volumes are unattached, {} GB in total".format(
-                        len(idle), total, truth[1]))
+                    f"{len(idle)} of {total} volumes are unattached, {truth[1]} GB in total")
                 assert len(ec2.describe_volumes()["Volumes"]) == total, (
                     "solve deleted volumes — this is a report, not a delete script")

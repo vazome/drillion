@@ -7,7 +7,24 @@ META = {"topic": 55, "title": "threads vs processes vs async — pick one, say w
 
 
 def solve(workloads):
-    """Pick the right concurrency tool for each workload.
+    """WHY: A colleague brings you a list of jobs they want to speed up: resize
+    8 images, call 40 APIs, poll 5000 sensors. Python has three ways to do
+    several things at once, and picking the wrong one makes a job no faster
+    or even slower. The team wants one simple rule written down so everyone
+    picks consistently: heavy calculation gets separate processes, a modest
+    number of network waits gets threads, a huge number of waits gets async.
+    Interviewers ask for this rule and the reasons behind it.
+
+    YOU GET: `workloads` — a list of dicts, each like {"kind": "io",
+    "count": 40}, where kind is "io" (waiting on network or disk) or "cpu"
+    (calculating) and count is how many things there are to do. The test
+    creates it and hands it to you.
+
+    YOU RETURN: a list of strings, one per workload, in the same order; each
+    is "threads", "processes" or "async".
+
+    ─── exact rules ───
+    Pick the right concurrency tool for each workload.
 
     Each workload is a dict:
 
@@ -51,16 +68,16 @@ def solve(workloads):
 
 
 HINTS = [
-    "One fact carries most of this: the GIL means only one thread runs "
+    ("One fact carries most of this: the GIL means only one thread runs "
     "Python bytecode at a time, so threads buy you nothing while computing "
     "and everything while waiting. That settles the cpu case on its own. The "
     "count only enters the picture on the waiting side, where the question "
-    "is how many threads is too many.",
-    "One pass over the list, one label appended per workload. Check the kind "
+    "is how many threads is too many."),
+    ("One pass over the list, one label appended per workload. Check the kind "
     "first — cpu has a single answer whatever the count is. Then one "
     ">= 100 test splits the io case in two. Mind the boundary the spec "
-    "states: exactly 100 is async, not threads.",
-    "Different data — same two-level decision, sizing disk jobs:\n"
+    "states: exactly 100 is async, not threads."),
+    ("Different data — same two-level decision, sizing disk jobs:\n"
     "    jobs = [{'size': 5}, {'size': 40}, {'size': 40000}]\n"
     "    out = []\n"
     "    for j in jobs:\n"
@@ -72,7 +89,7 @@ HINTS = [
     "            out.append('large')\n"
     "    print(out)       # ['small', 'medium', 'large']\n"
     "Yours branches on two fields rather than one: kind first, then count "
-    "inside the io branch.",
+    "inside the io branch."),
 ]
 
 

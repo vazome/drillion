@@ -5,6 +5,7 @@
     uv run study.py check      grade the current exercise
     uv run study.py hint       next hint (gated)
     uv run study status     progress
+    STUDY_DIR=rsample_drill uv run study.py   same, for the take-home track
 
 Design notes live in STUDY.md. Scheduler is a 5-box Leitner ladder, not FSRS:
 the horizon is 12 weeks and Cepeda 2008 puts the optimal gap at 10-20% of that,
@@ -22,8 +23,8 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).parent
-EXDIR = ROOT / "exercises"
-STATE = ROOT / "progress.json"
+EXDIR = ROOT / os.environ.get("STUDY_DIR", "exercises")      # STUDY_DIR=rsample_drill for the take-home track
+STATE = ROOT / "progress.json" if EXDIR.name == "exercises" else EXDIR / "progress.json"
 
 LADDER = [2, 4, 8, 16, 28]          # days until next sighting, per box
 INTERVIEW = date(2026, 11, 2)        # everything recycles before this
@@ -59,9 +60,9 @@ def exercises():
     for f in sorted(EXDIR.glob("ex_*.py")):
         ns = {}
         try:
-            exec(compile(f.read_text(), f.name, "exec"), ns)
-        except Exception:
-            continue                # a half-edited file shouldn't break the menu
+            exec(compile(f.read_text(), f.name, "exec"), ns)  # noqa: S102
+        except Exception:  # noqa: BLE001, S112 — a half-edited file shouldn't break the menu
+            continue
         if "META" in ns:
             out[f.stem] = {**ns["META"], "path": f, "hints": ns.get("HINTS", [])}
     return out
@@ -125,7 +126,7 @@ def run_tests(path, seed):
     env = {**os.environ, "STUDY_SEED": str(seed)}
     r = subprocess.run(
         [sys.executable, "-m", "pytest", str(path), "-x", "-q", "--timeout=10", "--no-header"],
-        env=env, capture_output=True, text=True,
+        env=env, capture_output=True, text=True, check=False,
     )
     return r.returncode == 0, r.stdout
 
@@ -136,7 +137,7 @@ def cmd_next(st, exs):
     if cur and cur["slug"] in exs:
         print(f"still open: {exs[cur['slug']]['title']}")
         print(f"  file  {exs[cur['slug']]['path'].relative_to(ROOT)}")
-        print(f"  then  uv run study.py check")
+        print("  then  uv run study.py check")
         return
     slug, kind = pick(st, exs)
     if not slug:
@@ -151,8 +152,8 @@ def cmd_next(st, exs):
     save(st)
     print(f"[{kind}]  topic {m['topic']} — {m['title']}   (~{m['minutes']} min)")
     print(f"  file  {m['path'].relative_to(ROOT)}")
-    print(f"  edit  solve()  — spec is in its docstring")
-    print(f"  then  uv run study.py check")
+    print("  edit  solve()  — spec is in its docstring")
+    print("  then  uv run study.py check")
     if kind == "review":
         print(f"  seen {c['seen']}x, box {c['box']+1}/5 — data is freshly generated, "
               f"the old answer won't fit")

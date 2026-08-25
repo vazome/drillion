@@ -11,7 +11,33 @@ META = {"topic": 84, "title": "DRILL: health-check a URL list in parallel",
 
 
 def solve(urls, get, timeout, max_workers):
-    """Check every URL and report one verdict each.
+    """WHY: A company runs dozens of small services, each with a health
+    page. Every few minutes a monitor has to ask all of them "are you
+    alive?" and produce one verdict per service. Asked one at a time, a
+    single frozen host makes the whole round take minutes; asked all at once
+    with a time limit on each, it takes seconds. One dead host must not stop
+    the report for the others.
+
+    YOU GET: `urls` — a list of web addresses as strings, like
+    ["http://a.svc/health", "http://b.svc/health"].
+
+    `get` — a function that fetches one address: you call it as get(url,
+    timeout=...) and it returns a status number like 200, or raises an error
+    when the host is down or too slow. The test hands you a fake that only
+    pretends; no network is used.
+
+    `timeout` — seconds to allow for one fetch, like 2.0. You must pass it
+    to get every time.
+
+    `max_workers` — a whole number, like 4: how many fetches may run at the
+    same time.
+
+    YOU RETURN: a dictionary mapping each address to one word: "healthy"
+    (status 200 to 299), "unhealthy" (any other status) or "error" (the
+    fetch raised).
+
+    ─── exact rules ───
+    Check every URL and report one verdict each.
 
     `get` is the injected HTTP client, standing in for requests.get:
     get(url, timeout=...) returns an integer status code, or raises — dead
@@ -39,18 +65,18 @@ def solve(urls, get, timeout, max_workers):
 
 
 HINTS = [
-    "Build it inside out. Write the function that handles ONE url first: it "
+    ("Build it inside out. Write the function that handles ONE url first: it "
     "has three outcomes, and two of them come out of the same call — a number "
     "you have to classify, or an exception you have to catch. Only once that "
     "is right do you wrap a pool around it. Deciding where the try goes is "
-    "the design step: around the one call that can fail, not around the loop.",
-    "def one(url): try status = get(url, timeout=timeout), except Exception "
+    "the design step: around the one call that can fail, not around the loop."),
+    ("def one(url): try status = get(url, timeout=timeout), except Exception "
     "return (url, 'error'), else return (url, 'healthy' if 200 <= status < 300 "
     "else 'unhealthy'). Returning pairs is deliberate — then "
     "`with ThreadPoolExecutor(max_workers=max_workers) as pool:` and "
     "dict(pool.map(one, urls)) builds the whole result in one line. Leaving "
-    "the with block waits for every thread to finish.",
-    "Different data, same wiring:\n"
+    "the with block waits for every thread to finish."),
+    ("Different data, same wiring:\n"
     "    from concurrent.futures import ThreadPoolExecutor\n"
     "    def parse(x):\n"
     "        try:\n"
@@ -61,7 +87,7 @@ HINTS = [
     "        print(dict(pool.map(parse, ['1', 'two', '3'])))\n"
     "    # {'1': 1, 'two': None, '3': 3}\n"
     "The per-item function swallows its own failure, so the pool never sees "
-    "an exception and the batch always completes.",
+    "an exception and the batch always completes."),
 ]
 
 
@@ -104,7 +130,7 @@ def _reference(urls, get, timeout, max_workers):
     def one(url):
         try:
             status = get(url, timeout=timeout)
-        except Exception:
+        except Exception:  # noqa: BLE001 — any failure is 'error'
             return url, "error"
         return url, "healthy" if 200 <= status < 300 else "unhealthy"
 

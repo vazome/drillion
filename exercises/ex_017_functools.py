@@ -7,7 +7,23 @@ META = {"topic": 17, "title": "functools — lru_cache proven by counting, wraps
 
 
 def solve(fn):
-    """Return a memoised version of fn that still looks like fn.
+    """WHY: A pricing function is slow, and a billing report calls it thousands
+    of times with only a handful of different inputs. The same answer is
+    recomputed over and over. You want to remember each answer the first
+    time and reuse it after that. At the same time, wrapping the function
+    must not change its name or description, or the logs and error messages
+    will start naming a function that does not exist.
+
+    YOU GET: `fn` — a function that takes one value and always gives the
+    same answer for the same input, like cost(3). The test creates it and
+    hands it to you; you never build it yourself.
+
+    YOU RETURN: a wrapped version of `fn` that gives the same answers, runs
+    the real `fn` only once per distinct input, and still reports the
+    original name and docstring.
+
+    ─── exact rules ───
+    Return a memoised version of fn that still looks like fn.
 
     fn takes one hashable argument and is pure: same input, same output. Return
     a wrapper where:
@@ -33,20 +49,20 @@ def solve(fn):
 
 
 HINTS = [
-    "Memoising is a dict from arguments to results, and you have written that "
+    ("Memoising is a dict from arguments to results, and you have written that "
     "before by hand. The point of this drill is that you should not: functools "
     "has it, one line, thread-safe, with a hit/miss counter attached. The "
     "second half of the drill is the tax every wrapper pays — the wrapper is a "
     "different function object from the one it replaced, so it arrives with the "
-    "wrong identity unless you fix it.",
-    "from functools import lru_cache. lru_cache(maxsize=None)(fn) returns the "
+    "wrong identity unless you fix it."),
+    ("from functools import lru_cache. lru_cache(maxsize=None)(fn) returns the "
     "cached wrapper — that is the decorator applied as a plain call, which is "
     "all @lru_cache(maxsize=None) means. functools.cache is the same thing "
     "under a shorter name. Either one calls functools.wraps for you, so "
     "__name__ and __doc__ survive without extra work. If you would rather "
     "hand-roll the dict, you must put @wraps(fn) on your inner function "
-    "yourself or the name check fails.",
-    "Different data — squaring, with the real calls logged:\n"
+    "yourself or the name check fails."),
+    ("Different data — squaring, with the real calls logged:\n"
     "    from functools import lru_cache, wraps\n"
     "\n"
     "    hits = []\n"
@@ -67,7 +83,7 @@ HINTS = [
     "            return f(*a, **kw)\n"
     "        return inner\n"
     "Only cache pure functions. Cache something that reads a file or a clock "
-    "and you have built a bug that only shows up in production.",
+    "and you have built a bug that only shows up in production."),
 ]
 
 

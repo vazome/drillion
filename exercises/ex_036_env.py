@@ -11,7 +11,24 @@ TRUTHY = {"1", "true", "yes", "on"}      # given — do not edit
 
 
 def solve():
-    """Read this program's config out of the environment and return it.
+    """WHY: A service runs inside a container. Operators change its port,
+    timeout, debug mode and region by setting environment variables (named
+    settings the operating system hands to a process at start) instead of
+    editing files. Some settings have sensible defaults; the database
+    address does not, and booting against a guessed database is an incident
+    waiting to happen. You write the startup code that reads them all and
+    converts them from text to the right types.
+
+    YOU GET: nothing — you build the thing from scratch. The test sets the
+    environment variables before calling you; you read them.
+
+    YOU RETURN: a dict with the keys "port", "timeout", "debug", "region"
+    and "database_url", typed as described in the rules below. If
+    DATABASE_URL is not set you do not return at all: the lookup must fail
+    with a KeyError that you let escape.
+
+    ─── exact rules ───
+    Read this program's config out of the environment and return it.
 
     Takes no arguments: the environment IS the input. Read os.environ.
 
@@ -39,16 +56,16 @@ def solve():
 
 
 HINTS = [
-    "os.environ is a plain dict-like object of strings. Two ways to read from "
+    ("os.environ is a plain dict-like object of strings. Two ways to read from "
     "it, and the difference is the whole exercise: the method that takes a "
     "fallback never fails, square brackets fail loudly. Optional settings want "
     "the first, required settings want the second. Nothing in there is ever an "
-    "int, a float or a bool — every value is a string, including \"0\".",
-    "os.environ.get(NAME, default) returns a string, so wrap it: "
+    "int, a float or a bool — every value is a string, including \"0\"."),
+    ("os.environ.get(NAME, default) returns a string, so wrap it: "
     "int(os.environ.get('APP_PORT', '8080')). For the bool there is no builtin "
     "parser — lowercase the string and test membership in TRUTHY. For the "
-    "required one use os.environ['DATABASE_URL'] with no try/except.",
-    "Different program, same shape:\n"
+    "required one use os.environ['DATABASE_URL'] with no try/except."),
+    ("Different program, same shape:\n"
     "    import os\n"
     "    cfg = {\n"
     "        'host': os.environ.get('SMTP_HOST', 'localhost'),\n"
@@ -56,7 +73,7 @@ HINTS = [
     "        'tls': os.environ.get('SMTP_TLS', 'no').lower() in {'1', 'true', 'yes', 'on'},\n"
     "        'password': os.environ['SMTP_PASSWORD'],   # required, no default\n"
     "    }\n"
-    "Defaults for what you can guess, a hard failure for what you cannot.",
+    "Defaults for what you can guess, a hard failure for what you cannot."),
 ]
 
 

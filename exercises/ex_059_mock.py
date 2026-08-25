@@ -9,7 +9,28 @@ META = {"topic": 59, "title": "mocking — patch where it is used, then read the
 
 
 def solve(version, host):
-    """Test run_deploy without letting send_alert touch the network.
+    """WHY: The deploy script has a step that posts an alert to the company
+    chat when a deploy finishes. You need to test that step in CI, but a
+    test that really posts to chat is slow, needs real credentials, and
+    spams colleagues on every test run. Instead you temporarily swap the
+    real "send" function for a stand-in that just records what it was asked
+    to send, run the code, read the recording, and put the real function
+    back. Both functions live at the bottom of this file; you write the
+    test.
+
+    YOU GET: `version` — a string like "v2.1.0".
+    `host` — a string like "hooks.internal:443".
+    The test creates both. The real send_alert in this file raises an error
+    if it is ever truly called, which is how the test proves you swapped it
+    out.
+
+    YOU RETURN: a dict with four keys: "result" (what run_deploy returned),
+    "calls" (how many times the stand-in was called), "url" (the first
+    argument it received) and "payload" (the second argument). The real
+    send_alert must be back in place by the time you return.
+
+    ─── exact rules ───
+    Test run_deploy without letting send_alert touch the network.
 
     Two functions live at the bottom of this file. send_alert is the
     real call — it raises RuntimeError if it ever actually runs.
@@ -53,19 +74,19 @@ def solve(version, host):
 
 
 HINTS = [
-    "A Mock is a stand-in that answers any attribute you ask for and records "
+    ("A Mock is a stand-in that answers any attribute you ask for and records "
     "every call it receives. patch swaps one in for a real name for the "
     "length of a block and puts the original back afterwards. The part worth "
     "slowing down over is which name gets swapped: the one the code under "
     "test resolves at call time, which is not always where the function was "
-    "written.",
-    "from unittest.mock import patch, then `with patch(TARGET) as fake:` "
+    "written."),
+    ("from unittest.mock import patch, then `with patch(TARGET) as fake:` "
     "where TARGET is the string 'module.attribute' — inside this file "
     "f'{__name__}.send_alert' builds it. Set fake.return_value before "
     "calling run_deploy, since run_deploy reads a key off the reply. "
     "Afterwards fake.call_count and fake.call_args carry the recording; "
-    "call_args.args is the tuple of positional arguments.",
-    "Different data — patching a clock that another module imported:\n"
+    "call_args.args is the tuple of positional arguments."),
+    ("Different data — patching a clock that another module imported:\n"
     "    # app.py:  from time import time      <- app now owns a name 'time'\n"
     "    #          def stamp():\n"
     "    #              return f'at {time()}'\n"
@@ -77,7 +98,7 @@ HINTS = [
     "        print(fake.call_args)    # call()\n"
     "    print(stamp())               # at 1786... the real clock is back\n"
     "Same three beats as yours: swap the name the caller uses, configure the "
-    "return, read the recording.",
+    "return, read the recording."),
 ]
 
 

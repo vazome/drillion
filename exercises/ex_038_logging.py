@@ -9,7 +9,27 @@ META = {"topic": 38, "title": "logging — levels, a formatter, a custom handler
 
 
 def solve(name, level, messages):
-    """Set up one logger and capture what it emits, printing nothing.
+    """WHY: A background service writes hundreds of messages a minute. In
+    production the operators want only warnings and errors; while debugging
+    they want everything — and they want to switch between the two with one
+    setting, not a code change. The messages must also go somewhere you
+    control (a file, a log system, or here a plain list the test can
+    inspect) in one consistent format. You wire up one such logger.
+
+    YOU GET: `name` — a string naming the logger, like "drill38.0.solve".
+    The test creates it and hands it to you; you never build it yourself.
+
+    YOU GET: `level` — a whole number meaning "keep messages at this
+    severity or higher", like logging.WARNING.
+
+    YOU GET: `messages` — a list of (severity name, text) pairs, like
+    [("INFO", "starting"), ("ERROR", "disk full")].
+
+    YOU RETURN: a list of strings — the formatted messages that got past the
+    level filter, in order, like ["ERROR:disk full"].
+
+    ─── exact rules ───
+    Set up one logger and capture what it emits, printing nothing.
 
         name      a unique logger name, e.g. "drill38.0.solve"
         level     a level as an int, e.g. logging.WARNING
@@ -38,20 +58,20 @@ def solve(name, level, messages):
 
 
 HINTS = [
-    "Three separate objects, and mixing them up is the usual beginner failure. "
+    ("Three separate objects, and mixing them up is the usual beginner failure. "
     "The logger is a named thing you fetch, and it decides which records pass "
     "its level. The handler decides where a surviving record goes — a file, "
     "syslog, or in this case a list. The formatter decides what it looks like "
     "as text. Loggers are also a tree: by default a record travels up to the "
     "root and gets emitted again there, which is why one flag exists to stop "
-    "it.",
-    "Subclass logging.Handler and override emit(self, record); inside, "
+    "it."),
+    ("Subclass logging.Handler and override emit(self, record); inside, "
     "self.format(record) gives you the formatted string. Then: "
     "logging.getLogger(name), .setLevel(level), handler.setFormatter(...), "
     ".addHandler(handler), .propagate = False. To log at a level you only know "
     "as a string, getattr(logging, 'INFO') gives you the int and "
-    "logger.log(int, text) takes it.",
-    "Different data, same wiring:\n"
+    "logger.log(int, text) takes it."),
+    ("Different data, same wiring:\n"
     "    import logging\n"
     "    seen = []\n"
     "\n"
@@ -68,7 +88,7 @@ HINTS = [
     "    log.debug('opening socket')\n"
     "    log.log(getattr(logging, 'WARNING'), 'slow disk')\n"
     "    print(seen)          # ['WARNING|slow disk']\n"
-    "The debug line was dropped by the logger's level, not by the handler.",
+    "The debug line was dropped by the logger's level, not by the handler."),
 ]
 
 

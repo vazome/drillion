@@ -2,7 +2,6 @@
 
 import requests
 import responses
-
 from _lib import rng
 
 META = {"topic": 51, "title": "requests.Session — shared headers, reused connection",
@@ -10,7 +9,30 @@ META = {"topic": 51, "title": "requests.Session — shared headers, reused conne
 
 
 def solve(base_url, token, agent, names):
-    """Ask one API about several services, over a single Session.
+    """WHY: A health-check bot asks an internal status API "how is the api? how
+    is the db? how is the cache?" every minute, one request per service.
+    Every request must carry the same secret token and the same label that
+    names your program (the User-Agent). Done the naive way, each request
+    opens a fresh connection to the server and repeats the headers, which
+    is slow and is exactly where "one call forgot the token" bugs come from.
+    The ask: set up one reusable client with the shared headers configured
+    once, then send all the requests through it.
+
+    YOU GET: `base_url` — a string like "https://ops.example.com".
+    `token` — a string secret like "tok-4f".
+    `agent` — a string label like "deploybot/1.0" naming your program to
+    the server.
+    `names` — a list of service names like ["api", "db"].
+    The test points the requests library at a fake server and spies on the
+    client object, so nothing real is contacted; it checks that every
+    request went through the one client you hand back.
+
+    YOU RETURN: a pair (tuple): first the reusable client object you used
+    (a requests Session), then a dict of service name to its status string,
+    like {"api": "healthy", "db": "degraded"}.
+
+    ─── exact rules ───
+    Ask one API about several services, over a single Session.
 
     Build a requests.Session, set the two headers every call needs on
     the Session itself, then GET one url per name, in the order given:
@@ -54,18 +76,18 @@ def solve(base_url, token, agent, names):
 
 
 HINTS = [
-    "A Session is a client you keep, not a call you make. Two things live on "
+    ("A Session is a client you keep, not a call you make. Two things live on "
     "it: state that should apply to every request (headers, cookies, auth) and "
     "the connection pool underneath. requests.get is a one-shot wrapper that "
     "builds one, uses it once, and drops it — which is why it cannot reuse a "
     "connection and cannot remember your token. Note what does NOT live on the "
-    "session: anything about an individual call, timeout included.",
-    "s = requests.Session(), then s.headers.update({...}) with both header "
+    "session: anything about an individual call, timeout included."),
+    ("s = requests.Session(), then s.headers.update({...}) with both header "
     "names. After that s.get(url, timeout=...) behaves like requests.get but "
     "merges the session headers in for you. Loop over names, build the url "
     "with an f-string, raise_for_status, and collect r.json()['status'] into a "
-    "dict. Return (s, that_dict) — a plain tuple, session first.",
-    "Different data — one session against a paste service:\n"
+    "dict. Return (s, that_dict) — a plain tuple, session first."),
+    ("Different data — one session against a paste service:\n"
     "    s = requests.Session()\n"
     "    s.headers.update({'X-Api-Key': 'k-99', 'User-Agent': 'linter/2.1'})\n"
     "    out = {}\n"
@@ -76,7 +98,7 @@ HINTS = [
     "    print(out)                  # {'a1': 'python', 'b2': 'go'}\n"
     "    print(s.headers['X-Api-Key'])   # k-99, still set for the next call\n"
     "Same shape as yours: configure once above the loop, then the loop only "
-    "does the part that changes.",
+    "does the part that changes."),
 ]
 
 

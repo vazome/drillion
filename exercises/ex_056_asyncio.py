@@ -10,7 +10,26 @@ META = {"topic": 56, "title": "asyncio — gather, don't queue", "tier": 4,
 
 
 def solve():
-    """Return an ASYNC function `fetch_all(worker, jobs)` where:
+    """WHY: A status page must fetch the state of a dozen services before it
+    can render. Each fetch is mostly waiting on the network. If the code
+    waits for service 1 to answer before it even asks service 2, the page
+    takes the sum of all the waits; asking everyone at once and then
+    collecting the answers takes only the slowest single wait. The team's
+    code is written in Python's async style, and you are asked to write the
+    "ask everyone at once, collect the answers in order" helper.
+
+    YOU GET: nothing — you build the thing from scratch. Your solve()
+    returns a helper; the test then calls that helper with its own `worker`
+    (an async stand-in that pauses and returns a value) and a list of job
+    ids. No real service is contacted.
+
+    YOU RETURN: the helper function itself (an async function that takes a
+    worker and a list of jobs), not the result of running it. When the test
+    runs your helper, every job must start before any job finishes, and the
+    results must come back in the same order as the jobs.
+
+    ─── exact rules ───
+    Return an ASYNC function `fetch_all(worker, jobs)` where:
 
       - `worker` is an async function: `await worker(job)` returns a result
       - `jobs` is a list of job ids
@@ -31,14 +50,14 @@ def solve():
 
 
 HINTS = [
-    "`await worker(j)` inside a plain for-loop finishes job 1 completely "
+    ("`await worker(j)` inside a plain for-loop finishes job 1 completely "
     "before job 2 even starts — sequential, exactly what async exists to "
-    "avoid. You need to hand ALL the coroutines to the event loop at once.",
-    "Build the list of coroutine objects first — calling worker(j) WITHOUT "
+    "avoid. You need to hand ALL the coroutines to the event loop at once."),
+    ("Build the list of coroutine objects first — calling worker(j) WITHOUT "
     "await creates one without running it. Then look up asyncio.gather: it "
     "takes many awaitables, runs them concurrently, and returns results in "
-    "argument order.",
-    "Different data, same shape:\n"
+    "argument order."),
+    ("Different data, same shape:\n"
     "    import asyncio\n"
     "    async def shout(word):\n"
     "        await asyncio.sleep(0.01)\n"
@@ -46,7 +65,7 @@ HINTS = [
     "    async def all_shouts(words):\n"
     "        return await asyncio.gather(*(shout(w) for w in words))\n"
     "    print(asyncio.run(all_shouts(['hi', 'yo'])))   # ['HI', 'YO']\n"
-    "The * unpacks the coroutines into gather's arguments.",
+    "The * unpacks the coroutines into gather's arguments."),
 ]
 
 

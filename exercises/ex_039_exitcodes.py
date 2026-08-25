@@ -10,7 +10,22 @@ MAX_REPLICAS = 10                                   # given — do not edit
 
 
 def solve(argv):
-    """This is the body of a CLI's main(). `argv` is the argument list with the
+    """WHY: A CI pipeline runs your deploy script and then decides whether to
+    carry on. It cannot read your printed messages; it reads exactly one
+    number, the exit code. Zero means success, anything else means failure,
+    and different numbers let the pipeline tell a usage mistake from a
+    refused deploy. You write the decision part of the deploy command so it
+    hands back the right number for each situation.
+
+    YOU GET: `argv` — a list of strings, the command-line arguments without
+    the program name, like ["deploy", "web", "3"]. The test creates it and
+    hands it to you; you never build it yourself.
+
+    YOU RETURN: a whole number, 0, 1, 2 or 3, as described in the rules
+    below. Do not exit the program and do not print.
+
+    ─── exact rules ───
+    This is the body of a CLI's main(). `argv` is the argument list with the
     program name already stripped, e.g. ["deploy", "web", "3"].
 
     Return an int. Do not call sys.exit, do not print.
@@ -47,19 +62,19 @@ def solve(argv):
 
 
 HINTS = [
-    "A process hands its parent one small integer, and only zero means "
+    ("A process hands its parent one small integer, and only zero means "
     "success. So the interesting design question is not how to print an error, "
     "it is which number each kind of failure gets. Bad usage, bad input and a "
     "refused operation are three different things to whoever is calling you. "
     "Also note what the spec asks for: a function that RETURNS the number, not "
     "one that exits — those are different jobs and only one of them is "
-    "testable.",
-    "A chain of guard clauses, each returning early, in the order the spec "
+    "testable."),
+    ("A chain of guard clauses, each returning early, in the order the spec "
     "lists them. The numeric check is str.isdigit on argv[2] — it is False for "
     "'-1', '3.5' and '', which is what you want here. Unpack the three items "
     "only after you know there are three. int() the count for the last "
-    "comparison.",
-    "A different tool, same shape:\n"
+    "comparison."),
+    ("A different tool, same shape:\n"
     "    import sys\n"
     "\n"
     "    def main(argv):\n"
@@ -74,7 +89,7 @@ HINTS = [
     "\n"
     "    # $ python check.py a.conf b.conf ; echo $?\n"
     "    # 2\n"
-    "One function returns codes, one line turns the code into an exit.",
+    "One function returns codes, one line turns the code into an exit."),
 ]
 
 

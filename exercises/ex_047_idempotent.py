@@ -7,7 +7,27 @@ META = {"topic": 47, "title": "idempotency — apply desired state, safe to re-r
 
 
 def solve(state, desired):
-    """Bring `state` in line with `desired` and report what you changed.
+    """WHY: A service's settings (replica count, image version, debug flag) are
+    applied by a script. That script gets run again and again: after a
+    crash, by an automatic retry, by a colleague at 3am who is not sure it
+    ran. Running it twice must not break anything, and it must only report
+    changes that really happened, so the team can tell genuine drift from
+    noise in the audit log. Your job: compare what is with what should be,
+    change only what differs, and list exactly what you touched.
+
+    YOU GET: `state` — a dict of the settings as they are right now, like
+    {"replicas": "2", "debug": "on"}.
+    `desired` — a dict of how the settings should be, like {"replicas": "3",
+    "debug": None}; a value of None means "this setting must not exist".
+    The test creates both and hands them to you.
+
+    YOU RETURN: a pair (tuple) of two things: a new dict with the corrected
+    settings, and a sorted list of short strings saying what you did, like
+    ["remove debug", "update replicas"]. Running your function again on its
+    own output must give the same settings and an empty list.
+
+    ─── exact rules ───
+    Bring `state` in line with `desired` and report what you changed.
 
     `state` is the resource as it is right now: a dict of key -> value.
     `desired` is how it should look: key -> wanted value, where the value
@@ -43,16 +63,16 @@ def solve(state, desired):
 
 
 HINTS = [
-    "The whole exercise is the comparison before the write. Code that just "
+    ("The whole exercise is the comparison before the write. Code that just "
     "assigns every desired key produces the right state but reports a change "
     "every single run, so nobody can tell a real drift from noise. Second "
     "trap: writing into the dict you were given means the caller's 'before' "
-    "is gone and you can no longer diff against it.",
-    "Start with new = dict(state) and changes = []. Loop over "
+    "is gone and you can no longer diff against it."),
+    ("Start with new = dict(state) and changes = []. Loop over "
     "desired.items(). Three tests in order: want is None, then key not in "
     "new, then new[key] != want. Removal is del new[key] or new.pop(key). "
-    "Return (new, sorted(changes)) so the order never depends on dict order.",
-    "Different data — reconciling feature flags:\n"
+    "Return (new, sorted(changes)) so the order never depends on dict order."),
+    ("Different data — reconciling feature flags:\n"
     "    have = {'tls': 'on', 'logs': 'debug'}\n"
     "    want = {'tls': 'on', 'retries': '3'}\n"
     "    out, log = dict(have), []\n"
@@ -66,7 +86,7 @@ HINTS = [
     "    print(out)          # {'tls': 'on', 'logs': 'debug', 'retries': '3'}\n"
     "    print(sorted(log))  # ['add retries']\n"
     "'logs' survives because want never mentions it, and 'tls' logs nothing "
-    "because it already matched. Yours adds the None-means-absent branch.",
+    "because it already matched. Yours adds the None-means-absent branch."),
 ]
 
 

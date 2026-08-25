@@ -1,15 +1,36 @@
 """The dict-of-runnables shape: one input fans out into several named fields."""
 
-from langchain_core.runnables import Runnable, RunnableLambda, RunnablePassthrough
-
 from _lib import rng
+from langchain_core.runnables import Runnable, RunnableLambda, RunnablePassthrough
 
 META = {"topic": 89, "title": "LCEL — a dict of runnables fans one input out",
         "tier": 4, "minutes": 20, "prereqs": [88]}
 
 
 def solve(retrieve, render):
-    """This is the shape that makes real LangChain code unreadable at first:
+    """WHY: LangChain is a library for wiring steps together around an AI
+    model. A common pattern at companies is "answer a question using our own
+    documents": the question goes in, related documents are looked up, and
+    both the question and the documents are handed to a template that writes
+    the final text. So one input has to reach several steps at once, and
+    their results have to be collected under names. This exercise builds
+    exactly that fan-out.
+
+    YOU GET: `retrieve` — a function: give it a question string and it
+    returns a list of matching document strings. The test hands you a fake
+    that searches a tiny in-memory list; nothing real is contacted.
+
+    `render` — a function: give it a dictionary of named fields and it
+    returns the final string. The test's fake writes down every dictionary
+    it receives so the test can check the field names.
+
+    YOU RETURN: the chain itself, not a result. When the test calls it with
+    a question, it must call render with a dictionary holding exactly the
+    keys "question", "context" and "n_docs", and give back whatever render
+    returned.
+
+    ─── exact rules ───
+    This is the shape that makes real LangChain code unreadable at first:
 
         {"context": ..., "question": RunnablePassthrough()} | render
 
@@ -51,17 +72,17 @@ def solve(retrieve, render):
 
 
 HINTS = [
-    "The confusing part is that the dict is not data being passed along — the "
+    ("The confusing part is that the dict is not data being passed along — the "
     "dict IS the step, and its values are steps too. Whatever went into the "
     "dict step goes into every one of its values, and the outputs get "
     "reassembled under the same keys. Sketch it on paper: one arrow in, three "
-    "arrows out, three results back into one dict, then one arrow onward.",
-    "Build the dict literal first: keys 'question', 'context', 'n_docs'. Use "
+    "arrows out, three results back into one dict, then one arrow onward."),
+    ("Build the dict literal first: keys 'question', 'context', 'n_docs'. Use "
     "RunnablePassthrough() for 'question'. For 'context' you need retrieve "
     "then a join, which is RunnableLambda(retrieve) | RunnableLambda(...) — a "
     "chain nested inside a dict value. 'n_docs' is retrieve then len. Then "
-    "pipe the whole dict into RunnableLambda(render) and return that.",
-    "Different data — one word fanned into three fields:\n"
+    "pipe the whole dict into RunnableLambda(render) and return that."),
+    ("Different data — one word fanned into three fields:\n"
     "    from langchain_core.runnables import RunnableLambda, RunnablePassthrough\n"
     "    show = RunnableLambda(lambda f: f\"{f['word']}/{f['upper']}/{f['size']}\")\n"
     "    chain = {\n"
@@ -71,7 +92,7 @@ HINTS = [
     "    } | show\n"
     "    print(chain.invoke('pod'))    # pod/POD/3\n"
     "Notice 'size' is two steps stacked inside one dict value, and every "
-    "value saw the same 'pod'.",
+    "value saw the same 'pod'."),
 ]
 
 

@@ -7,7 +7,24 @@ META = {"topic": 16, "title": "type hints — read a signature with get_type_hin
 
 
 def solve(fn):
-    """Report three facts about an annotated function's signature.
+    """WHY: You inherit a library of infrastructure functions written by
+    someone who left. Before calling one at 3am you want to know what it
+    expects: the names of its inputs, which ones might be empty (None), and
+    what comes back. The answers are written in the function's own signature
+    as type hints, but stored as plain text. You need to read that text back
+    into something you can check in code, an automated form of reading the
+    docs.
+
+    YOU GET: `fn` — a function object with type hints, like
+    scale(replicas: int, zone: str | None) -> dict. You must not call it.
+    The test creates it and hands it to you; you never build it yourself.
+
+    YOU RETURN: a triple (params, nullable, ret): a dict of input names to
+    their types, a sorted list of the input names that may be None, and the
+    return type.
+
+    ─── exact rules ───
+    Report three facts about an annotated function's signature.
 
     fn is a function you must not call. Its annotations are stored as plain
     strings, because the file it came from starts with
@@ -44,19 +61,19 @@ def solve(fn):
 
 
 HINTS = [
-    "Two separate problems. One: annotations arrive as strings and you need "
+    ("Two separate problems. One: annotations arrive as strings and you need "
     "objects, so something has to evaluate them in the namespace of the module "
     "that defined the function. Two: once you have the objects, you need to ask "
     "of each one 'could this be None' — and a compound type like `str | None` "
-    "has parts you can pull apart, while a plain `int` has none.",
-    "typing.get_type_hints(fn) does the resolving and returns one dict holding "
+    "has parts you can pull apart, while a plain `int` has none."),
+    ("typing.get_type_hints(fn) does the resolving and returns one dict holding "
     "the parameters AND the return, keyed 'return'. Pop that key off first: it "
     "gives you ret and leaves params clean, in declaration order. Then "
     "typing.get_args(t) returns the pieces of a union — (str, NoneType) for "
     "`str | None` — and an empty tuple for anything that is not compound. So a "
     "parameter is nullable when type(None) is in get_args of its annotation. "
-    "sorted() the names at the end.",
-    "Different data — a two-parameter function:\n"
+    "sorted() the names at the end."),
+    ("Different data — a two-parameter function:\n"
     "    import typing\n"
     "\n"
     "    def f(host: str, port: int | None) -> bool: ...\n"
@@ -70,7 +87,7 @@ HINTS = [
     "                                      # parameters only\n"
     "    print(typing.get_args(hints['port']))   # (<class 'int'>, <class 'NoneType'>)\n"
     "    print(typing.get_args(hints['host']))   # ()\n"
-    "Yours does the same over however many parameters it is handed.",
+    "Yours does the same over however many parameters it is handed."),
 ]
 
 
@@ -110,7 +127,7 @@ def _gen(r, nullable_return=False):
     source = _TEMPLATE % (fn_name, params, returns)
 
     namespace = {}
-    exec(compile(source, "<generated>", "exec"), namespace)
+    exec(compile(source, "<generated>", "exec"), namespace)  # noqa: S102 — builds fixture fns
     return namespace[fn_name]
 
 

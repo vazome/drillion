@@ -7,7 +7,24 @@ META = {"topic": 6, "title": "unpacking — star, swap, loop", "tier": 3,
 
 
 def solve(xs, pairs):
-    """xs is a list of numbers (at least 3 long). pairs is a list of
+    """WHY: A deploy pipeline hands you a list of build numbers and a list of
+    tag settings. The release manager needs the pieces named: which build is
+    the first, which is the latest, everything in between, and the tags
+    written as "key=value" lines for a config file. Pulling a list apart into
+    named parts without fiddling with index numbers is a daily Python habit,
+    and interviewers watch for it.
+
+    YOU GET: `xs` — a list of at least 3 numbers like [5, 6, 7].
+    `pairs` — a list of two-word pairs like [("env", "prod"), ("region",
+    "eu")]. The test creates them and hands them to you; you never build them
+    yourself.
+
+    YOU RETURN: a dict with six keys ("first", "rest", "body", "last",
+    "swapped", "lines") holding the named parts of `xs` and the "key=value"
+    lines built from `pairs`.
+
+    ─── exact rules ───
+    xs is a list of numbers (at least 3 long). pairs is a list of
     (key, value) tuples of strings. Return a dict:
 
         "first":   first item of xs
@@ -29,15 +46,15 @@ def solve(xs, pairs):
 
 
 HINTS = [
-    "One starred name on the LEFT of an assignment soaks up 'whatever is "
+    ("One starred name on the LEFT of an assignment soaks up 'whatever is "
     "left over' as a list, and it can sit at either end. Swapping needs no "
     "temp variable because Python builds the whole right-hand side before "
-    "assigning anything.",
-    "Four moves: star-assign with the star last to split off the first item; "
+    "assigning anything."),
+    ("Four moves: star-assign with the star last to split off the first item; "
     "star first to split off the last; on a copy of xs, assign a pair to a "
     "pair to swap the ends; and in the loop header give each pair's two "
-    "slots their own names.",
-    "Different data, same moves:\n"
+    "slots their own names."),
+    ("Different data, same moves:\n"
     "    q = ['mon', 'tue', 'wed', 'thu']\n"
     "    head, *tail = q            # 'mon', ['tue', 'wed', 'thu']\n"
     "    *early, final = q          # ['mon', 'tue', 'wed'], 'thu'\n"
@@ -45,7 +62,7 @@ HINTS = [
     "    a, b = b, a                # a=2, b=1\n"
     "    for k, v in [('cpu', '90'), ('mem', '40')]:\n"
     "        print(k + '=' + v)     # cpu=90  mem=40\n"
-    "Same shapes, collected into your dict.",
+    "Same shapes, collected into your dict."),
 ]
 
 

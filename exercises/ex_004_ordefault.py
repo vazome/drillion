@@ -7,7 +7,24 @@ META = {"topic": 4, "title": "defaults without swallowing 0 and ''", "tier": 3,
 
 
 def solve(port, name):
-    """Apply defaults to two settings and return the tuple (port, name).
+    """WHY: Your deployment script reads settings from a config file. When a
+    setting is missing it should fall back to a sensible default. But
+    "missing" is not the same as "set to zero" or "set to empty": a port of 0
+    means "let the operating system pick a free port", and an empty name is a
+    deliberate choice. A script that treats those real values as missing
+    quietly overrides what the engineer asked for, and that kind of silent
+    override causes confusing outages.
+
+    YOU GET: `port` — either None (not set), 0, or a number like 8080.
+    `name` — either None (not set), "" (empty text), or a word like "api".
+    The test creates them and hands them to you; you never build them
+    yourself.
+
+    YOU RETURN: a pair (port, name) where None has been replaced with the
+    default, and every other value, including 0 and "", comes back untouched.
+
+    ─── exact rules ───
+    Apply defaults to two settings and return the tuple (port, name).
 
         port: if it is None, use 8080. But 0 is a REAL value (it means
               "let the OS pick a free port") and must come through untouched.
@@ -23,18 +40,18 @@ def solve(port, name):
 
 
 HINTS = [
-    "`or` returns the first truthy operand. 0 and '' are falsy, so "
+    ("`or` returns the first truthy operand. 0 and '' are falsy, so "
     "`port or 8080` throws a legitimate 0 away. The question you actually "
-    "want to ask is 'is it None', not 'is it truthy'.",
-    "A conditional expression reads value-if-kept, then the condition, then "
+    "want to ask is 'is it None', not 'is it truthy'."),
+    ("A conditional expression reads value-if-kept, then the condition, then "
     "the fallback: keep the original when it is not None, otherwise the "
-    "default. Write one per setting and return both in a tuple.",
-    "Different data, same trap:\n"
+    "default. Write one per setting and return both in a tuple."),
+    ("Different data, same trap:\n"
     "    retries = 0                # a real setting: 'never retry'\n"
     "    wrong = retries or 3\n"
     "    right = retries if retries is not None else 3\n"
     "    print(wrong, right)        # 3 0\n"
-    "`or` is only safe when falsy values genuinely mean 'unset'.",
+    "`or` is only safe when falsy values genuinely mean 'unset'."),
 ]
 
 

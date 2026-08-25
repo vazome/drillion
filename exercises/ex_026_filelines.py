@@ -7,7 +7,23 @@ META = {"topic": 26, "title": "open() — stream a file line by line", "tier": 3
 
 
 def solve(path):
-    """`path` is a log file. Every line is a LEVEL, a space, then a message:
+    """WHY: The overnight backup job failed. The log file it wrote is huge, far
+    bigger than the machine's memory. Your manager wants only the ERROR
+    messages, in the order they happened, so the team can see what broke
+    first. You must read the file one line at a time, never the whole thing
+    at once, or your own script will crash the box.
+
+    YOU GET: `path` — a string with the location of a log file on disk, like
+    "/tmp/ex026_abc.log". Every line in it is a level word, a space, then a
+    message. The test writes the file and hands you the path; you never
+    build it yourself.
+
+    YOU RETURN: a list of strings — the message part of every ERROR line, in
+    file order, like ["disk full on node-7"]. An empty list if there are no
+    ERROR lines.
+
+    ─── exact rules ───
+    `path` is a log file. Every line is a LEVEL, a space, then a message:
 
         INFO backup ok on node-3
         ERROR disk full on node-7
@@ -26,21 +42,21 @@ def solve(path):
 
 
 HINTS = [
-    "A file object is its own iterator: looping over it gives one line at a "
+    ("A file object is its own iterator: looping over it gives one line at a "
     "time and never holds the whole file. .readlines() builds the entire list "
     "in memory first — fine at 50 MB, fatal at 40 GB. One more thing: every "
-    "line you get still ends with its newline character.",
-    "Three pieces: with plus open(path, encoding='utf-8'), a for loop directly "
+    "line you get still ends with its newline character."),
+    ("Three pieces: with plus open(path, encoding='utf-8'), a for loop directly "
     "over the handle, and per line — strip the newline, test the level with "
     "startswith, cut the level off the front with a slice or split. Append "
-    "matches to a list as you go.",
-    "Different data, same skeleton — summing a column from a huge file:\n"
+    "matches to a list as you go."),
+    ("Different data, same skeleton — summing a column from a huge file:\n"
     "    # each line of sizes.txt looks like: '512 backup.tar'\n"
     "    total = 0\n"
     "    with open('sizes.txt', encoding='utf-8') as f:\n"
     "        for line in f:\n"
     "            total += int(line.split()[0])\n"
-    "Open once, loop the handle, handle each line, never hold the whole file.",
+    "Open once, loop the handle, handle each line, never hold the whole file."),
 ]
 
 

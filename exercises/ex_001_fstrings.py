@@ -7,7 +7,21 @@ META = {"topic": 1, "title": "f-strings — aligned report columns", "tier": 3,
 
 
 def solve(rows):
-    """Each row is (name, value); value is a float. Return ONE string,
+    """WHY: You run the servers for a company. Every month finance asks
+    "how much did each service cost?" and wants it as a neat table they can
+    read at a glance — numbers lined up under each other, commas in the
+    thousands, always two decimals. Ragged numbers get misread; aligned
+    ones don't. Your job is to turn a plain list of (service, cost) into
+    that table.
+
+    YOU GET: `rows` — a list of pairs like [("api", 1234.5), ("db", 7.25)].
+    The test creates it and hands it to you; you never build it yourself.
+
+    YOU RETURN: one string with one line per pair: the name on the left, the
+    cost padded on the right so all costs line up when printed.
+
+    ─── exact rules ───
+    Each row is (name, value); value is a float. Return ONE string,
     lines joined with "\\n", no trailing newline. Per line:
 
       - name left-aligned in a 14-wide column
@@ -25,20 +39,20 @@ def solve(rows):
 
 
 HINTS = [
-    "Everything after the colon inside the braces is a format spec. You need "
+    ("Everything after the colon inside the braces is a format spec. You need "
     "three effects: pad-and-left-align the name, pad-and-right-align the "
     "number, and give the number commas plus fixed decimals. Then join the "
-    "lines.",
-    "The pieces: < left-aligns, > right-aligns, a number is the width, a "
+    "lines."),
+    ("The pieces: < left-aligns, > right-aligns, a number is the width, a "
     "comma turns on thousands separators, .2f fixes two decimals. They stack "
     "in one spec, in that order. Build one f-string per row, then "
-    "'\\n'.join the lot.",
-    "Different data, same shape:\n"
+    "'\\n'.join the lot."),
+    ("Different data, same shape:\n"
     "    for city, pop in [('oslo', 709037), ('york', 202821)]:\n"
     "        print(f'{city:<8}{pop:>12,}')\n"
     "    # oslo         709,037\n"
     "    # york         202,821\n"
-    "For floats, add .2f right after the comma: {v:>12,.2f}.",
+    "For floats, add .2f right after the comma: {v:>12,.2f}."),
 ]
 
 

@@ -7,7 +7,23 @@ META = {"topic": 33, "title": "datetime — strptime, deltas, busiest minute",
 
 
 def solve(lines):
-    """Each line starts with a timestamp, then a request:
+    """WHY: After an outage the incident review asks two questions: how long
+    did the event window last, from the first request to the last, and which
+    minute was the busiest? The web server's access log gives one line per
+    request with a timestamp, but the lines are out of order because several
+    servers' logs were merged. You turn the timestamps into real times you
+    can subtract and count.
+
+    YOU GET: `lines` — a list of strings, each starting with a timestamp,
+    like ["2026-08-12 10:31:04 GET /api/users", ...], in shuffled order. The
+    test creates it and hands it to you; you never build it yourself.
+
+    YOU RETURN: a dict with "span_seconds" (a whole number of seconds from
+    the earliest to the latest line) and "busiest_minute" (a string like
+    "2026-08-12 10:31").
+
+    ─── exact rules ───
+    Each line starts with a timestamp, then a request:
 
         2026-08-12 10:31:04 GET /api/users
 
@@ -27,16 +43,16 @@ def solve(lines):
 
 
 HINTS = [
-    "Strings that look like times are still strings. ISO-shaped ones happen "
+    ("Strings that look like times are still strings. ISO-shaped ones happen "
     "to sort correctly, but you cannot subtract them — the moment the "
     "question is 'how long between', you need real datetime objects. Parse "
-    "everything first; the rest is min, max and one subtraction.",
-    "Slice the first 19 characters, parse with datetime.strptime and the "
+    "everything first; the rest is min, max and one subtraction."),
+    ("Slice the first 19 characters, parse with datetime.strptime and the "
     "given format. Subtracting two datetimes gives a timedelta; its "
     ".total_seconds() is the number you want, wrapped in int. For the busy "
     "minute, strftime each datetime back down to '%Y-%m-%d %H:%M', count "
-    "with Counter, and on a tie prefer the smallest minute string.",
-    "Different data, same moves:\n"
+    "with Counter, and on a tie prefer the smallest minute string."),
+    ("Different data, same moves:\n"
     "    from datetime import datetime\n"
     "    fmt = '%Y-%m-%d %H:%M:%S'\n"
     "    a = datetime.strptime('2026-01-05 09:15:30', fmt)\n"
@@ -44,7 +60,7 @@ HINTS = [
     "    print(int((b - a).total_seconds()))   # 150\n"
     "    print(a.strftime('%Y-%m-%d %H:%M'))   # 2026-01-05 09:15\n"
     "Parse at the edge, compute in datetime-land, format back out only at "
-    "the end.",
+    "the end."),
 ]
 
 
@@ -52,7 +68,7 @@ HINTS = [
 
 def _gen(r):
     from datetime import datetime, timedelta
-    base = datetime(2026, r.randint(1, 12), r.randint(1, 28),
+    base = datetime(2026, r.randint(1, 12), r.randint(1, 28),  # noqa: DTZ001 — naive log times
                     r.randint(0, 22), r.randint(0, 50))
     methods = ["GET", "GET", "POST", "DELETE"]
     paths = ["/api/users", "/health", "/login", "/metrics", "/api/orders"]
@@ -68,7 +84,7 @@ def _gen(r):
 def _reference(lines):
     from collections import Counter
     from datetime import datetime
-    times = [datetime.strptime(l[:19], "%Y-%m-%d %H:%M:%S") for l in lines]
+    times = [datetime.strptime(l[:19], "%Y-%m-%d %H:%M:%S") for l in lines]  # noqa: DTZ007
     counts = Counter(t.strftime("%Y-%m-%d %H:%M") for t in times)
     busiest = min(counts, key=lambda m: (-counts[m], m))
     return {"span_seconds": int((max(times) - min(times)).total_seconds()),

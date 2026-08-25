@@ -7,7 +7,22 @@ META = {"topic": 32, "title": "csv — parse quoted fields correctly", "tier": 3
 
 
 def solve(text):
-    """Parse CSV text into a list of dicts, one per data row.
+    """WHY: Finance exports a spreadsheet of services and their owners as CSV
+    text. Some owner names are written "Last, First" and wrapped in quotes
+    because they contain a comma. A colleague's script that cuts each line
+    at every comma silently garbles those rows and puts the wrong owner on
+    the wrong service. You are asked to parse the export correctly so the
+    cost report is right.
+
+    YOU GET: `text` — one string of CSV text, first line the header, like
+    the example in the rules below. The test creates it and hands it to you;
+    you never build it yourself.
+
+    YOU RETURN: a list of dicts, one per data row, with the keys taken from
+    the header and every value kept as a string.
+
+    ─── exact rules ───
+    Parse CSV text into a list of dicts, one per data row.
 
         'service,owner,cpu\\nauth,"Reyes, Ana",250m\\ncron,priya,100m'
         ->
@@ -25,14 +40,14 @@ def solve(text):
 
 
 HINTS = [
-    "Count the commas on a quoted row: split(',') sees four fields where "
+    ("Count the commas on a quoted row: split(',') sees four fields where "
     "there are three. CSV quoting rules (commas inside quotes don't split, "
     "doubled quotes escape) are exactly what the csv module exists to handle "
-    "— never reimplement them.",
-    "csv.DictReader reads the header row itself and yields one dict per data "
+    "— never reimplement them."),
+    ("csv.DictReader reads the header row itself and yields one dict per data "
     "row. It wants a file-like object, and io.StringIO(text) turns your "
-    "string into one. Wrap the reader in list().",
-    "Different data, same shape:\n"
+    "string into one. Wrap the reader in list()."),
+    ("Different data, same shape:\n"
     "    import csv, io\n"
     "    raw = 'city,motto\\nParis,\"Fluctuat, nec mergitur\"\\nOslo,Blue'\n"
     "    print(list(csv.DictReader(io.StringIO(raw))))\n"
@@ -40,7 +55,7 @@ HINTS = [
     "    #  {'city': 'Oslo', 'motto': 'Blue'}]\n"
     "    print(raw.splitlines()[1].split(','))\n"
     "    # ['Paris', '\"Fluctuat', ' nec mergitur\"']   <- shredded\n"
-    "The reader undid the quotes; the naive split tore the field in half.",
+    "The reader undid the quotes; the naive split tore the field in half."),
 ]
 
 

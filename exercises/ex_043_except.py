@@ -7,7 +7,22 @@ META = {"topic": 43, "title": "try/except — survive bad input", "tier": 3,
 
 
 def solve(rows):
-    """Each row is a string that SHOULD look like "name=42".
+    """WHY: A monitoring agent sends metrics as lines like "cpu=90". Now and
+    then a line is garbage: truncated, missing the equals sign, or with a
+    value that is not a number. A parser that crashes on the first bad line
+    takes the whole dashboard down. The team wants a parser that keeps the
+    good lines and quietly skips the bad ones, but only for the specific
+    errors bad input causes, so real bugs still surface.
+
+    YOU GET: `rows` — a list of strings, like ["cpu=90", "junk", "mem=x",
+    "disk=12"]. The test creates it and hands it to you; you never build it
+    yourself.
+
+    YOU RETURN: a dict from name to whole number for the rows that parsed,
+    like {"cpu": 90, "disk": 12}.
+
+    ─── exact rules ───
+    Each row is a string that SHOULD look like "name=42".
 
     Return {name: number} for every row that parses, silently skipping rows
     that are malformed (no "=", or a right-hand side that isn't a whole number).
@@ -21,12 +36,12 @@ def solve(rows):
 
 
 HINTS = [
-    "Two different things can blow up: splitting a row with no '=' in it, and "
-    "int() on something that isn't a number. Find out what each one raises.",
-    "int('x') raises ValueError. Unpacking 'junk'.split('=') into two names "
+    ("Two different things can blow up: splitting a row with no '=' in it, and "
+    "int() on something that isn't a number. Find out what each one raises."),
+    ("int('x') raises ValueError. Unpacking 'junk'.split('=') into two names "
     "raises ValueError too. So one except clause covers both here — but write "
-    "the name, never a bare except.",
-    "Different data, same shape:\n"
+    "the name, never a bare except."),
+    ("Different data, same shape:\n"
     "    out = {}\n"
     "    for item in ['a:1', 'oops', 'b:2']:\n"
     "        try:\n"
@@ -34,7 +49,7 @@ HINTS = [
     "            out[k] = int(v)\n"
     "        except ValueError:\n"
     "            continue          # skip it, keep going\n"
-    "    print(out)     # {'a': 1, 'b': 2}",
+    "    print(out)     # {'a': 1, 'b': 2}"),
 ]
 
 

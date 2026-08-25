@@ -11,7 +11,22 @@ META = {"topic": 37, "title": "argparse — declare a CLI, get validation free",
 
 
 def solve():
-    """Build and return an argparse.ArgumentParser for a tool called deployctl.
+    """WHY: The team has an internal deploy tool people run from the terminal:
+    deployctl web -r 3 --env prod. It must accept a service name, a replica
+    count, an environment, a dry-run switch and some tags, and it must
+    reject bad input (a typo in the environment, a replica count that is not
+    a number) with a clear message and a non-zero exit. Writing those checks
+    by hand is tedious and buggy; you declare what the arguments are and let
+    the standard library enforce them.
+
+    YOU GET: nothing — you build the thing from scratch.
+
+    YOU RETURN: the parser object itself, not yet used on anything. The test
+    feeds it its own argument lists and checks what it accepts and what it
+    rejects.
+
+    ─── exact rules ───
+    Build and return an argparse.ArgumentParser for a tool called deployctl.
 
     Return the parser itself. Do not parse anything, do not read sys.argv, do
     not print. The test calls parser.parse_args([...]) with its own lists.
@@ -40,19 +55,19 @@ def solve():
 
 
 HINTS = [
-    "An argparse parser is a declaration, not code you step through. Each "
+    ("An argparse parser is a declaration, not code you step through. Each "
     "add_argument line states one argument's name, what it should be converted "
     "to, and what it defaults to. From those lines argparse builds the parsing, "
     "the error messages, the --help output and the exit code. A hand-rolled "
     "loop over sys.argv gets none of that and is the thing an interviewer is "
-    "checking you have outgrown.",
-    "Five add_argument calls on an ArgumentParser. A name without dashes is a "
+    "checking you have outgrown."),
+    ("Five add_argument calls on an ArgumentParser. A name without dashes is a "
     "positional. type=int converts and rejects. default= supplies the fallback. "
     "choices=[...] restricts the allowed values. action='store_true' makes a "
     "flag. nargs='*' collects zero or more values into a list. argparse "
     "converts a leading -- and inner dashes into the attribute name, so "
-    "--dry-run lands on .dry_run.",
-    "A different tool, same moves:\n"
+    "--dry-run lands on .dry_run."),
+    ("A different tool, same moves:\n"
     "    import argparse\n"
     "    p = argparse.ArgumentParser(prog='backupctl')\n"
     "    p.add_argument('bucket')\n"
@@ -63,7 +78,7 @@ HINTS = [
     "    print(p.parse_args(['logs', '-n', '3', '--skip', 'tmp', 'cache']))\n"
     "    # Namespace(bucket='logs', keep=3, mode='full', verbose=False,\n"
     "    #           skip=['tmp', 'cache'])\n"
-    "Return the parser; let the caller do the parsing.",
+    "Return the parser; let the caller do the parsing."),
 ]
 
 

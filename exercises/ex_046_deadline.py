@@ -7,7 +7,30 @@ META = {"topic": 46, "title": "deadlines — poll until ready or time out", "tie
 
 
 def solve(check, now, sleep, timeout, interval):
-    """Wait for a resource to become ready, but never wait forever.
+    """WHY: A deploy script has just asked the cloud to start a new database.
+    The database takes an unknown time to come up: usually a minute,
+    sometimes five, occasionally never (a quota problem, a typo in the
+    config). The next step cannot run until it is ready, so the script must
+    keep looking, pause between looks, and stop with a clear error once a
+    time budget is used up. A script that waits forever blocks the whole
+    pipeline and nobody notices until morning.
+
+    YOU GET: `check` — a function with no arguments that answers "is it
+    ready yet?" with something true or false. The test hands in a stand-in
+    that says no a few times and then yes (or never says yes).
+    `now` — a function with no arguments that returns the current time as a
+    number of seconds. The test hands in a fake clock that starts at 0.
+    `sleep` — a function you call with a number of seconds. The test's fake
+    just moves the fake clock forward by that much; no real waiting.
+    `timeout` — a number like 10: the total seconds you may keep looking.
+    `interval` — a number like 4: how many seconds to pause between looks.
+
+    YOU RETURN: a whole number: how many times you called `check` before it
+    said yes. If the time budget runs out first, do not return anything:
+    raise the built-in TimeoutError instead.
+
+    ─── exact rules ───
+    Wait for a resource to become ready, but never wait forever.
 
     Rules, exactly:
       - Compute the deadline once, up front: deadline = now() + timeout.
@@ -32,14 +55,14 @@ def solve(check, now, sleep, timeout, interval):
 
 
 HINTS = [
-    "Two mistakes to avoid: recomputing the deadline inside the loop (it drifts "
+    ("Two mistakes to avoid: recomputing the deadline inside the loop (it drifts "
     "forever) and checking the clock before the first check() (you always get "
-    "at least one look). Pin down when the clock is read and when you poll.",
-    "One variable for the deadline before the loop, one counter for polls. "
+    "at least one look). Pin down when the clock is read and when you poll."),
+    ("One variable for the deadline before the loop, one counter for polls. "
     "`while now() < deadline:` then check(), return the counter on truthy, "
     "else sleep(interval). After the while, raise TimeoutError — code below a "
-    "while only runs when its condition went false.",
-    "Different data — waiting for a fake queue to drain, budget 6, step 2:\n"
+    "while only runs when its condition went false."),
+    ("Different data — waiting for a fake queue to drain, budget 6, step 2:\n"
     "    t = [0]\n"
     "    queue = [3, 1, 0]          # lengths we will see\n"
     "    stop_at = t[0] + 6\n"
@@ -53,7 +76,7 @@ HINTS = [
     "    else:\n"
     "        print('gave up')\n"
     "    # drained after 3 looks\n"
-    "Yours returns instead of printing, and raises TimeoutError on the give-up path.",
+    "Yours returns instead of printing, and raises TimeoutError on the give-up path."),
 ]
 
 
@@ -101,11 +124,11 @@ def test_solve():
         interval = r.choice([1, 2, 3, 5])
         for k in (r.randint(1, 6), 10 ** 9):  # one likely success, one sure timeout
 
-            def run(fn):
+            def run(fn):  # closes over loop vars; called within this iteration
                 now, sleep = _clock()
-                check, n = _ready_after(k)
+                check, n = _ready_after(k)  # noqa: B023
                 try:
-                    out = ("ok", fn(check, now, sleep, timeout, interval))
+                    out = ("ok", fn(check, now, sleep, timeout, interval))  # noqa: B023
                 except TimeoutError:
                     out = ("timeout", None)
                 return out, n["c"], now()

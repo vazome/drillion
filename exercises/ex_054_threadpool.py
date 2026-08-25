@@ -11,7 +11,25 @@ META = {"topic": 54, "title": "ThreadPoolExecutor — fan out, keep the order",
 
 
 def solve(work, items, workers):
-    """Run work(item) for every item, at most `workers` at a time.
+    """WHY: A morning report needs to ask 200 hosts for their status. Each ask
+    is mostly waiting on the network, about 200ms; done one after another
+    that is 40 seconds, done a few at once it is under a second. But the
+    report must list the rows in the same order as the host list, and you
+    must not fire all 200 at once because the network team set a limit. The
+    ask: run the checks a fixed number at a time and hand back the answers
+    in the original order.
+
+    YOU GET: `work` — a function that takes one item and returns a result.
+    The test hands in a stand-in that pauses briefly and notes which thread
+    it ran on; nothing real is contacted.
+    `items` — a list of items, like ["api-01", "db-07"].
+    `workers` — a whole number like 3: how many may run at the same time.
+
+    YOU RETURN: a real list of results, one per item, in the same order as
+    `items`.
+
+    ─── exact rules ───
+    Run work(item) for every item, at most `workers` at a time.
 
     Return a list of the results in the SAME ORDER as items, no matter
     which call finished first.
@@ -40,17 +58,17 @@ def solve(work, items, workers):
 
 
 HINTS = [
-    "The pool is a context manager, and leaving the `with` block waits for "
+    ("The pool is a context manager, and leaving the `with` block waits for "
     "everything to finish — that is the join you would otherwise write by "
     "hand. Settle one question before you write anything: do you need the "
     "results in input order, or as soon as each one lands. That choice picks "
-    "the API for you.",
-    "from concurrent.futures import ThreadPoolExecutor. Then `with "
+    "the API for you."),
+    ("from concurrent.futures import ThreadPoolExecutor. Then `with "
     "ThreadPoolExecutor(max_workers=workers) as pool:` and pool.map(work, "
     "items) — same argument order as the builtin map, results in input "
     "order. It is lazy, so wrap it in list() while you are still inside the "
-    "with block.",
-    "Different data — squaring numbers, both ways:\n"
+    "with block."),
+    ("Different data — squaring numbers, both ways:\n"
     "    from concurrent.futures import ThreadPoolExecutor, as_completed\n"
     "    def sq(n):\n"
     "        return n * n\n"
@@ -63,7 +81,7 @@ HINTS = [
     "        print(sorted(f.result() for f in as_completed(futures)))\n"
     "        # [1, 4, 9] only because of the sorted() — arrival order is not\n"
     "        # promised\n"
-    "map is the short road when input order is what you want.",
+    "map is the short road when input order is what you want."),
 ]
 
 

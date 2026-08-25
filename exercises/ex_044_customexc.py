@@ -19,7 +19,24 @@ class BadValueError(ConfigError):
 
 
 def solve(configs):
-    """Validate a list of service configs. Each config should be a dict with
+    """WHY: A deploy tool reads a list of service configs and applies the good
+    ones. Bad configs must be skipped, but the report has to say exactly
+    what was wrong with each: a missing field, or a field holding a nonsense
+    value. Real tools solve this with a family of related error types: the
+    checks raise the specific one, and the loop catches the whole family
+    with a single handler. Interviewers ask for exactly this design.
+
+    YOU GET: `configs` — a list of dicts, like [{"name": "web", "replicas":
+    3}, {"name": "db"}]. The test creates it and hands it to you; you never
+    build it yourself. The error classes ConfigError, MissingKeyError and
+    BadValueError are already defined above.
+
+    YOU RETURN: a pair (applied, rejected): applied is a list of the names
+    of good configs; rejected is a list of (position, error class name)
+    pairs.
+
+    ─── exact rules ───
+    Validate a list of service configs. Each config should be a dict with
     a "name" (string) and "replicas" (an int, 0 or more).
 
     For each config, in order:
@@ -47,15 +64,15 @@ def solve(configs):
 
 
 HINTS = [
-    "Raise the most specific class you can; catch the most general one the "
+    ("Raise the most specific class you can; catch the most general one the "
     "caller can handle. Here the checks raise MissingKeyError or BadValueError, "
     "and the loop catches ConfigError — one except clause covers both, and "
-    "plain bugs like TypeError still crash loudly, which you want.",
-    "Inside a for-loop over enumerate(configs): a try block that checks "
+    "plain bugs like TypeError still crash loudly, which you want."),
+    ("Inside a for-loop over enumerate(configs): a try block that checks "
     "'name' then 'replicas' with `in`, raising MissingKeyError(key), then "
     "checks isinstance(value, int) and value >= 0, raising BadValueError. "
-    "In `except ConfigError as err`, append (i, type(err).__name__).",
-    "Different data, same shape:\n"
+    "In `except ConfigError as err`, append (i, type(err).__name__)."),
+    ("Different data, same shape:\n"
     "    class ParseError(Exception): pass\n"
     "    class EmptyLine(ParseError): pass\n"
     "\n"
@@ -71,7 +88,7 @@ HINTS = [
     "            print('skipped:', type(err).__name__)\n"
     "    # HI\n"
     "    # skipped: EmptyLine\n"
-    "The raiser names the exact problem; the catcher only knows the family.",
+    "The raiser names the exact problem; the catcher only knows the family."),
 ]
 
 

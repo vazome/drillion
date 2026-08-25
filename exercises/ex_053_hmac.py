@@ -10,7 +10,29 @@ META = {"topic": 53, "title": "webhooks — verify an HMAC signature",
 
 
 def solve(secret, body, signature):
-    """Decide whether this webhook really came from someone holding the secret.
+    """WHY: Your CI pipeline has a web address that GitHub calls every time
+    code is pushed (a webhook), and that call triggers a deploy. Anyone on
+    the internet can send a request to that address. To prove a message is
+    really from GitHub, both sides share a secret; GitHub computes a
+    fingerprint of the message using that secret and sends it in a header.
+    You recompute the fingerprint yourself and compare. Skip the check and
+    anyone can trigger deploys; compare carelessly and an attacker can guess
+    the fingerprint one character at a time by timing your replies. The
+    security team asks you to write the check.
+
+    YOU GET: `secret` — bytes: the shared secret both sides know, like
+    b"s3cr3t".
+    `body` — bytes: the exact raw message as it arrived, like
+    b'{"action":"deploy"}'.
+    `signature` — a string from the request header, normally "sha256="
+    followed by 64 hex characters. The test also hands in junk, truncated,
+    wrong and empty values.
+
+    YOU RETURN: True if the signature proves the message is genuine, False
+    in every other case. Never raise an error.
+
+    ─── exact rules ───
+    Decide whether this webhook really came from someone holding the secret.
 
     Arguments:
       - secret: bytes, the shared secret both sides know.
@@ -51,17 +73,17 @@ def solve(secret, body, signature):
 
 
 HINTS = [
-    "You are not decrypting anything. HMAC is one-way: the same secret over "
+    ("You are not decrypting anything. HMAC is one-way: the same secret over "
     "the same bytes always gives the same digest, so you recompute it and "
     "see whether it matches what the caller claimed. Two details do the "
     "damage here — the header is not bare hex, and the comparison itself "
-    "has a security requirement.",
-    "hmac.new(secret, body, hashlib.sha256).hexdigest() gives you 64 "
+    "has a security requirement."),
+    ("hmac.new(secret, body, hashlib.sha256).hexdigest() gives you 64 "
     "lowercase hex characters. Use str.startswith for the 'sha256=' label "
     "and slice past it, or signature.split('=', 1). Finish with "
     "hmac.compare_digest(claimed, computed) — it takes two str or two "
-    "bytes, returns a bool, and does not raise on a length mismatch.",
-    "Different data — signing a tiny message:\n"
+    "bytes, returns a bool, and does not raise on a length mismatch."),
+    ("Different data — signing a tiny message:\n"
     "    import hmac, hashlib\n"
     "    key, msg = b'key', b'ping'\n"
     "    sig = hmac.new(key, msg, hashlib.sha256).hexdigest()\n"
@@ -71,7 +93,7 @@ HINTS = [
     "    print(hmac.new(key, msg + b'!', hashlib.sha256).hexdigest()[:8])\n"
     "    #  a totally different digest — one byte changes everything\n"
     "Your version does the same three moves after peeling the label off "
-    "the header.",
+    "the header."),
 ]
 
 

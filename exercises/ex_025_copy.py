@@ -7,7 +7,24 @@ META = {"topic": 25, "title": "shallow vs deep copy — predict the damage", "ti
 
 
 def solve(cfg):
-    """Predict, without running it, what this snippet leaves behind:
+    """WHY: A classic interview question and a real production bug. A script
+    takes the base config for one environment, copies it to make a second
+    one, and edits the copy. Weeks later someone notices the ORIGINAL config
+    changed too: a server added to staging showed up in prod. The copy only
+    duplicated the outer container; the lists inside were still shared
+    between both. You are asked to predict, line by line, which edits leak
+    into which dict.
+
+    YOU GET: `cfg` — a dict with two keys, like {"servers": ["web-1",
+    "db-2"], "ports": [80, 443]}. The test creates it and hands it to you;
+    you never build it yourself.
+
+    YOU RETURN: a tuple of three dicts (cfg, shallow, deep) showing what
+    each one looks like AFTER the snippet in the rules below has run. You
+    work out the answer in your head and build the three dicts by hand.
+
+    ─── exact rules ───
+    Predict, without running it, what this snippet leaves behind:
 
         import copy
         shallow = cfg.copy()
@@ -27,15 +44,15 @@ def solve(cfg):
 
 
 HINTS = [
-    "cfg.copy() copies only the outer dict — the lists inside are the very "
+    ("cfg.copy() copies only the outer dict — the lists inside are the very "
     "same objects, now reachable from two dicts. deepcopy clones all the way "
     "down. For each of the three mutations, ask: which actual object does "
-    "this line touch, and who else can see that object.",
-    "shallow['servers'] is the same list object as cfg['servers'], so an "
+    "this line touch, and who else can see that object."),
+    ("shallow['servers'] is the same list object as cfg['servers'], so an "
     "append through one shows through the other. Assigning a brand-new key "
     "on shallow touches only the outer dict, which is NOT shared. deep "
-    "shares nothing at all. Now apply that to the three lines.",
-    "Different data, same mechanics:\n"
+    "shares nothing at all. Now apply that to the three lines."),
+    ("Different data, same mechanics:\n"
     "    import copy\n"
     "    a = {'x': [1, 2]}\n"
     "    b = a.copy()\n"
@@ -44,7 +61,7 @@ HINTS = [
     "    print(a)   # {'x': [1, 2, 3]}   b's append leaked into a\n"
     "    print(b)   # {'x': [1, 2, 3]}\n"
     "    print(c)   # {'x': [1, 2]}      the deep copy stayed clean\n"
-    "Same reasoning here, just three mutations instead of one.",
+    "Same reasoning here, just three mutations instead of one."),
 ]
 
 

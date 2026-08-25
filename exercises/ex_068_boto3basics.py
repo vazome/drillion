@@ -4,16 +4,33 @@ import contextlib
 import os
 
 import boto3
-from moto import mock_aws
-
 from _lib import rng
+from moto import mock_aws
 
 META = {"topic": 68, "title": "boto3 — client vs resource, and paginators",
         "tier": 3, "minutes": 20, "prereqs": []}
 
 
 def solve(s3, bucket):
-    """Report every object in a bucket that is bigger than one page.
+    """WHY: Finance asks "how much is stored in the logs bucket, and what
+    exactly is in it?". AWS answers list requests one page at a time, about
+    a thousand entries per page, and only quietly notes that more exist. A
+    script that reads one page reports a fraction of the bucket, and nobody
+    notices until the bill disagrees with the report. You are asked for the
+    full list of object names and the total size, walking every page.
+
+    YOU GET: `s3` — an AWS S3 client object, the thing you call to talk to
+    the storage service. The test hands in one connected to a fake
+    in-memory AWS (moto), so nothing real is contacted and no money is
+    spent.
+    `bucket` — a string bucket name like "acme-logs-412". It already exists
+    and holds more objects than a single page returns.
+
+    YOU RETURN: a pair (tuple): a sorted list of every object name (strings),
+    and the total size in bytes as a whole number.
+
+    ─── exact rules ───
+    Report every object in a bucket that is bigger than one page.
 
     `s3` is a boto3 S3 *client*: a thin skin over the HTTP API where one
     method call is one request and every answer is a plain dict. The other
@@ -44,18 +61,18 @@ def solve(s3, bucket):
 
 
 HINTS = [
-    "Every AWS list API is paged, and the page size is the service's choice, "
+    ("Every AWS list API is paged, and the page size is the service's choice, "
     "not yours. One list_objects_v2 call returns at most one page and then "
     "quietly tells you, in a field you did not read, that there is more. "
     "Nothing raises. You get a dict, you get Contents, your loop runs — and "
     "your report is missing three quarters of the bucket. Turning MaxKeys up "
-    "does not fix it: S3 clamps it and hands you the same page back.",
-    "boto3 already knows how to do this. Ask the client for a paginator with "
+    "does not fix it: S3 clamps it and hands you the same page back."),
+    ("boto3 already knows how to do this. Ask the client for a paginator with "
     "s3.get_paginator(\"list_objects_v2\"), then call .paginate(Bucket=...) "
     "on it. That gives you an iterable of response dicts, one per page, with "
     "the continuation token threaded through for you. Two loops: pages on the "
-    "outside, page.get(\"Contents\", []) on the inside. Accumulate as you go.",
-    "Different data — every IAM user in an account, same shape:\n"
+    "outside, page.get(\"Contents\", []) on the inside. Accumulate as you go."),
+    ("Different data — every IAM user in an account, same shape:\n"
     "    pager = iam.get_paginator('list_users')\n"
     "    names, oldest = [], None\n"
     "    for page in pager.paginate():\n"
@@ -65,7 +82,7 @@ HINTS = [
     "                oldest = user['CreateDate']\n"
     "    print(len(names), oldest)\n"
     "The operation name changes and the field names change; the two loops and "
-    "the running total do not. Yours adds up Size instead of tracking a date.",
+    "the running total do not. Yours adds up Size instead of tracking a date."),
 ]
 
 
@@ -110,7 +127,7 @@ def _gen(r):
     count = page * r.randint(3, 6) + r.randint(1, page - 1)
     bucket = "{}-{}-{}".format(r.choice(["acme", "globex", "initech"]), prefix,
                                r.randint(100, 999))
-    objects = [("{}/{:05d}{}".format(prefix, i, ext), r.randint(1, 400))
+    objects = [(f"{prefix}/{i:05d}{ext}", r.randint(1, 400))
                for i in range(count)]
     return {"bucket": bucket, "page": page, "objects": objects}
 
