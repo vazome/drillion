@@ -9,72 +9,50 @@ tags: [concurrency, rsample]
 *Reaching for threads on CPU work is the wrong answer that ends a phone screen.*
 
 ## Why
-A colleague brings you a list of jobs they want to speed up: resize
-8 images, call 40 APIs, poll 5000 sensors. Python has three ways to do
-several things at once, and picking the wrong one makes a job no faster
-or even slower. The team wants one simple rule written down so everyone
-picks consistently: heavy calculation gets separate processes, a modest
-number of network waits gets threads, a huge number of waits gets async.
-Interviewers ask for this rule and the reasons behind it.
+A colleague brings you a list of jobs they want to speed up: resize 8 images, call 40 APIs, poll 5000 sensors. Python has three ways to do several things at once, and picking the wrong one makes a job no faster or even slower. The team wants one simple rule written down so everyone picks consistently: heavy calculation gets separate processes, a modest number of network waits gets threads, a huge number of waits gets async. Interviewers ask for this rule and the reasons behind it.
 
 ## You get
-`workloads` — a list of dicts, each like {"kind": "io",
-"count": 40}, where kind is "io" (waiting on network or disk) or "cpu"
-(calculating) and count is how many things there are to do. The test
-creates it and hands it to you.
+`workloads` — a list of dicts, each like `{"kind": "io", "count": 40}`, where kind is `"io"` (waiting on network or disk) or `"cpu"` (calculating) and count is how many things there are to do. The test creates it and hands it to you.
 
 ## You return
-a list of strings, one per workload, in the same order; each
-is "threads", "processes" or "async".
+a list of strings, one per workload, in the same order; each is `"threads"`, `"processes"` or `"async"`.
 
 ## Rules
 Pick the right concurrency tool for each workload.
 
 Each workload is a dict:
 
-```
+```python
 {"kind": "io", "count": 40}     # 40 things to do, all waiting on I/O
 {"kind": "cpu", "count": 8}     # 8 things to do, all number crunching
 ```
 
-Return a list of labels, one per workload, in input order. Each
-label is "threads", "processes" or "async". The rule:
+Return a list of labels, one per workload, in input order. Each label is `"threads"`, `"processes"` or `"async"`. The rule:
 
-  - kind == "cpu"                 -> "processes"
-  - kind == "io" and count < 100  -> "threads"
-  - kind == "io" and count >= 100 -> "async"
+| Workload | Label |
+| --- | --- |
+| `kind == "cpu"` | `"processes"` |
+| `kind == "io"` and `count < 100` | `"threads"` |
+| `kind == "io"` and `count >= 100` | `"async"` |
 
+```python
+solve([{"kind": "cpu", "count": 8},
+       {"kind": "io", "count": 12},
+       {"kind": "io", "count": 5000}])
+# -> ["processes", "threads", "async"]
 ```
-[{"kind": "cpu", "count": 8},
- {"kind": "io", "count": 12},
- {"kind": "io", "count": 5000}]
-->  ["processes", "threads", "async"]
-```
 
-The reasoning behind the rule, which is the part you actually get
-asked for:
+The reasoning behind the rule, which is the part you actually get asked for:
 
-CPU work goes to processes because the GIL lets only one thread run
-Python bytecode at a time. Ten threads doing arithmetic finish no
-sooner than one. Separate processes each get their own interpreter
-and their own lock, so they genuinely run at once — you pay for it
-in startup time and in having to pickle whatever you send across.
+CPU work goes to processes because the GIL lets only one thread run Python bytecode at a time. Ten threads doing arithmetic finish no sooner than one. Separate processes each get their own interpreter and their own lock, so they genuinely run at once — you pay for it in startup time and in having to pickle whatever you send across.
 
-I/O work suits threads because a thread blocked on a socket holds
-the GIL for none of that time. Everything you already have works
-unchanged: requests, boto3, psycopg, all of it.
+I/O work suits threads because a thread blocked on a socket holds the GIL for none of that time. Everything you already have works unchanged: requests, boto3, psycopg, all of it.
 
-Past a hundred or so concurrent operations, threads stop being
-cheap — each one is a real OS thread with its own stack, and the
-scheduler starts costing more than the work. An event loop runs
-thousands of waits on one thread. The catch is that every library
-in the path has to be async-aware; one blocking call inside a
-coroutine freezes the whole loop, which is why "just use async" is
-not automatically the right answer.
+Past a hundred or so concurrent operations, threads stop being cheap — each one is a real OS thread with its own stack, and the scheduler starts costing more than the work. An event loop runs thousands of waits on one thread. The catch is that every library in the path has to be async-aware; one blocking call inside a coroutine freezes the whole loop, which is why "just use async" is not automatically the right answer.
 
 ## Read first
-- https://realpython.com/python-concurrency/  — threads vs processes vs asyncio, when each wins
-- https://docs.python.org/3/library/concurrency.html
+- [Speed up your Python program with concurrency](https://realpython.com/python-concurrency/) — threads vs processes vs asyncio, when each wins
+- [Concurrent execution — the stdlib index](https://docs.python.org/3/library/concurrency.html) — the modules themselves: threading, multiprocessing, concurrent.futures, asyncio
 
 > [!NOTE]
 > **Take-home:** "why async here?"

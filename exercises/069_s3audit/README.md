@@ -10,71 +10,45 @@ practices: [30, 43, 68]
 *The bucket that leaked was never meant to be public; nobody ever looked.*
 
 ## Why
-A security review asks: "which of our storage buckets can anyone on
-the internet read?" Data leaks usually come from a bucket that was never
-meant to be public and that nobody checked. A bucket can be opened two
-separate ways: an access-control list (ACL, a list of who may do what)
-that grants everyone read, or an attached policy document that allows
-everyone. Both must be checked on every bucket, because a script that
-checks one and stops reports "all clear" on a bucket the world is
-reading. You produce the list of exposed bucket names.
+A security review asks: "which of our storage buckets can anyone on the internet read?" Data leaks usually come from a bucket that was never meant to be public and that nobody checked. A bucket can be opened two separate ways: an access-control list (ACL, a list of who may do what) that grants everyone read, or an attached policy document that allows everyone. Both must be checked on every bucket, because a script that checks one and stops reports "all clear" on a bucket the world is reading. You produce the list of exposed bucket names.
 
 ## You get
-`s3` — an AWS S3 client object. The test hands in one connected
-to a fake in-memory AWS (moto) pre-loaded with a mix of private and
-exposed buckets; nothing real is contacted. You are not told the bucket
-names; you ask the client for them.
+`s3` — an AWS S3 client object. The test hands in one connected to a fake in-memory AWS (moto) pre-loaded with a mix of private and exposed buckets; nothing real is contacted. You are not told the bucket names; you ask the client for them.
 
 ## You return
-a sorted list of the names of buckets open to the whole
-internet, with no duplicates; an empty list if none are.
+a sorted list of the names of buckets open to the whole internet, with no duplicates; an empty list if none are.
 
 ## Rules
 Find every bucket in the account that anyone on the internet can read.
 
-`s3` is a boto3 S3 client. You are not told which buckets exist — start
-from `s3.list_buckets()`, whose answer holds "Buckets", a list of dicts
-each with a "Name". A bucket can be exposed two different ways and you
-have to check both.
+`s3` is a boto3 S3 client. You are not told which buckets exist — start from `s3.list_buckets()`, whose answer holds `"Buckets"`, a list of dicts each with a `"Name"`. A bucket can be exposed two different ways and you have to check both.
 
-1. Its ACL. `s3.get_bucket_acl(Bucket=name)` answers with "Grants", a
-   list of dicts shaped {"Grantee": {...}, "Permission": "READ"}. It is
-   public when some grantee has
+1. **Its ACL.** `s3.get_bucket_acl(Bucket=name)` answers with `"Grants"`, a list of dicts shaped `{"Grantee": {...}, "Permission": "READ"}`. It is public when some grantee has
 
-```
-Grantee["URI"] == "http://acs.amazonaws.com/groups/global/AllUsers"
-```
+   ```python
+   Grantee["URI"] == "http://acs.amazonaws.com/groups/global/AllUsers"
+   ```
 
-   Most grantees are the bucket owner and carry no "URI" key at all.
-   A grant to .../groups/global/AuthenticatedUsers is a different group
-   and does NOT count — that is any AWS customer, not the whole internet.
+   Most grantees are the bucket owner and carry no `"URI"` key at all. A grant to `.../groups/global/AuthenticatedUsers` is a different group and does NOT count — that is any AWS customer, not the whole internet.
 
-2. Its bucket policy. `s3.get_bucket_policy(Bucket=name)` answers with
-   "Policy", which is a JSON **string**, not a dict. Parse it and look at
-   its "Statement" list. It is public when some statement has both
-   "Effect": "Allow" and a "Principal" of either the bare string "*" or
-   the dict {"AWS": "*"}. A statement naming a real account is not
-   public, and neither is "Effect": "Deny" — even with Principal "*".
-   A statement list can be longer than one, so check all of them.
+2. **Its bucket policy.** `s3.get_bucket_policy(Bucket=name)` answers with `"Policy"`, which is a JSON **string**, not a dict. Parse it and look at its `"Statement"` list. It is public when some statement has both `"Effect": "Allow"` and a `"Principal"` of either the bare string `"*"` or the dict `{"AWS": "*"}`. A statement naming a real account is not public, and neither is `"Effect": "Deny"` — even with Principal `"*"`. A statement list can be longer than one, so check all of them.
 
-   A bucket with no policy at all does not answer with an empty policy.
-   It raises botocore.exceptions.ClientError, and the code that tells you
-   which failure it was lives at
+   A bucket with no policy at all does not answer with an empty policy. It raises `botocore.exceptions.ClientError`, and the code that tells you which failure it was lives at
 
-```
-exc.response["Error"]["Code"]     # "NoSuchBucketPolicy"
-```
+   ```python
+   exc.response["Error"]["Code"]     # "NoSuchBucketPolicy"
+   ```
 
    Catch that one and move on. Let anything else through.
 
 Return the sorted list of exposed bucket names, no duplicates:
 
-```
-["acme-static-site-441", "globex-backups-207"]
+```python
+solve(s3)
+# -> ["acme-static-site-441", "globex-backups-207"]
 ```
 
-Return [] when the account is clean. `json` and `ClientError` are already
-imported at the top of this file. Read only — do not change any bucket.
+Return `[]` when the account is clean. `json` and `ClientError` are already imported at the top of this file. Read only — do not change any bucket.
 
 ## Hints
 ### Hint 1

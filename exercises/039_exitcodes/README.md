@@ -9,42 +9,34 @@ tags: [stdlib-ops]
 *A pipeline reads one thing from your script: the exit code.*
 
 ## Why
-A CI pipeline runs your deploy script and then decides whether to
-carry on. It cannot read your printed messages; it reads exactly one
-number, the exit code. Zero means success, anything else means failure,
-and different numbers let the pipeline tell a usage mistake from a
-refused deploy. You write the decision part of the deploy command so it
-hands back the right number for each situation.
+A CI pipeline runs your deploy script and then decides whether to carry on. It cannot read your printed messages; it reads exactly one number, the exit code. Zero means success, anything else means failure, and different numbers let the pipeline tell a usage mistake from a refused deploy. You write the decision part of the deploy command so it hands back the right number for each situation.
 
 ## You get
-`argv` — a list of strings, the command-line arguments without
-the program name, like ["deploy", "web", "3"]. The test creates it and
-hands it to you; you never build it yourself.
+`argv` — a list of strings, the command-line arguments without the program name, like `["deploy", "web", "3"]`. The test creates it and hands it to you; you never build it yourself.
 
 ## You return
-a whole number, 0, 1, 2 or 3, as described in the rules
-below. Do not exit the program and do not print.
+a whole number, 0, 1, 2 or 3, as described in the rules below. Do not exit the program and do not print.
 
 ## Rules
-This is the body of a CLI's main(). `argv` is the argument list with the
-program name already stripped, e.g. ["deploy", "web", "3"].
+This is the body of a CLI's `main()`. `argv` is the argument list with the program name already stripped, e.g. `["deploy", "web", "3"]`.
 
-Return an int. Do not call sys.exit, do not print.
+> [!WARNING]
+> Return an int. Do not call `sys.exit`, do not print.
 
 Check in this order and return the first code that applies:
 
-```
-2  usage error      argv is not exactly 3 items, or argv[0] is not
-                    "deploy" or "rollback", or argv[2] is not a
-                    non-negative whole number
-3  unknown service  argv[1] is not in KNOWN_SERVICES
-1  refused          the replica count is above MAX_REPLICAS
-0  success
+| Code | Meaning | When |
+| --- | --- | --- |
+| `2` | usage error | `argv` is not exactly 3 items, or `argv[0]` is not `"deploy"` or `"rollback"`, or `argv[2]` is not a non-negative whole number |
+| `3` | unknown service | `argv[1]` is not in `KNOWN_SERVICES` |
+| `1` | refused | the replica count is above `MAX_REPLICAS` |
+| `0` | success | everything above passed |
 
-["deploy", "web", "3"]     ->  0
-["deploy", "web", "99"]    ->  1
-["ship", "web", "3"]       ->  2
-["deploy", "ftp", "3"]     ->  3
+```python
+solve(["deploy", "web", "3"])    # -> 0
+solve(["deploy", "web", "99"])   # -> 1
+solve(["ship", "web", "3"])      # -> 2
+solve(["deploy", "ftp", "3"])    # -> 3
 ```
 
 The real program ends with one line:
@@ -53,15 +45,9 @@ The real program ends with one line:
 sys.exit(main(sys.argv[1:]))
 ```
 
-Keep the decisions in a function that returns a code and let that single
-line do the exiting — then tests can call main() directly, which is exactly
-what is happening here.
+Keep the decisions in a function that returns a code and let that single line do the exiting — then tests can call `main()` directly, which is exactly what is happening here.
 
-Why this matters: a shell && chain, a Makefile and every CI step read the
-exit code and nothing else. A script that prints ERROR and exits 0 gives
-you a green pipeline sitting on top of a broken deploy. 0 means success,
-anything else means failure, and distinct codes let the caller tell which
-failure it was without parsing your output.
+Why this matters: a shell `&&` chain, a Makefile and every CI step read the exit code and nothing else. A script that prints ERROR and exits 0 gives you a green pipeline sitting on top of a broken deploy. 0 means success, anything else means failure, and distinct codes let the caller tell which failure it was without parsing your output.
 
 ## Hints
 ### Hint 1

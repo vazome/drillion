@@ -9,52 +9,37 @@ tags: [stdlib-ops]
 *A checksum is how you prove the artifact you deployed is the artifact you built.*
 
 ## Why
-The release pipeline publishes a checksum (a short fingerprint
-string computed from a file's bytes) next to every build artifact.
-Before deploying, you must prove the files that arrived on the server
-are the exact ones that were built: a single changed byte, from a
-corrupted download or tampering, must be caught. You compute each file's
-fingerprint and compare it with the published one.
+The release pipeline publishes a checksum (a short fingerprint string computed from a file's bytes) next to every build artifact. Before deploying, you must prove the files that arrived on the server are the exact ones that were built: a single changed byte, from a corrupted download or tampering, must be caught. You compute each file's fingerprint and compare it with the published one.
 
 ## You get
-`paths` — a list of file path strings, like
-["/tmp/x/build-0.bin", "/tmp/x/build-1.bin"]. The test writes the files
-and hands you the paths; you never build them yourself.
+`paths` — a list of file path strings, like `["/tmp/x/build-0.bin", "/tmp/x/build-1.bin"]`. The test writes the files and hands you the paths; you never build them yourself.
 
-`known_good` — a string, the correct fingerprint in lowercase
-hex, like "9f86d0...".
+`known_good` — a string, the correct fingerprint in lowercase hex, like `"9f86d0..."`.
 
 ## You return
-a dict with "digests" (filename to fingerprint), "match" and
-"bad" (sorted lists of filenames), as in the rules below.
+a dict with `"digests"` (filename to fingerprint), `"match"` and `"bad"` (sorted lists of filenames), as in the rules below.
 
 ## Rules
-`paths` is a list of file paths (strings). `known_good` is the sha256
-hex digest of the artifact you were supposed to receive.
+`paths` is a list of file paths (strings). `known_good` is the sha256 hex digest of the artifact you were supposed to receive.
 
 Return exactly:
 
+```python
+solve(paths, known_good)
+# -> {"digests": {"build-0.bin": "9f86d0...", "build-1.bin": "3a7bd3..."},
+#     "match":   ["build-0.bin"],     # digest equals known_good, sorted
+#     "bad":     ["build-1.bin"]}     # everything else, sorted
 ```
-{"digests": {"build-0.bin": "9f86d0...", "build-1.bin": "3a7bd3..."},
- "match":   ["build-0.bin"],     # digest equals known_good, sorted
- "bad":     ["build-1.bin"]}     # everything else, sorted
-```
 
-Keys in "digests" are basenames, not full paths. Digests are lowercase hex
-strings, which is what .hexdigest() already gives you.
+- Keys in `"digests"` are basenames, not full paths.
+- Digests are lowercase hex strings, which is what `.hexdigest()` already gives you.
 
-Read each file as BYTES — open in "rb", not text mode. A hash function eats
-bytes; handing it a decoded string is the usual first error, and on a real
-binary artifact decoding would fail outright.
+> [!WARNING]
+> Read each file as BYTES — open in `"rb"`, not text mode. A hash function eats bytes; handing it a decoded string is the usual first error, and on a real binary artifact decoding would fail outright.
 
-These files are small, so read each one whole. For a multi-gigabyte image
-you would loop over chunks and call .update() on the hash object instead of
-holding the file in memory.
+These files are small, so read each one whole. For a multi-gigabyte image you would loop over chunks and call `.update()` on the hash object instead of holding the file in memory.
 
-Some of these files differ from the good one by a single byte. A digest
-turns that one byte into a completely different string, with no way to tell
-a typo from sabotage — that property is why release pipelines publish
-checksums at all.
+Some of these files differ from the good one by a single byte. A digest turns that one byte into a completely different string, with no way to tell a typo from sabotage — that property is why release pipelines publish checksums at all.
 
 ## Hints
 ### Hint 1

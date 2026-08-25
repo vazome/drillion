@@ -9,46 +9,31 @@ tags: [stdlib-ops]
 *Every deploy script shells out; subprocess.run is how Python does it safely.*
 
 ## Why
-A deploy script has to run other command-line tools (kubectl,
-terraform, a health check) and decide what to do based on whether each
-one succeeded and what it printed. The team lead wants one helper that
-runs a command and reports back in one tidy package: did it succeed, the
-exit code, its normal output and its error output. It must never glue
-the command into one string, because that is how attackers sneak extra
-commands in.
+A deploy script has to run other command-line tools (kubectl, terraform, a health check) and decide what to do based on whether each one succeeded and what it printed. The team lead wants one helper that runs a command and reports back in one tidy package: did it succeed, the exit code, its normal output and its error output. It must never glue the command into one string, because that is how attackers sneak extra commands in.
 
 ## You get
-`argv` — a list of strings: the program name followed by its
-arguments, like ["echo", "hi"]. The test creates it and hands it to you;
-you never build it yourself.
+`argv` — a list of strings: the program name followed by its arguments, like `["echo", "hi"]`. The test creates it and hands it to you; you never build it yourself.
 
 ## You return
-a dict with exactly the keys "ok", "code", "out" and "err",
-as described in the rules below.
+a dict with exactly the keys `"ok"`, `"code"`, `"out"` and `"err"`, as described in the rules below.
 
 ## Rules
-Run the command `argv` (a list like ["echo", "hi"]) and report on it.
+Run the command `argv` (a list like `["echo", "hi"]`) and report on it. Return a dict with exactly these keys:
 
-Return a dict with exactly these keys:
+```python
+solve(["echo", "hi"])
+# -> {"ok": True,     # returncode == 0
+#     "code": 0,      # the returncode itself
+#     "out": "hi",    # stdout, stripped of surrounding whitespace
+#     "err": ""}      # stderr, stripped the same way
 
+solve(["false"])
+# -> {"ok": False, "code": 1, "out": "", "err": ""}
 ```
-{"ok": True,          # returncode == 0
- "code": 0,           # the returncode itself
- "out": "hi",         # stdout, stripped of surrounding whitespace
- "err": ""}           # stderr, stripped the same way
-```
 
-Rules:
-- Pass argv straight to subprocess.run as a LIST. Never join it into a
-  string with shell=True — that is how injection bugs happen, and the
-  list form does not need it.
+- Pass `argv` straight to `subprocess.run` as a LIST. Never join it into a string with `shell=True` — that is how injection bugs happen, and the list form does not need it.
 - Capture both streams as text, not bytes.
-- A non-zero exit must NOT raise. Either skip check=True, or use it and
-  catch subprocess.CalledProcessError. Both give the same dict here.
-
-```
-["false"]  ->  {"ok": False, "code": 1, "out": "", "err": ""}
-```
+- A non-zero exit must NOT raise. Either skip `check=True`, or use it and catch `subprocess.CalledProcessError`. Both give the same dict here.
 
 ## Hints
 ### Hint 1

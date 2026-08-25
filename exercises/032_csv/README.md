@@ -9,38 +9,28 @@ tags: [files-text]
 *split(',') corrupts real CSV the day a field grows a comma.*
 
 ## Why
-Finance exports a spreadsheet of services and their owners as CSV
-text. Some owner names are written "Last, First" and wrapped in quotes
-because they contain a comma. A colleague's script that cuts each line
-at every comma silently garbles those rows and puts the wrong owner on
-the wrong service. You are asked to parse the export correctly so the
-cost report is right.
+Finance exports a spreadsheet of services and their owners as CSV text. Some owner names are written "Last, First" and wrapped in quotes because they contain a comma. A colleague's script that cuts each line at every comma silently garbles those rows and puts the wrong owner on the wrong service. You are asked to parse the export correctly so the cost report is right.
 
 ## You get
-`text` — one string of CSV text, first line the header, like
-the example in the rules below. The test creates it and hands it to you;
-you never build it yourself.
+`text` — one string of CSV text, first line the header, like the example in the rules below. The test creates it and hands it to you; you never build it yourself.
 
 ## You return
-a list of dicts, one per data row, with the keys taken from
-the header and every value kept as a string.
+a list of dicts, one per data row, with the keys taken from the header and every value kept as a string.
 
 ## Rules
 Parse CSV text into a list of dicts, one per data row.
 
-```
-'service,owner,cpu\nauth,"Reyes, Ana",250m\ncron,priya,100m'
-->
-[{"service": "auth", "owner": "Reyes, Ana", "cpu": "250m"},
- {"service": "cron", "owner": "priya", "cpu": "100m"}]
+```python
+text = 'service,owner,cpu\nauth,"Reyes, Ana",250m\ncron,priya,100m'
+solve(text)
+# -> [{"service": "auth", "owner": "Reyes, Ana", "cpu": "250m"},
+#     {"service": "cron", "owner": "priya", "cpu": "100m"}]
 ```
 
-The first line is the header. All values stay strings. Some owner
-fields are quoted and contain a comma — split(",") shreds those rows,
-which is the whole point of this drill.
-
-text is a string, not a file: use io.StringIO to give the csv module
-the file-like object it wants. No real files.
+- The first line is the header.
+- All values stay strings.
+- Some owner fields are quoted and contain a comma — `split(",")` shreds those rows, which is the whole point of this drill.
+- `text` is a string, not a file: use `io.StringIO` to give the csv module the file-like object it wants. No real files.
 
 ## Hints
 ### Hint 1

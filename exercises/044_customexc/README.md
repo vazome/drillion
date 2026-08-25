@@ -9,50 +9,37 @@ tags: [errors]
 *Custom exceptions let callers catch a whole family of errors with one except.*
 
 ## Why
-A deploy tool reads a list of service configs and applies the good
-ones. Bad configs must be skipped, but the report has to say exactly
-what was wrong with each: a missing field, or a field holding a nonsense
-value. Real tools solve this with a family of related error types: the
-checks raise the specific one, and the loop catches the whole family
-with a single handler. Interviewers ask for exactly this design.
+A deploy tool reads a list of service configs and applies the good ones. Bad configs must be skipped, but the report has to say exactly what was wrong with each: a missing field, or a field holding a nonsense value. Real tools solve this with a family of related error types: the checks raise the specific one, and the loop catches the whole family with a single handler. Interviewers ask for exactly this design.
 
 ## You get
-`configs` — a list of dicts, like [{"name": "web", "replicas":
-3}, {"name": "db"}]. The test creates it and hands it to you; you never
-build it yourself. The error classes ConfigError, MissingKeyError and
-BadValueError are already defined above.
+`configs` — a list of dicts, like `[{"name": "web", "replicas": 3}, {"name": "db"}]`. The test creates it and hands it to you; you never build it yourself. The error classes `ConfigError`, `MissingKeyError` and `BadValueError` are already defined above.
 
 ## You return
-a pair (applied, rejected): applied is a list of the names
-of good configs; rejected is a list of (position, error class name)
-pairs.
+a pair `(applied, rejected)`: `applied` is a list of the names of good configs; `rejected` is a list of (position, error class name) pairs.
 
 ## Rules
-Validate a list of service configs. Each config should be a dict with
-a "name" (string) and "replicas" (an int, 0 or more).
+Validate a list of service configs. Each config should be a dict with a `"name"` (string) and `"replicas"` (an int, 0 or more).
 
 For each config, in order:
-  - if "name" is missing, that is a MissingKeyError
-  - else if "replicas" is missing, that is a MissingKeyError
-  - else if replicas is not an int, or is negative, that is a BadValueError
-  - otherwise the config is good
 
-Structure it the way real tools do: write the checks so they RAISE the
-specific exception, then wrap each config in try/except ConfigError — the
-base class catches both subtypes. Record type(err).__name__ for rejects.
+- if `"name"` is missing, that is a `MissingKeyError`
+- else if `"replicas"` is missing, that is a `MissingKeyError`
+- else if replicas is not an int, or is negative, that is a `BadValueError`
+- otherwise the config is good
 
-Return a pair (applied, rejected):
-  applied  — list of names of good configs, in input order
-  rejected — list of (index, exception class name) tuples, in input order
+Structure it the way real tools do: write the checks so they RAISE the specific exception, then wrap each config in `try/except ConfigError` — the base class catches both subtypes. Record `type(err).__name__` for rejects.
 
+Return a pair `(applied, rejected)`:
+
+- `applied` — list of names of good configs, in input order
+- `rejected` — list of (index, exception class name) tuples, in input order
+
+```python
+solve([{"name": "web", "replicas": 3}, {"name": "db"}, {"name": "gw", "replicas": -1}])
+# -> (["web"], [(1, "MissingKeyError"), (2, "BadValueError")])
 ```
-[{"name": "web", "replicas": 3}, {"name": "db"}, {"name": "gw", "replicas": -1}]
-->  (["web"], [(1, "MissingKeyError"), (2, "BadValueError")])
-```
 
-Why a hierarchy: the loop only needs "this config is bad, skip it", so it
-catches ConfigError. The message still says exactly what was wrong. That
-is the whole pitch for custom exception classes in an interview.
+Why a hierarchy: the loop only needs "this config is bad, skip it", so it catches `ConfigError`. The message still says exactly what was wrong. That is the whole pitch for custom exception classes in an interview.
 
 ## Hints
 ### Hint 1
