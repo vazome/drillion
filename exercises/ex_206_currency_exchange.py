@@ -110,7 +110,8 @@ def test_solve():
             want["get_value_of_bills"](denomination, bills))
 
     # canonical cases from exercism's exchange_test.py
-    for budget, rate, expected in [(100000, 0.8, 125000), (700000, 10.0, 70000)]:
+    for budget, rate, expected in [(100000, 0.8, 125000), (700000, 10.0, 70000),
+                                  (127.5, 1.2, 106.25)]:
         assert got["exchange_money"](budget, rate) == pytest.approx(expected)
     for budget, handed_over, expected in [(463000, 5000, 458000), (1250, 120, 1130),
                                           (15000, 1380, 13620)]:
