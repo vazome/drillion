@@ -7,64 +7,51 @@ practices: [32, 54, 43]
 ---
 # DRILL: CSV rows fanned out over a thread pool
 
-Whole-task drill: a batch of hosts, a thread pool, and the order kept.
+*Whole-task drill: a batch of hosts, a thread pool, and the order kept.*
 
 Combines topics 32 (csv), 54 (ThreadPoolExecutor), 43 (except).
 
 ## Why
-An inventory file lists every host in a fleet, and the ops team
-needs to run one slow network call against each of them, say to fetch
-its CPU load. Done one at a time, two hundred hosts at two seconds each
-is almost seven minutes. Done at the same time, it is seconds. The
-report must still come back in the file's order so it lines up with the
-inventory, and one unreachable host must not stop the rest.
+An inventory file lists every host in a fleet, and the ops team needs to run one slow network call against each of them, say to fetch its CPU load. Done one at a time, two hundred hosts at two seconds each is almost seven minutes. Done at the same time, it is seconds. The report must still come back in the file's order so it lines up with the inventory, and one unreachable host must not stop the rest.
 
 ## You get
-`text` — the whole inventory file as one string, in CSV form
-with a header line, like "host,cpu,zone" on the first line and
-"web-1,500,a" on the next.
+`text` — the whole inventory file as one string, in CSV form with a header line, like `"host,cpu,zone"` on the first line and `"web-1,500,a"` on the next.
 
-`work` — a function you call with one row (a dictionary like {"host":
-"web-1", "cpu": "500", "zone": "a"}). It takes a moment, then returns a
-value or raises an error. The test hands you a fake that pretends to be
-slow and pretends some hosts are down; nothing real is contacted.
+`work` — a function you call with one row (a dictionary like `{"host": "web-1", "cpu": "500", "zone": "a"}`). It takes a moment, then returns a value or raises an error. The test hands you a fake that pretends to be slow and pretends some hosts are down; nothing real is contacted.
 
-`max_workers` — a whole number, like 4: how many calls may run at the
-same time.
+`max_workers` — a whole number, like `4`: how many calls may run at the same time.
 
 ## You return
-a list with one dictionary per row, in the same order as the
-file. Each has "host", "status" ("ok" or "error") and "result" (the
-value work returned, or the error message as text).
+a list with one dictionary per row, in the same order as the file. Each has `"host"`, `"status"` (`"ok"` or `"error"`) and `"result"` (the value work returned, or the error message as text).
 
 ## Rules
 An inventory file lists hosts. Run one slow call per host, in parallel.
 
-`text` is CSV with a header. `work` is the function you were handed:
-work(row) takes one row as a dict and returns a value, or raises.
+`text` is CSV with a header. `work` is the function you were handed: `work(row)` takes one row as a dict and returns a value, or raises.
 
-```
+```text
 host,cpu,zone
 web-1,500,a
 web-2,250,b
+```
 
-->  [{"host": "web-1", "status": "ok",    "result": 1000},
-     {"host": "web-2", "status": "error", "result": "unreachable: web-2"}]
+```python
+solve(text, work, 4)
+# -> [{"host": "web-1", "status": "ok",    "result": 1000},
+#     {"host": "web-2", "status": "error", "result": "unreachable: web-2"}]
 ```
 
 Rules:
-  - Parse with the csv module and io.StringIO. No real files.
-  - Run every row through a ThreadPoolExecutor with max_workers
-    threads. Each work() call blocks for a while, the way a real API
-    call does, so serial code costs the sum of them.
-  - Results come back in the SAME order as the rows in the file, no
-    matter what order the calls finish in. The generator here is
-    rigged so the first row finishes last.
-  - If work raises, that row gets status "error" and result str(exc).
-    One dead host must not sink the batch.
 
-Fan-out with ordered results is the standard "make it faster" follow-up
-in a screen. Narrate why the order survives while you write it.
+- Parse with the `csv` module and `io.StringIO`. No real files.
+- Run every row through a `ThreadPoolExecutor` with `max_workers` threads. Each `work()` call blocks for a while, the way a real API call does, so serial code costs the sum of them.
+- If `work` raises, that row gets status `"error"` and result `str(exc)`. One dead host must not sink the batch.
+
+> [!WARNING]
+> Results come back in the SAME order as the rows in the file, no matter what order the calls finish in. The generator here is rigged so the first row finishes last.
+
+> [!TIP]
+> Fan-out with ordered results is the standard "make it faster" follow-up in a screen. Narrate why the order survives while you write it.
 
 ## Hints
 ### Hint 1

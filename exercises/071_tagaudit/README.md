@@ -10,67 +10,49 @@ practices: [18, 20, 68]
 *Untagged instances are the ones nobody can bill, page, or safely delete.*
 
 ## Why
-Every server in the cloud account is supposed to carry labels
-(tags) like Owner and CostCenter, so finance can bill the right team and
-on-call knows who to wake. Servers launched without them are the ones
-nobody can bill, page, or safely delete. The platform team asks for an
-audit: for each mandatory label, which servers are missing it. A label
-that is present but set to an empty value counts as missing, since
-"Owner: " helps nobody.
+Every server in the cloud account is supposed to carry labels (tags) like Owner and CostCenter, so finance can bill the right team and on-call knows who to wake. Servers launched without them are the ones nobody can bill, page, or safely delete. The platform team asks for an audit: for each mandatory label, which servers are missing it. A label that is present but set to an empty value counts as missing, since "Owner: " helps nobody.
 
 ## You get
-`ec2` — an AWS EC2 client object. The test hands in one
-connected to a fake in-memory AWS (moto) with a small fleet launched
-with various tags; nothing real is contacted.
-`required` — a list of the mandatory tag names, like ["CostCenter",
-"Owner"].
+`ec2` — an AWS EC2 client object. The test hands in one connected to a fake in-memory AWS (moto) with a small fleet launched with various tags; nothing real is contacted.
+
+`required` — a list of the mandatory tag names, like `["CostCenter", "Owner"]`.
 
 ## You return
-a dict with one entry per required tag name, mapping it to
-a sorted list of the ids of the servers missing it (an empty list when
-none are).
+a dict with one entry per required tag name, mapping it to a sorted list of the ids of the servers missing it (an empty list when none are).
 
 ## Rules
 Report which instances are missing which mandatory tags.
 
-`ec2` is a boto3 EC2 client. `required` is the list of tag keys every
-instance is supposed to carry, e.g. ["CostCenter", "Owner"].
+`ec2` is a boto3 EC2 client. `required` is the list of tag keys every instance is supposed to carry, e.g. `["CostCenter", "Owner"]`.
 
-`ec2.describe_instances()` does not answer with a flat list of instances.
-It answers with the API's own shape:
+`ec2.describe_instances()` does not answer with a flat list of instances. It answers with the API's own shape:
 
-```
+```python
 {"Reservations": [
     {"ReservationId": "r-...", "Instances": [ {...}, {...} ]},
     {"ReservationId": "r-...", "Instances": [ {...} ]},
 ]}
 ```
 
-One launch makes one reservation, and launching five instances at once
-puts all five inside that single reservation. So both loops are load
-bearing.
+One launch makes one reservation, and launching five instances at once puts all five inside that single reservation. So both loops are load bearing.
 
-Each instance dict has "InstanceId", and — only if it has any tags at
-all — a "Tags" list of {"Key": ..., "Value": ...} dicts. An instance
-launched with no tags has no "Tags" key whatsoever.
+Each instance dict has `"InstanceId"`, and — only if it has any tags at all — a `"Tags"` list of `{"Key": ..., "Value": ...}` dicts. An instance launched with no tags has no `"Tags"` key whatsoever.
 
-A required tag counts as missing when its key is absent, and also when
-the key is there but its value is the empty string. "Owner" with nothing
-after it satisfies no auditor.
+A required tag counts as missing when its key is absent, and also when the key is there but its value is the empty string. "Owner" with nothing after it satisfies no auditor.
 
-Return a dict with one entry per required tag key, mapping that key to
-the sorted list of ids of the instances missing it. Keep the entry even
-when the list is empty:
+Return a dict with one entry per required tag key, mapping that key to the sorted list of ids of the instances missing it. Keep the entry even when the list is empty:
 
-```
-required = ["CostCenter", "Environment", "Owner"]
-->  {"CostCenter": ["i-0a1b2c3d4e5f60718", "i-0f9e8d7c6b5a40312"],
-     "Environment": [],
-     "Owner": ["i-0f9e8d7c6b5a40312"]}
+```python
+solve(ec2, ["CostCenter", "Environment", "Owner"])
+# -> {"CostCenter": ["i-0a1b2c3d4e5f60718", "i-0f9e8d7c6b5a40312"],
+#     "Environment": [],
+#     "Owner": ["i-0f9e8d7c6b5a40312"]}
 ```
 
-Ids that appear under two keys are not a mistake — that instance is
-missing both. Read only: do not launch, tag, stop or terminate anything.
+Ids that appear under two keys are not a mistake — that instance is missing both.
+
+> [!WARNING]
+> Read only: do not launch, tag, stop or terminate anything.
 
 ## Hints
 ### Hint 1

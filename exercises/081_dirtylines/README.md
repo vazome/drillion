@@ -9,59 +9,55 @@ tags: [errors]
 *Interviewers feed you a log with junk in it on purpose; one bad line must not kill the run.*
 
 ## Why
-A log export from a customer has junk mixed in: blank lines,
-lines cut short, a field that should be a number but says "N/A". Someone
-in support wants the good records loaded so they can look at response
-times. A script that crashes on the first bad line is useless; a script
-that quietly throws lines away is worse, because nobody learns that 40%
-of the data went missing. So: keep what you can, and count what you
-dropped.
+A log export from a customer has junk mixed in: blank lines, lines cut short, a field that should be a number but says "N/A". Someone in support wants the good records loaded so they can look at response times. A script that crashes on the first bad line is useless; a script that quietly throws lines away is worse, because nobody learns that 40% of the data went missing. So: keep what you can, and count what you dropped.
 
 ## You get
 `lines` — a list of strings, one per log line, like
-["2026-08-12T10:12:44Z INFO checkout 137", "", "2026-08-12T10:12:46Z
-WARN cart"]. The test builds it, junk included, and hands it to you.
+
+```python
+["2026-08-12T10:12:44Z INFO checkout 137", "", "2026-08-12T10:12:46Z WARN cart"]
+```
+
+The test builds it, junk included, and hands it to you.
 
 ## You return
-a pair (records, skipped). records is a list of
-dictionaries, one per good line, with "ts", "level", "service" and "ms"
-(a number). skipped is how many lines you threw away.
+a pair `(records, skipped)`. `records` is a list of dictionaries, one per good line, with `"ts"`, `"level"`, `"service"` and `"ms"` (a number). `skipped` is how many lines you threw away.
 
 ## Rules
 Parse the good lines out of a dirty log. Report how many you dropped.
 
 A good line is exactly four whitespace-separated fields:
 
-```
+```text
 2026-08-12T10:12:44Z INFO checkout 137
 <timestamp>          <level> <service> <latency in ms>
 ```
 
-Return the tuple (records, skipped):
+Return the tuple `(records, skipped)`:
 
-  - records: a list, in input order, of
-    {"ts": <str>, "level": <str>, "service": <str>, "ms": <int>}
-    Note ms is an int, not the string you split out.
-  - skipped: how many lines you did not turn into a record.
+- `records`: a list, in input order, of `{"ts": <str>, "level": <str>, "service": <str>, "ms": <int>}`
+- `skipped`: how many lines you did not turn into a record.
+
+> [!WARNING]
+> Note `ms` is an `int`, not the string you split out.
 
 Skip a line, without raising, when any of these is true:
-  - it is empty or only whitespace
-  - it does not split into exactly 4 fields (too few or too many)
-  - the level is not one of DEBUG, INFO, WARN, ERROR (case matters)
-  - the last field is not a whole number
 
-```
-["2026-08-12T10:12:44Z INFO checkout 137",
- "2026-08-12T10:12:45Z info checkout 12",     # lowercase level
- "2026-08-12T10:12:46Z WARN cart",            # only 3 fields
- "2026-08-12T10:12:47Z ERROR cart N/A"]       # ms is not a number
-->  ([{"ts": "2026-08-12T10:12:44Z", "level": "INFO",
-       "service": "checkout", "ms": 137}], 3)
+- it is empty or only whitespace
+- it does not split into exactly 4 fields (too few or too many)
+- the level is not one of `DEBUG`, `INFO`, `WARN`, `ERROR` (case matters)
+- the last field is not a whole number
+
+```python
+solve(["2026-08-12T10:12:44Z INFO checkout 137",
+       "2026-08-12T10:12:45Z info checkout 12",     # lowercase level
+       "2026-08-12T10:12:46Z WARN cart",            # only 3 fields
+       "2026-08-12T10:12:47Z ERROR cart N/A"])      # ms is not a number
+# -> ([{"ts": "2026-08-12T10:12:44Z", "level": "INFO",
+#       "service": "checkout", "ms": 137}], 3)
 ```
 
-The count matters as much as the parsing. A parser that silently
-drops 40% of your log is worse than one that crashes, because
-nobody finds out.
+The count matters as much as the parsing. A parser that silently drops 40% of your log is worse than one that crashes, because nobody finds out.
 
 ## Hints
 ### Hint 1

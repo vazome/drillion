@@ -7,52 +7,46 @@ practices: [19, 22, 28, 34]
 ---
 # DRILL: nginx log -> top IPs, status mix, p95
 
-Whole-task drill: the nginx log question, end to end.
+*Whole-task drill: the nginx log question, end to end.*
 
-Combines topics 19 (Counter), 22 (set), 28 (str), 34 (percentile).
-Passing this cleanly pushes those components further out too.
+Combines topics 19 (Counter), 22 (set), 28 (str), 34 (percentile). Passing this cleanly pushes those components further out too.
 
 ## Why
-The site was slow last night and the manager wants a quick read of
-the web server's access log: which three visitors (IP addresses) made
-the most requests, how the responses split between success and error
-classes (2xx, 4xx, 5xx), and how slow the slowest requests were. That
-last one is the "p95": the time that 95 percent of requests came in
-under. This is the single most common hands-on question in DevOps
-interviews.
+The site was slow last night and the manager wants a quick read of the web server's access log: which three visitors (IP addresses) made the most requests, how the responses split between success and error classes (2xx, 4xx, 5xx), and how slow the slowest requests were. That last one is the "p95": the time that 95 percent of requests came in under. This is the single most common hands-on question in DevOps interviews.
 
 ## You get
-`lines` — a list of strings, one per request, each in the
-standard nginx log format, like
-'10.0.0.1 - - [07/Aug/2026:10:12:33 +1000] "GET /api/users HTTP/1.1"
-200 1234 0.043'. The test generates them and hands them to you.
+`lines` — a list of strings, one per request, each in the standard nginx log format, like
+
+```python
+'10.0.0.1 - - [07/Aug/2026:10:12:33 +1000] "GET /api/users HTTP/1.1" 200 1234 0.043'
+```
+
+The test generates them and hands them to you.
 
 ## You return
-a dict with three keys: "top_ips" (a list of the 3 busiest
-(ip, count) pairs, busiest first), "statuses" (a dict like {"2xx": 5,
-"4xx": 1}, only for classes that occur) and "p95" (a number of seconds).
+a dict with three keys: `"top_ips"` (a list of the 3 busiest `(ip, count)` pairs, busiest first), `"statuses"` (a dict like `{"2xx": 5, "4xx": 1}`, only for classes that occur) and `"p95"` (a number of seconds).
 
 ## Rules
 Parse access-log lines and return a summary dict:
 
-```
-{"top_ips":  [(ip, count), ...],   # 3 busiest, most first
- "statuses": {"2xx": 5, "4xx": 1}, # only classes that occur
- "p95":      0.418}                # 95th percentile duration
+```python
+solve(lines)
+# -> {"top_ips":  [(ip, count), ...],   # 3 busiest, most first
+#     "statuses": {"2xx": 5, "4xx": 1}, # only classes that occur
+#     "p95":      0.418}                # 95th percentile duration
 ```
 
 A line looks like:
 
-```
+```text
 10.0.0.1 - - [07/Aug/2026:10:12:33 +1000] "GET /api/users HTTP/1.1" 200 1234 0.043
 ^ip                                        ^method ^path            ^status ^bytes ^seconds
 ```
 
-p95 uses the nearest-rank method: sort ascending, take the value at
-index ceil(0.95 * len) - 1. No interpolation.
+p95 uses the nearest-rank method: sort ascending, take the value at index `ceil(0.95 * len) - 1`. No interpolation.
 
-This is the most-asked DevOps screen question in existence. Narrate it
-out loud while you write it.
+> [!TIP]
+> This is the most-asked DevOps screen question in existence. Narrate it out loud while you write it.
 
 ## Hints
 ### Hint 1

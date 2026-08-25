@@ -7,71 +7,54 @@ practices: [14, 46, 47]
 ---
 # DRILL: token-bucket rate limiter with a fake clock
 
-Whole-task drill: a rate limiter you can reason about, with the clock as data.
+*Whole-task drill: a rate limiter you can reason about, with the clock as data.*
 
 Combines topics 14 (classes), 46 (clock handling), 47 (idempotency).
 
 ## Why
-A public API gets more requests than it can handle, so it must
-let a steady stream through and turn the rest away. The standard way is
-a "token bucket": the bucket holds a few tokens, each accepted request
-spends one, and tokens trickle back in over time. Clients also retry
-requests that already went through, and a retry must not be charged
-twice, or a flaky network eats a customer's whole allowance.
+A public API gets more requests than it can handle, so it must let a steady stream through and turn the rest away. The standard way is a "token bucket": the bucket holds a few tokens, each accepted request spends one, and tokens trickle back in over time. Clients also retry requests that already went through, and a retry must not be charged twice, or a flaky network eats a customer's whole allowance.
 
 ## You get
-`requests` — a list of pairs (time in seconds, request id), in
-time order, like [(0, "a"), (0, "b"), (2, "d")].
+`requests` — a list of pairs (time in seconds, request id), in time order, like `[(0, "a"), (0, "b"), (2, "d")]`.
 
-`capacity` — a whole number, like 2: the most tokens the bucket can
-hold.
+`capacity` — a whole number, like `2`: the most tokens the bucket can hold.
 
-`rate` — a number, like 1: how many tokens come back per second.
+`rate` — a number, like `1`: how many tokens come back per second.
 
-`start` — the time in seconds when the bucket was created full, like 0.
-The test builds all four and hands them to you. Time is just numbers
-here; nothing really waits.
+`start` — the time in seconds when the bucket was created full, like `0`. The test builds all four and hands them to you. Time is just numbers here; nothing really waits.
 
 ## You return
-a dictionary with "allowed" (a list of True/False, one per
-request, in order) and "tokens_left" (how many tokens remain after the
-last request, rounded to 6 decimals).
+a dictionary with `"allowed"` (a list of `True`/`False`, one per request, in order) and `"tokens_left"` (how many tokens remain after the last request, rounded to 6 decimals).
 
 ## Rules
 Decide which requests the rate limiter lets through.
 
-A token bucket holds at most `capacity` tokens, starts full at time
-`start`, and refills at `rate` tokens per second. An accepted request
-costs one token.
+A token bucket holds at most `capacity` tokens, starts full at time `start`, and refills at `rate` tokens per second. An accepted request costs one token.
 
-`requests` is a list of (timestamp, request_id) in non-decreasing time
-order. The clock is data here — nothing sleeps, and the test can
-replay an hour of traffic instantly.
+`requests` is a list of `(timestamp, request_id)` in non-decreasing time order. The clock is data here — nothing sleeps, and the test can replay an hour of traffic instantly.
 
 For each request, in order:
-  - Refill first: tokens = min(capacity, tokens + elapsed * rate),
-    where elapsed is the time since the request you looked at just
-    before this one, or since `start` for the very first.
-  - If this request_id was accepted earlier, accept it again and
-    charge nothing. A retry of something you already did must not
-    cost a second token. That is idempotency, and it is the half of
-    this question people forget.
-  - Otherwise: tokens >= 1 means spend one and accept, anything less
-    means reject.
+
+- Refill first: `tokens = min(capacity, tokens + elapsed * rate)`, where elapsed is the time since the request you looked at just before this one, or since `start` for the very first.
+- If this `request_id` was accepted earlier, accept it again and charge nothing.
+- Otherwise: `tokens >= 1` means spend one and accept, anything less means reject.
+
+> [!WARNING]
+> A retry of something you already did must not cost a second token. That is idempotency, and it is the half of this question people forget.
 
 Return
 
-```
-{"allowed": [True, True, False, True, True],
- "tokens_left": 1.0}
+```python
+solve(requests, capacity, rate, start)
+# -> {"allowed": [True, True, False, True, True],
+#     "tokens_left": 1.0}
 ```
 
-where allowed has one entry per request, in order, and tokens_left is
-what is in the bucket after the last one, rounded to 6 decimals.
+where allowed has one entry per request, in order, and `tokens_left` is what is in the bucket after the last one, rounded to 6 decimals.
 
-Worked example, capacity=2, rate=1, start=0:
+Worked example, `capacity=2`, `rate=1`, `start=0`:
 
-```
+```text
 (0, "a")  bucket full at 2, spend    -> True,  1 left
 (0, "b")  spend                      -> True,  0 left
 (0, "c")  empty                      -> False, 0 left
@@ -79,8 +62,8 @@ Worked example, capacity=2, rate=1, start=0:
 (2, "d")  2 seconds refilled 2       -> True,  1 left
 ```
 
-Rate limiters come up in every systems screen. Say the three pieces of
-state out loud before you write any of them.
+> [!TIP]
+> Rate limiters come up in every systems screen. Say the three pieces of state out loud before you write any of them.
 
 ## Hints
 ### Hint 1
