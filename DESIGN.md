@@ -54,15 +54,19 @@ showing which box the card is in), a small stats strip (days left, due today, ca
 Answers: *what exactly is asked, and does my code pass?*
 
 Data: `GET /api/ex/{slug}` →
-- `meta` — `topic`, `title`, `minutes`, `tags`, `prereqs`
-- `spec` — plain text, hand-formatted, ~25–60 lines: `WHY:` (business context), `YOU GET:`,
-  `YOU RETURN:`, a `─── exact rules ───` block with worked examples. Monospace-aligned; must not
-  be re-flowed.
-- `read_first[]` — 2–3 links with one-line notes (+ an optional `TAKE-HOME:` line)
+- `meta` — `topic`, `title`, `minutes`, `tags`, `prereqs`, `practices`, `source` (Exercism drills)
+- `spec_md` — the drill's guidance as **GitHub-flavoured Markdown**, ~25–120 lines: `# title`,
+  then `## Why` (business context), `## You get`, `## You return`, `## Rules` with worked
+  examples, `## Read first` (the links, with notes), and whatever else the drill adds
+  (`## Introduction`, `## Instructions` on Exercism drills). Render: headings, lists, tables,
+  fenced code with language, GitHub alerts (`> [!NOTE]`, `[!TIP]`, `[!WARNING]`), ```mermaid
+  diagrams, images from `assets/` (`GET /api/ex/{slug}/assets/{name}`), and `![…](assets/x.webm)`
+  as a muted looping video. No raw HTML. The spec pane scrolls; never truncate it.
 - `code` — the editor text (a stub, or the user's draft); `has_given` — true when the region
   contains given code above `solve()` that must not be edited (show a note)
 - `attempt` — null, or `{attempts, hints, active (seconds), seed, solution_shown}`
-- `hints` — `{total: 3, shown[]: texts already revealed, next_in: seconds}`
+- `hints` — `{total: 3, shown[]: Markdown already revealed, next_in: seconds}`, rendered the same
+  way as the spec
 - `solution` — `{unlocked, need_attempts, need_secs}`
 - `archive[]` — previous passes `{date, grade, code?}` (code shown only when allowed)
 

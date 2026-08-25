@@ -7,8 +7,9 @@ pytest test against a reference solution on **fresh random data every sitting**,
 
 Design brief for the UI: [DESIGN.md](DESIGN.md).
 
-The exercise files on disk are the source of truth; the app edits only the learner's region of
-each file and never writes a file without its spec docstring.
+The drill files on disk are the source of truth; the app edits only the learner's region of each
+`drill.py` — everything above its machinery marker — and the guidance beside the editor is the
+drill's `README.md`, rendered as Markdown.
 
 ## Quick start
 
@@ -26,8 +27,9 @@ frontend (React + Vite) is being built; until `web/dist` exists the server expos
 1. **Today** shows due reviews first (most overdue first), then up to 2 new topics whose
    prerequisites you have passed. The whole catalogue is open too — the queue is a suggestion.
 2. Opening an exercise starts an **attempt** (fresh seed, active-seconds timer that pauses when the
-   tab is hidden). The left pane is the spec: `WHY` / `YOU GET` / `YOU RETURN` / exact rules, plus
-   READ FIRST links. The right pane is the editor with the stub.
+   tab is hidden). The left pane renders the drill's `README.md`: Why / You get / You return /
+   Rules / Read first, with code blocks, tables, diagrams and images. The right pane is the editor
+   with the stub.
 3. **Run** saves your region into the file and runs that file's pytest test with the attempt's
    seed. Failures come back with the assertion lines mapped to editor line numbers.
 4. **Hints** unlock one level per 60 active seconds; the **solution** unlocks after 3 attempts and
@@ -76,14 +78,18 @@ src/study/            the application package (`study` console script)
   cli.py              serve (default) | selfcheck; logging
   settings.py         STUDY_ROOT / STUDY_HOST / STUDY_PORT / STUDY_OPEN_BROWSER
   state.py            progress.json load/save (atomic)
-  catalogue.py        exercises(): META, HINTS, READ FIRST — parsed with ast, never executed
+  catalogue.py        exercises(): each drill's README.md frontmatter, spec and hints
   region.py           the learner's region: cut/splice/stub/validate/etag, atomic file writes
   scheduler.py        ladder, due/new queue, grading, rescheduling
   attempts.py         open/run/pass/abandon/hint/solution lifecycle, active-seconds timer
   runner.py           pytest subprocess, failure summariser, selfcheck
   api.py              FastAPI JSON API + static frontend, serve()
 tests/                unit + ASGI tests (plain pytest, no fixtures)
-exercises/            the drills (ex_<topic>_<name>.py) and _lib.py (seeded Random)
+exercises/            one folder per drill and _lib.py (seeded Random)
+  <NNN>_<name>/
+    README.md         frontmatter (title, minutes, prereqs, tags, …) + Markdown guidance
+    drill.py          the learner's region, the machinery marker, the machinery
+    assets/           optional images, diagrams and clips the README points at
 web/                  the frontend (React + Vite), served from web/dist
 progress.json         your cards, attempts, log and archived solutions
 Dockerfile, compose.yaml, .github/workflows/ci.yml
@@ -109,8 +115,8 @@ uv sync                                      # dependencies (runtime + dev)
 uv run pytest tests -q                       # the app's tests
 uv run ruff check .                          # lint
 uv run study selfcheck                       # every drill green with its reference
-uv run pytest exercises/ex_019_counter.py    # one drill by hand (fails with NotImplementedError on a stub)
-STUDY_SEED=42 uv run pytest exercises/ex_019_counter.py   # same drill, fixed data
+uv run pytest exercises/019_counter          # one drill by hand (NotImplementedError on a stub)
+STUDY_SEED=42 uv run pytest exercises/019_counter   # same drill, fixed data
 ```
 
 CI runs the same three checks on every push. The frontend dev loop (`pnpm --dir web dev` with a
@@ -118,20 +124,55 @@ proxy to the API) is documented in `web/` once it lands.
 
 ## The exercises
 
-One file per drill, `exercises/ex_<topic>_<name>.py`; copy the shape of an existing one:
+One folder per drill, `exercises/<topic>_<name>/`; copy the shape of an existing one.
 
-- `META` — `topic` (== the number in the filename), `title`, `minutes` (par time), `prereqs`
-  (topic numbers that gate it), `tags`; whole-task drills add `practices`
-- `solve()` — the stub; its docstring **is** the spec (`WHY` / `YOU GET` / `YOU RETURN` / rules)
-- `HINTS` — exactly 3, escalating, the last one worked on different data
-- `_gen(r)` — builds inputs from `r` (a seeded `random.Random`)
-- `_reference(...)` — the correct implementation; tests compare yours against it
-- `test_solve()` — a handful of generated cases, plus fixed canonical cases where they exist
+**`README.md`** — YAML frontmatter, then GitHub-flavoured Markdown:
 
-**The region contract.** Everything between `META` and `HINTS` is the learner's: it is the text the
-editor shows and the only text a save may replace. `solve` must be the last statement in it; given
-code (constants, exception classes, a toy app) goes above `solve`, never below. The machinery
-(`_gen`, `_reference`, `test_*`) is never sent to the editor.
+```markdown
+---
+title: Counter — top N by frequency
+minutes: 12
+prereqs: [18]            # topic numbers that gate it; optional, default []
+tags: [data-structures]
+practices: [19, 22]      # optional, whole-task drills
+source: exercism/python practice/two-fer (MIT, adapted)   # optional
+---
+# Counter — top N by frequency
+## Why / ## You get / ## You return / ## Rules / ## Read first
+## Hints
+### Hint 1 … ### Hint 2 … ### Hint 3
+```
+
+`topic` is **not** in the frontmatter: it is the folder's leading number. The **spec** is everything
+from `# title` up to `## Hints`; extra sections (`## Introduction`, `## Instructions`) may go
+anywhere before it. Exactly 3 hints, escalating, the last one worked on different data — the server
+never sends one the learner has not unlocked. Headings, lists, tables, fenced code, GitHub alerts
+(`> [!NOTE]`), Mermaid diagrams, images and muted looping clips from `assets/` all render. For a
+drill adapted from Exercism the README carries **Exercism's Markdown verbatim** — never trimmed to
+make room for ours — plus frontmatter `source:` and a closing attribution line.
+
+**`drill.py`** — code only, no docstring spec, no META, no HINTS:
+
+```python
+from collections import Counter        # the learner's imports, given code and solve()
+
+def solve(lines, n):
+    raise NotImplementedError
+
+
+# ══ machinery — everything below is the grader's, not yours ══
+from _lib import rng
+
+def _gen(r): ...                        # builds inputs from a seeded random.Random
+def _reference(lines, n): ...           # the correct implementation; tests compare yours to it
+def test_solve(): ...                   # generated cases, plus canonical ones where they exist
+```
+
+**The region contract.** Everything above the marker line is the learner's: it is the text the
+editor shows and the only text a save may replace. `solve` is the last statement in it; given code
+(constants, exception classes, a toy app) goes above `solve`, never below. The machinery
+(`_gen`, `_reference`, `test_*`) is never sent to the editor, and an edit that pastes the marker,
+defines `_reference`/`_gen`/`test_*` or names `_reference` is refused.
 
 **Tags** — one catalogue, no folders:
 
@@ -140,9 +181,10 @@ code (constants, exception classes, a toy app) goes above `solve`, never below. 
   `concurrency` (54–56, 94–97) · `testing` (57–61, 98–99) · `packaging` (62–67) · `cloud` (68–72) ·
   `whole-task` (73–80, 82–86, 100–101) · `llm` (88–93)
 - *Library*, from the file's imports: `boto3` · `requests` · `langchain` · `fastapi` · `asyncio`
-- *Track*: `rsample` (drills built around a RAG take-home, with a `TAKE-HOME:` line in READ FIRST);
-  `exercism` (drills adapted from [exercism/python](https://github.com/exercism/python), MIT —
-  each carries a `# SOURCE:` line and the Exercism concept slugs as tags; topics 200+)
+- *Track*: `rsample` (drills built around a RAG take-home, with a **Take-home** callout under
+  Read first); `exercism` (drills adapted from
+  [exercism/python](https://github.com/exercism/python), MIT — each carries a frontmatter
+  `source:` and the Exercism concept slugs as tags; topics 200+)
 
 `focus` in `progress.json` is a single tag that restricts which *new* exercises are offered;
 reviews and the open catalogue ignore it.
@@ -152,6 +194,6 @@ runs the tests — it must be green before the drill is trusted.
 
 ## Status
 
-Backend, API, catalogue migration and 87 drills are done and tested. In progress: the React
-frontend (light + dark), the Exercism-derived drills (batches of concept and practice exercises),
-container smoke test.
+Backend, API, the folder-per-drill Markdown format and 104 drills are done and tested. In progress:
+the React frontend (light + dark), the content pass over the Exercism-derived drills, container
+smoke test.
