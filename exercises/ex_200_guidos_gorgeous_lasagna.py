@@ -88,19 +88,19 @@ def _gen(r):
 
 
 def _reference():
-    expected_bake_time = 40
-    preparation_time = 2
+    EXPECTED_BAKE_TIME = 40
+    PREPARATION_TIME = 2
 
     def bake_time_remaining(elapsed_bake_time):
-        return expected_bake_time - elapsed_bake_time
+        return EXPECTED_BAKE_TIME - elapsed_bake_time
 
     def preparation_time_in_minutes(number_of_layers):
-        return number_of_layers * preparation_time
+        return number_of_layers * PREPARATION_TIME
 
     def elapsed_time_in_minutes(number_of_layers, elapsed_bake_time):
         return preparation_time_in_minutes(number_of_layers) + elapsed_bake_time
 
-    return {"EXPECTED_BAKE_TIME": expected_bake_time,
+    return {"EXPECTED_BAKE_TIME": EXPECTED_BAKE_TIME,
             "bake_time_remaining": bake_time_remaining,
             "preparation_time_in_minutes": preparation_time_in_minutes,
             "elapsed_time_in_minutes": elapsed_time_in_minutes}
@@ -118,7 +118,7 @@ def test_solve():
         assert (got["elapsed_time_in_minutes"](layers, elapsed)
                 == want["elapsed_time_in_minutes"](layers, elapsed))
 
-    # canonical cases from exercism's lasagna_test.py
+    # canonical cases from exercism's lasagna_test.py + instructions.md
     assert got["EXPECTED_BAKE_TIME"] == 40
     for elapsed, expected in [(1, 39), (23, 17), (33, 7)]:
         assert got["bake_time_remaining"](elapsed) == expected

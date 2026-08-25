@@ -125,7 +125,7 @@ def test_solve():
         assert (got["exchangeable_value"](budget, rate, spread, denomination)
                 == want["exchangeable_value"](budget, rate, spread, denomination))
 
-    # canonical cases from exercism's exchange_test.py
+    # canonical cases from exercism's exchange_test.py + instructions.md
     for amount, denomination, expected in [(163270, 50000, 3), (54361, 1000, 54),
                                            (127.5, 5, 25)]:
         assert got["get_number_of_bills"](amount, denomination) == expected
