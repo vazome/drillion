@@ -55,7 +55,7 @@ Task 2: review clean (Approved, spec ✅). Deferred minors (for the final review
 - exercises() "skips broken files" branch untested; catalogue parses each file 5× (172 ms/79 files) — fine for localhost.
 - Gated(0) = hints exhausted vs Gated(n>0) = wait (carried to Task 4); record_pass/next_hint/unlock_solution KeyError without an open attempt → web.py must 4xx (carried to Task 4).
 - validate's top-level ban misses AnnAssign/import forms (the _reference Name walk covers what matters); "could not put the spec back" message blames machinery for learner trailing content.
-- stub keeps the learner's indentation for the docstring after a non-4-space save (git noise, cosmetic); helpers above solve survive a reset (name in STUDY.md, Task 8).
+- stub keeps the learner's indentation for the docstring after a non-4-space save (git noise, cosmetic); helpers above solve survive a reset (name in README.md, Task 8).
 Task 2: complete (commits 67d64f5..9a98eed, review clean)
 BASE for Task 3: 9a98eed
 
@@ -63,7 +63,7 @@ BASE for Task 3: 9a98eed
 Rulings: F841 added to the exercises/* ruff ignore (learner code legitimately has unused names; ruff is
 not the grader) — accepted. test_stub_is_identity skips slugs with an open attempt (reads progress.json)
 — accepted: that IS the invariant (files without an attempt are stubs). `[tool.ruff] extend-exclude =
-["drafts"]` accepted. Noted for Task 8: STUDY.md command block still lists deleted CLI commands;
+["drafts"]` accepted. Noted for Task 8: README.md command block still lists deleted CLI commands;
 python-checklist.md lacks 94–101 (Daniel's checklist — leave).
 
 ## Phase B (Exercism) started 2026-08-25 — worktree /home/daniel/study-exercism, branch exercism-drills from 3ce7507
@@ -123,7 +123,7 @@ Wave 1' (3 concurrent): Task 3 reviewer (opus) + batch A + batch E. Next: batch 
 Task 3: review Approved (spec ✅ all 8 steps; archive byte-faithful; tags 87/87 by AST). Rulings on minors:
 F841 ignore ratified (ceiling: unused locals in machinery go unlinted); drafts/ exclude kept (Daniel's scratch);
 ex_098 docstring ex_11→ex_096 fixed by controller (commit after 3ce7507); test_stub_is_identity reading
-progress.json accepted; STUDY.md command block + "8 of 87" line → Task 8.
+progress.json accepted; README.md command block + "8 of 87" line → Task 8.
 Task 3: complete. BASE for Task 4 = HEAD after the ex_098 fix.
 Phase B batch E: DONE_WITH_CONCERNS → read_first() skipped # SOURCE: line — fixed on study-ui (3e85082; unit
 test to add after Task 4 lands, test_study.py is being edited by the Task 4 agent). Rulings: `solve(name="you")`
@@ -174,7 +174,8 @@ Task 9: review Approved (AST-verified move, 42→42 tests + health). Minors fixe
 CI `uv sync --frozen`. Deferred: static mount decided at import (Task 6 note), STUDY_PORT non-int traceback,
 serve() prints 0.0.0.0 URL in container. Task 9: complete.
 Repo housekeeping (Daniel): plan now lives at .superpowers/sdd/scalable-napping-treehouse/plan.md (old
-~/.claude/plans path is a symlink); .superpowers tracked; drafts/, STUDY.md, platform-checklist.md,
+~/.claude/plans path is a symlink); .superpowers tracked; drafts/, README.md, platform-checklist.md,
 python-checklist.{md,html}, ruff_plan.md, ruff_report.txt, unrelated-devops-1.html purged from ALL history
 (git-filter-repo, backup bundle in /tmp), gitignored, kept locally; all branches force-pushed to origin.
-NOTE for Task 8: STUDY.md is local-only now → user docs go to README.md.
+NOTE for Task 8: README.md is local-only now → user docs go to README.md.
+README.md is the single user doc (STUDY.md deleted per Daniel; review-*.diff gitignored).

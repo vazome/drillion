@@ -376,7 +376,7 @@ script in the same commit series (final state has no `migrate.py`). The script a
 7. `pyproject.toml`: `testpaths = ["exercises", "test_study.py"]`; ruff per-file-ignore
    `"exercises/*" = ["E402"]`; `uv add --dev uvicorn`. `.gitignore`: add `*.tmp` and
    `.pytest_cache/`; do not ignore `progress.json`.
-8. `STUDY.md`: delete the "Take-home track" section; add a "Tags" section (vocabulary above, the
+8. `README.md`: delete the "Take-home track" section; add a "Tags" section (vocabulary above, the
    `rsample` track tag, focus); in "Adding exercises" add `tags` to the META list and the region
    contract ("everything between META and HINTS is the learner's; `solve` must be the last
    statement in it; given code goes above `solve`").
@@ -484,7 +484,7 @@ No new features; every existing test keeps passing (split across files, same ass
 8. **CI**: `.github/workflows/ci.yml` — on push/PR: `astral-sh/setup-uv`, `uv sync`, `uv run ruff
    check .`, `uv run pytest tests -q`, `uv run study selfcheck`. Cannot be run here either; keep it
    minimal and valid YAML.
-9. `STUDY.md` command block only (`uv run study`, `uv run study selfcheck`, `uv run pytest
+9. `README.md` command block only (`uv run study`, `uv run study selfcheck`, `uv run pytest
    exercises/ex_019_counter.py`, `docker compose up`); the full doc pass stays in Task 8.
 
 Verification (paste outputs): `uv run pytest tests -q` → 42 passed (43 with the health assert),
@@ -539,10 +539,10 @@ scoped re-review.
 
 ### Task 8: Docs and final review
 
-Update `STUDY.md` (`uv run study`, `uv run study selfcheck`, `docker compose up`, `uv run pytest
+Update `README.md` (`uv run study`, `uv run study selfcheck`, `docker compose up`, `uv run pytest
 exercises/ex_019_counter.py`), the package layout, that passing resets the file and solutions live
 in `progress.json`, Exercism attribution (Phase B). Remove anything that still mentions
-`STUDY_DIR`, `check`, `hint`, `next`, `status`. Commit: `STUDY.md for the web UI`. Then the controller
+`STUDY_DIR`, `check`, `hint`, `next`, `status`. Commit: `README.md for the web UI`. Then the controller
 dispatches the final whole-branch review.
 
 ## Verification (end-to-end)
