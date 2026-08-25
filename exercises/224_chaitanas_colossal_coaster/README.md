@@ -448,6 +448,9 @@ park["add_me_with_my_friends"](["Natasha", "Steve", "Wanda"], 1, "Bucky")
 > Two of these are graded on **identity**, not just on contents: the tests assert that the list you return `is` the queue you were given. `express_queue + [person_name]` produces the right names in a brand new list and still fails. Mutate the queue you were handed, then return that same object.
 
 ## Exercism hints
+
+### General
+
 - Make sure you have a good understanding of how to create and update lists.
 - The Python [documentation on `lists`][python lists] can be really helpful.
 - The Python [tutorial section on `lists`][more on lists] is also a good resource.
