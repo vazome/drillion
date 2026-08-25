@@ -162,7 +162,7 @@ The leaflet follows a specific layout in the shape of a rectangle:
 Nothing. The event details arrive as arguments to your functions.
 
 > [!NOTE]
-> Exercism asks for four module-level functions in one `string_formatting.py`. Here there is one entry point: `solve()` takes **no arguments** and returns a dict that hands your four functions to the grader, keyed by name. Define them wherever you like — module level or inside `solve` — as long as the dict points at them.
+> Exercism's Instructions above talk about a class, a `convert_date` function and a `leaflet.set_date(...)` method — none of those exist in Exercism's own tests or exemplar (the exercise is marked `wip` upstream). What is graded is four plain functions, listed below. Exercism asks for four module-level functions in one `string_formatting.py`. Here there is one entry point: `solve()` takes **no arguments** and returns a dict that hands your four functions to the grader, keyed by name. Define them wherever you like — module level or inside `solve` — as long as the dict points at them.
 
 ## You return
 A dict with these four functions.
