@@ -494,6 +494,56 @@ no warnings; `uv run ruff check .` clean; `uv run study selfcheck` → 87/87; `u
 `git status` clean; `STUDY_ROOT=/tmp/x uv run study selfcheck` fails loudly with a clear message
 (no exercises dir). Commits: `Restructure into the study package`, `Docker image, compose and CI`.
 
+### Task 10: Content format — one folder per drill, guidance in Markdown (runs NOW, before Task 6)
+
+Spec: `.superpowers/sdd/scalable-napping-treehouse/content-format-spec.md` — binding, read it
+fully first. Implement the core change and the migration in one task, in this order:
+
+1. **Core** (`src/study/`): `region.py` → marker-based region (`bounds/cut/splice/stub/has_given/
+   validate/etag/write_region`; delete `strip_spec`, `merge_spec`, `Spec`, `doc_offset`, the
+   docstring gate). `catalogue.py` → folders `exercises/<NNN>_<name>/` with `README.md` (PyYAML
+   frontmatter; `topic` from the folder name; spec Markdown = body up to `## Hints`; hints = the
+   `### Hint N` sections) + `drill.py` (marker present). `runner.py` → `_selfcheck.py` inside the
+   folder; `summarise` keeps mapping `drill.py:NN` to editor lines (region starts at line 1, so
+   the map is identity up to the marker). `api.py` → payload per the spec's "API changes"
+   (`spec_md`, no `read_first`/`doc_offset`, `meta.source`, assets endpoint). `settings.py`
+   unchanged. `pyproject.toml`: `pyyaml` runtime dep; pytest `pythonpath = ["exercises"]`,
+   `python_files = ["drill.py", "test_*.py"]`; ruff ignores for `exercises/*/drill.py`.
+2. **Tests** (`tests/`): rewrite `test_region.py` for the marker region (round-trip on all drills,
+   stub identity on all drills except open attempts, validate rejections incl. "marker in edited
+   text"), `test_catalogue.py` (frontmatter, headings, exactly 3 hints, topic from folder name,
+   broken folder skipped), `test_api.py` (temp copy of one drill folder; spec_md present; hint
+   texts are Markdown; assets endpoint 200/404 incl. traversal), scheduler/attempts/runner tests
+   adjusted to the new slugs. TDD: red first for the new region and catalogue behaviour.
+3. **Migration** — `migrate.py` at the root per the spec's "Migration" section; run once; verify
+   the list in the spec; delete the script in the final commit. Do not hand-edit drills except
+   where the converter cannot classify a docstring line (report those).
+4. `README.md` (repo): update "The exercises" (layout, README.md contract, drill.py marker,
+   Exercism verbatim rule) and the Layout tree. `DESIGN.md`: the spec pane renders Markdown
+   (headings, lists, tables, fenced code, GitHub alerts, Mermaid, images, muted looping video),
+   hints are Markdown; `read_first` is part of the Markdown.
+5. Verification (paste): `uv run pytest tests -q` green, no warnings; `uv run ruff check .`;
+   `uv run study selfcheck` → 104/104; `ls -d exercises/*/ | wc -l` → 104; a script that loads
+   every README and asserts required frontmatter keys + headings + 3 hints; boot smoke:
+   `GET /api/ex/019_counter` shows `spec_md` starting with `# ` and `GET /api/ex/019_counter/
+   assets/..%2Fdrill.py` → 404; `git status` clean; `progress.json` keys renamed, values intact
+   (diff shows only key renames); `exercises/016_typehints/drill.py` region == the old file's
+   region minus the docstring.
+Commits: `Core: marker region, Markdown guidance, folder per drill` · `Migrate drills to folders` ·
+`Remove the migration script`.
+
+### Task 11: Content pass — Exercism verbatim + native polish (after Task 10)
+
+Per the spec's "Exercism drills — keep their content, add ours": rebuild `README.md` for the 17
+Exercism drills (200,203,206,207,209,212,213,300–309) from `/tmp/exercism-python` sources
+(introduction.md, instructions.md, instructions.append.md, hints.md, concepts/<slug>/links.json,
+introduction.md) — Exercism text verbatim, our Why / You get / You return / Rules / Hint 3 kept
+from the migrated README, attribution line. Native drills (87): fence every example, turn
+`TAKE-HOME:` into callouts, tables where a rule list is really a table; no wording changes to the
+WHY blocks. Batches of ~20 per implementer; one reviewer per batch checks: nothing from Exercism
+dropped, headings contract, 3 hints, frontmatter, selfcheck still green.
+Update `phase-b-exercism.md` so batches B–I author the folder format directly.
+
 ### Task 6: Frontend (React + Vite + shadcn/ui)
 
 Implement the `web/` Vite project per the "Frontend" and "API" sections of the plan file

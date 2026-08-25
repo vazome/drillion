@@ -181,3 +181,8 @@ NOTE for Task 8: README.md is local-only now → user docs go to README.md.
 README.md is the single user doc (STUDY.md deleted per Daniel; review-*.diff gitignored).
 README rewritten as a project README (Task 8 docs pulled forward; re-check after Task 6 lands: frontend dev loop, screenshots).
 DESIGN.md is the design handoff (screens, data, states, constraints); design-brief.md marked superseded; spike/ and web/index.html removed (web/README.md keeps web/ non-empty for the Dockerfile COPY).
+
+## 2026-08-25 Daniel: content format change (folder per drill, README.md guidance in GFM)
+Spec: content-format-spec.md. Plan: Task 10 (core + migration), Task 11 (Exercism verbatim + native polish).
+exercism-drills merged into main (ff9220a, 104 drills, selfcheck 104/104); worktree and branch deleted;
+batch-B partial files discarded. Phase B continues on main in the folder format after Task 10.
