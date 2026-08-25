@@ -237,6 +237,9 @@ def test_read_first_reads_the_comment_block_after_the_docstring():
         "READ FIRST:", "  https://x", "  https://y"]
     assert study.read_first(file.format("# just a note")) == []     # only the READ FIRST block
     assert study.read_first(file.format("import os")) == []
+    assert study.read_first(file.format(                                   # exercism attribution
+        "# SOURCE: exercism/python practice/leap (MIT, adapted)\n# READ FIRST:\n#   https://x")) == [
+        "READ FIRST:", "  https://x"]
 
 
 def test_solution_returns_only_the_reference():
