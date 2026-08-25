@@ -33,7 +33,7 @@ Do this:
 3. Call `run_deploy(version, host)` and keep what it returns.
 4. Return a dict with exactly these keys:
 
-   ```python
+   ```text
    {"result": <what run_deploy returned>,
     "calls": <how many times the mock was called>,
     "url": <the first argument it was called with>,
