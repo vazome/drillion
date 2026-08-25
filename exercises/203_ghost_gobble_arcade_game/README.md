@@ -120,6 +120,33 @@ rules["win"](True, False, True)   # -> False  (all dots eaten, but lost anyway)
 - every parameter arrives as a real `True`/`False`; return a real `True`/`False`, not `1`/`0` or a string
 - the parameters are positional and in the order given above
 
+## Exercism hints
+
+### General
+
+- For an overview, this section of the Python documentation: [Truth Value Testing][stdlib-bools] might help.
+- Don't worry about how the arguments are _derived_, focus on combining the arguments to return the intended result.
+
+### 1. Define if Pac-Man can eat a ghost
+
+- You can use the [Boolean][boolean] [operators][Boolean-operators] to combine arguments for a result.
+
+### 2. Define if Pac-Man scores
+
+- You can use the [Boolean][boolean] [operators][Boolean-operators] to combine arguments for a result.
+
+### 3. Define if Pac-Man loses
+
+- You can use the [boolean][Boolean] [operators][Boolean-operators] to combine arguments for a result.
+
+### 4. Define if Pac-Man wins
+
+- You can use the [Boolean][boolean] [operators][Boolean-operators] to combine arguments for a result.
+
+[Boolean-operators]: https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not
+[boolean]: https://docs.python.org/3/library/stdtypes.html#truth
+[stdlib-bools]: https://docs.python.org/3/library/stdtypes.html#truth-value-testing
+
 ## Read first
 - [boolean-operators](https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not) — the three operators, their precedence (`not` binds tightest, then `and`, then `or`)
 - [Truth Value Testing](https://docs.python.org/3/library/stdtypes.html#truth) — why you never need to write `if flag == True`
