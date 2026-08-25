@@ -170,3 +170,11 @@ Correction: Docker IS installed (daemon just not started). Docker optional for n
 Task 9: implementer DONE_WITH_CONCERNS (dfebde2, 67a89a0; 43 tests, selfcheck 87/87). Rulings: compose single-file
 bind mount → controller switched to `./:/data`; web_dist = repo-root web/dist (correct reading); `/` 404 until
 Task 6 accepted. Docker build + CI unverified here (daemon off).
+Task 9: review Approved (AST-verified move, 42→42 tests + health). Minors fixed by controller: dead region.has_given,
+CI `uv sync --frozen`. Deferred: static mount decided at import (Task 6 note), STUDY_PORT non-int traceback,
+serve() prints 0.0.0.0 URL in container. Task 9: complete.
+Repo housekeeping (Daniel): plan now lives at .superpowers/sdd/scalable-napping-treehouse/plan.md (old
+~/.claude/plans path is a symlink); .superpowers tracked; drafts/, STUDY.md, platform-checklist.md,
+python-checklist.{md,html}, ruff_plan.md, ruff_report.txt, unrelated-devops-1.html purged from ALL history
+(git-filter-repo, backup bundle in /tmp), gitignored, kept locally; all branches force-pushed to origin.
+NOTE for Task 8: STUDY.md is local-only now → user docs go to README.md.
