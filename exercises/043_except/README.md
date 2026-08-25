@@ -26,7 +26,7 @@ Return `{name: number}` for every row that parses, silently skipping rows that a
 solve(["cpu=90", "junk", "mem=x", "disk=12"])  # -> {"cpu": 90, "disk": 12}
 ```
 
-> [!WARNING]
+> [!TIP]
 > Do not use a bare `except:` — catch the specific errors. Real log parsers live or die on this, and interviewers feed you dirty data on purpose.
 
 ## Hints

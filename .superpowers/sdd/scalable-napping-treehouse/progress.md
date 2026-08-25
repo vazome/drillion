@@ -202,3 +202,7 @@ Still to do for Task 11: dispatch N3 remainder (9 files); one sampling reviewer 
 accuracy check of You get/You return/split coverage for 206/207/212/213 (X reviewer died before that step).
 Model policy (Daniel, 2026-08-25): controller picks sonnet/opus per task, never fable. N3b → sonnet; native/X reviewer → opus.
 N3b ✓ d8760f1 (sonnet). Task 11 authoring complete; content reviewer (opus) pending. Phase B batch B (opus) running; batch F dispatched (opus).
+Task 11: content review Approved (95 native+X checked: Why unchanged 95/95, frontmatter identical 95/95, 130 fenced
+solve() calls match signatures, 17 Exercism splits/signatures correct, hints.md verbatim 7/7). Minors applied by
+controller: 059 fence → text, 043 WARNING → TIP, 203/213 bool wording. Deferred: adjacent TIP callouts (078/083/085),
+084 table duplicates fence comments. Task 11: complete.
