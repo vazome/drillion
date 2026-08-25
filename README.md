@@ -51,7 +51,7 @@ import ex_019_counter as m; m.solve = m._reference; m.test_solve(); print('ok')"
 
 ## Current coverage
 
-8 of 87 topics. Deliberate — the system introduces 2 a day, so a backlog of 87 authored exercises would rot before you reached them. More get written as you get through these.
+87 drills authored (topics 1–101 with gaps), plus Exercism-derived drills (topics 200+) as they land. The scheduler introduces 2 new ones a day, so the backlog is meant to be larger than what you see in a week.
 
 ## Tags
 
