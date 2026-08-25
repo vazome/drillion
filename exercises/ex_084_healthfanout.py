@@ -7,7 +7,7 @@ from _lib import rng
 
 META = {"topic": 84, "title": "DRILL: health-check a URL list in parallel",
         "tier": 4, "minutes": 25, "prereqs": [43],
-        "practices": [43, 46, 54]}
+        "practices": [43, 46, 54], "tags": ["whole-task"]}
 
 
 def solve(urls, get, timeout, max_workers):

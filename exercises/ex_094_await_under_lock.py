@@ -7,14 +7,15 @@
 #   https://docs.python.org/3/library/asyncio-sync.html#asyncio.Semaphore  — the test's fake pool is
 #       just this: a counter of free slots
 #   https://docs.python.org/3/reference/compound_stmts.html#the-async-with-statement
+#   TAKE-HOME: `embed_query` outside `pool.acquire()`
 
 import asyncio
 import inspect
 
 from _lib import rng
 
-META = {"topic": 9, "title": "take-home Task 1 — embed before you borrow", "tier": 4,
-        "minutes": 20, "prereqs": []}
+META = {"topic": 94, "title": "take-home Task 1 — embed before you borrow", "tier": 4,
+        "minutes": 20, "prereqs": [56], "tags": ["concurrency", "asyncio", "rsample"]}
 
 
 def solve():

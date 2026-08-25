@@ -4,7 +4,7 @@ the concept by hand on the flat subset — in real code it is one yaml.safe_load
 from _lib import rng
 
 META = {"topic": 31, "title": "YAML, the concept — flat key: value block by hand",
-        "tier": 3, "minutes": 12, "prereqs": [28]}
+        "tier": 3, "minutes": 12, "prereqs": [28], "tags": ["files-text"]}
 
 
 def solve(text):

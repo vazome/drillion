@@ -6,14 +6,15 @@
 #       pattern': check, lock, check again. (Ignore the Java memory-model parts.)
 #   https://realpython.com/async-io-python/  — 'Async IO Explained': why an `await` is a gap where
 #       another request can sneak in between your `if` and your assignment
+#   TAKE-HOME: `app/db.py` (given — you must explain it)
 
 import asyncio
 import inspect
 
 from _lib import rng
 
-META = {"topic": 12, "title": "lazy init under a lock — why db.py has asyncio.Lock", "tier": 4,
-        "minutes": 20, "prereqs": []}
+META = {"topic": 97, "title": "lazy init under a lock — why db.py has asyncio.Lock", "tier": 4,
+        "minutes": 20, "prereqs": [56, 95], "tags": ["concurrency", "asyncio", "rsample"]}
 
 
 def solve():

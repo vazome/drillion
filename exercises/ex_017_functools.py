@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 17, "title": "functools — lru_cache proven by counting, wraps keeps the name", "tier": 3,
-        "minutes": 12, "prereqs": [12]}
+        "minutes": 12, "prereqs": [12], "tags": ["core"]}
 
 
 def solve(fn):

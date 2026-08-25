@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 28, "title": "str — split, transform, join back", "tier": 3,
-        "minutes": 8, "prereqs": []}
+        "minutes": 8, "prereqs": [], "tags": ["files-text"]}
 
 
 def solve(line):

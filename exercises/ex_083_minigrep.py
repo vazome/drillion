@@ -7,7 +7,7 @@ from _lib import rng
 
 META = {"topic": 83, "title": "DRILL: mini-grep with argparse flags",
         "tier": 4, "minutes": 25, "prereqs": [29],
-        "practices": [29, 37, 28]}
+        "practices": [29, 37, 28], "tags": ["whole-task"]}
 
 
 def solve(lines, argv):

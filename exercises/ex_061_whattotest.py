@@ -1,9 +1,13 @@
 """Coverage percentage is easy to game; knowing which lines deserve a test is the real skill."""
+# READ FIRST:
+#   https://martinfowler.com/bliki/TestPyramid.html  — many small unit tests, few big end-to-end ones
+#   https://realpython.com/pytest-python-testing/  — the pytest tutorial; 'Fixtures' and 'Marks' sections
+#   TAKE-HOME: Task 3 judgement
 
 from _lib import rng
 
 META = {"topic": 61, "title": "what to actually test in an ops script",
-        "tier": 3, "minutes": 8, "prereqs": []}
+        "tier": 3, "minutes": 8, "prereqs": [], "tags": ["testing", "rsample"]}
 
 
 def solve(units):

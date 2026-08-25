@@ -11,7 +11,7 @@ from moto import mock_aws
 
 META = {"topic": 69, "title": "boto3 task — audit S3 buckets for public access",
         "tier": 4, "minutes": 25, "prereqs": [68],
-        "practices": [30, 43, 68]}
+        "practices": [30, 43, 68], "tags": ["cloud", "boto3"]}
 
 
 def solve(s3):

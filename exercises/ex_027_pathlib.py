@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 27, "title": "pathlib.Path — walk and inspect a tree", "tier": 3,
-        "minutes": 12, "prereqs": []}
+        "minutes": 12, "prereqs": [], "tags": ["files-text"]}
 
 
 def solve(root):

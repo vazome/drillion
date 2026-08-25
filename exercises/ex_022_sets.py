@@ -1,9 +1,13 @@
 """Dedupe with a set — the runner-up trap."""
+# READ FIRST:
+#   https://docs.python.org/3/tutorial/datastructures.html#sets  — what a set is, & | - operators
+#   https://realpython.com/python-sets/  — intersection() is what the take-home reranker used
+#   TAKE-HOME: `query_words & content_words` in reranker.py
 
 from _lib import rng
 
 META = {"topic": 22, "title": "set — second-highest distinct value", "tier": 3,
-        "minutes": 8, "prereqs": []}
+        "minutes": 8, "prereqs": [], "tags": ["data-structures", "rsample"]}
 
 
 def solve(scores):

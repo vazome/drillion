@@ -1,4 +1,8 @@
 """asyncio — run many waits at once instead of one after another."""
+# READ FIRST:
+#   https://realpython.com/async-io-python/  — THE asyncio walkthrough; read 'Async IO Explained' and 'The asyncio Package' before anything below
+#   https://docs.python.org/3/library/asyncio-task.html#asyncio.gather
+#   TAKE-HOME: `loadtest.py`, your concurrency test
 
 import asyncio
 import inspect
@@ -6,7 +10,7 @@ import inspect
 from _lib import rng
 
 META = {"topic": 56, "title": "asyncio — gather, don't queue", "tier": 4,
-        "minutes": 20, "prereqs": [55]}
+        "minutes": 20, "prereqs": [55], "tags": ["concurrency", "asyncio", "rsample"]}
 
 
 def solve():

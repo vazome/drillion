@@ -7,7 +7,7 @@ from _lib import rng
 
 META = {"topic": 75, "title": "DRILL: recursive diff of two nested configs",
         "tier": 4, "minutes": 30, "prereqs": [18],
-        "practices": [30, 18, 25]}
+        "practices": [30, 18, 25], "tags": ["whole-task"]}
 
 
 def solve(old, new):

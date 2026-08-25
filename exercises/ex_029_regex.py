@@ -1,9 +1,14 @@
 """Pulling fields out of log lines is the regex work ops actually does."""
+# READ FIRST:
+#   https://docs.python.org/3/howto/regex.html  — the official intro; read up to 'Grouping'
+#   https://realpython.com/regex-python/  — re.sub / re.findall with examples
+#   https://regex101.com  — paste a pattern, see what it matches, live
+#   TAKE-HOME: `_tokenize` in reranker.py
 
 from _lib import rng
 
 META = {"topic": 29, "title": "re — named groups on log lines", "tier": 3,
-        "minutes": 15, "prereqs": []}
+        "minutes": 15, "prereqs": [], "tags": ["files-text", "rsample"]}
 
 
 def solve(text):

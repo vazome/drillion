@@ -1,9 +1,13 @@
 """A decorator wraps a function in another function — the whole trick is that."""
+# READ FIRST:
+#   https://realpython.com/primer-on-python-decorators/  — @app.get(...) and @pytest.fixture are decorators; this is how they work
+#   https://docs.python.org/3/glossary.html#term-decorator
+#   TAKE-HOME: `@app.get("/search")`, `@pytest.fixture`
 
 from _lib import rng
 
 META = {"topic": 12, "title": "decorators — record every call, pass everything through", "tier": 3,
-        "minutes": 12, "prereqs": [8]}
+        "minutes": 12, "prereqs": [8], "tags": ["core", "rsample"]}
 
 
 def solve(calls):

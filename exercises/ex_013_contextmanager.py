@@ -1,9 +1,13 @@
 """`with` is a promise that cleanup runs — including on the way out through an error."""
+# READ FIRST:
+#   https://realpython.com/python-with-statement/  — `with` = setup, body, guaranteed cleanup (read the 'async with' section too)
+#   https://docs.python.org/3/library/contextlib.html  — @contextmanager, the short way
+#   TAKE-HOME: the sync half of `async with pool.acquire()`
 
 from _lib import rng
 
 META = {"topic": 13, "title": "context managers — @contextmanager with guaranteed exit", "tier": 3,
-        "minutes": 12, "prereqs": [12]}
+        "minutes": 12, "prereqs": [12], "tags": ["core", "rsample"]}
 
 
 def solve(events, name):

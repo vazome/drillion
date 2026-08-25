@@ -5,7 +5,7 @@ import responses
 from _lib import rng
 
 META = {"topic": 48, "title": "requests — params, auth header, timeout, raise_for_status",
-        "tier": 3, "minutes": 18, "prereqs": []}
+        "tier": 3, "minutes": 18, "prereqs": [], "tags": ["http", "requests"]}
 
 
 def solve(url, token, params):

@@ -6,6 +6,7 @@
 #   https://docs.pytest.org/en/stable/how-to/monkeypatch.html  — setattr a fake in, and pytest
 #       puts the real thing back after the test, automatically
 #   https://docs.pytest.org/en/stable/how-to/fixtures.html#teardown-cleanup-aka-fixture-finalization
+#   TAKE-HOME: what the README asked and you skipped
 
 import asyncio
 import sys
@@ -13,8 +14,8 @@ import sys
 import pytest
 from _lib import rng
 
-META = {"topic": 14, "title": "fixtures — one setup, automatic restore", "tier": 4,
-        "minutes": 25, "prereqs": []}
+META = {"topic": 98, "title": "fixtures — one setup, automatic restore", "tier": 4,
+        "minutes": 25, "prereqs": [59], "tags": ["testing", "asyncio", "rsample"]}
 
 
 # ── the "app" under test: a tiny copy of the take-home's main.py ─────────

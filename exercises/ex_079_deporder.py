@@ -7,7 +7,7 @@ from _lib import rng
 
 META = {"topic": 79, "title": "DRILL: start-up order, or the cycle that blocks it",
         "tier": 4, "minutes": 35, "prereqs": [20],
-        "practices": [18, 20, 22]}
+        "practices": [18, 20, 22], "tags": ["whole-task"]}
 
 
 def solve(graph):

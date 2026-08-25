@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 30, "title": "json — loads, safe nested gets, dumps", "tier": 3,
-        "minutes": 15, "prereqs": [18]}
+        "minutes": 15, "prereqs": [18], "tags": ["files-text"]}
 
 
 def solve(text):

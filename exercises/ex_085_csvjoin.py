@@ -7,7 +7,7 @@ from _lib import rng
 
 META = {"topic": 85, "title": "DRILL: inner-join two CSVs on a shared key",
         "tier": 4, "minutes": 30, "prereqs": [32],
-        "practices": [32, 18, 20]}
+        "practices": [32, 18, 20], "tags": ["whole-task"]}
 
 
 def solve(services_csv, members_csv, min_cpu):

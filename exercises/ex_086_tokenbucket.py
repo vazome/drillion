@@ -7,7 +7,7 @@ from _lib import rng
 
 META = {"topic": 86, "title": "DRILL: token-bucket rate limiter with a fake clock",
         "tier": 4, "minutes": 35, "prereqs": [],
-        "practices": [14, 46, 47]}
+        "practices": [14, 46, 47], "tags": ["whole-task"]}
 
 
 def solve(requests, capacity, rate, start):

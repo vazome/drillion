@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 7, "title": "mutable default — predict the leak", "tier": 1,
-        "minutes": 8, "prereqs": []}
+        "minutes": 8, "prereqs": [], "tags": ["core"]}
 
 
 def solve(tasks):

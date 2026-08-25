@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 23, "title": "itertools — chain, islice, groupby (sort first)", "tier": 3,
-        "minutes": 15, "prereqs": [9]}
+        "minutes": 15, "prereqs": [9], "tags": ["data-structures"]}
 
 
 def solve(pages, first_n):

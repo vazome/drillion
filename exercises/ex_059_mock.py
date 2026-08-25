@@ -1,11 +1,15 @@
 """Tests that hit the real webhook are slow, flaky, and occasionally page a colleague."""
+# READ FIRST:
+#   https://realpython.com/python-mock-library/  — swapping a real function for a fake inside a test
+#   https://docs.python.org/3/library/unittest.mock.html#unittest.mock.patch
+#   TAKE-HOME: `monkeypatch.setattr(...)`
 
 from unittest.mock import patch
 
 from _lib import rng
 
 META = {"topic": 59, "title": "mocking — patch where it is used, then read the calls",
-        "tier": 4, "minutes": 20, "prereqs": []}
+        "tier": 4, "minutes": 20, "prereqs": [], "tags": ["testing", "rsample"]}
 
 
 def solve(version, host):

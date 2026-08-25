@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 25, "title": "shallow vs deep copy — predict the damage", "tier": 1,
-        "minutes": 6, "prereqs": []}
+        "minutes": 6, "prereqs": [], "tags": ["data-structures"]}
 
 
 def solve(cfg):

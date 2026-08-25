@@ -5,7 +5,7 @@ import os
 from _lib import rng
 
 META = {"topic": 36, "title": "os.environ.get — config with defaults", "tier": 3,
-        "minutes": 12, "prereqs": []}
+        "minutes": 12, "prereqs": [], "tags": ["stdlib-ops"]}
 
 TRUTHY = {"1", "true", "yes", "on"}      # given — do not edit
 

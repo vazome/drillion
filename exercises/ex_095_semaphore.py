@@ -4,14 +4,15 @@
 #       read up to 'Example of Using an Asyncio Semaphore'
 #   https://docs.python.org/3/library/asyncio-sync.html#asyncio.Semaphore  — the 6-line reference
 #   https://docs.python.org/3/library/asyncio-task.html#asyncio.gather  — start everything, collect in order
+#   TAKE-HOME: why `FakePool` is a `Semaphore(max_size)`
 
 import asyncio
 import inspect
 
 from _lib import rng
 
-META = {"topic": 10, "title": "semaphore — at most N in flight", "tier": 4,
-        "minutes": 20, "prereqs": []}
+META = {"topic": 95, "title": "semaphore — at most N in flight", "tier": 4,
+        "minutes": 20, "prereqs": [56], "tags": ["concurrency", "asyncio", "rsample"]}
 
 
 def solve():

@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 39, "title": "exit codes — main(argv) returns an int", "tier": 3,
-        "minutes": 12, "prereqs": []}
+        "minutes": 12, "prereqs": [], "tags": ["stdlib-ops"]}
 
 KNOWN_SERVICES = ("api", "web", "db", "cache")      # given — do not edit
 MAX_REPLICAS = 10                                   # given — do not edit

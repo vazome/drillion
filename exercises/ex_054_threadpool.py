@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from _lib import rng
 
 META = {"topic": 54, "title": "ThreadPoolExecutor — fan out, keep the order",
-        "tier": 3, "minutes": 12, "prereqs": []}
+        "tier": 3, "minutes": 12, "prereqs": [], "tags": ["concurrency"]}
 
 
 def solve(work, items, workers):

@@ -14,7 +14,7 @@ from moto import mock_aws
 
 META = {"topic": 72, "title": "boto3 task — find unattached EBS volumes",
         "tier": 4, "minutes": 25, "prereqs": [68],
-        "practices": [9, 28, 68]}
+        "practices": [9, 28, 68], "tags": ["cloud", "boto3"]}
 
 
 def solve(ec2):

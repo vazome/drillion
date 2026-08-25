@@ -4,7 +4,7 @@ from _lib import rng
 from langchain_core.runnables import RunnableLambda
 
 META = {"topic": 92, "title": "LLM retry — back off on rate limits, fail fast on bad requests",
-        "tier": 4, "minutes": 20, "prereqs": [45]}
+        "tier": 4, "minutes": 20, "prereqs": [45], "tags": ["llm", "langchain"]}
 
 
 class RateLimited(Exception):

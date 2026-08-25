@@ -6,7 +6,7 @@ import hmac
 from _lib import rng
 
 META = {"topic": 53, "title": "webhooks — verify an HMAC signature",
-        "tier": 3, "minutes": 12, "prereqs": []}
+        "tier": 3, "minutes": 12, "prereqs": [], "tags": ["http"]}
 
 
 def solve(secret, body, signature):

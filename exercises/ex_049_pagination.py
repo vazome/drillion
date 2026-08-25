@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 49, "title": "pagination — follow the cursor until it runs out",
-        "tier": 3, "minutes": 12, "prereqs": []}
+        "tier": 3, "minutes": 12, "prereqs": [], "tags": ["http"]}
 
 
 def solve(fetch_page):

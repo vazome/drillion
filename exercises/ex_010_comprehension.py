@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 10, "title": "comprehension — transform + filter", "tier": 3,
-        "minutes": 8, "prereqs": []}
+        "minutes": 8, "prereqs": [], "tags": ["core"]}
 
 
 def solve(records):

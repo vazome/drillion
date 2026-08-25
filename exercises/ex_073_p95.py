@@ -8,7 +8,7 @@ from _lib import rng
 
 META = {"topic": 73, "title": "DRILL: nginx log -> top IPs, status mix, p95",
         "tier": 4, "minutes": 30, "prereqs": [19, 28],
-        "practices": [19, 22, 28, 34]}
+        "practices": [19, 22, 28, 34], "tags": ["whole-task"]}
 
 
 def solve(lines):

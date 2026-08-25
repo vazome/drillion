@@ -7,7 +7,7 @@ from _lib import rng
 
 META = {"topic": 77, "title": "DRILL: CSV rows fanned out over a thread pool",
         "tier": 4, "minutes": 30, "prereqs": [32],
-        "practices": [32, 54, 43]}
+        "practices": [32, 54, 43], "tags": ["whole-task"]}
 
 
 def solve(text, work, max_workers):

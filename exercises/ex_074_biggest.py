@@ -7,7 +7,7 @@ from _lib import rng
 
 META = {"topic": 74, "title": "DRILL: N largest files under a directory tree",
         "tier": 4, "minutes": 25, "prereqs": [27],
-        "practices": [27, 9, 40]}
+        "practices": [27, 9, 40], "tags": ["whole-task"]}
 
 
 def solve(root, n):

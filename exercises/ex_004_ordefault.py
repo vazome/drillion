@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 4, "title": "defaults without swallowing 0 and ''", "tier": 3,
-        "minutes": 8, "prereqs": []}
+        "minutes": 8, "prereqs": [], "tags": ["core"]}
 
 
 def solve(port, name):

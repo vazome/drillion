@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 26, "title": "open() — stream a file line by line", "tier": 3,
-        "minutes": 10, "prereqs": []}
+        "minutes": 10, "prereqs": [], "tags": ["files-text"]}
 
 
 def solve(path):
