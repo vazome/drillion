@@ -69,7 +69,7 @@ def solve(monkeypatch):
          16-number list,
       2. patches `get_pool` in this module with an async fake returning a
          pool whose `acquire()` works in `async with` and whose conn's
-         `fetch(vector)` returns `rows` (a FakePool from ex_11 is perfect),
+         `fetch(vector)` returns `rows` (a FakePool from ex_096 is perfect),
       3. calls `search(q)` via `asyncio.run(...)` and returns its result.
 
     ─── exact rules ───
