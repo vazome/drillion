@@ -1227,42 +1227,46 @@ wheels = [
 [[package]]
 name = "study"
 version = "0.1.0"
-source = { virtual = "." }
-
-[package.dev-dependencies]
-dev = [
+source = { editable = "." }
+dependencies = [
     { name = "boto3" },
     { name = "fastapi" },
     { name = "httpx" },
-    { name = "ipykernel" },
     { name = "langchain-core" },
     { name = "moto" },
     { name = "pytest" },
     { name = "pytest-timeout" },
-    { name = "pytest-watcher" },
     { name = "requests" },
     { name = "responses" },
-    { name = "ruff" },
     { name = "uvicorn" },
 ]
 
-[package.metadata]
-
-[package.metadata.requires-dev]
+[package.dev-dependencies]
 dev = [
+    { name = "ipykernel" },
+    { name = "pytest-watcher" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
     { name = "boto3", specifier = ">=1.43.69" },
     { name = "fastapi", specifier = ">=0.141.1" },
     { name = "httpx", specifier = ">=0.28.1" },
-    { name = "ipykernel", specifier = ">=7.3.0" },
     { name = "langchain-core", specifier = ">=1.5.4" },
     { name = "moto", specifier = ">=5.2.2" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-timeout", specifier = ">=2.4.0" },
-    { name = "pytest-watcher", specifier = ">=0.6.3" },
     { name = "requests", specifier = ">=2.34.2" },
     { name = "responses", specifier = ">=0.26.2" },
-    { name = "ruff", specifier = ">=0.16.2" },
     { name = "uvicorn", specifier = ">=0.52.4" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "ipykernel", specifier = ">=7.3.0" },
+    { name = "pytest-watcher", specifier = ">=0.6.3" },
+    { name = "ruff", specifier = ">=0.16.2" },
 ]
 
 [[package]]
