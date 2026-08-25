@@ -179,3 +179,5 @@ python-checklist.{md,html}, ruff_plan.md, ruff_report.txt, unrelated-devops-1.ht
 (git-filter-repo, backup bundle in /tmp), gitignored, kept locally; all branches force-pushed to origin.
 NOTE for Task 8: README.md is local-only now → user docs go to README.md.
 README.md is the single user doc (STUDY.md deleted per Daniel; review-*.diff gitignored).
+README rewritten as a project README (Task 8 docs pulled forward; re-check after Task 6 lands: frontend dev loop, screenshots).
+DESIGN.md is the design handoff (screens, data, states, constraints); design-brief.md marked superseded; spike/ and web/index.html removed (web/README.md keeps web/ non-empty for the Dockerfile COPY).
