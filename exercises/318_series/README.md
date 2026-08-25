@@ -40,16 +40,16 @@ This particular exercise requires that you use the [raise statement](https://doc
 To raise a `ValueError` with a message, write the message as an argument to the `exception` type:
 
 ```python
-### if the slice length is zero.
+# if the slice length is zero.
 raise ValueError("slice length cannot be zero")
 
-### if the slice length is negative.
+# if the slice length is negative.
 raise ValueError("slice length cannot be negative")
 
-### if the series provided is empty.
+# if the series provided is empty.
 raise ValueError("series cannot be empty")
 
-### if the slice length is longer than the series.
+# if the slice length is longer than the series.
 raise ValueError("slice length cannot be greater than series length")
 ```
 
