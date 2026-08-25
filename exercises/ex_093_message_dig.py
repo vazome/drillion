@@ -9,7 +9,7 @@ from _lib import rng
 
 META = {"topic": 93, "title": "DRILL: dig tool calls out of a model response",
         "tier": 4, "minutes": 20, "prereqs": [30],
-        "practices": [30, 43, 75]}
+        "practices": [30, 43, 75], "tags": ["llm"]}
 
 
 def solve(payload):

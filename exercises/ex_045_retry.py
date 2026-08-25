@@ -5,7 +5,7 @@ import itertools
 from _lib import rng
 
 META = {"topic": 45, "title": "retry — exponential backoff with jitter, by hand", "tier": 4,
-        "minutes": 20, "prereqs": [43]}
+        "minutes": 20, "prereqs": [43], "tags": ["errors"]}
 
 
 def solve(call, sleep, rand, max_attempts, base):

@@ -7,7 +7,7 @@ import io
 from _lib import rng
 
 META = {"topic": 37, "title": "argparse — declare a CLI, get validation free",
-        "tier": 3, "minutes": 15, "prereqs": []}
+        "tier": 3, "minutes": 15, "prereqs": [], "tags": ["stdlib-ops"]}
 
 
 def solve():

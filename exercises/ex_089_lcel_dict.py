@@ -4,7 +4,7 @@ from _lib import rng
 from langchain_core.runnables import Runnable, RunnableLambda, RunnablePassthrough
 
 META = {"topic": 89, "title": "LCEL — a dict of runnables fans one input out",
-        "tier": 4, "minutes": 20, "prereqs": [88]}
+        "tier": 4, "minutes": 20, "prereqs": [88], "tags": ["llm", "langchain"]}
 
 
 def solve(retrieve, render):

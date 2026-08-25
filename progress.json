@@ -1,0 +1,61 @@
+{
+ "focus": null,
+ "cards": {
+  "ex_009_sortkey": {
+   "box": 0,
+   "due": "2026-08-23",
+   "seen": 1
+  },
+  "ex_022_sets": {
+   "box": 0,
+   "due": "2026-08-23",
+   "seen": 1
+  }
+ },
+ "open": {
+  "ex_016_typehints": {
+   "seed": 4357,
+   "attempts": 0,
+   "hints": 0,
+   "new": true,
+   "started": "2026-08-25T04:01:07.781830",
+   "last": "2026-08-25T04:01:07.781830",
+   "active": 0,
+   "solution_shown": false
+  }
+ },
+ "log": [
+  {
+   "date": "2026-08-21",
+   "slug": "ex_009_sortkey",
+   "grade": "struggled",
+   "attempts": 3,
+   "secs": 893,
+   "new": true
+  },
+  {
+   "date": "2026-08-21",
+   "slug": "ex_022_sets",
+   "grade": "struggled",
+   "attempts": 3,
+   "secs": 1372,
+   "new": true
+  }
+ ],
+ "archive": {
+  "ex_009_sortkey": [
+   {
+    "date": "2026-08-21",
+    "grade": "struggled",
+    "code": "def solve(services: list):\n    services = sorted(services, reverse=True, key=lambda age: age[1])\n    print(services)\n\n    return services"
+   }
+  ],
+  "ex_022_sets": [
+   {
+    "date": "2026-08-21",
+    "grade": "struggled",
+    "code": "def solve(scores: list):\n    real_val = set(scores)\n    real_val = sorted(real_val, reverse=True)[1]\n    print(real_val)\n    return real_val"
+   }
+  ]
+ }
+}

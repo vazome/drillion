@@ -7,7 +7,7 @@ from _lib import rng
 from langchain_core.runnables import RunnableLambda
 
 META = {"topic": 91, "title": "parallel LLM calls — gather with a per-call timeout",
-        "tier": 4, "minutes": 22, "prereqs": [56]}
+        "tier": 4, "minutes": 22, "prereqs": [56], "tags": ["llm", "asyncio", "langchain"]}
 
 
 def solve():

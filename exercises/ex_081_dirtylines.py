@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 81, "title": "defensive parsing — skip the junk, count it",
-        "tier": 3, "minutes": 15, "prereqs": [43]}
+        "tier": 3, "minutes": 15, "prereqs": [43], "tags": ["errors"]}
 
 LEVELS = {"DEBUG", "INFO", "WARN", "ERROR"}
 

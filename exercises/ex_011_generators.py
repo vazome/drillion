@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 11, "title": "generators — yield a filtered stream, lazily", "tier": 3,
-        "minutes": 10, "prereqs": []}
+        "minutes": 10, "prereqs": [], "tags": ["core"]}
 
 
 def solve(lines):

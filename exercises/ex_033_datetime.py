@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 33, "title": "datetime — strptime, deltas, busiest minute",
-        "tier": 3, "minutes": 15, "prereqs": []}
+        "tier": 3, "minutes": 15, "prereqs": [], "tags": ["files-text"]}
 
 
 def solve(lines):

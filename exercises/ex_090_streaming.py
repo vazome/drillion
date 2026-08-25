@@ -4,7 +4,7 @@ from _lib import rng
 from langchain_core.runnables import RunnableGenerator
 
 META = {"topic": 90, "title": "streaming — accumulate tokens, stop at a sentinel",
-        "tier": 3, "minutes": 15, "prereqs": [11]}
+        "tier": 3, "minutes": 15, "prereqs": [11], "tags": ["llm", "langchain"]}
 
 
 def solve(model, prompt, sentinel):

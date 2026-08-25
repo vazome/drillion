@@ -8,11 +8,12 @@
 #   https://fastapi.tiangolo.com/advanced/async-tests/
 #   https://www.pinecone.io/learn/series/rag/rerankers/
 #   https://en.wikipedia.org/wiki/Precision_and_recall
+#   TAKE-HOME: the interview
 
 from _lib import rng
 
-META = {"topic": 18, "title": "explain the take-home — ten interview questions", "tier": 4,
-        "minutes": 15, "prereqs": []}
+META = {"topic": 101, "title": "explain the take-home — ten interview questions", "tier": 4,
+        "minutes": 15, "prereqs": [94, 100], "tags": ["whole-task", "rsample"]}
 
 
 def solve():

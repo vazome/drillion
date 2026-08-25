@@ -9,7 +9,7 @@ from moto import mock_aws
 
 META = {"topic": 71, "title": "boto3 task — audit EC2 instances for missing tags",
         "tier": 4, "minutes": 25, "prereqs": [68],
-        "practices": [18, 20, 68]}
+        "practices": [18, 20, 68], "tags": ["cloud", "boto3"]}
 
 
 def solve(ec2, required):

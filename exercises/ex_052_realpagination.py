@@ -10,7 +10,7 @@ import responses
 from _lib import rng
 
 META = {"topic": 52, "title": "Link header pagination — follow rel=next with requests",
-        "tier": 4, "minutes": 25, "prereqs": [48, 49]}
+        "tier": 4, "minutes": 25, "prereqs": [48, 49], "tags": ["http", "requests"]}
 
 
 def solve(first_url, token):

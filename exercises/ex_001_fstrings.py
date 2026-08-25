@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 1, "title": "f-strings — aligned report columns", "tier": 3,
-        "minutes": 10, "prereqs": []}
+        "minutes": 10, "prereqs": [], "tags": ["core"]}
 
 
 def solve(rows):

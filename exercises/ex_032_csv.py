@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 32, "title": "csv — parse quoted fields correctly", "tier": 3,
-        "minutes": 10, "prereqs": []}
+        "minutes": 10, "prereqs": [], "tags": ["files-text"]}
 
 
 def solve(text):

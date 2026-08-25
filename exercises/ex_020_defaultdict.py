@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 20, "title": "defaultdict(list) — group log lines by host", "tier": 3,
-        "minutes": 10, "prereqs": [18]}
+        "minutes": 10, "prereqs": [18], "tags": ["data-structures"]}
 
 
 def solve(lines):

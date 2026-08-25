@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 47, "title": "idempotency — apply desired state, safe to re-run",
-        "tier": 3, "minutes": 15, "prereqs": [43]}
+        "tier": 3, "minutes": 15, "prereqs": [43], "tags": ["errors"]}
 
 
 def solve(state, desired):

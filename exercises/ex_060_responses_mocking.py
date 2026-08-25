@@ -5,7 +5,7 @@ import responses
 from _lib import rng
 
 META = {"topic": 60, "title": "responses — mock the HTTP the code under test will make",
-        "tier": 4, "minutes": 20, "prereqs": [48]}
+        "tier": 4, "minutes": 20, "prereqs": [48], "tags": ["testing", "requests"]}
 
 
 def solve(rsps, spec):

@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 34, "title": "p95 latency — nearest-rank percentile", "tier": 3,
-        "minutes": 10, "prereqs": []}
+        "minutes": 10, "prereqs": [], "tags": ["files-text"]}
 
 
 def solve(values, pct):

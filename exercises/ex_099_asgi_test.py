@@ -6,6 +6,7 @@
 #   https://www.python-httpx.org/advanced/transports/  — section 'ASGITransport': the client talks
 #       to the app object in-process; no port, no socket, no uvicorn
 #   https://fastapi.tiangolo.com/tutorial/query-params/  — why `q` is required and what 422 means
+#   TAKE-HOME: `httpx.ASGITransport(app=app)`
 
 import asyncio
 import inspect
@@ -14,8 +15,8 @@ import httpx
 from _lib import rng
 from fastapi import FastAPI
 
-META = {"topic": 15, "title": "ASGITransport — hit the endpoint without a server", "tier": 4,
-        "minutes": 20, "prereqs": []}
+META = {"topic": 99, "title": "ASGITransport — hit the endpoint without a server", "tier": 4,
+        "minutes": 20, "prereqs": [98], "tags": ["testing", "asyncio", "fastapi", "rsample"]}
 
 
 # ── the app under test (do not edit) ────────────────────────────────────

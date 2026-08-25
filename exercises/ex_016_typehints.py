@@ -1,9 +1,18 @@
 """Most of the type hints you meet are ones you read, not ones you wrote."""
+# READ FIRST:
+#   https://realpython.com/python-type-checking/  — the take-home REQUIRED annotations on every signature
+#   https://docs.python.org/3/library/typing.html  — reference, only for lookup
+#   https://docs.python.org/3/tutorial/datastructures.html#dictionaries  — dicts: read, add, remove, loop over
+#   https://realpython.com/python-dicts/  — same, longer; 'Building a Dictionary Incrementally' and
+#       'Dictionary Methods' (.items(), .pop()) are the 70% of this task
+#   https://docs.python.org/3/library/typing.html#typing.get_type_hints  — the one call that reads the hints
+#   https://docs.python.org/3/library/typing.html#typing.get_args  — split `str | None` into its parts
+#   TAKE-HOME: required on every signature
 
 from _lib import rng
 
 META = {"topic": 16, "title": "type hints — read a signature with get_type_hints", "tier": 3,
-        "minutes": 22, "prereqs": []}
+        "minutes": 22, "prereqs": [], "tags": ["core", "rsample"]}
 
 
 def solve(fn):
@@ -57,6 +66,13 @@ def solve(fn):
     or it is missing. Spotting those is the practical payoff of reading hints,
     since they are the ones that will hand you a None at 3am.
     """
+    from typing import get_type_hints
+    modifications = get_type_hints(fn)
+    zone = modifications["zone"]
+    returnal = modifications["return"]
+
+    print(get_type_hints(fn))
+
     raise NotImplementedError
 
 

@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 5, "title": "enumerate + zip — pair and number", "tier": 3,
-        "minutes": 8, "prereqs": []}
+        "minutes": 8, "prereqs": [], "tags": ["core"]}
 
 
 def solve(hosts, ips):

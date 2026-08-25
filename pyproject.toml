@@ -20,11 +20,16 @@ dev = [
     "requests>=2.34.2",
     "responses>=0.26.2",
     "ruff>=0.16.2",
+    "uvicorn>=0.52.4",
 ]
+
+[tool.ruff]
+extend-exclude = ["drafts"]          # scratch files, not part of the drill set
 
 [tool.ruff.lint.per-file-ignores]
 "study.py" = ["DTZ"]  # local wall-clock dates are intended for scheduling
+"exercises/*" = ["E402", "F841"]  # the region is the learner's: mid-file imports, half-used names
 
 [tool.pytest.ini_options]
 python_files = ["ex_*.py", "test_*.py"]
-testpaths = ["exercises", "rsample_drill"]
+testpaths = ["exercises", "test_study.py"]

@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 18, "title": "dict.get — count without KeyError", "tier": 2,
-        "minutes": 8, "prereqs": []}
+        "minutes": 8, "prereqs": [], "tags": ["data-structures"]}
 
 
 def solve(words):

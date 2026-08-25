@@ -5,7 +5,7 @@ import responses
 from _lib import rng
 
 META = {"topic": 51, "title": "requests.Session — shared headers, reused connection",
-        "tier": 3, "minutes": 15, "prereqs": [48]}
+        "tier": 3, "minutes": 15, "prereqs": [48], "tags": ["http", "requests"]}
 
 
 def solve(base_url, token, agent, names):

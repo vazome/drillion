@@ -6,7 +6,7 @@ import sys
 from _lib import rng
 
 META = {"topic": 35, "title": "subprocess.run — run a command, read the result",
-        "tier": 3, "minutes": 15, "prereqs": []}
+        "tier": 3, "minutes": 15, "prereqs": [], "tags": ["stdlib-ops"]}
 
 
 def solve(argv):

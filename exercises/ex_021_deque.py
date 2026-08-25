@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 21, "title": "deque(maxlen) — tail of a stream", "tier": 3,
-        "minutes": 10, "prereqs": []}
+        "minutes": 10, "prereqs": [], "tags": ["data-structures"]}
 
 
 def solve(lines, n):

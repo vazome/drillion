@@ -7,7 +7,7 @@ from _lib import rng
 
 META = {"topic": 78, "title": "DRILL: tail a growing log, alert with context",
         "tier": 4, "minutes": 25, "prereqs": [21],
-        "practices": [26, 29, 21]}
+        "practices": [26, 29, 21], "tags": ["whole-task"]}
 
 
 def solve(stream, pattern, window):

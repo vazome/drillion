@@ -8,7 +8,7 @@ import tempfile
 from _lib import rng
 
 META = {"topic": 40, "title": "shutil / tempfile / glob — stage files, then clean up",
-        "tier": 3, "minutes": 18, "prereqs": []}
+        "tier": 3, "minutes": 18, "prereqs": [], "tags": ["stdlib-ops"]}
 
 
 def solve(root):

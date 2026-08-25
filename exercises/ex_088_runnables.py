@@ -4,7 +4,7 @@ from _lib import rng
 from langchain_core.runnables import RunnableLambda, RunnableSequence
 
 META = {"topic": 88, "title": "runnables — build a chain with |", "tier": 3,
-        "minutes": 15, "prereqs": []}
+        "minutes": 15, "prereqs": [], "tags": ["llm", "langchain"]}
 
 
 def solve():

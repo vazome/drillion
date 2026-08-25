@@ -53,7 +53,10 @@ def test_splice_puts_every_file_back_exactly():
 
 
 def test_stub_is_identity_on_pristine_files():
+    drafts = set(study.load()["open"])           # an open attempt means the file holds live work
     for f in FILES:
+        if f.stem in drafts:
+            continue
         body = study.cut(f.read_text()).body
         assert study.stub(body) == body, f.name
 

@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 14, "title": "classes — __init__, __repr__, @property", "tier": 3,
-        "minutes": 12, "prereqs": []}
+        "minutes": 12, "prereqs": [], "tags": ["core"]}
 
 
 def solve(name, replicas, cpu):

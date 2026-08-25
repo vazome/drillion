@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 46, "title": "deadlines — poll until ready or time out", "tier": 3,
-        "minutes": 15, "prereqs": [43]}
+        "minutes": 15, "prereqs": [43], "tags": ["errors"]}
 
 
 def solve(check, now, sleep, timeout, interval):

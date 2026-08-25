@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 50, "title": "rate limits — honour 429 and Retry-After",
-        "tier": 3, "minutes": 15, "prereqs": [45]}
+        "tier": 3, "minutes": 15, "prereqs": [45], "tags": ["http"]}
 
 
 def solve(request, sleep, max_attempts, default_wait):

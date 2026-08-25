@@ -7,7 +7,7 @@ from _lib import rng
 
 META = {"topic": 76, "title": "DRILL: poll until healthy, back off, exit code",
         "tier": 4, "minutes": 30, "prereqs": [46],
-        "practices": [46, 45, 39]}
+        "practices": [46, 45, 39], "tags": ["whole-task"]}
 
 
 def solve(check, now, sleep, timeout, interval, max_interval):

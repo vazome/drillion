@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 2, "title": "slicing — combine start, stop, step", "tier": 3,
-        "minutes": 10, "prereqs": []}
+        "minutes": 10, "prereqs": [], "tags": ["core"]}
 
 
 def solve(xs):

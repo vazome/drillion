@@ -7,13 +7,14 @@
 #   https://docs.python.org/3/howto/sorting.html  — key=, reverse=True, and 'Sort Stability':
 #       equal scores keep their incoming order, which is how ties stay in vector order
 #   https://docs.python.org/3/library/stdtypes.html#set  — `&` gives the words in both sets
+#   TAKE-HOME: Task 2 + the "fraction, not count" upgrade
 
 import re
 
 from _lib import rng
 
-META = {"topic": 16, "title": "take-home Task 2 — rerank the candidate pool", "tier": 3,
-        "minutes": 20, "prereqs": []}
+META = {"topic": 100, "title": "take-home Task 2 — rerank the candidate pool", "tier": 3,
+        "minutes": 20, "prereqs": [9, 22, 29], "tags": ["whole-task", "rsample"]}
 
 
 def solve(query, rows, k):

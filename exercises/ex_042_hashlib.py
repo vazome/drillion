@@ -8,7 +8,7 @@ import tempfile
 from _lib import rng
 
 META = {"topic": 42, "title": "hashlib — checksum files against a known digest",
-        "tier": 3, "minutes": 10, "prereqs": []}
+        "tier": 3, "minutes": 10, "prereqs": [], "tags": ["stdlib-ops"]}
 
 
 def solve(paths, known_good):

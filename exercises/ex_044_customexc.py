@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 44, "title": "custom exceptions — a ConfigError family", "tier": 3,
-        "minutes": 15, "prereqs": [43]}
+        "minutes": 15, "prereqs": [43], "tags": ["errors"]}
 
 
 class ConfigError(Exception):

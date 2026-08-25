@@ -5,7 +5,7 @@ import logging
 from _lib import rng
 
 META = {"topic": 38, "title": "logging — levels, a formatter, a custom handler",
-        "tier": 3, "minutes": 18, "prereqs": []}
+        "tier": 3, "minutes": 18, "prereqs": [], "tags": ["stdlib-ops"]}
 
 
 def solve(name, level, messages):

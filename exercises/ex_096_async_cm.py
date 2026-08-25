@@ -6,14 +6,15 @@
 #       methods Python calls: __aenter__ on the way in, __aexit__ on the way out (ALWAYS, even on error)
 #   https://docs.python.org/3/library/contextlib.html#contextlib.asynccontextmanager  — the shorter
 #       way: one async generator with a single `yield`
+#   TAKE-HOME: your `tests/test_search.py`
 
 import asyncio
 import inspect
 
 from _lib import rng
 
-META = {"topic": 11, "title": "async context manager — your own FakePool", "tier": 4,
-        "minutes": 25, "prereqs": []}
+META = {"topic": 96, "title": "async context manager — your own FakePool", "tier": 4,
+        "minutes": 25, "prereqs": [13, 56], "tags": ["concurrency", "asyncio", "rsample"]}
 
 
 def solve():

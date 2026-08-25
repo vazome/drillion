@@ -8,7 +8,7 @@ from _lib import rng
 from moto import mock_aws
 
 META = {"topic": 68, "title": "boto3 — client vs resource, and paginators",
-        "tier": 3, "minutes": 20, "prereqs": []}
+        "tier": 3, "minutes": 20, "prereqs": [], "tags": ["cloud", "boto3"]}
 
 
 def solve(s3, bucket):

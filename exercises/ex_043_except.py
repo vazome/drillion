@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 43, "title": "try/except — survive bad input", "tier": 3,
-        "minutes": 10, "prereqs": []}
+        "minutes": 10, "prereqs": [], "tags": ["errors"]}
 
 
 def solve(rows):

@@ -7,7 +7,7 @@ from _lib import rng
 
 META = {"topic": 82, "title": "DRILL: palindrome, anagram, top-N words",
         "tier": 4, "minutes": 30, "prereqs": [19],
-        "practices": [28, 19, 22]}
+        "practices": [28, 19, 22], "tags": ["whole-task"]}
 
 
 def solve(phrase, pair, text, n):

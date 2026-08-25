@@ -1,9 +1,13 @@
 """sorted(key=...) — top-3 most-used Python in interviews."""
+# READ FIRST:
+#   https://docs.python.org/3/howto/sorting.html  — key=, reverse=, and why Python's sort is 'stable' (ties keep order)
+#   https://realpython.com/python-sort/  — same, slower and with pictures
+#   TAKE-HOME: `sorted(rows, key=score)` in main.py
 
 from _lib import rng
 
 META = {"topic": 9, "title": "sorted with key=", "tier": 3,
-        "minutes": 10, "prereqs": []}
+        "minutes": 10, "prereqs": [], "tags": ["core", "rsample"]}
 
 
 def solve(services):

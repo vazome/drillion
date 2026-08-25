@@ -3,7 +3,7 @@
 from _lib import rng
 
 META = {"topic": 15, "title": "dataclasses — defaults, frozen=True, sort by a field", "tier": 3,
-        "minutes": 12, "prereqs": []}
+        "minutes": 12, "prereqs": [], "tags": ["core"]}
 
 
 def solve(specs):

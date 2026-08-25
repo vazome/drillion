@@ -1,9 +1,13 @@
 """Reaching for threads on CPU work is the wrong answer that ends a phone screen."""
+# READ FIRST:
+#   https://realpython.com/python-concurrency/  — threads vs processes vs asyncio, when each wins
+#   https://docs.python.org/3/library/concurrency.html
+#   TAKE-HOME: "why async here?"
 
 from _lib import rng
 
 META = {"topic": 55, "title": "threads vs processes vs async — pick one, say why",
-        "tier": 3, "minutes": 8, "prereqs": []}
+        "tier": 3, "minutes": 8, "prereqs": [], "tags": ["concurrency", "rsample"]}
 
 
 def solve(workloads):
