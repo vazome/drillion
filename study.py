@@ -265,6 +265,8 @@ def read_first(src):
         if not line.startswith("#"):
             break
         block.append(line[1:].removeprefix(" "))
+    if block and block[0].startswith("SOURCE:"):  # exercism attribution line
+        block = block[1:]
     return block if block and block[0].strip().startswith("READ FIRST") else []
 
 
