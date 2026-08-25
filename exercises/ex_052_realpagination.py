@@ -7,7 +7,6 @@ loop as topic 49, but against actual requests/Response objects rather than a fak
 
 import requests
 import responses
-
 from _lib import rng
 
 META = {"topic": 52, "title": "Link header pagination — follow rel=next with requests",
@@ -15,7 +14,26 @@ META = {"topic": 52, "title": "Link header pagination — follow rel=next with r
 
 
 def solve(first_url, token):
-    """Collect every item the API will give you, across all pages.
+    """WHY: A manager wants every open issue in the team's repo on a
+    GitHub-style server, to build a backlog report. The server hands back
+    issues a few at a time, and it tells you where the next batch lives not
+    in the data but in a response header called Link: a line listing web
+    addresses labelled next, prev, first and last. You must follow the
+    "next" address until there is none, send the token and a time limit
+    with every request, and never guess at addresses yourself, because the
+    server only answers addresses it handed out.
+
+    YOU GET: `first_url` — a string: the web address of the first page,
+    like "https://api.github.test/repos/sre/runbooks/issues?page=1".
+    `token` — a string secret that proves who you are.
+    The test points the requests library at a fake server with made-up
+    pages and inspects each request you made; nothing real is contacted.
+
+    YOU RETURN: one flat list of every issue dict from every page, in the
+    order received, like [{"number": 412, "title": "flaky test"}, ...].
+
+    ─── exact rules ───
+    Collect every item the API will give you, across all pages.
 
     GET `first_url` with the header  Authorization: Bearer <token>
     and a timeout=, call raise_for_status(), and keep going until the
@@ -64,20 +82,20 @@ def solve(first_url, token):
 
 
 HINTS = [
-    "You cannot know the page count up front, so this is a while loop, and the "
+    ("You cannot know the page count up front, so this is a while loop, and the "
     "thing that survives each turn is the url to fetch next. Two details are "
     "specific to HTTP: the pointer lives in a response header rather than in "
     "the JSON, and requests has already turned that header into a small dict "
     "for you, so there is no parsing to write. The stop condition is the "
-    "absence of one particular rel, not the absence of links.",
-    "Keep a url variable starting at first_url and an items list outside the "
+    "absence of one particular rel, not the absence of links."),
+    ("Keep a url variable starting at first_url and an items list outside the "
     "loop. Inside: requests.get(url, headers=..., timeout=...), "
     "raise_for_status(), items.extend(r.json()) — extend, since the body is "
     "already a list — then look at r.links. r.links.get('next') gives you "
     "either None or a dict with a 'url' key, which is exactly what decides "
     "whether the loop runs again. `while url:` reads well once url becomes "
-    "None at the end.",
-    "Different data — walking an audit log the same way:\n"
+    "None at the end."),
+    ("Different data — walking an audit log the same way:\n"
     "    url = 'https://audit.example.com/events?since=monday'\n"
     "    rows = []\n"
     "    while url:\n"
@@ -90,7 +108,7 @@ HINTS = [
     "        url = nxt['url'] if nxt else None\n"
     "    print(len(rows))     # 57\n"
     "Same three beats as yours: fetch, accumulate, ask the response where to "
-    "go next.",
+    "go next."),
 ]
 
 

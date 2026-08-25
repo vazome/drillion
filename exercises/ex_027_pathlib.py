@@ -7,7 +7,24 @@ META = {"topic": 27, "title": "pathlib.Path — walk and inspect a tree", "tier"
 
 
 def solve(root):
-    """`root` is a directory path as a STRING. The tree under it looks like:
+    """WHY: A company keeps one folder per service on a shared server, each
+    with its own log and config subfolders. Before a migration the platform
+    team asks for an inventory: the name of every log file anywhere under
+    the root, the name (minus extension) of every config file, and whether
+    someone already wrote a README at the top. Chopping path strings by hand
+    is error-prone; you need to walk the whole tree and ask questions about
+    each path.
+
+    YOU GET: `root` — a string with the path to the top folder, like
+    "/tmp/ex027_xyz". The test builds a small tree of folders and files
+    under it and hands you the path; you never build it yourself.
+
+    YOU RETURN: a dict with three keys: "logs" (sorted list of log file
+    names), "conf_stems" (sorted list of config file names without the
+    extension) and "has_readme" (True or False).
+
+    ─── exact rules ───
+    `root` is a directory path as a STRING. The tree under it looks like:
 
         root/
           api/
@@ -31,22 +48,22 @@ def solve(root):
 
 
 HINTS = [
-    "pathlib treats a path as an object, not a string: joining, searching and "
+    ("pathlib treats a path as an object, not a string: joining, searching and "
     "asking questions about it are all methods. glob looks in one directory "
     "only; it has a sibling that walks the entire tree. A Path also knows its "
-    "own final component, and that component with the extension removed.",
-    "Path(root) gets you into object-land. rglob('*.log') yields every match "
+    "own final component, and that component with the extension removed."),
+    ("Path(root) gets you into object-land. rglob('*.log') yields every match "
     "in the whole tree. .name is the final component, .stem is that minus the "
     "suffix. Join with the / operator and ask .exists() for the readme. Wrap "
-    "both listings in sorted so the order is fixed.",
-    "Different data, same moves:\n"
+    "both listings in sorted so the order is fixed."),
+    ("Different data, same moves:\n"
     "    from pathlib import Path\n"
     "    etc = Path('/etc')\n"
     "    units = sorted(p.name for p in etc.rglob('*.timer'))\n"
     "    p = Path('/var/log/nginx/access.log')\n"
     "    print(p.name, p.stem, p.suffix)   # access.log access .log\n"
     "    print((etc / 'hosts').exists())   # True on most boxes\n"
-    "One object, and the string-splitting you used to do disappears.",
+    "One object, and the string-splitting you used to do disappears."),
 ]
 
 

@@ -11,7 +11,30 @@ META = {"topic": 82, "title": "DRILL: palindrome, anagram, top-N words",
 
 
 def solve(phrase, pair, text, n):
-    """Three small questions, one dict back:
+    """WHY: Many phone screens for ops roles open with two or three tiny
+    warm-up questions before the real work: is this phrase the same read
+    backwards, are these two words made of the same letters, what are the
+    most common words in this text. They are not about the job; they check
+    that you can state a rule clearly and then write it. Here all three are
+    bundled into one function so you can practise them together.
+
+    YOU GET: `phrase` — a string like "Nurses, run." to test for reading the
+    same backwards.
+
+    `pair` — two strings packed together, like ("Dirty room", "Dormitory"),
+    to test whether they use the same letters.
+
+    `text` — a string of words like "pod pod, POD deploy Deploy node".
+
+    `n` — a whole number, like 2: how many of the most common words to
+    report. The test builds all four and hands them to you.
+
+    YOU RETURN: a dictionary with three keys: "palindrome" (True or False),
+    "anagram" (True or False) and "top_words" (a list of (word, count)
+    pairs, most common first).
+
+    ─── exact rules ───
+    Three small questions, one dict back:
 
         {"palindrome": True,
          "anagram": True,
@@ -43,18 +66,18 @@ def solve(phrase, pair, text, n):
 
 
 HINTS = [
-    "Three unrelated questions, so resist making them share code. Every one "
+    ("Three unrelated questions, so resist making them share code. Every one "
     "is the same two beats: normalise, then compare. Every bug lives in the "
     "normalise beat — which characters you drop, and whether you dropped them "
-    "on both sides.",
-    "Palindrome: build a cleaned string with a comprehension over phrase "
+    "on both sides."),
+    ("Palindrome: build a cleaned string with a comprehension over phrase "
     "keeping c.isalnum(), lowercased, then compare it to s[::-1]. Anagram: "
     "sorted() of each side, lowercased with spaces removed, and compare the "
     "two lists. Top words: Counter over text.lower().split() with "
     "w.strip('.,!?;:\\'\"') on each word, then sorted(counts.items(), "
     "key=lambda kv: (-kv[1], kv[0]))[:n] — most_common would leave ties in "
-    "whatever order they arrived.",
-    "Different data, both normalising moves:\n"
+    "whatever order they arrived."),
+    ("Different data, both normalising moves:\n"
     "    from collections import Counter\n"
     "    words = [w.strip('.,;') for w in 'Red, red; blue GREEN green red'.lower().split()]\n"
     "    counts = Counter(words)\n"
@@ -65,7 +88,7 @@ HINTS = [
     "    print(s, s == s[::-1])          # abba True\n"
     "    print(sorted('cat') == sorted('act'))    # True\n"
     "Note the sort key: minus the count sorts big first, the word sorts A to "
-    "Z, one pass.",
+    "Z, one pass."),
 ]
 
 

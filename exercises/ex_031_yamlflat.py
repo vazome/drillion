@@ -8,7 +8,22 @@ META = {"topic": 31, "title": "YAML, the concept — flat key: value block by ha
 
 
 def solve(text):
-    """`text` is a flat YAML-style mapping — the honest subset you can parse
+    """WHY: Deployment settings live in a small text file: one setting per line
+    as "key: value", with comments and blank lines in between. The deploy
+    tool needs those settings as real typed values (3 as a number, false as
+    a yes/no flag), not as text. The usual library for this format is not
+    installed here, so you parse the simple flat form by hand. The trap: a
+    value like an image tag nginx:1.25 contains a colon of its own.
+
+    YOU GET: `text` — a multi-line string of settings, like the block shown
+    in the rules below. The test creates it and hands it to you; you never
+    build it yourself.
+
+    YOU RETURN: a dict mapping each key to its typed value, like
+    {"replicas": 3, "debug": False, "name": "api"}.
+
+    ─── exact rules ───
+    `text` is a flat YAML-style mapping — the honest subset you can parse
     without a library:
 
         # deploy config
@@ -35,23 +50,23 @@ def solve(text):
 
 
 HINTS = [
-    "This is the YAML idea without the library: a mapping is lines of key, "
+    ("This is the YAML idea without the library: a mapping is lines of key, "
     "colon, value, with comments and blanks to ignore. The trap is that a "
     "value can contain a colon too — an image tag like nginx:1.25 — so "
     "cutting at every colon destroys data. And YAML is typed: 3 and true are "
-    "not strings.",
-    "splitlines walks the block. strip plus startswith('#') filters the "
+    "not strings."),
+    ("splitlines walks the block. strip plus startswith('#') filters the "
     "noise. partition(':') splits at the first colon only — that is why it "
     "beats split here. For typing: compare the value against 'true' and "
-    "'false', then try isdigit for ints, otherwise keep the string.",
-    "Different data, same moves:\n"
+    "'false', then try isdigit for ints, otherwise keep the string."),
+    ("Different data, same moves:\n"
     "    line = 'listen: 0.0.0.0:8080'\n"
     "    key, _, value = line.partition(':')\n"
     "    print(key.strip(), '|', value.strip())   # listen | 0.0.0.0:8080\n"
     "    print('42'.isdigit(), 'id42'.isdigit())  # True False\n"
     "In real code this whole exercise is yaml.safe_load(text) — and never "
     "plain yaml.load, which can construct arbitrary Python objects from "
-    "untrusted input.",
+    "untrusted input."),
 ]
 
 

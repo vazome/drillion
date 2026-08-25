@@ -11,7 +11,25 @@ META = {"topic": 79, "title": "DRILL: start-up order, or the cycle that blocks i
 
 
 def solve(graph):
-    """`graph` maps a service to the services it depends on:
+    """WHY: A platform has many services, and some cannot start until others
+    are already running: the API needs the database, the cache needs the
+    database, and so on. After a full outage someone has to bring everything
+    back up in an order that works. If two services each wait for the other,
+    nothing can start at all, and the team needs to know that before they
+    try.
+
+    YOU GET: `graph` — a dictionary where each key is a service name and its
+    value is a list of the services it needs running first, like {"api":
+    ["db", "cache"], "cache": ["db"], "db": []}. The test builds it and
+    hands it to you.
+
+    YOU RETURN: a dictionary with two keys: "cycle" (True when services wait
+    on each other in a loop, otherwise False) and "order" (a list of service
+    names in a start-up order that works, or an empty list when there is a
+    cycle).
+
+    ─── exact rules ───
+    `graph` maps a service to the services it depends on:
 
         {"api": ["db", "cache"], "cache": ["db"], "db": []}
 
@@ -39,18 +57,18 @@ def solve(graph):
 
 
 HINTS = [
-    "One algorithm answers both questions. Repeatedly take any service whose "
+    ("One algorithm answers both questions. Repeatedly take any service whose "
     "dependencies are all started already, mark it started, and see what that "
     "unblocks. If you run out of unblocked services with some still left "
     "over, the leftovers are waiting on each other — that is the cycle, and "
-    "you get it for free. No separate cycle hunt.",
-    "Kahn's algorithm. Two structures: unmet[svc] = how many dependencies it "
+    "you get it for free. No separate cycle hunt."),
+    ("Kahn's algorithm. Two structures: unmet[svc] = how many dependencies it "
     "is still waiting on, and a reverse map unblocks = defaultdict(list) "
     "where unblocks[dep] lists the services that were waiting on dep. Seed a "
     "queue with every service at zero, pop one, append it to the order, "
     "decrement each of its dependents, push the ones that hit zero. At the "
-    "end, len(order) != len(graph) means a cycle.",
-    "Different data, whole shape:\n"
+    "end, len(order) != len(graph) means a cycle."),
+    ("Different data, whole shape:\n"
     "    from collections import defaultdict, deque\n"
     "    needs = {'cake': ['eggs', 'flour'], 'eggs': [], 'flour': []}\n"
     "    unmet = {k: len(v) for k, v in needs.items()}\n"
@@ -68,7 +86,7 @@ HINTS = [
     "            if unmet[nxt] == 0:\n"
     "                ready.append(nxt)\n"
     "    print(order)      # ['eggs', 'flour', 'cake']\n"
-    "Add the leftover check and the two return shapes and you are done.",
+    "Add the leftover check and the two return shapes and you are done."),
 ]
 
 

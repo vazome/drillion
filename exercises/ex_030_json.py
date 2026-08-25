@@ -7,7 +7,22 @@ META = {"topic": 30, "title": "json — loads, safe nested gets, dumps", "tier":
 
 
 def solve(text):
-    """`text` is the JSON string a cluster API returned. Its shape,
+    """WHY: A cluster API answers with the state of every node as JSON text.
+    Not every node reports CPU load, and not every cluster carries a region
+    tag. The platform team's dashboard script keeps crashing because it
+    assumes those fields are always present. You are asked to write a
+    version that produces a short summary (region plus CPU per node) and
+    never crashes when a field is simply absent.
+
+    YOU GET: `text` — a string of JSON, the raw text an HTTP API answered
+    with, shaped like the example in the rules below. The test creates it
+    and hands it to you; you never build it yourself.
+
+    YOU RETURN: a string — the summary written back out as JSON text with
+    two-space indent and sorted keys, exactly as shown in the rules below.
+
+    ─── exact rules ───
+    `text` is the JSON string a cluster API returned. Its shape,
     pretty-printed:
 
         {"cluster": {
@@ -45,23 +60,23 @@ def solve(text):
 
 
 HINTS = [
-    "json.loads hands you plain dicts and lists — after that it is not a JSON "
+    ("json.loads hands you plain dicts and lists — after that it is not a JSON "
     "problem, it is a dict problem. The crash comes from square-bracketing a "
     "key that is not there. Only the hops the schema marks optional need a "
-    "lookup with a default; the guaranteed ones can stay as plain indexing.",
-    "data['cluster']['nodes'] is safe — the spec guarantees those. For the "
+    "lookup with a default; the guaranteed ones can stay as plain indexing."),
+    ("data['cluster']['nodes'] is safe — the spec guarantees those. For the "
     "optional hops, chain dict.get with an empty-dict default: get('meta', {}) "
     "then get('region', 'unknown'). Note that .get with no default returns "
     "None, which is exactly what the cpu column wants. Finish with json.dumps "
-    "plus its indent and sort_keys keyword arguments.",
-    "Different data, same pattern:\n"
+    "plus its indent and sort_keys keyword arguments."),
+    ("Different data, same pattern:\n"
     "    import json\n"
     "    cfg = {'svc': {'limits': {'mem': '1Gi'}}}\n"
     "    cpu = cfg['svc'].get('limits', {}).get('cpu', 'unset')\n"
     "    print(cpu)                                        # unset\n"
     "    print(json.dumps({'b': 1, 'a': 2}, sort_keys=True))  # {\"a\": 2, \"b\": 1}\n"
     "Chained .get with {} defaults never raises; the dumps arguments control "
-    "the exact text you return.",
+    "the exact text you return."),
 ]
 
 

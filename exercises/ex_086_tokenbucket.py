@@ -11,7 +11,31 @@ META = {"topic": 86, "title": "DRILL: token-bucket rate limiter with a fake cloc
 
 
 def solve(requests, capacity, rate, start):
-    """Decide which requests the rate limiter lets through.
+    """WHY: A public API gets more requests than it can handle, so it must
+    let a steady stream through and turn the rest away. The standard way is
+    a "token bucket": the bucket holds a few tokens, each accepted request
+    spends one, and tokens trickle back in over time. Clients also retry
+    requests that already went through, and a retry must not be charged
+    twice, or a flaky network eats a customer's whole allowance.
+
+    YOU GET: `requests` — a list of pairs (time in seconds, request id), in
+    time order, like [(0, "a"), (0, "b"), (2, "d")].
+
+    `capacity` — a whole number, like 2: the most tokens the bucket can
+    hold.
+
+    `rate` — a number, like 1: how many tokens come back per second.
+
+    `start` — the time in seconds when the bucket was created full, like 0.
+    The test builds all four and hands them to you. Time is just numbers
+    here; nothing really waits.
+
+    YOU RETURN: a dictionary with "allowed" (a list of True/False, one per
+    request, in order) and "tokens_left" (how many tokens remain after the
+    last request, rounded to 6 decimals).
+
+    ─── exact rules ───
+    Decide which requests the rate limiter lets through.
 
     A token bucket holds at most `capacity` tokens, starts full at time
     `start`, and refills at `rate` tokens per second. An accepted request
@@ -55,20 +79,20 @@ def solve(requests, capacity, rate, start):
 
 
 HINTS = [
-    "Three pieces of state and nothing else: how many tokens are in the "
+    ("Three pieces of state and nothing else: how many tokens are in the "
     "bucket, when you last looked at the clock, and which request ids you "
     "have already accepted. Everything else is one pass down the list. The "
     "classic bug is refilling with the wrong elapsed — it is the gap since "
-    "the previous request, not the time since the bucket was created.",
-    "tokens = float(capacity), last = start, seen = set(). Per request: "
+    "the previous request, not the time since the bucket was created."),
+    ("tokens = float(capacity), last = start, seen = set(). Per request: "
     "refill with min(capacity, tokens + (ts - last) * rate), then set "
     "last = ts before you decide anything, or the next refill double-counts. "
     "Check `rid in seen` first, the tokens >= 1 branch second. The version an "
     "interviewer wants to see is a small class: __init__(self, capacity, "
     "rate, start) holding that state and an allow(self, ts, rid) method "
     "returning a bool, with tokens_left as a @property. Then solve is a loop "
-    "four lines long.",
-    "Different data — refill and cap in isolation, capacity 3, rate 0.5, one "
+    "four lines long."),
+    ("Different data — refill and cap in isolation, capacity 3, rate 0.5, one "
     "token spent each time:\n"
     "    capacity, rate, tokens, last = 3, 0.5, 3.0, 0\n"
     "    for ts in [0, 1, 5]:\n"
@@ -80,7 +104,7 @@ HINTS = [
     "    # 1 1.5     <- 1 second refilled half a token\n"
     "    # 5 2.0     <- refill wanted 3.5, the cap said 3\n"
     "The cap is what makes it a bucket instead of a counter that grows "
-    "forever while the service is idle.",
+    "forever while the service is idle."),
 ]
 
 

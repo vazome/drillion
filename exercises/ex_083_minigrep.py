@@ -11,7 +11,26 @@ META = {"topic": 83, "title": "DRILL: mini-grep with argparse flags",
 
 
 def solve(lines, argv):
-    """Write the guts of grep.
+    """WHY: grep is the command-line tool every engineer uses to pull
+    matching lines out of a log. Interviewers ask you to rebuild a small
+    version of it because it combines two everyday skills: reading
+    command-line options the standard way, and searching lines for a
+    pattern. The ignore-case, invert and line-number options are the ones
+    people reach for most on a real shell.
+
+    YOU GET: `lines` — a list of strings, one per log line, with no newline
+    characters, like ["INFO ok", "ERROR boom"].
+
+    `argv` — the command-line arguments as a list of strings, exactly what a
+    user typed after the program name, like ["-n", "-i", "error"]. The test
+    builds both and hands them to you.
+
+    YOU RETURN: a list of the lines that were kept, as strings, in their
+    original order. When the line-number option is on, each kept line is
+    prefixed with its number and a colon, like "2:ERROR boom".
+
+    ─── exact rules ───
+    Write the guts of grep.
 
     `lines` is a list of strings with no trailing newlines. `argv` is the
     command line as a list, exactly what sys.argv[1:] would hand you.
@@ -39,19 +58,19 @@ def solve(lines, argv):
 
 
 HINTS = [
-    "Two halves. First turn argv into settings — that is argparse's whole "
+    ("Two halves. First turn argv into settings — that is argparse's whole "
     "job, and hand-rolling `if '-i' in argv` is the answer that loses points. "
     "Then one pass over the lines. Invert is the flag that trips people: it "
     "does not change the pattern or the search, it flips the keep-or-drop "
-    "decision at the end.",
-    "add_argument('pattern') for the positional, then each flag with "
+    "decision at the end."),
+    ("add_argument('pattern') for the positional, then each flag with "
     "action='store_true' — argparse turns --ignore-case into args.ignore_case "
     "for you. parse_args(argv), not parse_args(). Compile once with "
     "re.compile(pattern, re.IGNORECASE) when the flag is set and no flags "
     "otherwise. Then per line: matched = rx.search(line) is not None, and "
     "keep it when matched != args.invert_match. enumerate(lines, start=1) and "
-    "an f-string give you the numbered form.",
-    "Different data, both halves:\n"
+    "an f-string give you the numbered form."),
+    ("Different data, both halves:\n"
     "    import argparse\n"
     "    p = argparse.ArgumentParser()\n"
     "    p.add_argument('word')\n"
@@ -62,7 +81,7 @@ HINTS = [
     "    for matched, invert in [(True, False), (True, True), (False, True)]:\n"
     "        print(matched != invert)        # True, False, True\n"
     "That second loop is the whole invert rule: not-equal is exclusive or, "
-    "and it reads better than four branches.",
+    "and it reads better than four branches."),
 ]
 
 

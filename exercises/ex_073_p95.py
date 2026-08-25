@@ -12,7 +12,25 @@ META = {"topic": 73, "title": "DRILL: nginx log -> top IPs, status mix, p95",
 
 
 def solve(lines):
-    """Parse access-log lines and return a summary dict:
+    """WHY: The site was slow last night and the manager wants a quick read of
+    the web server's access log: which three visitors (IP addresses) made
+    the most requests, how the responses split between success and error
+    classes (2xx, 4xx, 5xx), and how slow the slowest requests were. That
+    last one is the "p95": the time that 95 percent of requests came in
+    under. This is the single most common hands-on question in DevOps
+    interviews.
+
+    YOU GET: `lines` — a list of strings, one per request, each in the
+    standard nginx log format, like
+    '10.0.0.1 - - [07/Aug/2026:10:12:33 +1000] "GET /api/users HTTP/1.1"
+    200 1234 0.043'. The test generates them and hands them to you.
+
+    YOU RETURN: a dict with three keys: "top_ips" (a list of the 3 busiest
+    (ip, count) pairs, busiest first), "statuses" (a dict like {"2xx": 5,
+    "4xx": 1}, only for classes that occur) and "p95" (a number of seconds).
+
+    ─── exact rules ───
+    Parse access-log lines and return a summary dict:
 
         {"top_ips":  [(ip, count), ...],   # 3 busiest, most first
          "statuses": {"2xx": 5, "4xx": 1}, # only classes that occur
@@ -33,19 +51,19 @@ def solve(lines):
 
 
 HINTS = [
-    "Do it in four separate passes, not one clever loop. Parse first: turn "
+    ("Do it in four separate passes, not one clever loop. Parse first: turn "
     "every line into the few fields you need, then answer each question from "
     "that. Clear beats compact — and the interviewer is listening to you "
-    "explain, not admiring your line count.",
-    "Fields come from line.split(). The status is at index 8, the duration is "
+    "explain, not admiring your line count."),
+    ("Fields come from line.split(). The status is at index 8, the duration is "
     "last. Status class: 500 // 100 gives 5, so f'{500//100}xx' builds '5xx'. "
-    "For p95 you need math.ceil.",
-    "Different data, same shape — the percentile piece alone:\n"
+    "For p95 you need math.ceil."),
+    ("Different data, same shape — the percentile piece alone:\n"
     "    import math\n"
     "    vals = [0.5, 0.1, 0.9, 0.3]\n"
     "    idx = math.ceil(0.95 * len(vals)) - 1\n"
     "    print(sorted(vals)[idx])     # 0.9\n"
-    "The other three pieces are exercises you have already passed.",
+    "The other three pieces are exercises you have already passed."),
 ]
 
 

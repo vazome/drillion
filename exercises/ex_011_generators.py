@@ -7,7 +7,22 @@ META = {"topic": 11, "title": "generators — yield a filtered stream, lazily", 
 
 
 def solve(lines):
-    """Stream the request ids of the ERROR lines.
+    """WHY: A log file on a production server is 10 GB. Support needs the
+    request ids of every failed request so they can look them up, and they
+    want the first one right away, not after the whole file has been read.
+    Loading the file into memory would crash the box. You need a way to hand
+    out results one at a time, reading only as far as needed for the next
+    answer.
+
+    YOU GET: `lines` — a stream of log lines like "api INFO req=a1", one
+    line per item, that you can walk through exactly once. The test creates
+    it and hands it to you; you never build it yourself.
+
+    YOU RETURN: not a list, but a generator: an object that hands out one
+    request id at a time, for ERROR lines only, doing the reading as it goes.
+
+    ─── exact rules ───
+    Stream the request ids of the ERROR lines.
 
     Each line looks like "<service> <LEVEL> req=<id>". Produce the <id> part
     (a string) of every line whose LEVEL is ERROR, in order, nothing else.
@@ -32,19 +47,19 @@ def solve(lines):
 
 
 HINTS = [
-    "A list comprehension does all the work up front and hands you the "
+    ("A list comprehension does all the work up front and hands you the "
     "finished list; you cannot see item one until item ten thousand is done. "
     "A generator flips that: it does the least work needed to produce the next "
     "item, then stops and waits. Same values, different question — when does "
     "the work happen. On a log you are tailing, or a file bigger than memory, "
-    "only one of the two is usable.",
-    "Either write a def whose body loops over lines and yields the id when the "
+    "only one of the two is usable."),
+    ("Either write a def whose body loops over lines and yields the id when the "
     "level is ERROR — the moment a function contains yield anywhere, calling it "
     "runs none of the body and returns a generator instead. Or take the list "
     "comprehension you would have written and swap [ ] for ( ). For one line, "
     "line.split() gives the three fields; the id is the part of the third after "
-    "the '='.",
-    "Different data — even numbers, squared:\n"
+    "the '='."),
+    ("Different data — even numbers, squared:\n"
     "    def evens(nums):\n"
     "        for n in nums:\n"
     "            if n % 2 == 0:\n"
@@ -56,7 +71,7 @@ HINTS = [
     "    print(list(g))    # [16] <- the 4 is already spent, a generator is one-shot\n"
     "\n"
     "    same = (n * n for n in [1, 2, 3, 4] if n % 2 == 0)   # identical, one line\n"
-    "Yours is the same shape: loop, test the level, yield the id.",
+    "Yours is the same shape: loop, test the level, yield the id."),
 ]
 
 
@@ -78,7 +93,7 @@ def _gen(r):
 
 def _reference(lines):
     for line in lines:
-        service, level, req = line.split()
+        _service, level, req = line.split()
         if level == "ERROR":
             yield req.split("=", 1)[1]
 

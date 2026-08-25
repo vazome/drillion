@@ -12,7 +12,23 @@ META = {"topic": 40, "title": "shutil / tempfile / glob — stage files, then cl
 
 
 def solve(root):
-    """`root` is a directory path as a STRING, holding a flat pile of files:
+    """WHY: A build job tidies a work folder: log files get copied to a scratch
+    area for upload, temporary files get moved out of the way. The scratch
+    area must be a fresh, uniquely named folder (two jobs on the same
+    machine must not collide) and it must be removed afterward even if
+    something fails halfway. The release engineer wants a report of what was
+    copied, moved, staged and left behind.
+
+    YOU GET: `root` — a string path to a folder holding files and no
+    subfolders, like "/tmp/ex040_abc". The test creates it and hands you the
+    path; you never build it yourself.
+
+    YOU RETURN: a dict with the keys "copied", "moved", "staged" and "left"
+    (each a sorted list of bare filenames) and "cleaned" (True if the
+    scratch folder is gone).
+
+    ─── exact rules ───
+    `root` is a directory path as a STRING, holding a flat pile of files:
     some *.log, some *.tmp, some with other extensions. No subdirectories.
 
     Stage the interesting ones in scratch space and leave no mess behind:
@@ -42,19 +58,19 @@ def solve(root):
 
 
 HINTS = [
-    "Three modules, one job each. tempfile invents a scratch path nobody else "
+    ("Three modules, one job each. tempfile invents a scratch path nobody else "
     "is using, so two runs of your script on the same box cannot collide. glob "
     "expands a shell-style pattern into real paths. shutil is the file "
     "operations you would otherwise shell out to cp, mv and rm -r. The one "
     "thing to be careful about: glob hands you full paths, and the answer wants "
-    "bare filenames.",
-    "glob.glob(os.path.join(root, '*.log')) lists the matches. shutil.copy2 "
+    "bare filenames."),
+    ("glob.glob(os.path.join(root, '*.log')) lists the matches. shutil.copy2 "
     "copies a file into a directory and keeps its metadata; shutil.move moves "
     "one. os.listdir gives you the names already bare. Wrap the whole thing in "
     "`with tempfile.TemporaryDirectory() as stage:` and take your staged "
     "listing before the block ends — outside it the directory is gone, which "
-    "is exactly how you check 'cleaned' with os.path.exists.",
-    "Different tree, same moves:\n"
+    "is exactly how you check 'cleaned' with os.path.exists."),
+    ("Different tree, same moves:\n"
     "    import glob, os, shutil, tempfile\n"
     "    with tempfile.TemporaryDirectory() as stage:\n"
     "        for path in glob.glob('/var/backups/*.sql'):\n"
@@ -62,7 +78,7 @@ HINTS = [
     "            print(os.path.basename(path))    # dump-2024.sql\n"
     "        print(sorted(os.listdir(stage)))     # ['dump-2024.sql']\n"
     "    print(os.path.exists(stage))             # False — the with block removed it\n"
-    "Scratch space you did not name, and cleanup you cannot forget.",
+    "Scratch space you did not name, and cleanup you cannot forget."),
 ]
 
 

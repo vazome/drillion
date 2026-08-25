@@ -3,16 +3,36 @@
 import asyncio
 import inspect
 
-from langchain_core.runnables import RunnableLambda
-
 from _lib import rng
+from langchain_core.runnables import RunnableLambda
 
 META = {"topic": 91, "title": "parallel LLM calls — gather with a per-call timeout",
         "tier": 4, "minutes": 22, "prereqs": [56]}
 
 
 def solve():
-    """Ten prompts answered one after another is ten round trips of sitting
+    """WHY: LangChain is a library for wiring steps together around an AI
+    model. A support team wants ten customer tickets summarised by an AI
+    model. Sent one after another, each waits for the previous one to
+    finish; sent all at once they take about as long as the slowest single
+    one. But any single call can hang, so each needs its own time limit, and
+    a call that runs out of time must just be marked as such without
+    spoiling the other answers.
+
+    YOU GET: nothing — you build the thing from scratch. The function you
+    write will later be handed three things: `model` (a stand-in AI model
+    whose ainvoke method gives back an answer string), `prompts` (a list of
+    strings) and `timeout` (seconds allowed per call). The test's fake model
+    only pauses briefly and writes down when each call started and ended; no
+    real AI is called.
+
+    YOU RETURN: an async function named ask_all. Return the function itself;
+    do not call it. When the test runs it, it must give back a list of
+    answers in the same order as the prompts, with the text "TIMEOUT" in the
+    slot of any call that took too long.
+
+    ─── exact rules ───
+    Ten prompts answered one after another is ten round trips of sitting
     still. Every Runnable has an async side — `await model.ainvoke(prompt)` —
     so all ten can be in flight at once. And since one prompt can hang, each
     call needs its own time limit rather than one limit for the batch.
@@ -43,18 +63,18 @@ def solve():
 
 
 HINTS = [
-    "Two separate problems, and mixing them up is the usual mistake. First: "
+    ("Two separate problems, and mixing them up is the usual mistake. First: "
     "everything must be launched before anything is awaited, or you have a "
     "slow for-loop wearing async syntax. Second: the time limit belongs to one "
     "call, not to the group — a group-wide limit would kill the answers that "
     "already came back, and letting a timeout escape would sink the whole "
-    "batch. So the per-call handling has to happen inside each call.",
-    "Write a small inner `async def one(prompt)` that wraps a single call: "
+    "batch. So the per-call handling has to happen inside each call."),
+    ("Write a small inner `async def one(prompt)` that wraps a single call: "
     "asyncio.wait_for(model.ainvoke(prompt), timeout) gives up after `timeout` "
     "seconds by raising TimeoutError, so catch that and return 'TIMEOUT'. Then "
     "hand one(p) for every p to asyncio.gather, which runs them all at once "
-    "and returns results in argument order.",
-    "Different data — three lookups at once, each capped at 20ms:\n"
+    "and returns results in argument order."),
+    ("Different data — three lookups at once, each capped at 20ms:\n"
     "    import asyncio\n"
     "    async def lookup(host):\n"
     "        await asyncio.sleep(0.05 if host == 'slow' else 0.001)\n"
@@ -71,7 +91,7 @@ HINTS = [
     "\n"
     "    print(asyncio.run(all_of(['a', 'slow', 'b'])))\n"
     "    # ['a.internal', 'TIMEOUT', 'b.internal']\n"
-    "Yours awaits model.ainvoke(prompt) where this awaits lookup(host).",
+    "Yours awaits model.ainvoke(prompt) where this awaits lookup(host)."),
 ]
 
 
@@ -103,7 +123,7 @@ def _reference():
         async def one(prompt):
             try:
                 return await asyncio.wait_for(model.ainvoke(prompt), timeout)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 return "TIMEOUT"
         return await asyncio.gather(*(one(p) for p in prompts))
     return ask_all

@@ -7,7 +7,26 @@ META = {"topic": 23, "title": "itertools — chain, islice, groupby (sort first)
 
 
 def solve(pages, first_n):
-    """Count log lines per service in the head of a paged stream.
+    """WHY: An on-call engineer is paged at 2am. The log service hands back log
+    lines in pages (batches), the way an API says "here are the next 50
+    results". The incident lead asks: "in the first N lines after the alert
+    fired, how many came from each service?" to see which service got noisy
+    first. You stitch the pages into one stream, stop after N lines, and
+    count per service.
+
+    YOU GET: `pages` — a list of lists of strings; each inner list is one
+    page of log lines, like [["api ERROR boom", "db INFO ok"], ["api WARN
+    slow"]]. Every line starts with the service name. The test creates it
+    and hands it to you; you never build it yourself.
+
+    YOU GET: `first_n` — a whole number like 3: how many lines from the
+    start of the combined stream to look at.
+
+    YOU RETURN: a list of (service, count) pairs sorted by service name,
+    like [("api", 2), ("db", 1)].
+
+    ─── exact rules ───
+    Count log lines per service in the head of a paged stream.
 
     pages is a list of pages, each page a list of log lines — the shape a
     paginated API hands you. The service name is the first word of a line.
@@ -25,21 +44,21 @@ def solve(pages, first_n):
 
 
 HINTS = [
-    "Three small jobs: flatten the pages into one stream, cut it to the first "
+    ("Three small jobs: flatten the pages into one stream, cut it to the first "
     "N, count per service. itertools has a tool for each. The counting one has "
-    "a famous catch: it only merges neighbours.",
-    "chain.from_iterable(pages) flattens; islice(stream, n) takes the head "
+    "a famous catch: it only merges neighbours."),
+    ("chain.from_iterable(pages) flattens; islice(stream, n) takes the head "
     "without materialising the rest; groupby(rows, key=...) yields (key, group) "
     "pairs — but only for ADJACENT equal keys, so sort by that same key first. "
-    "len(list(group)) counts a group.",
-    "Different data, same trap:\n"
+    "len(list(group)) counts a group."),
+    ("Different data, same trap:\n"
     "    from itertools import groupby\n"
     "    animals = ['cat', 'dog', 'cat', 'cat', 'dog']\n"
     "    print([(k, len(list(g))) for k, g in groupby(animals)])\n"
     "    # [('cat', 1), ('dog', 1), ('cat', 2), ('dog', 1)]   <- unsorted: wrong\n"
     "    print([(k, len(list(g))) for k, g in groupby(sorted(animals))])\n"
     "    # [('cat', 3), ('dog', 2)]\n"
-    "groupby is a run-length grouper, not SQL GROUP BY.",
+    "groupby is a run-length grouper, not SQL GROUP BY."),
 ]
 
 

@@ -4,9 +4,8 @@ import contextlib
 import os
 
 import boto3
-from moto import mock_aws
-
 from _lib import rng
+from moto import mock_aws
 
 META = {"topic": 71, "title": "boto3 task — audit EC2 instances for missing tags",
         "tier": 4, "minutes": 25, "prereqs": [68],
@@ -14,7 +13,26 @@ META = {"topic": 71, "title": "boto3 task — audit EC2 instances for missing ta
 
 
 def solve(ec2, required):
-    """Report which instances are missing which mandatory tags.
+    """WHY: Every server in the cloud account is supposed to carry labels
+    (tags) like Owner and CostCenter, so finance can bill the right team and
+    on-call knows who to wake. Servers launched without them are the ones
+    nobody can bill, page, or safely delete. The platform team asks for an
+    audit: for each mandatory label, which servers are missing it. A label
+    that is present but set to an empty value counts as missing, since
+    "Owner: " helps nobody.
+
+    YOU GET: `ec2` — an AWS EC2 client object. The test hands in one
+    connected to a fake in-memory AWS (moto) with a small fleet launched
+    with various tags; nothing real is contacted.
+    `required` — a list of the mandatory tag names, like ["CostCenter",
+    "Owner"].
+
+    YOU RETURN: a dict with one entry per required tag name, mapping it to
+    a sorted list of the ids of the servers missing it (an empty list when
+    none are).
+
+    ─── exact rules ───
+    Report which instances are missing which mandatory tags.
 
     `ec2` is a boto3 EC2 client. `required` is the list of tag keys every
     instance is supposed to carry, e.g. ["CostCenter", "Owner"].
@@ -55,22 +73,22 @@ def solve(ec2, required):
 
 
 HINTS = [
-    "The response shape is the trap. Instances are nested one level deeper "
+    ("The response shape is the trap. Instances are nested one level deeper "
     "than you want them, inside reservations, and a reservation holds every "
     "instance from one launch. So code that walks the reservations and looks "
     "at Instances[0] audits one machine per launch and calls the other four "
     "compliant. Two smaller traps sit underneath: an instance with no tags "
     "has no Tags key at all, so indexing it raises rather than returning an "
     "empty list, and a tag set to the empty string is present in the response "
-    "but does not count as tagged.",
-    "Seed the answer first: {key: [] for key in required}, so a tag nobody is "
+    "but does not count as tagged."),
+    ("Seed the answer first: {key: [] for key in required}, so a tag nobody is "
     "missing still comes back with an empty list. Then two nested for loops — "
     "reservations on the outside, reservation[\"Instances\"] on the inside. "
     "For each instance, flatten its tags into a dict with a comprehension "
     "over instance.get(\"Tags\", []) keyed on t[\"Key\"]. Then one pass over "
     "`required`: `if not tags.get(key)` is true for both the absent key and "
-    "the empty value. Sort each list before you return.",
-    "Different data — the same two-level walk over autoscaling groups, "
+    "the empty value. Sort each list before you return."),
+    ("Different data — the same two-level walk over autoscaling groups, "
     "collecting the instances a group considers unhealthy:\n"
     "    sick = {}\n"
     "    for group in asg.describe_auto_scaling_groups()['AutoScalingGroups']:\n"
@@ -83,7 +101,7 @@ HINTS = [
     "    print(sick)    # {'api-asg': ['i-03', 'i-09'], 'worker-asg': []}\n"
     "Note the group with nothing wrong still gets a key, because the key was "
     "written before the inner loop ran. Yours writes the required tag keys up "
-    "front for exactly the same reason.",
+    "front for exactly the same reason."),
 ]
 
 
@@ -196,5 +214,4 @@ def test_solve():
 
                 assert _reference(ec2, required) == truth, "fixture drifted"
                 assert solve(ec2, required) == truth, (
-                    "{} instances across {} launches, required tags {}".format(
-                        len(made), len(plan), required))
+                    f"{len(made)} instances across {len(plan)} launches, required tags {required}")

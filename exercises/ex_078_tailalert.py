@@ -11,7 +11,32 @@ META = {"topic": 78, "title": "DRILL: tail a growing log, alert with context",
 
 
 def solve(stream, pattern, window):
-    r"""Follow a log as it grows and raise an alert on every match.
+    r"""WHY: A service writes a log file that grows all day and never stops.
+    The on-call team wants to be paged every time an ERROR line shows up,
+    and the page must include the few lines just before it so they can see
+    what led up to the error. The log can be huge, so the tool must never
+    try to hold all of it in memory.
+
+    YOU GET: `stream` — a source of log lines you can only read one at a
+    time, first to last, like a file being read while it is still growing.
+    Each line ends with a newline character. You cannot look ahead or ask
+    how many lines there are. The test hands you a short fake one.
+
+    `pattern` — a search pattern as a string, like "ERROR
+    (?P<code>E[0-9]+)". It is a regular expression (a small language for
+    matching text), and it always contains a named part called "code" that
+    picks out the error code.
+
+    `window` — a whole number, like 2: how many earlier lines to include
+    with each alert.
+
+    YOU RETURN: a list of dictionaries, one per line that matched. Each has
+    "line_no" (the line's position, counting from 1), "code" (the error code
+    picked out of the line) and "before" (the last few lines seen before it,
+    oldest first).
+
+    ─── exact rules ───
+    Follow a log as it grows and raise an alert on every match.
 
     `stream` is an ITERATOR of lines, the way tail -f hands them over: one
     line at a time, in order, each with its trailing newline. You cannot
@@ -45,18 +70,18 @@ def solve(stream, pattern, window):
 
 
 HINTS = [
-    "Two things happen per line and they are independent: you ask whether "
+    ("Two things happen per line and they are independent: you ask whether "
     "this line matches, and you keep a rolling memory of the few lines behind "
     "it. The memory is the interesting half — a plain list plus a slice grows "
     "forever, and the container you want throws the oldest item away by "
-    "itself.",
-    "collections.deque(maxlen=window) for the history. re.compile(pattern) "
+    "itself."),
+    ("collections.deque(maxlen=window) for the history. re.compile(pattern) "
     "once, above the loop, never inside it, then m = rx.search(line) and "
     "m.group('code') for the named group. enumerate(stream, start=1) gives "
     "you the line number. Order matters at the end of the loop body: snapshot "
     "with list(history) while you build the alert, and append the current "
-    "line after that, so a line is never in its own context.",
-    "Different data, same three moves:\n"
+    "line after that, so a line is never in its own context."),
+    ("Different data, same three moves:\n"
     "    import re\n"
     "    from collections import deque\n"
     "    rx = re.compile(r'user=(?P<who>\\w+)')\n"
@@ -66,7 +91,7 @@ HINTS = [
     "        if m:\n"
     "            print(i, m.group('who'), list(seen))   # 3 ana ['boot', 'idle']\n"
     "        seen.append(line)\n"
-    "Yours strips the newline first and collects dicts instead of printing.",
+    "Yours strips the newline first and collects dicts instead of printing."),
 ]
 
 

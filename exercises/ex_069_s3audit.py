@@ -5,10 +5,9 @@ import json
 import os
 
 import boto3
+from _lib import rng
 from botocore.exceptions import ClientError
 from moto import mock_aws
-
-from _lib import rng
 
 META = {"topic": 69, "title": "boto3 task — audit S3 buckets for public access",
         "tier": 4, "minutes": 25, "prereqs": [68],
@@ -16,7 +15,25 @@ META = {"topic": 69, "title": "boto3 task — audit S3 buckets for public access
 
 
 def solve(s3):
-    """Find every bucket in the account that anyone on the internet can read.
+    """WHY: A security review asks: "which of our storage buckets can anyone on
+    the internet read?" Data leaks usually come from a bucket that was never
+    meant to be public and that nobody checked. A bucket can be opened two
+    separate ways: an access-control list (ACL, a list of who may do what)
+    that grants everyone read, or an attached policy document that allows
+    everyone. Both must be checked on every bucket, because a script that
+    checks one and stops reports "all clear" on a bucket the world is
+    reading. You produce the list of exposed bucket names.
+
+    YOU GET: `s3` — an AWS S3 client object. The test hands in one connected
+    to a fake in-memory AWS (moto) pre-loaded with a mix of private and
+    exposed buckets; nothing real is contacted. You are not told the bucket
+    names; you ask the client for them.
+
+    YOU RETURN: a sorted list of the names of buckets open to the whole
+    internet, with no duplicates; an empty list if none are.
+
+    ─── exact rules ───
+    Find every bucket in the account that anyone on the internet can read.
 
     `s3` is a boto3 S3 client. You are not told which buckets exist — start
     from `s3.list_buckets()`, whose answer holds "Buckets", a list of dicts
@@ -60,22 +77,22 @@ def solve(s3):
 
 
 HINTS = [
-    "Two independent doors into the same bucket, so a script that checks one "
+    ("Two independent doors into the same bucket, so a script that checks one "
     "and stops is a script that reports 'all clear' on a bucket the world is "
     "reading. Beyond that, the shape of the answers is the whole difficulty: "
     "the ACL grants are dicts that mostly do not have the key you want to "
     "compare, and the policy comes back as text rather than as parsed JSON. "
     "And absence is signalled by an exception, not by an empty result — a "
-    "bucket with no policy blows up the loop on the first private bucket.",
-    "One loop over list_buckets()[\"Buckets\"], and for each name two checks. "
+    "bucket with no policy blows up the loop on the first private bucket."),
+    ("One loop over list_buckets()[\"Buckets\"], and for each name two checks. "
     "For the ACL: any() over get_bucket_acl(...)['Grants'] testing "
     "grant['Grantee'].get('URI') against the AllUsers string — .get, not [], "
     "because the owner grant has no URI. For the policy: wrap the "
     "get_bucket_policy call in try/except ClientError, re-raise unless "
     "exc.response['Error']['Code'] is 'NoSuchBucketPolicy', then "
     "json.loads(resp['Policy']) and loop the statements. Collect names in a "
-    "list, and return sorted() of it.",
-    "Different data — the same three moves against IAM, where the risky thing "
+    "list, and return sorted() of it."),
+    ("Different data — the same three moves against IAM, where the risky thing "
     "is a role any account can assume:\n"
     "    risky = []\n"
     "    for role in iam.list_roles()['Roles']:\n"
@@ -88,7 +105,7 @@ HINTS = [
     "    print(sorted(risky))\n"
     "The break matters: one matching statement is enough, and without it a "
     "role with two open statements lands in the list twice. Yours does this "
-    "over parsed bucket policies, plus the ACL check, plus the try/except.",
+    "over parsed bucket policies, plus the ACL check, plus the try/except."),
 ]
 
 
@@ -138,13 +155,13 @@ def _gen(r):
              "media", "invoices", "raw", "snapshots", "dumps", "cache",
              "exports", "archive", "assets", "audit"]
     r.shuffle(words)
-    return [("{}-{}-{}".format(org, words[i], r.randint(100, 999)), kind)
+    return [(f"{org}-{words[i]}-{r.randint(100, 999)}", kind)
             for i, kind in enumerate(kinds)]
 
 
 def _statement(effect, principal, bucket):
     return {"Effect": effect, "Principal": principal, "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::{}/*".format(bucket)}
+            "Resource": f"arn:aws:s3:::{bucket}/*"}
 
 
 def _build(spec, s3, r):
@@ -206,5 +223,4 @@ def test_solve():
                 truth = _build(spec, s3, r)
                 assert _reference(s3) == truth, "fixture drifted"
                 assert solve(s3) == truth, (
-                    "{} of {} buckets are open to the world".format(
-                        len(truth), len(spec)))
+                    f"{len(truth)} of {len(spec)} buckets are open to the world")

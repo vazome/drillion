@@ -7,7 +7,23 @@ META = {"topic": 15, "title": "dataclasses — defaults, frozen=True, sort by a 
 
 
 def solve(specs):
-    """Build frozen Node records from short specs and sort them by cpu.
+    """WHY: An inventory script reads server records from a short-hand list
+    where people leave out the fields that have sensible defaults: most
+    servers get 100 CPU and live in the main zone unless said otherwise. The
+    records get passed around many scripts, so nobody should be able to
+    change one by accident after it is made. Capacity planning then wants
+    the list ordered smallest-CPU first.
+
+    YOU GET: `specs` — a list of tuples of 1, 2 or 3 items like [("db",
+    400), ("api",), ("edge", 200, "eu-west-1b")]: name, then optional cpu,
+    then optional zone. The test creates it and hands it to you; you never
+    build it yourself.
+
+    YOU RETURN: a list of Node records (one per spec, defaults filled in,
+    locked against later edits), sorted by cpu from smallest to largest.
+
+    ─── exact rules ───
+    Build frozen Node records from short specs and sort them by cpu.
 
     Define a dataclass called Node with exactly these three fields, in this
     order, with these defaults:
@@ -35,18 +51,18 @@ def solve(specs):
 
 
 HINTS = [
-    "Two halves. First, describe the record: a class body that is nothing but "
+    ("Two halves. First, describe the record: a class body that is nothing but "
     "field names with their types, plus one decorator that turns that into a "
     "real class with a constructor, a repr and equality. Second, the frozen "
     "part — the decorator takes an argument that makes assignment raise instead "
     "of silently rewriting a record someone else is holding. Then it is just a "
-    "sort.",
-    "from dataclasses import dataclass, then @dataclass(frozen=True) above "
+    "sort."),
+    ("from dataclasses import dataclass, then @dataclass(frozen=True) above "
     "class Node. Inside the class write the three annotated fields, giving the "
     "last two their default values; fields with defaults must come after ones "
     "without. Build with Node(*spec) for each spec, and return "
-    "sorted(nodes, key=lambda n: n.cpu).",
-    "Different data — release records:\n"
+    "sorted(nodes, key=lambda n: n.cpu)."),
+    ("Different data — release records:\n"
     "    from dataclasses import dataclass\n"
     "\n"
     "    @dataclass(frozen=True)\n"
@@ -60,7 +76,7 @@ HINTS = [
     "    print(sorted(rs, key=lambda x: x.build))   # v1 first\n"
     "    rs[0].build = 9                            # dataclasses.FrozenInstanceError\n"
     "The repr and the __init__ came free — that is the whole point of the "
-    "decorator.",
+    "decorator."),
 ]
 
 

@@ -2,7 +2,6 @@
 
 import requests
 import responses
-
 from _lib import rng
 
 META = {"topic": 48, "title": "requests — params, auth header, timeout, raise_for_status",
@@ -10,7 +9,31 @@ META = {"topic": 48, "title": "requests — params, auth header, timeout, raise_
 
 
 def solve(url, token, params):
-    """Make one authenticated GET and hand back the decoded body.
+    """WHY: The team's deploy dashboard needs the latest deploys from an
+    internal deployment service. That service has a web API: you send a
+    request to a web address with a few filters (which environment, how
+    many) and a secret token that proves who you are, and it answers with
+    data. Platform work is full of this one call, and the usual mistakes
+    cause real outages: no time limit, so a dead server freezes your script
+    forever; ignoring error answers, so a broken server looks like "no
+    deploys today". You are asked to make that one call properly.
+
+    YOU GET: `url` — a string web address like
+    "https://api.example.com/v1/deploys".
+    `token` — a string secret like "tok-91ab3c" the server uses to check you
+    are allowed in.
+    `params` — a dict of filters like {"env": "prod", "limit": 20} to send
+    along with the request.
+    The test points the requests library at a fake server, so nothing real
+    is contacted; it then inspects exactly what your request contained.
+
+    YOU RETURN: the server's answer decoded from JSON into Python data (a
+    dict or list), exactly as it came. If the server answered with an error
+    code like 404 or 500, do not return anything: let the library's
+    HTTPError escape.
+
+    ─── exact rules ───
+    Make one authenticated GET and hand back the decoded body.
 
     Four things, all of them graded:
 
@@ -46,21 +69,21 @@ def solve(url, token, params):
 
 
 HINTS = [
-    "requests.get hands you a Response object, not the body — the body only "
+    ("requests.get hands you a Response object, not the body — the body only "
     "appears when you ask for it. Everything else in this drill is keyword "
     "arguments on that one call: where the query string comes from, where the "
     "header comes from, how long you are prepared to wait. The timeout is the "
     "one people leave off, and it is the one that hurts: with no timeout a "
     "dead peer parks your worker forever, and a thread pool of those is an "
     "outage. Also worth being precise about: a 4xx or 5xx is still a perfectly "
-    "normal response object, so nothing raises unless you ask it to.",
-    "One call: requests.get(url, params=..., headers=..., timeout=...). params "
+    "normal response object, so nothing raises unless you ask it to."),
+    ("One call: requests.get(url, params=..., headers=..., timeout=...). params "
     "takes the dict as-is. headers takes a dict too, and the value you want is "
     "the string 'Bearer ' with the token after it. Then two lines on the "
     "response: .raise_for_status() to convert a bad status into an exception, "
     "and .json() to decode the body. Order matters — check the status before "
-    "you trust the body.",
-    "Different data — one call to a weather API that wants a key header:\n"
+    "you trust the body."),
+    ("Different data — one call to a weather API that wants a key header:\n"
     "    r = requests.get('https://wx.example.com/v1/now',\n"
     "                     params={'city': 'Vilnius', 'units': 'metric'},\n"
     "                     headers={'X-Api-Key': 'abc123'},\n"
@@ -69,7 +92,7 @@ HINTS = [
     "    print(r.url)                  # .../v1/now?city=Vilnius&units=metric\n"
     "    print(r.json())               # {'temp': 14.2, 'wind': 3}\n"
     "Yours is the same four arguments and the same two lines after, with a "
-    "Bearer token instead of an api key header.",
+    "Bearer token instead of an api key header."),
 ]
 
 

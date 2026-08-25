@@ -7,7 +7,23 @@ META = {"topic": 14, "title": "classes — __init__, __repr__, @property", "tier
 
 
 def solve(name, replicas, cpu):
-    """Define a class called Service, then return Service(name, replicas, cpu).
+    """WHY: Your cluster runs services, each with a name, a number of copies
+    (replicas) and a CPU budget per copy. Capacity planning asks "how much
+    CPU does each service use in total?", and that total changes whenever
+    someone scales a service up or down. If you work it out once and store
+    it, it goes stale; it has to be recomputed every time it is asked for.
+    Bundling the facts and the derived figure together is what a class is
+    for.
+
+    YOU GET: `name` — a service name like "api-blue". `replicas` — a count
+    like 3. `cpu` — CPU per copy, like 250. The test creates them and hands
+    them to you; you never build them yourself.
+
+    YOU RETURN: one Service object built from those three values, with a
+    readable printed form and a total_cpu figure that is always up to date.
+
+    ─── exact rules ───
+    Define a class called Service, then return Service(name, replicas, cpu).
 
     Write the class wherever you like — top level of this file, or inside
     solve. It must have:
@@ -34,20 +50,20 @@ def solve(name, replicas, cpu):
 
 
 HINTS = [
-    "Three jobs that people mix up. __init__ takes what the caller passed and "
+    ("Three jobs that people mix up. __init__ takes what the caller passed and "
     "parks it on self — it does not compute anything derived. __repr__ is for "
     "you and your logs, and the convention is that it reads like the "
     "constructor call that would rebuild the object. A property is a method "
     "that lies about being a method: callers see an attribute, but code runs "
-    "on every read, so it can never disagree with the fields it derives from.",
-    "class Service: with def __init__(self, name, replicas, cpu) assigning "
+    "on every read, so it can never disagree with the fields it derives from."),
+    ("class Service: with def __init__(self, name, replicas, cpu) assigning "
     "self.name and friends. def __repr__(self) returning the f-string — note "
     "the !r on the name, which is what puts the quotes around it. Then def "
     "total_cpu(self) with @property on the line above and return "
     "self.replicas * self.cpu inside. Because it is a property you write no "
     "parentheses at the call site, and because you never defined a setter, "
-    "assigning to it raises AttributeError, which the test checks.",
-    "Different data — a disk with a derived free-space figure:\n"
+    "assigning to it raises AttributeError, which the test checks."),
+    ("Different data — a disk with a derived free-space figure:\n"
     "    class Disk:\n"
     "        def __init__(self, path, size_gb, used_gb):\n"
     "            self.path = path\n"
@@ -66,7 +82,7 @@ HINTS = [
     "    d.used_gb = 90\n"
     "    print(d.free_gb)      # 10      <- recomputed, never stale\n"
     "    print(d)              # Disk(path='/var', size_gb=100)\n"
-    "Same three pieces, different nouns.",
+    "Same three pieces, different nouns."),
 ]
 
 

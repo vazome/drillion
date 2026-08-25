@@ -1,8 +1,7 @@
 """Retry the failures that clear on their own — and only those."""
 
-from langchain_core.runnables import RunnableLambda
-
 from _lib import rng
+from langchain_core.runnables import RunnableLambda
 
 META = {"topic": 92, "title": "LLM retry — back off on rate limits, fail fast on bad requests",
         "tier": 4, "minutes": 20, "prereqs": [45]}
@@ -17,7 +16,35 @@ class BadRequest(Exception):
 
 
 def solve(model, prompt, sleep, max_attempts, base):
-    """Model APIs fail in two very different ways, and telling them apart is
+    """WHY: LangChain is a library for wiring steps together around an AI
+    model. Calls to a paid AI service fail in two ways. "Too many requests,
+    slow down" clears by itself if you wait a bit and try again. "Your
+    request is malformed" will never clear, and retrying it only wastes
+    money, adds load and delays the error message someone needs to read. A
+    script that treats both the same way is a common and expensive bug.
+
+    YOU GET: `model` — a stand-in AI model. model.invoke(prompt) returns an
+    answer string, or raises one of two errors defined at the top of this
+    file: RateLimited (wait and try again) or BadRequest (give up). The
+    test's fake follows a script of outcomes; no real AI is called.
+
+    `prompt` — the question, as a string.
+
+    `sleep` — a function you call with a number of seconds to wait. The test
+    hands you a fake that only writes the number down, so nothing really
+    waits.
+
+    `max_attempts` — a whole number, like 3: the most calls you may make.
+
+    `base` — a number, like 0.5: the first wait in seconds; each later wait
+    is double the one before.
+
+    YOU RETURN: the answer string from the model. If the tries run out, or
+    the request is bad, or the model raises something you were not told
+    about, let that error escape instead of returning anything.
+
+    ─── exact rules ───
+    Model APIs fail in two very different ways, and telling them apart is
     the whole job. A rate limit clears on its own, so waiting helps. A
     malformed request does not, so retrying it burns your budget, multiplies
     the load, and delays the error message someone actually needs to read.
@@ -51,18 +78,18 @@ def solve(model, prompt, sleep, max_attempts, base):
 
 
 HINTS = [
-    "Backoff is the easy half. The half that matters is that not every "
+    ("Backoff is the easy half. The half that matters is that not every "
     "exception deserves a retry, so a bare `except Exception` is already the "
     "wrong answer — it turns one bad prompt into max_attempts identical bad "
     "prompts, and hides the real error behind the last one. Decide per "
-    "exception type: wait and retry, or get out of the way.",
-    "Loop `for attempt in range(max_attempts)` and try to return "
+    "exception type: wait and retry, or get out of the way."),
+    ("Loop `for attempt in range(max_attempts)` and try to return "
     "model.invoke(prompt) inside it. You need two except clauses on that try. "
     "`except BadRequest: raise` re-raises straight away. `except RateLimited:` "
     "checks whether attempt is the last one (bare `raise` if so) and otherwise "
     "calls sleep(base * 2 ** attempt) before going round again. Any other "
-    "exception is caught by neither clause, which is exactly what you want.",
-    "Different data — two kinds of failure from a file read, 3 tries:\n"
+    "exception is caught by neither clause, which is exactly what you want."),
+    ("Different data — two kinds of failure from a file read, 3 tries:\n"
     "    for attempt in range(3):\n"
     "        try:\n"
     "            data = open('/tmp/report').read()\n"
@@ -75,7 +102,7 @@ HINTS = [
     "            time.sleep(0.1 * 2 ** attempt)   # 0.1, then 0.2\n"
     "Note the two clauses do opposite things, and that the last retry re-raises "
     "rather than returning None. Yours returns instead of breaking, and calls "
-    "the injected sleep.",
+    "the injected sleep."),
 ]
 
 

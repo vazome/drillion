@@ -7,7 +7,22 @@ META = {"topic": 5, "title": "enumerate + zip — pair and number", "tier": 3,
 
 
 def solve(hosts, ips):
-    """Pair each host with its ip and number the lines starting from 1.
+    """WHY: You have two lists that belong together: server names and the IP
+    addresses assigned to them, in matching order. A teammate asks for a
+    numbered inventory they can paste into a ticket: "1. web 10.0.0.1",
+    "2. db 10.0.0.2", and so on. Walking two lists side by side while
+    numbering the lines is one of the most common small jobs in ops
+    scripting.
+
+    YOU GET: `hosts` — a list of server names like ["web", "db"].
+    `ips` — a list of IP address strings like ["10.0.0.1", "10.0.0.2"], the
+    same length, in the same order. The test creates them and hands them to
+    you; you never build them yourself.
+
+    YOU RETURN: a list of strings, one per server, numbered from 1.
+
+    ─── exact rules ───
+    Pair each host with its ip and number the lines starting from 1.
     Return a list of strings shaped "N. host ip":
 
         ["web", "db"], ["10.0.0.1", "10.0.0.2"]
@@ -20,20 +35,20 @@ def solve(hosts, ips):
 
 
 HINTS = [
-    "Two jobs at once: walking two lists in step, and counting from 1. "
+    ("Two jobs at once: walking two lists in step, and counting from 1. "
     "Python has one builtin for each; used together they hand you everything "
-    "the loop body needs.",
-    "zip(hosts, ips) yields pairs. enumerate(..., start=1) wraps any "
+    "the loop body needs."),
+    ("zip(hosts, ips) yields pairs. enumerate(..., start=1) wraps any "
     "iterable and yields (number, item) — here the item IS a pair, so the "
-    "for line unpacks a number and a parenthesised pair.",
-    "Different data, same shape:\n"
+    "for line unpacks a number and a parenthesised pair."),
+    ("Different data, same shape:\n"
     "    names = ['ada', 'linus']\n"
     "    langs = ['math', 'c']\n"
     "    for i, (n, lang) in enumerate(zip(names, langs), start=1):\n"
     "        print(f'{i}: {n} likes {lang}')\n"
     "    # 1: ada likes math\n"
     "    # 2: linus likes c\n"
-    "Collect into a list instead of printing.",
+    "Collect into a list instead of printing."),
 ]
 
 

@@ -7,7 +7,21 @@ META = {"topic": 19, "title": "Counter — top N by frequency", "tier": 3,
 
 
 def solve(lines, n):
-    """Return the n most frequent IPs as a list of (ip, count) tuples,
+    """WHY: A web server is under unusual load. The security lead asks "which
+    IP addresses are hitting us the most?" so they can decide whether to
+    block one. You have the access log, one request per line, and need the
+    busiest few addresses with their request counts, biggest first. This is
+    the single most-asked DevOps screening question.
+
+    YOU GET: `lines` — a list of log lines like "10.0.0.4 GET /health 200",
+    where the first word is the IP. `n` — how many top addresses to report,
+    like 3. The test creates them and hands them to you; you never build
+    them yourself.
+
+    YOU RETURN: a list of `n` pairs (ip, count), busiest first.
+
+    ─── exact rules ───
+    Return the n most frequent IPs as a list of (ip, count) tuples,
     busiest first.
 
     Each line looks like:  "10.0.0.4 GET /health 200"
@@ -19,16 +33,16 @@ def solve(lines, n):
 
 
 HINTS = [
-    "You need to count how often each IP appears, then take the biggest few. "
-    "The `collections` module has a class built for exactly the counting half.",
-    "collections.Counter(some_list) counts everything for you. Feed it just the "
+    ("You need to count how often each IP appears, then take the biggest few. "
+    "The `collections` module has a class built for exactly the counting half."),
+    ("collections.Counter(some_list) counts everything for you. Feed it just the "
     "IPs — one per line. Then look at Counter's methods for one that returns the "
-    "top N already sorted.",
-    "Different data, same shape:\n"
+    "top N already sorted."),
+    ("Different data, same shape:\n"
     "    from collections import Counter\n"
     "    words = ['a', 'b', 'a', 'c', 'a', 'b']\n"
     "    print(Counter(words).most_common(2))   # [('a', 3), ('b', 2)]\n"
-    "Your job is turning `lines` into that flat list of IPs first.",
+    "Your job is turning `lines` into that flat list of IPs first."),
 ]
 
 

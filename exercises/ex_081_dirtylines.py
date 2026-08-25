@@ -9,7 +9,24 @@ LEVELS = {"DEBUG", "INFO", "WARN", "ERROR"}
 
 
 def solve(lines):
-    """Parse the good lines out of a dirty log. Report how many you dropped.
+    """WHY: A log export from a customer has junk mixed in: blank lines,
+    lines cut short, a field that should be a number but says "N/A". Someone
+    in support wants the good records loaded so they can look at response
+    times. A script that crashes on the first bad line is useless; a script
+    that quietly throws lines away is worse, because nobody learns that 40%
+    of the data went missing. So: keep what you can, and count what you
+    dropped.
+
+    YOU GET: `lines` — a list of strings, one per log line, like
+    ["2026-08-12T10:12:44Z INFO checkout 137", "", "2026-08-12T10:12:46Z
+    WARN cart"]. The test builds it, junk included, and hands it to you.
+
+    YOU RETURN: a pair (records, skipped). records is a list of
+    dictionaries, one per good line, with "ts", "level", "service" and "ms"
+    (a number). skipped is how many lines you threw away.
+
+    ─── exact rules ───
+    Parse the good lines out of a dirty log. Report how many you dropped.
 
     A good line is exactly four whitespace-separated fields:
 
@@ -44,18 +61,18 @@ def solve(lines):
 
 
 HINTS = [
-    "The instinct is one try/except wrapped around the whole loop. That "
+    ("The instinct is one try/except wrapped around the whole loop. That "
     "stops at the first bad line and throws away everything after it. The "
     "unit of failure here is a single line, so the handling belongs inside "
     "the loop. Second thing to notice: only one of the four failure modes "
     "actually raises — a wrong level is just a value you have to check for "
-    "yourself.",
-    "Per line: strip it, skip if falsy, parts = line.split(), skip if "
+    "yourself."),
+    ("Per line: strip it, skip if falsy, parts = line.split(), skip if "
     "len(parts) != 4, skip if parts[1] not in the allowed set, then wrap "
     "int(parts[3]) in try/except ValueError. Use `continue` on every skip "
     "path so the append at the bottom only runs for lines that survived "
-    "all four checks. Keep one counter alongside the results list.",
-    "Different data — reading key=value tokens where some are malformed:\n"
+    "all four checks. Keep one counter alongside the results list."),
+    ("Different data — reading key=value tokens where some are malformed:\n"
     "    good, bad = {}, 0\n"
     "    for token in ['cpu=2', 'mem', 'disk=x', '  ']:\n"
     "        token = token.strip()\n"
@@ -70,7 +87,7 @@ HINTS = [
     "            continue\n"
     "    print(good, bad)     # {'cpu': 2} 3\n"
     "Same shape: check what you can check with `in` and len, and catch only "
-    "the conversion that genuinely raises.",
+    "the conversion that genuinely raises."),
 ]
 
 

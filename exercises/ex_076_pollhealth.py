@@ -11,7 +11,36 @@ META = {"topic": 76, "title": "DRILL: poll until healthy, back off, exit code",
 
 
 def solve(check, now, sleep, timeout, interval, max_interval):
-    """A deploy just went out. Wait for it to report healthy, or give up.
+    """WHY: A deploy pipeline has just pushed a new version of a service.
+    Before the pipeline moves to the next stage it has to wait until the
+    service says it is healthy. Waiting forever is not allowed, so there is
+    a time limit; checking every millisecond is wasteful, so the gaps
+    between checks grow. If the service never comes up, the pipeline has to
+    stop with a failure code so nobody ships on top of a broken release.
+
+    YOU GET: `check` — a function you call with no arguments; it answers "is
+    the service up?" with True or False. The test hands you a fake one that
+    says no a few times and then yes; nothing real is contacted.
+
+    `now` — a function with no arguments that returns the current time as a
+    number of seconds, like 1234.0.
+
+    `sleep` — a function you call with a number of seconds to wait. The test
+    hands you a fake clock: `sleep` only moves the fake time forward, so
+    nothing really waits. Do not use Python's real time module here.
+
+    `timeout` — total seconds you are allowed to keep trying, like 10.
+
+    `interval` — seconds to wait after the first failed check, like 1.
+
+    `max_interval` — the longest gap you are ever allowed to wait, like 4.
+
+    YOU RETURN: a dictionary with three keys: "exit_code" (0 for healthy, 1
+    for gave up), "attempts" (how many times you called check) and "elapsed"
+    (how many seconds of fake time passed).
+
+    ─── exact rules ───
+    A deploy just went out. Wait for it to report healthy, or give up.
 
     `check()` returns something truthy when the service is up. `now()` and
     `sleep()` are the clock, handed in so the test can replay hours in no
@@ -48,24 +77,24 @@ def solve(check, now, sleep, timeout, interval, max_interval):
 
 
 HINTS = [
-    "Three separate ideas, and mixing them is what makes this hard: a "
+    ("Three separate ideas, and mixing them is what makes this hard: a "
     "deadline read once at the top, a wait that grows between polls, and an "
     "exit code carried out in the return value instead of thrown at the "
-    "process. Sketch where each of the three lives before you write a line.",
-    "start = now(); deadline = start + timeout; wait = interval; attempts = 0. "
+    "process. Sketch where each of the three lives before you write a line."),
+    ("start = now(); deadline = start + timeout; wait = interval; attempts = 0. "
     "Loop `while now() < deadline`, bump attempts, call check(), return the "
     "success dict on truthy. Otherwise sleep(wait) and then "
     "wait = min(wait * 2, max_interval). The code after the loop only runs "
     "when the clock ran out, so build the exit_code 1 dict there. Both "
-    "branches compute elapsed as now() - start.",
-    "Different data — a wait that doubles into a ceiling:\n"
+    "branches compute elapsed as now() - start."),
+    ("Different data — a wait that doubles into a ceiling:\n"
     "    wait, waits = 2, []\n"
     "    for _ in range(5):\n"
     "        waits.append(wait)\n"
     "        wait = min(wait * 2, 10)\n"
     "    print(waits)     # [2, 4, 8, 10, 10]\n"
     "The cap matters: without it a long timeout ends with one enormous sleep "
-    "and you notice the service came up four minutes ago.",
+    "and you notice the service came up four minutes ago."),
 ]
 
 
@@ -119,10 +148,10 @@ def test_solve():
         max_interval = r.choice([4, 8, 16])
         for k in (r.randint(1, 6), 10 ** 9):   # one likely success, one sure timeout
 
-            def run(fn):
-                now, sleep = _clock(start)
-                check, n = _healthy_on(k)
-                out = fn(check, now, sleep, timeout, interval, max_interval)
+            def run(fn):  # closes over loop vars; called within this iteration
+                now, sleep = _clock(start)  # noqa: B023
+                check, n = _healthy_on(k)  # noqa: B023
+                out = fn(check, now, sleep, timeout, interval, max_interval)  # noqa: B023
                 return (out["exit_code"], out["attempts"],
                         round(out["elapsed"], 6), n["c"], round(now(), 6))
 

@@ -2,7 +2,6 @@
 
 import requests
 import responses
-
 from _lib import rng
 
 META = {"topic": 60, "title": "responses — mock the HTTP the code under test will make",
@@ -10,7 +9,29 @@ META = {"topic": 60, "title": "responses — mock the HTTP the code under test w
 
 
 def solve(rsps, spec):
-    """Stand up the fake API that fetch_inventory needs, from `spec`.
+    """WHY: An inventory script (fetch_inventory, at the bottom of this file,
+    already written) talks to a hosts API: list the hosts, ask each one for
+    its CPU count, then post a report. To test it in CI without a real
+    server, you set up a fake server that answers exactly the requests the
+    script will make: the host list, one answer per host (some of them "404
+    gone"), and the report endpoint. The fake is strict: a request it was
+    not told about fails, and an answer you registered that the script never
+    asked for also fails. Your job: read the script, then register precisely
+    the answers it needs, built from a spec that changes every run.
+
+    YOU GET: `rsps` — the active fake server object (a
+    responses.RequestsMock). You register answers on it; the test then runs
+    the real script through it. Nothing real is contacted.
+    `spec` — a dict describing what the fake must answer, like
+    {"base_url": "https://inv.example.com", "token": "tok-4f9a",
+    "hosts": ["web-1", "db-2"], "cpu": {"web-1": 8}, "missing": ["db-2"],
+    "report_id": "rep-77"}.
+
+    YOU RETURN: nothing. The test calls fetch_inventory afterwards and
+    checks what it produced and which requests it made.
+
+    ─── exact rules ───
+    Stand up the fake API that fetch_inventory needs, from `spec`.
 
     fetch_inventory lives at the bottom of this file. It is already
     written and you must not change it. Read it first: every request it
@@ -59,22 +80,22 @@ def solve(rsps, spec):
 
 
 HINTS = [
-    "The mock is a registry, not a proxy. Nothing is recorded or forwarded: "
+    ("The mock is a registry, not a proxy. Nothing is recorded or forwarded: "
     "you declare, up front, which (method, url) pairs exist and what each one "
     "answers, and any request outside that list fails. So the work is not "
     "really about the library — it is reading the client and listing the calls "
     "it will make, in the shapes it will make them: one listing call, one call "
     "per host, one write at the end. Notice which of those depend on data the "
     "previous response returned, because that decides what your listing "
-    "registration has to say.",
-    "rsps.add(responses.GET, url, json={...}, status=200) is the whole api. "
+    "registration has to say."),
+    ("rsps.add(responses.GET, url, json={...}, status=200) is the whole api. "
     "json= takes a Python object and serialises it; status= defaults to 200, "
     "so you only pass it for the 404s. responses.POST is how you register the "
     "write — a POST url registered as a GET will not match. The url argument "
     "is the full url with no query string; query params on the request are "
     "ignored when the registered url has none. Three loops and one plain "
-    "registration will cover it.",
-    "Different data — mocking a payments client that checks a balance then "
+    "registration will cover it."),
+    ("Different data — mocking a payments client that checks a balance then "
     "charges:\n"
     "    with responses.RequestsMock() as rsps:\n"
     "        rsps.add(responses.GET, 'https://pay.test/v1/balance',\n"
@@ -86,7 +107,7 @@ HINTS = [
     "                            timeout=5).status_code)      # 402\n"
     "        print(len(rsps.calls))              # 2\n"
     "Yours is the same three arguments, just produced in a loop from the spec "
-    "instead of written out one at a time.",
+    "instead of written out one at a time."),
 ]
 
 

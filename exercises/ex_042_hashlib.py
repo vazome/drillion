@@ -12,7 +12,25 @@ META = {"topic": 42, "title": "hashlib — checksum files against a known digest
 
 
 def solve(paths, known_good):
-    """`paths` is a list of file paths (strings). `known_good` is the sha256
+    """WHY: The release pipeline publishes a checksum (a short fingerprint
+    string computed from a file's bytes) next to every build artifact.
+    Before deploying, you must prove the files that arrived on the server
+    are the exact ones that were built: a single changed byte, from a
+    corrupted download or tampering, must be caught. You compute each file's
+    fingerprint and compare it with the published one.
+
+    YOU GET: `paths` — a list of file path strings, like
+    ["/tmp/x/build-0.bin", "/tmp/x/build-1.bin"]. The test writes the files
+    and hands you the paths; you never build them yourself.
+
+    YOU GET: `known_good` — a string, the correct fingerprint in lowercase
+    hex, like "9f86d0...".
+
+    YOU RETURN: a dict with "digests" (filename to fingerprint), "match" and
+    "bad" (sorted lists of filenames), as in the rules below.
+
+    ─── exact rules ───
+    `paths` is a list of file paths (strings). `known_good` is the sha256
     hex digest of the artifact you were supposed to receive.
 
     Return exactly:
@@ -41,23 +59,23 @@ def solve(paths, known_good):
 
 
 HINTS = [
-    "A hash reads bytes and returns a short fixed-length fingerprint. Same "
+    ("A hash reads bytes and returns a short fixed-length fingerprint. Same "
     "bytes in, same fingerprint out, every time and on every machine; one bit "
     "different and the fingerprint is unrecognisable. So you never compare "
-    "files by size or by name — you compare their digests, as strings.",
-    "hashlib.sha256(data) where data is bytes, then .hexdigest() on the result "
+    "files by size or by name — you compare their digests, as strings."),
+    ("hashlib.sha256(data) where data is bytes, then .hexdigest() on the result "
     "for the lowercase hex string. Open with open(path, 'rb') and .read(), or "
     "use pathlib's read_bytes. os.path.basename turns the path into the key. "
     "Then it is one pass over the digests dict to split matching from "
-    "non-matching, sorted at the end.",
-    "Different data, same idea:\n"
+    "non-matching, sorted at the end."),
+    ("Different data, same idea:\n"
     "    import hashlib\n"
     "    print(hashlib.sha256(b'ok').hexdigest()[:16])    # 2689367b205c16ce\n"
     "    print(hashlib.sha256(b'Ok').hexdigest()[:16])    # 843ac01149cced78\n"
     "\n"
     "    with open('/etc/hostname', 'rb') as f:\n"
     "        print(hashlib.sha256(f.read()).hexdigest())\n"
-    "One flipped bit in the input, nothing in common in the output.",
+    "One flipped bit in the input, nothing in common in the output."),
 ]
 
 

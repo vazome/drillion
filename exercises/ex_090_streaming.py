@@ -1,15 +1,34 @@
 """Streaming: tokens arrive one at a time, and you are allowed to stop pulling."""
 
-from langchain_core.runnables import RunnableGenerator
-
 from _lib import rng
+from langchain_core.runnables import RunnableGenerator
 
 META = {"topic": 90, "title": "streaming — accumulate tokens, stop at a sentinel",
         "tier": 3, "minutes": 15, "prereqs": [11]}
 
 
 def solve(model, prompt, sentinel):
-    """A streaming model does not hand back a finished answer. `model.stream(prompt)`
+    """WHY: LangChain is a library for wiring steps together around an AI
+    model. When a chat assistant answers, the text arrives in small pieces
+    (tokens) one after another, not as one finished block; that is why you
+    see an answer "typing itself out". A company paying per token wants to
+    stop reading the moment a special end marker appears, because every
+    piece you never pull is one you never wait for or pay for.
+
+    YOU GET: `model` — a stand-in for an AI model. Calling
+    model.stream(prompt) gives you something you can loop over that hands
+    out one piece of text at a time. The test's fake just replays a fixed
+    list of pieces and counts how many you pulled; no real AI is called.
+
+    `prompt` — the question to send, as a string like "why did it restart".
+
+    `sentinel` — the end marker, as a string like "<END>".
+
+    YOU RETURN: one string: all the pieces joined in order, up to but not
+    including the marker.
+
+    ─── exact rules ───
+    A streaming model does not hand back a finished answer. `model.stream(prompt)`
     returns an iterator that yields small pieces of text — tokens — as they are
     produced, so you can print them or react to them before the model is done.
 
@@ -35,16 +54,16 @@ def solve(model, prompt, sentinel):
 
 
 HINTS = [
-    "model.stream(...) is lazy: it does not hand you a list, it hands you "
+    ("model.stream(...) is lazy: it does not hand you a list, it hands you "
     "something that produces the next token only when you ask for one. "
     "list(...) or a comprehension asks for all of them, which is exactly the "
     "behaviour being graded against — by the time you slice off the tail, the "
-    "whole answer has already been generated.",
-    "A plain `for token in model.stream(prompt):` pulls one token per turn "
+    "whole answer has already been generated."),
+    ("A plain `for token in model.stream(prompt):` pulls one token per turn "
     "round the loop. Start with an empty string, add each token to it, and use "
     "`break` the moment a token equals the sentinel — break abandons the "
-    "iterator where it stands. Return the accumulated string after the loop.",
-    "Different data — read a line-by-line feed and stop at a marker:\n"
+    "iterator where it stands. Return the accumulated string after the loop."),
+    ("Different data — read a line-by-line feed and stop at a marker:\n"
     "    def feed():\n"
     "        for line in ['ok ', 'ok ', 'HALT', 'never ', 'reached']:\n"
     "            print('produced', line)\n"
@@ -57,7 +76,7 @@ HINTS = [
     "        seen += line\n"
     "    print(repr(seen))     # 'ok ok '\n"
     "The prints show 'produced' three times, not five — the last two lines "
-    "were never generated at all.",
+    "were never generated at all."),
 ]
 
 

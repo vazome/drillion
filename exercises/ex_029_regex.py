@@ -7,7 +7,22 @@ META = {"topic": 29, "title": "re — named groups on log lines", "tier": 3,
 
 
 def solve(text):
-    """Extract structured records from a raw log blob.
+    """WHY: An application writes its log as free text, one line per event,
+    with fields like level=, host= and msg="...". Noise lines (stack traces,
+    retry notes) are mixed in between. The incident commander wants a clean
+    table of level, host and message for each real event to paste into the
+    incident report. You pull those fields out of the matching lines and
+    skip everything else.
+
+    YOU GET: `text` — one big multi-line string. Each real event line looks
+    like the example in the rules below; the noise lines do not. The test
+    creates it and hands it to you; you never build it yourself.
+
+    YOU RETURN: a list of dicts, one per event line in order, each with
+    exactly the keys "level", "host" and "msg".
+
+    ─── exact rules ───
+    Extract structured records from a raw log blob.
 
     text is one multi-line string. The lines you want look like:
 
@@ -26,21 +41,21 @@ def solve(text):
 
 
 HINTS = [
-    "One pattern, compiled once, applied across the whole text. Named groups "
+    ("One pattern, compiled once, applied across the whole text. Named groups "
     "give you a dict per match instead of counting parentheses. And look at "
     "how many double quotes sit after msg= on a line — think about which one "
-    "a greedy match stops at (hint: the last one).",
-    "re.compile the pattern; (?P<name>...) names a group; pat.finditer(text) "
+    "a greedy match stops at (hint: the last one)."),
+    ("re.compile the pattern; (?P<name>...) names a group; pat.finditer(text) "
     "yields match objects and m.groupdict() is exactly the dict you need "
     "(findall would hand you bare tuples, names lost). For the quoted msg "
-    "use .*? or [^\"]* so it stops at the FIRST closing quote.",
-    "Different data, same shape:\n"
+    "use .*? or [^\"]* so it stops at the FIRST closing quote."),
+    ("Different data, same shape:\n"
     "    import re\n"
     "    pat = re.compile(r'user=(?P<user>\\w+) cmd=\"(?P<cmd>.*?)\"')\n"
     "    log = 'user=ann cmd=\"rm -rf /tmp\" id=\"7\"\\nplain noise\\nuser=bo cmd=\"ls\" id=\"9\"'\n"
     "    print([m.groupdict() for m in pat.finditer(log)])\n"
     "    # [{'user': 'ann', 'cmd': 'rm -rf /tmp'}, {'user': 'bo', 'cmd': 'ls'}]\n"
-    "With a greedy .* the first cmd would swallow everything up to id=\"7\".",
+    "With a greedy .* the first cmd would swallow everything up to id=\"7\"."),
 ]
 
 

@@ -7,7 +7,25 @@ META = {"topic": 61, "title": "what to actually test in an ops script",
 
 
 def solve(units):
-    """Decide which pieces of a script are worth writing a test for.
+    """WHY: Your team has a big ops script and a rule that "everything must
+    have tests". Writing a test for every single function wastes days and
+    produces brittle tests that break on every rename. The tech lead wants a
+    consistent triage: functions that make decisions get tests; thin
+    wrappers around a library call, plain config constants, and
+    straight-line glue code are skipped, unless the glue starts branching,
+    which makes it decision-making again. You encode that rule so the team
+    can apply it to a list of functions.
+
+    YOU GET: `units` — a list of dicts, one per function in the script, like
+    {"name": "parse_uptime", "kind": "logic", "branches": 3}, where kind is
+    "logic", "wrapper", "config" or "glue" and branches is how many if/else
+    paths it has. Names are unique. The test creates it and hands it to
+    you.
+
+    YOU RETURN: a dict mapping each name to the string "test" or "skip".
+
+    ─── exact rules ───
+    Decide which pieces of a script are worth writing a test for.
 
     Each unit describes one function in the script:
 
@@ -53,16 +71,16 @@ def solve(units):
 
 
 HINTS = [
-    "The question sitting behind the rule: if this broke, would a test have "
+    ("The question sitting behind the rule: if this broke, would a test have "
     "caught it, and would that test break for any other reason. A function "
     "that only forwards to a library fails on both counts — it breaks when "
     "you rename an argument, not when the behaviour is wrong. Code that "
-    "decides something passes on both.",
-    "One dict, built in a loop over units. Two of the four kinds are always "
+    "decides something passes on both."),
+    ("One dict, built in a loop over units. Two of the four kinds are always "
     "skip and one is always test, so only glue needs to look at branches. "
     "Order the if/elif so the glue case comes last and the rest fall through "
-    "to a single skip. Key the dict by unit['name'].",
-    "Different data — same shape of decision, routing health checks:\n"
+    "to a single skip. Key the dict by unit['name']."),
+    ("Different data — same shape of decision, routing health checks:\n"
     "    checks = [{'n': 'disk', 'sev': 'page'},\n"
     "              {'n': 'cache_hit', 'sev': 'info'}]\n"
     "    action = {}\n"
@@ -73,7 +91,7 @@ HINTS = [
     "            action[c['n']] = 'dashboard'\n"
     "    print(action)    # {'disk': 'wake someone', 'cache_hit': 'dashboard'}\n"
     "Yours has four kinds feeding two labels, and one of them needs a second "
-    "look at a number before it picks.",
+    "look at a number before it picks."),
 ]
 
 

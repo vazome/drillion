@@ -11,7 +11,23 @@ META = {"topic": 74, "title": "DRILL: N largest files under a directory tree",
 
 
 def solve(root, n):
-    """A disk is filling up. Find the n biggest files under `root`.
+    """WHY: A server's disk is almost full and the on-call engineer needs to
+    know, right now, which files are eating the space so they can delete or
+    move the biggest ones. "Show me the five largest files under /var" is
+    the question. A list sorted biggest-first is what they act on.
+
+    YOU GET: `root` — a folder path as text, like "/tmp/ex074_abc". The test
+    creates a small temporary folder tree with files of different sizes and
+    hands you the path; you never build it yourself.
+
+    `n` — a whole number, like 3: how many of the biggest files to report.
+
+    YOU RETURN: a list of pairs, biggest file first. Each pair is (the
+    file's path relative to root, its size in bytes), like
+    [("api/logs/app.log", 900), ("web/index.html", 400)].
+
+    ─── exact rules ───
+    A disk is filling up. Find the n biggest files under `root`.
 
     `root` is a directory path as a STRING. Return a list of
     (relative_path, size_in_bytes) pairs, biggest first:
@@ -35,16 +51,16 @@ def solve(root, n):
 
 
 HINTS = [
-    "Three steps, and only the middle one is interesting: collect every file "
+    ("Three steps, and only the middle one is interesting: collect every file "
     "with its size, sort, take the first n. Sorting is where people stall, "
     "because you want one direction for size and the other for the path. One "
-    "key expression does both, no second sort pass.",
-    "Path(root).rglob('*') walks the whole tree; p.is_file() drops the "
+    "key expression does both, no second sort pass."),
+    ("Path(root).rglob('*') walks the whole tree; p.is_file() drops the "
     "directories. p.stat().st_size is the size, p.relative_to(root).as_posix() "
     "is the name you report. Sort with key=lambda t: (-t[1], t[0]) — negating "
     "the number flips that field to descending while the string stays "
-    "ascending. Then slice [:n].",
-    "Different data, same two moves:\n"
+    "ascending. Then slice [:n]."),
+    ("Different data, same two moves:\n"
     "    rows = [('pod-b', 3), ('pod-a', 3), ('pod-c', 9)]\n"
     "    rows.sort(key=lambda t: (-t[1], t[0]))\n"
     "    print(rows)      # [('pod-c', 9), ('pod-a', 3), ('pod-b', 3)]\n"
@@ -53,7 +69,7 @@ HINTS = [
     "    p = Path('/var/log/nginx/access.log')\n"
     "    print(p.relative_to('/var/log').as_posix())   # nginx/access.log\n"
     "A slice past the end is not an error, so [:n] handles the short tree "
-    "for free.",
+    "for free."),
 ]
 
 
