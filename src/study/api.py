@@ -8,8 +8,8 @@ blocking is what threads are for.
 Nothing here re-implements a rule: `region` owns validation and the splice,
 `scheduler` and `attempts` own grading, and the exercise files are read as text
 and run as a subprocess — the server never imports them. The browser only ever
-sees the editor half of the region, so `_reference`, `_gen` and the tests cannot
-leak into it.
+sees the region above the marker, so `_reference`, `_gen` and the tests cannot
+leak into it, and the guidance it renders comes from the drill's README.md.
 """
 
 import logging
@@ -21,7 +21,7 @@ from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -39,14 +39,14 @@ from .attempts import (
     touch,
     unlock_solution,
 )
-from .catalogue import exercises, has_given
+from .catalogue import exercises
 from .region import (
     Invalid,
     bounds,
     cut,
     etag,
+    has_given,
     splice,
-    strip_spec,
     stub,
     validate,
     write_region,
@@ -59,7 +59,7 @@ from .state import card, load, save, today
 log = logging.getLogger(__name__)
 MAX_BODY = 256 * 1024
 LOCK = threading.Lock()      # read → validate → write → save() is one transaction
-CATALOGUE_ONLY = ("path", "hints", "read_first", "hints_line", "region_start")  # never shipped
+CATALOGUE_ONLY = ("path", "dir", "hints", "spec_md", "marker_line")   # never shipped in `meta`
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -128,17 +128,7 @@ def _check_etag(src, sent):
     """Optimistic lock: the editor may only write what it last read."""
     if sent != etag(src):
         raise HTTPException(409, {"error": "the file changed on disk",
-                                  "etag": etag(src),
-                                  "code": strip_spec(cut(src).body).editor})
-
-
-def _coords(src):
-    """(region_start, doc_offset, hints_line) of the file as it is *now* — pytest
-    reports line numbers in the file it just ran, not the one we first parsed."""
-    meta_end, hints_line = bounds(src)
-    region = cut(src)
-    return (meta_end + 1 + region.lead.count("\n"),
-            strip_spec(region.body).doc_offset, hints_line)
+                                  "etag": etag(src), "code": cut(src).body})
 
 
 def _gate(o):
@@ -169,24 +159,20 @@ def _status(st, slug):
 
 def _payload(st, slug, meta, src):
     """Everything the exercise page needs, and nothing the answer lives in."""
-    region = cut(src)
-    spec = strip_spec(region.body)
+    body = cut(src).body
     o = st["open"].get(slug)
     c = card(st, slug)
-    region_start, _, hints_line = _coords(src)
     unlocked, need_attempts, need_secs = _gate(o)
     # a due review must not be handed last time's answer; a locked attempt neither
     show_code = c["seen"] > 0 and (unlocked if o else c["due"] > today())
     return {"slug": slug,
             "meta": {k: v for k, v in meta.items() if k not in CATALOGUE_ONLY},
-            "spec": spec.spec_text,
-            "read_first": meta["read_first"],
-            "code": spec.editor,
+            "spec_md": meta["spec_md"],
+            "code": body,
             "etag": etag(src),
-            "has_given": has_given(region.body),
-            "doc_offset": spec.doc_offset,
-            "region_start": region_start,
-            "hints_line": hints_line,
+            "has_given": has_given(body),
+            "region_start": 1,
+            "marker_line": bounds(src),
             "status": _status(st, slug),
             "attempt": {k: o[k] for k in ("attempts", "hints", "active", "seed",
                                           "solution_shown")} if o else None,
@@ -278,7 +264,7 @@ def save_exercise(slug: str, edit: Edit):
             raise HTTPException(409, "no open attempt — open the exercise first")
         src = meta["path"].read_text()
         _check_etag(src, edit.etag)
-        new_src = validate(edit.code, strip_spec(cut(src).body).spec_src, src)
+        new_src = validate(edit.code, src)
         write_region(meta["path"], new_src)
         return {"etag": etag(new_src)}
 
@@ -292,14 +278,13 @@ def run_exercise(slug: str, edit: Edit):
         o = _attempt(st, slug)
         src = meta["path"].read_text()
         _check_etag(src, edit.etag)
-        new_src = validate(edit.code, strip_spec(cut(src).body).spec_src, src)
+        new_src = validate(edit.code, src)
         write_region(meta["path"], new_src)
         passed, out = run_tests(meta["path"], o["seed"])
         o["attempts"] += 1                       # pytest ran; that is what an attempt is
-        body = cut(new_src).body
-        code = strip_spec(body).editor
+        code = body = cut(new_src).body
         resp = {"passed": passed, "attempts": o["attempts"],
-                **summarise(out, *_coords(new_src))}
+                **summarise(out, bounds(new_src))}
         log.info("%s passed=%s attempts=%s", slug, passed, o["attempts"])
         if passed:
             grade, gap, box = record_pass(st, slug, meta, code)     # drops the attempt
@@ -364,6 +349,16 @@ def abandon_exercise(slug: str, sent: Etag):
         write_region(meta["path"], new_src)
         save(st)
         return _payload(st, slug, meta, new_src)
+
+
+@app.get("/api/ex/{slug}/assets/{name}")
+def asset(slug: str, name: str):
+    """An image, diagram or clip the README points at. A name, never a path."""
+    folder = _exercise(slug)["dir"]
+    path = folder / "assets" / name
+    if "/" in name or "\\" in name or ".." in name or not path.is_file():
+        raise HTTPException(404, f"no asset {name!r}")
+    return FileResponse(path)
 
 
 @app.post("/api/focus")

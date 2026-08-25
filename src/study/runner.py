@@ -15,34 +15,37 @@ from .catalogue import exercises
 from .region import _solve, cut, splice, stub
 from .settings import settings
 
-_FILE_LINE = re.compile(r"[\w./\\-]*\.py:(\d+)")
+_DRILL_LINE = re.compile(r"[\w./\\-]*drill\.py:(\d+)")
+# every drill.py is called drill.py, so pytest must name modules by path, not basename
+_PYTEST = ["-q", "--no-header", "-p", "no:cacheprovider", "--import-mode=importlib"]
+
+
+def _env(**extra):
+    """`exercises/` on the path, so `from _lib import rng` works from any root."""
+    return {**os.environ, "PYTHONPATH": str(settings.exercises_dir), **extra}
 
 
 def run_tests(path, seed):
     """Exercise code only ever runs here, in its own process."""
-    cmd = [sys.executable, "-m", "pytest", str(path), "-x", "-q", "--no-header",
-           "--timeout=10", "-p", "no:cacheprovider"]
+    cmd = [sys.executable, "-m", "pytest", str(path), "-x", "--timeout=10", *_PYTEST]
     try:
-        r = subprocess.run(cmd, env={**os.environ, "STUDY_SEED": str(seed)}, cwd=settings.root,
+        r = subprocess.run(cmd, env=_env(STUDY_SEED=str(seed)), cwd=settings.root,
                            capture_output=True, text=True, check=False, timeout=60)
     except subprocess.TimeoutExpired:
         return False, "timed out after 60s — an endless loop, most likely"
     return r.returncode == 0, r.stdout
 
 
-def summarise(out, region_start, doc_offset, hints_line):
-    """pytest output for the browser: the assertion lines, in editor coordinates."""
-    # ponytail: the last docstring line, under-counted when code sits above solve() — but
-    # only by lines inside the docstring itself, which never appear in a traceback
-    doc_end = region_start + doc_offset
+def summarise(out, marker_line):
+    """pytest output for the browser: the assertion lines, in editor coordinates.
 
+    The region starts at line 1 of drill.py, so the map is the identity — a frame
+    is either the learner's or the grader's, and only the first gets a bare line."""
     def editor_line(m):
         n = int(m.group(1))
-        if not region_start <= n < hints_line:
-            return m.group(0)             # a frame in the test or the machinery: leave it alone
-        return f"line {n - region_start + 1 - (doc_offset if n > doc_end else 0)}"
+        return f"line {n}" if n < marker_line else m.group(0)
 
-    text = _FILE_LINE.sub(editor_line, out)
+    text = _DRILL_LINE.sub(editor_line, out)
     lines = text.split("\n")
     head = [ln for ln in lines if ln.startswith("E   ")][:6]
     return {"headline": head or [ln for ln in lines if ln.startswith(("FAILED", "ERROR"))][:6],
@@ -67,18 +70,19 @@ def selfcheck():
     exs = exercises()
     made = []
     try:
-        for slug, meta in exs.items():
+        for meta in exs.values():
             src = meta["path"].read_text()
-            path = settings.exercises_dir / f"_selfcheck_{slug}.py"
+            path = meta["dir"] / "_selfcheck.py"      # an explicit path is always collected
             path.write_text(splice(src, _reference_call(cut(src).body)))
             made.append(path)
-        r = subprocess.run([sys.executable, "-m", "pytest", *map(str, made), "-q", "--no-header",
-                            "--timeout=60", "-p", "no:cacheprovider"],
-                           cwd=settings.root, capture_output=True, text=True, check=False)
+        r = subprocess.run([sys.executable, "-m", "pytest", *map(str, made),
+                            "--timeout=60", *_PYTEST],
+                           cwd=settings.root, env=_env(), capture_output=True, text=True,
+                           check=False)
     finally:
         for path in made:
             path.unlink(missing_ok=True)
-    failed = sorted({ln.split("_selfcheck_", 1)[-1].split(".py")[0]
+    failed = sorted({ln.split("_selfcheck.py")[0].rstrip("/\\").split("/")[-1]
                      for ln in r.stdout.split("\n") if ln.startswith(("FAILED", "ERROR"))})
     if r.returncode and not failed:
         print(r.stdout[-2000:].strip() or "pytest did not run")

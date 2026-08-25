@@ -4,8 +4,9 @@ version = "0.1.0"
 description = "Spaced-repetition Python drills: pytest-graded exercises on a Leitner ladder, in a browser"
 readme = "README.md"
 requires-python = ">=3.13"
-# runtime, not dev: the app serves the API (fastapi/uvicorn), grades in a pytest
-# subprocess (pytest, pytest-timeout), and the drills themselves import the rest.
+# runtime, not dev: the app serves the API (fastapi/uvicorn), reads each drill's
+# README frontmatter (pyyaml), grades in a pytest subprocess (pytest,
+# pytest-timeout), and the drills themselves import the rest.
 dependencies = [
     "boto3>=1.43.69",
     "fastapi>=0.141.1",
@@ -14,6 +15,7 @@ dependencies = [
     "moto>=5.2.2",
     "pytest>=9.1.1",
     "pytest-timeout>=2.4.0",
+    "pyyaml>=6.0.3",
     "requests>=2.34.2",
     "responses>=0.26.2",
     "uvicorn>=0.52.4",
@@ -41,8 +43,12 @@ extend-exclude = ["drafts"]          # scratch files, not part of the drill set
 
 [tool.ruff.lint.per-file-ignores]
 "src/study/*" = ["DTZ"]  # local wall-clock dates are intended for scheduling
-"exercises/*" = ["E402", "F841"]  # the region is the learner's: mid-file imports, half-used names
+"exercises/*/drill.py" = ["E402", "F841"]  # the region is the learner's, and the
+# machinery imports below the marker are deliberately not at the top of the file
 
 [tool.pytest.ini_options]
-python_files = ["ex_*.py", "test_*.py"]
+python_files = ["drill.py", "test_*.py"]
 testpaths = ["tests", "exercises"]
+pythonpath = ["exercises"]           # every drill does `from _lib import rng`
+# every drill file is called drill.py, so modules are named by path, not by basename
+addopts = "--import-mode=importlib"

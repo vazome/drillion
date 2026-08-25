@@ -8,7 +8,7 @@ all price themselves in that currency.
 import random
 from datetime import datetime
 
-from .region import cut, splice, strip_spec, stub
+from .region import cut, splice, stub
 from .scheduler import grade_of, reschedule
 from .state import card, today
 
@@ -68,7 +68,7 @@ def abandon(st, slug, disk_src):
     stubbed = stub(body)
     if body.strip() != stubbed.strip():
         st["archive"].setdefault(slug, []).append(
-            {"date": today(), "grade": "abandoned", "code": strip_spec(body).editor})
+            {"date": today(), "grade": "abandoned", "code": body})
     st["open"].pop(slug, None)
     return splice(disk_src, stubbed)
 

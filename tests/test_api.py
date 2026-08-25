@@ -1,4 +1,4 @@
-"""The web API, driven over ASGI against a throwaway copy of one drill."""
+"""The web API, driven over ASGI against a throwaway copy of one drill folder."""
 
 import asyncio
 import shutil
@@ -11,7 +11,7 @@ from study import region, scheduler, state
 from study.api import MAX_BODY, app
 from study.settings import settings
 
-SLUG = "ex_001_fstrings"
+SLUG = "001_fstrings"
 PASSING = 'return "\\n".join(f"{name:<14}{value:>12,.2f}" for name, value in rows)'
 
 
@@ -21,14 +21,16 @@ def _api(flow):
     tmp, keep = Path(tempfile.mkdtemp(prefix="study_api_")), settings.root
     exdir = tmp / "exercises"
     exdir.mkdir()
-    for name in (f"{SLUG}.py", "_lib.py"):
-        shutil.copy(settings.exercises_dir / name, exdir / name)
+    shutil.copytree(settings.exercises_dir / SLUG, exdir / SLUG)
+    shutil.copy(settings.exercises_dir / "_lib.py", exdir / "_lib.py")
+    (exdir / SLUG / "assets").mkdir()
+    (exdir / SLUG / "assets" / "shape.svg").write_text("<svg/>")
     settings.root = tmp                              # exercises/ and progress.json move together
 
     async def drive():
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
                                      base_url="http://127.0.0.1") as client:
-            await flow(client, exdir / f"{SLUG}.py")
+            await flow(client, exdir / SLUG / "drill.py")
 
     try:
         asyncio.run(drive())
@@ -45,20 +47,23 @@ async def _stub_to_pass(api, path):
 
     ex = (await api.post(f"/api/ex/{SLUG}/open")).json()
     assert ex["attempt"]["attempts"] == 0 and ex["status"] == "open"
-    assert ex["spec"].startswith("WHY:") and '"""' not in ex["code"]   # the spec is not editable
+    assert ex["spec_md"].startswith("# ") and "\n## Why\n" in ex["spec_md"]
+    assert "## Hints" not in ex["spec_md"] and "spec" not in ex   # guidance is Markdown now
+    assert ex["meta"]["topic"] == 1 and "spec_md" not in ex["meta"]
+    assert ex["region_start"] == 1 and ex["marker_line"] > 1
     assert "raise NotImplementedError" in ex["code"] and "_reference" not in ex["code"]
 
     run = (await api.post(f"/api/ex/{SLUG}/run",
                           json={"code": ex["code"], "etag": ex["etag"]})).json()
     assert run["passed"] is False and run["attempts"] == 1
     assert any("NotImplementedError" in ln for ln in run["headline"])
+    assert "line 2: NotImplementedError" in run["output"]   # the learner's raise, editor line
 
-    two_space = ex["code"].replace("    raise NotImplementedError", "  return ''")
-    put = await api.put(f"/api/ex/{SLUG}", json={"code": two_space, "etag": run["etag"]})
-    assert put.status_code == 200
-    assert '\n  """WHY' in path.read_text()          # the spec went back, at the learner's indent
+    drafted = ex["code"].replace("    raise NotImplementedError", "  return ''")
+    put = await api.put(f"/api/ex/{SLUG}", json={"code": drafted, "etag": run["etag"]})
+    assert put.status_code == 200 and "  return ''" in path.read_text()
 
-    stale = await api.put(f"/api/ex/{SLUG}", json={"code": two_space, "etag": run["etag"]})
+    stale = await api.put(f"/api/ex/{SLUG}", json={"code": drafted, "etag": run["etag"]})
     assert stale.status_code == 409                  # that etag is one save out of date
     assert stale.json()["etag"] == put.json()["etag"] and "return ''" in stale.json()["code"]
 
@@ -83,6 +88,7 @@ async def _stub_to_pass(api, path):
 
     hint = await api.post(f"/api/ex/{SLUG}/hint")
     assert hint.status_code == 200 and (hint.json()["level"], hint.json()["total"]) == (1, 3)
+    assert hint.json()["text"] == (await api.get(f"/api/ex/{SLUG}")).json()["hints"]["shown"][0]
     soon = await api.post(f"/api/ex/{SLUG}/hint")
     assert soon.status_code == 423 and 0 < soon.json()["wait_secs"] <= 120
 
@@ -96,7 +102,7 @@ async def _guards(api, path):
     missing = await api.get("/api/ex/_lib")          # a real file, but not in the catalogue
     assert missing.status_code == 404 and missing.json()["error"] == "no exercise '_lib'"
     assert (await api.get("/api/ex/..%2f..%2fetc%2fpasswd")).status_code == 404
-    assert (await api.post("/api/ex/ex_999_nope/open")).status_code == 404
+    assert (await api.post("/api/ex/999_nope/open")).status_code == 404
 
     ex = (await api.get(f"/api/ex/{SLUG}")).json()
     assert ex["attempt"] is None and ex["hints"]["shown"] == []
@@ -119,6 +125,11 @@ async def _guards(api, path):
                                 "etag": ex["etag"]})
     assert cheat.status_code == 400 and "_reference" in cheat.json()["error"]
 
+    pasted = await api.put(f"/api/ex/{SLUG}",
+                           json={"code": f"def solve(rows):\n    return ''\n{region.MARKER}\n",
+                                 "etag": ex["etag"]})
+    assert pasted.status_code == 400                 # the marker is the grader's, not the editor's
+
     assert (await api.post(f"/api/ex/{SLUG}/solution")).status_code == 423
     assert (await api.post("/api/focus", json={"tag": "core"})).json() == {"focus": "core"}
     assert (await api.get("/api/catalogue")).json()["focus"] == "core"
@@ -128,6 +139,15 @@ async def _guards(api, path):
     gone = await api.post(f"/api/ex/{SLUG}/abandon", json={"etag": stub_etag})
     assert gone.status_code == 200 and gone.json()["attempt"] is None
     assert state.load()["archive"] == {}              # an untouched stub is not worth keeping
+
+
+async def _assets(api, _path):
+    """Images and clips a README points at — a filename, never a path."""
+    ok = await api.get(f"/api/ex/{SLUG}/assets/shape.svg")
+    assert ok.status_code == 200 and ok.text == "<svg/>"
+    for name in ("..%2Fdrill.py", "nope.png", "..%2F..%2F_lib.py", "sub%2Fx.png"):
+        assert (await api.get(f"/api/ex/{SLUG}/assets/{name}")).status_code == 404, name
+    assert (await api.get("/api/ex/999_nope/assets/shape.svg")).status_code == 404
 
 
 async def _health(api, _path):
@@ -142,6 +162,10 @@ def test_the_api_carries_a_drill_from_stub_to_pass():
 
 def test_the_api_guards_its_edges():
     _api(_guards)
+
+
+def test_the_api_serves_a_drills_assets():
+    _api(_assets)
 
 
 def test_the_api_reports_its_health():
