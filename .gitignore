@@ -14,3 +14,12 @@ unrelated-1.html
 unrelated-devops-1.html
 *.tmp
 .pytest_cache/
+platform-checklist.md
+# personal / local-only files (kept on this machine, purged from history)
+drafts/
+STUDY.md
+platform-checklist.md
+python-checklist.md
+python-checklist.html
+ruff_plan.md
+ruff_report.txt

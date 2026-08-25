@@ -1,0 +1,4246 @@
+# Review package: 9a98eed..3ce7507
+
+## Commits
+3ce7507 Remove the one-off migration script
+6a94fd9 Merge rsample drills into one tagged catalogue
+
+## Files changed
+ .gitignore                                         |   4 +-
+ STUDY.md                                           |  24 ++-
+ rsample_drill/README.md                             |  35 ----
+ rsample_drill/_lib.py                               |  11 --
+ rsample_drill/ex_01_sortkey.py                      |  83 ---------
+ rsample_drill/ex_02_sets.py                         |  85 ---------
+ rsample_drill/ex_04_typehints.py                    | 202 ---------------------
+ rsample_drill/ex_05_decorators.py                   | 142 ---------------
+ rsample_drill/ex_06_contextmanager.py               | 135 --------------
+ rsample_drill/ex_07_concurrency.py                  | 132 --------------
+ rsample_drill/ex_08_asyncio.py                      | 112 ------------
+ rsample_drill/ex_13_mock.py                         | 150 ---------------
+ rsample_drill/ex_17_whattotest.py                   | 138 --------------
+ rsample_drill/progress.json                         | 138 --------------
+ rsample_drill/skipped_ex_03_regex.py                | 128 -------------
+ exercises/ex_001_fstrings.py                       |   2 +-
+ exercises/ex_002_slicing.py                        |   2 +-
+ exercises/ex_004_ordefault.py                      |   2 +-
+ exercises/ex_005_enumzip.py                        |   2 +-
+ exercises/ex_006_unpacking.py                      |   2 +-
+ exercises/ex_007_mutabledefault.py                 |   2 +-
+ exercises/ex_008_closures.py                       |   2 +-
+ exercises/ex_009_sortkey.py                        |   6 +-
+ exercises/ex_010_comprehension.py                  |   2 +-
+ exercises/ex_011_generators.py                     |   2 +-
+ exercises/ex_012_decorators.py                     |   6 +-
+ exercises/ex_013_contextmanager.py                 |   6 +-
+ exercises/ex_014_classes.py                        |   2 +-
+ exercises/ex_015_dataclasses.py                    |   2 +-
+ exercises/ex_016_typehints.py                      |  18 +-
+ exercises/ex_017_functools.py                      |   2 +-
+ exercises/ex_018_dictget.py                        |   2 +-
+ exercises/ex_019_counter.py                        |   2 +-
+ exercises/ex_020_defaultdict.py                    |   2 +-
+ exercises/ex_021_deque.py                          |   2 +-
+ exercises/ex_022_sets.py                           |   6 +-
+ exercises/ex_023_itertools.py                      |   2 +-
+ exercises/ex_025_copy.py                           |   2 +-
+ exercises/ex_026_filelines.py                      |   2 +-
+ exercises/ex_027_pathlib.py                        |   2 +-
+ exercises/ex_028_join.py                           |   2 +-
+ exercises/ex_029_regex.py                          |   7 +-
+ exercises/ex_030_json.py                           |   2 +-
+ exercises/ex_031_yamlflat.py                       |   2 +-
+ exercises/ex_032_csv.py                            |   2 +-
+ exercises/ex_033_datetime.py                       |   2 +-
+ exercises/ex_034_percentile.py                     |   2 +-
+ exercises/ex_035_subprocess.py                     |   2 +-
+ exercises/ex_036_env.py                            |   2 +-
+ exercises/ex_037_argparse.py                       |   2 +-
+ exercises/ex_038_logging.py                        |   2 +-
+ exercises/ex_039_exitcodes.py                      |   2 +-
+ exercises/ex_040_shutil.py                         |   2 +-
+ exercises/ex_042_hashlib.py                        |   2 +-
+ exercises/ex_043_except.py                         |   2 +-
+ exercises/ex_044_customexc.py                      |   2 +-
+ exercises/ex_045_retry.py                          |   2 +-
+ exercises/ex_046_deadline.py                       |   2 +-
+ exercises/ex_047_idempotent.py                     |   2 +-
+ exercises/ex_048_requests.py                       |   2 +-
+ exercises/ex_049_pagination.py                     |   2 +-
+ exercises/ex_050_ratelimit.py                      |   2 +-
+ exercises/ex_051_session.py                        |   2 +-
+ exercises/ex_052_realpagination.py                 |   2 +-
+ exercises/ex_053_hmac.py                           |   2 +-
+ exercises/ex_054_threadpool.py                     |   2 +-
+ exercises/ex_055_concurrency.py                    |   6 +-
+ exercises/ex_056_asyncio.py                        |   6 +-
+ exercises/ex_059_mock.py                           |   6 +-
+ exercises/ex_060_responses_mocking.py              |   2 +-
+ exercises/ex_061_whattotest.py                     |   6 +-
+ exercises/ex_068_boto3basics.py                    |   2 +-
+ exercises/ex_069_s3audit.py                        |   2 +-
+ exercises/ex_071_tagaudit.py                       |   2 +-
+ .../{ex_070_ebscleanup.py => ex_072_ebscleanup.py} |   2 +-
+ exercises/ex_073_p95.py                            |   2 +-
+ exercises/ex_074_biggest.py                        |   2 +-
+ exercises/ex_075_configdiff.py                     |   2 +-
+ exercises/ex_076_pollhealth.py                     |   2 +-
+ exercises/ex_077_fanout.py                         |   2 +-
+ exercises/ex_078_tailalert.py                      |   2 +-
+ exercises/ex_079_deporder.py                       |   2 +-
+ exercises/ex_081_dirtylines.py                     |   2 +-
+ exercises/ex_082_toyscreen.py                      |   2 +-
+ exercises/ex_083_minigrep.py                       |   2 +-
+ exercises/ex_084_healthfanout.py                   |   2 +-
+ exercises/ex_085_csvjoin.py                        |   2 +-
+ exercises/ex_086_tokenbucket.py                    |   2 +-
+ exercises/ex_088_runnables.py                      |   2 +-
+ exercises/ex_089_lcel_dict.py                      |   2 +-
+ exercises/ex_090_streaming.py                      |   2 +-
+ exercises/ex_091_parallel_llm.py                   |   2 +-
+ exercises/ex_092_llm_retry.py                      |   2 +-
+ exercises/ex_093_message_dig.py                    |   2 +-
+ .../ex_094_await_under_lock.py                     |   5 +-
+ .../ex_095_semaphore.py                            |   5 +-
+ .../ex_096_async_cm.py                             |   5 +-
+ .../ex_097_lazy_init_lock.py                       |   5 +-
+ .../ex_098_fixtures.py                             |   5 +-
+ .../ex_099_asgi_test.py                            |   5 +-
+ .../ex_16_rerank.py => exercises/ex_100_rerank.py  |   5 +-
+ .../ex_101_explain_takehome.py                     |   5 +-
+ progress.json                                      |  61 +++++++
+ pyproject.toml                                     |   7 +-
+ test_study.py                                      |   3 +
+ uv.lock                                            |  27 +++
+ 106 files changed, 275 insertions(+), 1593 deletions(-)
+
+## Diff
+diff --git a/.gitignore b/.gitignore
+index e2e4628..86bac64 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -4,11 +4,13 @@ __pycache__/
+ build/
+ dist/
+ wheels/
+ *.egg-info
+ 
+ # Virtual environments
+ .venv
+ 
+ # Other
+ unrelated-1.html
+-unrelated-devops-1.html
+\ No newline at end of file
++unrelated-devops-1.html
++*.tmp
++.pytest_cache/
+diff --git a/STUDY.md b/STUDY.md
+index c831619..32f3dc3 100644
+--- a/STUDY.md
++++ b/STUDY.md
+@@ -20,37 +20,51 @@ The obvious choice was FSRS (what Anki uses). Tested it: with default settings a
+ **Grades are computed, not self-reported.** First try under par = EASY (+2 boxes). Two tries = PASS (+1). Slow, or three-plus tries = STRUGGLED (stays put). Looked at the solution = never promotes, regardless of the tests going green. That last rule is the important one: hint-assisted passes are how people finish a curriculum and still can't code.
+ 
+ **Hints are gated.** Three levels — a nudge, then a strategy, then the same idea worked through on *different* data. The full solution unlocks only after 3 attempts and 10 minutes, and taking it queues a fresh variant within days. Levels are 60s apart because clicking through hints is the best-documented way to feel productive while learning nothing.
+ 
+ **Reviews come before new material,** capped at 2 new topics a day. Reviews arrive interleaved rather than blocked — mixing confusable topics is the largest effect in the whole literature (d ≈ 0.83), and it will feel worse than drilling one thing at a time. That feeling is documented and wrong.
+ 
+ ## Adding exercises
+ 
+ One file, `exercises/ex_<topic>_<name>.py`, copy the shape of an existing one:
+ 
+-- `META` — topic number from `python-checklist.md`, title, minutes (used as par time), `prereqs` (topic numbers that gate it)
++- `META` — topic number from `python-checklist.md`, title, minutes (used as par time), `prereqs` (topic numbers that gate it), `tags` (see below)
+ - `solve()` — stub with the spec in its docstring
+ - `HINTS` — exactly 3, escalating, the last one worked on different data
+ - `_gen(r)` — build inputs from `r` (a seeded Random)
+ - `_reference(...)` — correct implementation; tests compare yours against it
+ - `test_solve()` — loop a few generated cases
+ 
+ Whole-task drills add `practices: [...]` listing component topics.
+ 
++**The region contract.** Everything between `META` and `HINTS` is the learner's: that is the text the
++editor shows and the only text a save may replace. `solve` must be the last statement in it, and any
++given code (constants, exception classes, a toy app) goes above `solve`, never below.
++
+ Sanity check before trusting a new exercise:
+ 
+ ```bash
+ uv run python -c "
+ import sys, os; sys.path.insert(0,'exercises')
+ os.environ['STUDY_SEED']='42'
+ import ex_019_counter as m; m.solve = m._reference; m.test_solve(); print('ok')"
+ ```
+ 
+ ## Current coverage
+ 
+ 8 of 87 topics. Deliberate — the system introduces 2 a day, so a backlog of 87 authored exercises would rot before you reached them. More get written as you get through these.
+ 
+-## Take-home track
++## Tags
++
++One catalogue, no folders: what an exercise belongs to is `META["tags"]`.
++
++- **Section** — exactly one per exercise, from the topic number: `core` (1–17) ·
++  `data-structures` (18–25) · `files-text` (26–34) · `stdlib-ops` (35–42) · `errors` (43–47, 81) ·
++  `http` (48–53) · `concurrency` (54–56, 94–97) · `testing` (57–61, 98–99) · `packaging` (62–67) ·
++  `cloud` (68–72) · `whole-task` (73–80, 82–86, 100–101) · `llm` (88–93)
++- **Library** — from the file's own imports: `boto3` (boto3/moto) · `requests` (requests/responses) ·
++  `langchain` (langchain-core) · `fastapi` (fastapi/httpx) · `asyncio`
++- **Track** — `rsample`: the 18 drills built around the rsample RAG take-home (10 general drills that
++  carry an extra `TAKE-HOME:` line in their READ FIRST block, plus 8 written for it, topics 94–101).
+ 
+-`rsample_drill/` is a second, self-contained folder of 18 drills built around the rsample RAG take-home
+-(10 copied prerequisites + 8 new). Order and links: `rsample_drill/README.md`. Run it with
+-`STUDY_DIR=rsample_drill uv run study.py`; it keeps its own `progress.json` inside the folder.
++`focus` in `progress.json` is a single tag that restricts which *new* exercises get offered — the
++replacement for the old second folder. Reviews and the open catalogue ignore it.
+diff --git a/rsample_drill/README.md b/rsample_drill/README.md
+deleted file mode 100644
+index 2cbfbd0..0000000
+--- a/rsample_drill/README.md
++++ /dev/null
+@@ -1,35 +0,0 @@
+-# rsample take-home track — go top to bottom
+-
+-Goal: explain every line and every decision of your RAG take-home in an interview.
+-Each file starts with `# READ FIRST:` links — read them BEFORE opening the task.
+-The last hint of every new drill is "SAY IT IN THE INTERVIEW" — the sentences to say out loud.
+-
+-```bash
+-STUDY_DIR=rsample_drill uv run study.py          # what to do now
+-STUDY_DIR=rsample_drill uv run study.py check    # grade it
+-STUDY_DIR=rsample_drill uv run study.py hint     # stuck
+-uv run pytest rsample_drill/ex_09_await_under_lock.py   # or just run one file
+-```
+-
+-| # | file | what you learn | in the take-home |
+-|---|---|---|---|
+-| 01 | sortkey | `sorted(key=..., reverse=True)`, ties keep order | `sorted(rows, key=score)` in main.py |
+-| 02 | sets | intersection `&` | `query_words & content_words` in reranker.py |
+-| 03 | regex | `re.sub` to strip punctuation | `_tokenize` in reranker.py |
+-| 04 | typehints | `-> list[dict[str, Any]]` etc. | required on every signature |
+-| 05 | decorators | what `@something` does to a function | `@app.get("/search")`, `@pytest.fixture` |
+-| 06 | contextmanager | `with` = setup / body / guaranteed cleanup | the sync half of `async with pool.acquire()` |
+-| 07 | concurrency | threads vs processes vs asyncio | "why async here?" |
+-| 08 | asyncio | `gather`: start all, collect in order | `loadtest.py`, your concurrency test |
+-| 09 | **await_under_lock** | the Task 1 bug, rebuilt small | `embed_query` outside `pool.acquire()` |
+-| 10 | **semaphore** | at most N in flight | why `FakePool` is a `Semaphore(max_size)` |
+-| 11 | **async_cm** | build `FakePool`: `__aenter__` / `__aexit__` | your `tests/test_search.py` |
+-| 12 | **lazy_init_lock** | `asyncio.Lock` + double check | `app/db.py` (given — you must explain it) |
+-| 13 | mock | swap a real function for a fake in a test | `monkeypatch.setattr(...)` |
+-| 14 | **fixtures** | one setup, automatic restore | what the README asked and you skipped |
+-| 15 | **asgi_test** | call FastAPI in-process, no server | `httpx.ASGITransport(app=app)` |
+-| 16 | **rerank** | wide retrieve → fraction score → stable top-k | Task 2 + the "fraction, not count" upgrade |
+-| 17 | whattotest | what deserves a test | Task 3 judgement |
+-| 18 | **explain_takehome** | ten interview questions, pick the answer | the interview |
+-
+-Bold = new, written around the take-home. Plain = copies of the general drills you need first.
+diff --git a/rsample_drill/_lib.py b/rsample_drill/_lib.py
+deleted file mode 100644
+index 73c2d3a..0000000
+--- a/rsample_drill/_lib.py
++++ /dev/null
+@@ -1,11 +0,0 @@
+-"""Shared bits for exercises. Nothing to edit here."""
+-
+-import os
+-import random
+-
+-
+-def rng():
+-    """Fresh data every sitting: the runner passes a new seed each time an
+-    exercise comes up, so the literal answer you memorised never fits."""
+-    seed = os.environ.get("STUDY_SEED")
+-    return random.Random(int(seed) if seed else 7)
+diff --git a/rsample_drill/ex_01_sortkey.py b/rsample_drill/ex_01_sortkey.py
+deleted file mode 100644
+index 0b54e4f..0000000
+--- a/rsample_drill/ex_01_sortkey.py
++++ /dev/null
+@@ -1,83 +0,0 @@
+-"""sorted(key=...) — top-3 most-used Python in interviews."""
+-# READ FIRST:
+-#   https://docs.python.org/3/howto/sorting.html  — key=, reverse=, and why Python's sort is 'stable' (ties keep order)
+-#   https://realpython.com/python-sort/  — same, slower and with pictures
+-# (copy of exercises/ex_009_sortkey.py — same file, just placed in the take-home order)
+-
+-from _lib import rng
+-
+-META = {
+-    "topic": 1,
+-    "title": "sorted with key=",
+-    "tier": 3,
+-    "minutes": 10,
+-    "prereqs": [],
+-}
+-
+-
+-def solve(services: list):
+-    """WHY: A team lead asks "which services are crashing the most?" You have a
+-    list of services and how many times each one restarted this week. They
+-    want the list ordered worst-first so the top of the page is where the
+-    attention should go. Ordering a list of records by one particular field
+-    is the single most common data task in ops reporting.
+-
+-    YOU GET: `services` — a list of two-item lists like [["api", 2], ["db",
+-    9]], each holding a service name and its restart count. The test creates
+-    it and hands it to you; you never build it yourself.
+-
+-    YOU RETURN: the same two-item lists, reordered so the highest restart
+-    count comes first.
+-
+-    ─── exact rules ───
+-    Each item is [name, restarts]. Return the list sorted by restarts,
+-    MOST restarts first. Keep the pairs intact.
+-
+-        [["api", 2], ["db", 9], ["web", 5]]
+-        ->  [["db", 9], ["web", 5], ["api", 2]]
+-    """
+-    services = sorted(services, reverse=True, key=lambda age: age[1])
+-    print(services)
+-
+-    return services
+-
+-
+-HINTS = [
+-    (
+-        "sorted() on pairs sorts by the FIRST element by default — the name. You "
+-        "need it to look at the second instead, and to count downwards."
+-    ),
+-    (
+-        "sorted() takes two extra arguments here: one that says which part of each "
+-        "item to compare, and one that flips the direction. The first wants a "
+-        "function, not a number."
+-    ),
+-    (
+-        "Different data, same shape:\n"
+-        "    pairs = [['ny', 8.4], ['berlin', 3.6], ['tokyo', 14.0]]\n"
+-        "    print(sorted(pairs, key=lambda p: p[1], reverse=True))\n"
+-        "    # [['tokyo', 14.0], ['ny', 8.4], ['berlin', 3.6]]\n"
+-        "lambda p: p[1] means 'given one pair, compare its second slot'."
+-    ),
+-]
+-
+-
+-# ─────────────────────────────  below here is the machinery  ──────────────
+-
+-
+-def _gen(r):
+-    names = ["api", "db", "web", "cache", "queue", "auth", "cron"]
+-    picked = r.sample(names, r.randint(4, 7))
+-    counts = r.sample(range(41), len(picked))  # distinct: no tie ambiguity
+-    return [[n, c] for n, c in zip(picked, counts)]
+-
+-
+-def _reference(services):
+-    return sorted(services, key=lambda s: s[1], reverse=True)
+-
+-
+-def test_solve():
+-    r = rng()
+-    for _ in range(4):
+-        svc = _gen(r)
+-        assert solve([list(s) for s in svc]) == _reference(svc)
+diff --git a/rsample_drill/ex_02_sets.py b/rsample_drill/ex_02_sets.py
+deleted file mode 100644
+index e3d2c03..0000000
+--- a/rsample_drill/ex_02_sets.py
++++ /dev/null
+@@ -1,85 +0,0 @@
+-"""Dedupe with a set — the runner-up trap."""
+-# READ FIRST:
+-#   https://docs.python.org/3/tutorial/datastructures.html#sets  — what a set is, & | - operators
+-#   https://realpython.com/python-sets/  — intersection() is what the take-home reranker used
+-# (copy of exercises/ex_022_sets.py — same file, just placed in the take-home order)
+-
+-from _lib import rng
+-
+-META = {
+-    "topic": 2,
+-    "title": "set — second-highest distinct value",
+-    "tier": 3,
+-    "minutes": 8,
+-    "prereqs": [],
+-}
+-
+-
+-def solve(scores: list):
+-    """WHY: A performance review ranks people by score and the runner-up gets a
+-    bonus. Two people tied for first. The naive "second item of the sorted
+-    list" picks the other first-place person, not the real runner-up. The
+-    business wants the second-highest distinct value, so duplicates have to
+-    be treated as one value before picking. This is a well-known interview
+-    trap.
+-
+-    YOU GET: `scores` — a list of numbers like [2, 3, 6, 6, 5], always with
+-    at least two different values. The test creates it and hands it to you;
+-    you never build it yourself.
+-
+-    YOU RETURN: one number: the second-highest value once duplicates are
+-    ignored.
+-
+-    ─── exact rules ───
+-    Return the second-HIGHEST distinct score.
+-
+-        [2, 3, 6, 6, 5]  ->  5      (6 appears twice; it is still one value)
+-
+-    There are always at least two distinct values.
+-    """
+-    real_val = set(scores)
+-    real_val = sorted(real_val, reverse=True)[1]
+-    print(real_val)
+-    return real_val
+-
+-
+-HINTS = [
+-    (
+-        "Sorting alone isn't enough: the top two slots can hold the same number "
+-        "twice. Duplicates have to disappear before you index anything."
+-    ),
+-    (
+-        "One built-in type refuses to hold duplicates. Convert, sort what's left, "
+-        "then pick a position."
+-    ),
+-    (
+-        "Different data, same shape:\n"
+-        "    vals = [4, 9, 1, 9, 7]\n"
+-        "    uniq = sorted(set(vals))\n"
+-        "    print(uniq)        # [1, 4, 7, 9]\n"
+-        "    print(uniq[-2])    # 7  — second from the end\n"
+-        "sorted() ascending plus a negative index, or reverse=True plus [1]."
+-    ),
+-]
+-
+-
+-# ─────────────────────────────  below here is the machinery  ──────────────
+-
+-
+-def _gen(r):
+-    base = r.sample(range(1, 60), r.randint(3, 7))
+-    # always duplicate the maximum: sorted(vals)[-2] without a set must fail
+-    vals = base + [max(base)] + [r.choice(base) for _ in range(r.randint(0, 2))]
+-    r.shuffle(vals)
+-    return vals
+-
+-
+-def _reference(scores):
+-    return sorted(set(scores))[-2]
+-
+-
+-def test_solve():
+-    r = rng()
+-    for _ in range(4):
+-        s = _gen(r)
+-        assert solve(list(s)) == _reference(s)
+diff --git a/rsample_drill/ex_04_typehints.py b/rsample_drill/ex_04_typehints.py
+deleted file mode 100644
+index dd559a1..0000000
+--- a/rsample_drill/ex_04_typehints.py
++++ /dev/null
+@@ -1,202 +0,0 @@
+-"""Most of the type hints you meet are ones you read, not ones you wrote."""
+-
+-# READ FIRST:
+-#   https://realpython.com/python-type-checking/  — the take-home REQUIRED annotations on every signature
+-#   https://docs.python.org/3/library/typing.html  — reference, only for lookup
+-#   https://docs.python.org/3/tutorial/datastructures.html#dictionaries  — dicts: read, add, remove, loop over
+-#   https://realpython.com/python-dicts/  — same, longer; 'Building a Dictionary Incrementally' and
+-#       'Dictionary Methods' (.items(), .pop()) are the 70% of this task
+-#   https://docs.python.org/3/library/typing.html#typing.get_type_hints  — the one call that reads the hints
+-#   https://docs.python.org/3/library/typing.html#typing.get_args  — split `str | None` into its parts
+-# (copy of exercises/ex_016_typehints.py — same file, just placed in the take-home order)
+-from collections.abc import Callable
+-from typing import get_type_hints
+-
+-from _lib import rng
+-
+-META = {
+-    "topic": 4,
+-    "title": "type hints — read a signature with get_type_hints",
+-    "tier": 3,
+-    "minutes": 22,
+-    "prereqs": [],
+-}
+-
+-
+-def solve(fn: Callable):
+-    """WHY: You inherit a library of infrastructure functions written by
+-    someone who left. Before calling one at 3am you want to know what it
+-    expects: the names of its inputs, which ones might be empty (None), and
+-    what comes back. The answers are written in the function's own signature
+-    as type hints, but stored as plain text. You need to read that text back
+-    into something you can check in code, an automated form of reading the
+-    docs.
+-
+-    YOU GET: `fn` — a function object with type hints, like
+-    scale(replicas: int, zone: str | None) -> dict. You must not call it.
+-    The test creates it and hands it to you; you never build it yourself.
+-
+-    YOU RETURN: a triple (params, nullable, ret): a dict of input names to
+-    their types, a sorted list of the input names that may be None, and the
+-    return type.
+-
+-    ─── exact rules ───
+-    Report three facts about an annotated function's signature.
+-
+-    fn is a function you must not call. Its annotations are stored as plain
+-    strings, because the file it came from starts with
+-    `from __future__ import annotations` — check fn.__annotations__ and you get
+-    {"replicas": "int", ...}, the source text, not types. Turning those strings
+-    into real type objects is a one-call job in the typing module.
+-
+-    Return the tuple (params, nullable, ret):
+-
+-        params    dict of parameter name -> resolved annotation, in declaration
+-                  order, with no "return" key
+-        nullable  sorted list of the PARAMETER names whose annotation admits
+-                  None
+-        ret       the resolved annotation of the return value
+-
+-    For a function declared
+-
+-        def scale(replicas: int, zone: str | None, tags: list[str]) -> dict[str, int]
+-
+-    you return
+-
+-        ({"replicas": int, "zone": str | None, "tags": list[str]},
+-         ["zone"],
+-         dict[str, int])
+-
+-    The return annotation can itself be nullable. It never belongs in the
+-    nullable list — that list is parameters only.
+-
+-    `str | None` is the modern spelling of Optional[str]: this value is a str
+-    or it is missing. Spotting those is the practical payoff of reading hints,
+-    since they are the ones that will hand you a None at 3am.
+-    """
+-    modifications = get_type_hints(fn)
+-    zone = modifications["zone"]
+-    returnal = modifications["return"]
+-
+-    print(get_type_hints(fn))
+-
+-    raise NotImplementedError
+-
+-
+-HINTS = [
+-    (
+-        "Two separate problems. One: annotations arrive as strings and you need "
+-        "objects, so something has to evaluate them in the namespace of the module "
+-        "that defined the function. Two: once you have the objects, you need to ask "
+-        "of each one 'could this be None' — and a compound type like `str | None` "
+-        "has parts you can pull apart, while a plain `int` has none."
+-    ),
+-    (
+-        "typing.get_type_hints(fn) does the resolving and returns one dict holding "
+-        "the parameters AND the return, keyed 'return'. Pop that key off first: it "
+-        "gives you ret and leaves params clean, in declaration order. Then "
+-        "typing.get_args(t) returns the pieces of a union — (str, NoneType) for "
+-        "`str | None` — and an empty tuple for anything that is not compound. So a "
+-        "parameter is nullable when type(None) is in get_args of its annotation. "
+-        "sorted() the names at the end."
+-    ),
+-    (
+-        "Different data — a two-parameter function:\n"
+-        "    import typing\n"
+-        "\n"
+-        "    def f(host: str, port: int | None) -> bool: ...\n"
+-        "\n"
+-        "    print(f.__annotations__)          # under `from __future__ import\n"
+-        "                                      # annotations`: {'host': 'str', ...}\n"
+-        "    hints = typing.get_type_hints(f)  # {'host': <class 'str'>,\n"
+-        "                                      #  'port': int | None,\n"
+-        "                                      #  'return': <class 'bool'>}\n"
+-        "    print(hints.pop('return'))        # <class 'bool'>, and hints is now\n"
+-        "                                      # parameters only\n"
+-        "    print(typing.get_args(hints['port']))   # (<class 'int'>, <class 'NoneType'>)\n"
+-        "    print(typing.get_args(hints['host']))   # ()\n"
+-        "Yours does the same over however many parameters it is handed."
+-    ),
+-]
+-
+-
+-# ─────────────────────────────  below here is the machinery  ──────────────
+-
+-_PARAM_TYPES = [
+-    "int",
+-    "str",
+-    "bool",
+-    "float",
+-    "list[str]",
+-    "list[int]",
+-    "dict[str, int]",
+-    "dict[str, str]",
+-    "set[str]",
+-    "str | None",
+-    "int | None",
+-    "float | None",
+-]
+-_RETURN_TYPES = ["bool", "int", "str", "list[str]", "dict[str, int]", "set[str]"]
+-_NULLABLE_RETURNS = ["str | None", "int | None", "list[str] | None"]
+-_PARAM_NAMES = [
+-    "replicas",
+-    "zone",
+-    "image",
+-    "tags",
+-    "labels",
+-    "timeout",
+-    "retries",
+-    "port",
+-    "region",
+-    "healthy",
+-    "cluster",
+-]
+-_FN_NAMES = ["scale", "drain", "resolve", "reconcile", "annotate", "probe"]
+-
+-_TEMPLATE = """from __future__ import annotations
+-
+-
+-def %s(%s) -> %s:
+-    ...
+-"""
+-
+-
+-def _gen(r, nullable_return=False):
+-    """Compile a fresh annotated function. Signature varies with the seed.
+-
+-    nullable_return forces a `... | None` return type, so the test always
+-    includes a case where mixing the return in with the parameters shows up."""
+-    count = r.randint(2, 5)
+-    names = r.sample(_PARAM_NAMES, count)
+-    types = [r.choice(_PARAM_TYPES) for _ in range(count)]
+-    if not any("None" in t for t in types):  # always at least one nullable param
+-        types[r.randrange(count)] = r.choice(["str | None", "int | None"])
+-
+-    fn_name = r.choice(_FN_NAMES)
+-    params = ", ".join(f"{n}: {t}" for n, t in zip(names, types))
+-    returns = r.choice(_NULLABLE_RETURNS if nullable_return else _RETURN_TYPES)
+-    source = _TEMPLATE % (fn_name, params, returns)
+-
+-    namespace = {}
+-    exec(compile(source, "<generated>", "exec"), namespace)  # noqa: S102 — builds fixture fns
+-    return namespace[fn_name]
+-
+-
+-def _reference(fn):
+-    import typing
+-
+-    hints = typing.get_type_hints(fn)
+-    ret = hints.pop("return")
+-    nullable = sorted(
+-        name for name, t in hints.items() if type(None) in typing.get_args(t)
+-    )
+-    return hints, nullable, ret
+-
+-
+-def test_solve():
+-    r = rng()
+-    for i in range(4):
+-        fn = _gen(r, nullable_return=(i == 0))
+-        got, exp = solve(fn), _reference(fn)
+-        assert got == exp
+-        assert list(got[0]) == list(exp[0]), "params must keep declaration order"
+diff --git a/rsample_drill/ex_05_decorators.py b/rsample_drill/ex_05_decorators.py
+deleted file mode 100644
+index 816f0fb..0000000
+--- a/rsample_drill/ex_05_decorators.py
++++ /dev/null
+@@ -1,142 +0,0 @@
+-"""A decorator wraps a function in another function — the whole trick is that."""
+-# READ FIRST:
+-#   https://realpython.com/primer-on-python-decorators/  — @app.get(...) and @pytest.fixture are decorators; this is how they work
+-#   https://docs.python.org/3/glossary.html#term-decorator
+-# (copy of exercises/ex_012_decorators.py — same file, just placed in the take-home order)
+-
+-from _lib import rng
+-
+-META = {"topic": 5, "title": "decorators — record every call, pass everything through", "tier": 3,
+-        "minutes": 12, "prereqs": []}
+-
+-
+-def solve(calls):
+-    """WHY: An audit team asks: "every time one of our infrastructure tools
+-    changes something, we need a record of what was called, with what
+-    arguments, and what it returned." The tools are dozens of existing
+-    functions and nobody wants to edit each one. You need a single reusable
+-    wrapper that can be stuck on any function and quietly logs each call
+-    while leaving the function's behaviour exactly as it was.
+-
+-    YOU GET: `calls` — an empty list like []. Your wrapper appends one record
+-    to it per call. The test creates it and hands it to you; you never build
+-    it yourself.
+-
+-    YOU RETURN: a decorator: a thing that takes a function and gives back a
+-    replacement function that behaves the same but also appends
+-    (name, args, kwargs, result) to `calls` after each call.
+-
+-    ─── exact rules ───
+-    Return a decorator that records every call into the list `calls`.
+-
+-    solve(calls) gives you back a decorator. That decorator takes a function
+-    and returns a replacement for it. The replacement must:
+-
+-      - accept any arguments at all and hand them to the original unchanged
+-      - return exactly what the original returned
+-      - append one entry to calls, in this shape:
+-            (fn.__name__, args, kwargs, result)
+-        args is the positional tuple, kwargs the keyword dict, result the
+-        value the original returned.
+-
+-        calls = []
+-        record = solve(calls)
+-
+-        @record
+-        def scale(host, replicas=1):
+-            return f"{host}:{replicas}"
+-
+-        scale("api", replicas=3)   # -> "api:3", unchanged
+-        calls                      # [("scale", ("api",), {"replicas": 3}, "api:3")]
+-
+-    The entry goes in after the call, not before — you need the result. Record
+-    args and kwargs as you received them; do not merge, sort or normalise them.
+-    """
+-    raise NotImplementedError
+-
+-
+-HINTS = [
+-    ("Three nested layers, and the confusion is always about which layer runs "
+-    "when. The outer call captures the list. The middle one runs once, at "
+-    "decoration time, and is handed the function. The inner one runs on every "
+-    "single call and is the thing callers actually reach. Sketch the three defs "
+-    "and what each one returns before filling in any bodies."),
+-    ("def solve(calls): def record(fn): def wrapper(*args, **kwargs): ... ; "
+-    "return wrapper ; return record. Inside wrapper: call fn(*args, **kwargs) "
+-    "and keep the value in a variable, append the tuple to calls, then return "
+-    "the variable. *args and **kwargs collect anything on the way in and "
+-    "re-spread it on the way out. fn.__name__ is the original's name, and "
+-    "wrapper can still see fn and calls because of closures."),
+-    ("Different data — a decorator that doubles whatever comes back:\n"
+-    "    def doubler(fn):\n"
+-    "        def wrapper(*args, **kwargs):\n"
+-    "            return fn(*args, **kwargs) * 2\n"
+-    "        return wrapper\n"
+-    "\n"
+-    "    @doubler\n"
+-    "    def add(a, b=0):\n"
+-    "        return a + b\n"
+-    "\n"
+-    "    print(add(3, b=4))     # 14 — @doubler means add = doubler(add)\n"
+-    "That one has two layers because it takes no configuration. Yours has "
+-    "three, because solve takes the list first and only then meets the "
+-    "function."),
+-]
+-
+-
+-# ─────────────────────────────  below here is the machinery  ──────────────
+-
+-def _make(name, k, base):
+-    """A plain function with a known name, so the log has something to record."""
+-    def fn(host, replicas=1, dry_run=False):
+-        return f"{host}:dry" if dry_run else f"{host}:{base + k * replicas}"
+-
+-    fn.__name__ = name
+-    return fn
+-
+-
+-def _gen(r):
+-    """A few functions, each with the calls to replay against it."""
+-    plans = []
+-    for name in r.sample(["scale", "drain", "cordon", "restart", "resize", "tag"],
+-                         r.randint(2, 4)):
+-        fn = _make(name, r.randint(2, 9), r.randint(1, 20))
+-        calls = []
+-        for _ in range(r.randint(2, 4)):
+-            host = r.choice(["api", "db", "cache", "edge"]) + str(r.randint(1, 9))
+-            args = (host,) if r.random() < 0.5 else (host, r.randint(1, 4))
+-            kwargs = {}
+-            if len(args) == 1 and r.random() < 0.6:
+-                kwargs["replicas"] = r.randint(1, 4)
+-            if r.random() < 0.4:
+-                kwargs["dry_run"] = r.choice([True, False])
+-            calls.append((args, kwargs))
+-        plans.append((fn, calls))
+-    return plans
+-
+-
+-def _reference(calls):
+-    def record(fn):
+-        def wrapper(*args, **kwargs):
+-            result = fn(*args, **kwargs)
+-            calls.append((fn.__name__, args, kwargs, result))
+-            return result
+-        return wrapper
+-    return record
+-
+-
+-def test_solve():
+-    r = rng()
+-    for _ in range(4):
+-        plans = _gen(r)
+-        got_log, exp_log = [], []
+-        record, ref_record = solve(got_log), _reference(exp_log)
+-
+-        for fn, planned in plans:
+-            wrapped, ref_wrapped = record(fn), ref_record(fn)
+-            for args, kwargs in planned:
+-                expected = fn(*args, **kwargs)
+-                assert wrapped(*args, **kwargs) == expected, "wrapper must return fn's result"
+-                assert ref_wrapped(*args, **kwargs) == expected
+-
+-        assert got_log == exp_log
+diff --git a/rsample_drill/ex_06_contextmanager.py b/rsample_drill/ex_06_contextmanager.py
+deleted file mode 100644
+index 3ec23fe..0000000
+--- a/rsample_drill/ex_06_contextmanager.py
++++ /dev/null
+@@ -1,135 +0,0 @@
+-"""`with` is a promise that cleanup runs — including on the way out through an error."""
+-# READ FIRST:
+-#   https://realpython.com/python-with-statement/  — `with` = setup, body, guaranteed cleanup (read the 'async with' section too)
+-#   https://docs.python.org/3/library/contextlib.html  — @contextmanager, the short way
+-# (copy of exercises/ex_013_contextmanager.py — same file, just placed in the take-home order)
+-
+-from _lib import rng
+-
+-META = {"topic": 6, "title": "context managers — @contextmanager with guaranteed exit", "tier": 3,
+-        "minutes": 12, "prereqs": []}
+-
+-
+-def solve(events, name):
+-    """WHY: A deploy script writes "deploy started" and "deploy finished" into
+-    a shared event log so the dashboard knows when a deploy is in progress.
+-    One day a deploy crashes halfway, the "finished" marker never gets
+-    written, and the dashboard shows a deploy stuck for hours. You need a way
+-    to guarantee the closing marker is written even when the work in the
+-    middle fails, without hiding the failure from whoever ran the script.
+-
+-    YOU GET: `events` — a list like [] that you append markers to.
+-    `name` — the name of the operation, like "deploy". The test creates them
+-    and hands them to you; you never build them yourself.
+-
+-    YOU RETURN: a context manager: something usable in a with-block that
+-    appends "enter <name>" when the block starts and "exit <name>" when it
+-    ends, no matter how it ends. Any error from the block must still escape
+-    to the caller.
+-
+-    ─── exact rules ───
+-    A context manager that brackets a block with two markers.
+-
+-    Entering appends f"enter {name}" to the list events. Leaving appends
+-    f"exit {name}" — always, including when the body of the with-block raises.
+-    The exception must still reach the caller; you are logging, not swallowing.
+-
+-        events = []
+-        with solve(events, "deploy"):
+-            events.append("work")
+-        # events == ["enter deploy", "work", "exit deploy"]
+-
+-        events = []
+-        try:
+-            with solve(events, "deploy"):
+-                raise ValueError("pod 404")
+-        except ValueError:
+-            pass
+-        # events == ["enter deploy", "exit deploy"]   <- exit still ran
+-
+-    Build it with contextlib.contextmanager: put that decorator on this
+-    function and place exactly one yield where the with-block's body belongs.
+-    Nothing needs to come back out of the yield — a bare `yield` is fine, and
+-    the caller uses no `as`.
+-    """
+-    raise NotImplementedError
+-
+-
+-HINTS = [
+-    ("The easy half is a marker before and a marker after. The whole exercise "
+-    "is the second marker surviving a body that blows up. Ask what happens to "
+-    "the lines after the yield when the with-block raises — and which Python "
+-    "keyword exists precisely to make a block run either way."),
+-    ("Import contextmanager from contextlib and decorate solve with it. That "
+-    "turns a generator into a context manager: everything before the yield runs "
+-    "on entry, everything after runs on exit. The catch is that an exception in "
+-    "the body is thrown back into your generator at the yield, so a plain line "
+-    "underneath it never executes. Wrap the yield in try, and put the exit "
+-    "marker in finally. Do not catch the exception — finally re-raises for you."),
+-    ("Different data — a start/stop log around a block:\n"
+-    "    from contextlib import contextmanager\n"
+-    "\n"
+-    "    @contextmanager\n"
+-    "    def phase(log):\n"
+-    "        log.append('start')\n"
+-    "        try:\n"
+-    "            yield\n"
+-    "        finally:\n"
+-    "            log.append('stop')\n"
+-    "\n"
+-    "    log = []\n"
+-    "    try:\n"
+-    "        with phase(log):\n"
+-    "            raise RuntimeError('boom')\n"
+-    "    except RuntimeError:\n"
+-    "        pass\n"
+-    "    print(log)        # ['start', 'stop']\n"
+-    "Change finally to a bare line after the yield and the list stops at "
+-    "['start'] — the file handle, the lock, the temp dir all leak the same way."),
+-]
+-
+-
+-# ─────────────────────────────  below here is the machinery  ──────────────
+-
+-from contextlib import contextmanager
+-
+-
+-def _gen(r):
+-    name = r.choice(["deploy", "drain", "migrate", "rollout", "backup", "reindex"])
+-    body = [r.choice(["step", "check", "wait", "push"]) + str(r.randint(1, 9))
+-            for _ in range(r.randint(1, 3))]
+-    boom = r.choice([ValueError, KeyError, RuntimeError, TimeoutError])
+-    msg = f"{r.choice(['pod', 'node', 'disk'])} {r.randint(100, 999)}"
+-    return name, body, boom, msg
+-
+-
+-def _run(factory, name, body, boom, msg):
+-    """Drive one context manager down both paths and report what happened."""
+-    clean = []
+-    with factory(clean, name):
+-        clean.extend(body)
+-
+-    dirty, caught = [], None
+-    try:
+-        with factory(dirty, name):
+-            dirty.extend(body)
+-            raise boom(msg)
+-    except boom as exc:
+-        caught = str(exc)
+-    return clean, dirty, caught
+-
+-
+-@contextmanager
+-def _reference(events, name):
+-    events.append(f"enter {name}")
+-    try:
+-        yield
+-    finally:
+-        events.append(f"exit {name}")
+-
+-
+-def test_solve():
+-    r = rng()
+-    for _ in range(4):
+-        name, body, boom, msg = _gen(r)
+-        assert _run(solve, name, body, boom, msg) == _run(_reference, name, body, boom, msg)
+diff --git a/rsample_drill/ex_07_concurrency.py b/rsample_drill/ex_07_concurrency.py
+deleted file mode 100644
+index 2af33fd..0000000
+--- a/rsample_drill/ex_07_concurrency.py
++++ /dev/null
+@@ -1,132 +0,0 @@
+-"""Reaching for threads on CPU work is the wrong answer that ends a phone screen."""
+-# READ FIRST:
+-#   https://realpython.com/python-concurrency/  — threads vs processes vs asyncio, when each wins
+-#   https://docs.python.org/3/library/concurrency.html
+-# (copy of exercises/ex_055_concurrency.py — same file, just placed in the take-home order)
+-
+-from _lib import rng
+-
+-META = {"topic": 7, "title": "threads vs processes vs async — pick one, say why",
+-        "tier": 3, "minutes": 8, "prereqs": []}
+-
+-
+-def solve(workloads):
+-    """WHY: A colleague brings you a list of jobs they want to speed up: resize
+-    8 images, call 40 APIs, poll 5000 sensors. Python has three ways to do
+-    several things at once, and picking the wrong one makes a job no faster
+-    or even slower. The team wants one simple rule written down so everyone
+-    picks consistently: heavy calculation gets separate processes, a modest
+-    number of network waits gets threads, a huge number of waits gets async.
+-    Interviewers ask for this rule and the reasons behind it.
+-
+-    YOU GET: `workloads` — a list of dicts, each like {"kind": "io",
+-    "count": 40}, where kind is "io" (waiting on network or disk) or "cpu"
+-    (calculating) and count is how many things there are to do. The test
+-    creates it and hands it to you.
+-
+-    YOU RETURN: a list of strings, one per workload, in the same order; each
+-    is "threads", "processes" or "async".
+-
+-    ─── exact rules ───
+-    Pick the right concurrency tool for each workload.
+-
+-    Each workload is a dict:
+-
+-        {"kind": "io", "count": 40}     # 40 things to do, all waiting on I/O
+-        {"kind": "cpu", "count": 8}     # 8 things to do, all number crunching
+-
+-    Return a list of labels, one per workload, in input order. Each
+-    label is "threads", "processes" or "async". The rule:
+-
+-      - kind == "cpu"                 -> "processes"
+-      - kind == "io" and count < 100  -> "threads"
+-      - kind == "io" and count >= 100 -> "async"
+-
+-        [{"kind": "cpu", "count": 8},
+-         {"kind": "io", "count": 12},
+-         {"kind": "io", "count": 5000}]
+-        ->  ["processes", "threads", "async"]
+-
+-    The reasoning behind the rule, which is the part you actually get
+-    asked for:
+-
+-    CPU work goes to processes because the GIL lets only one thread run
+-    Python bytecode at a time. Ten threads doing arithmetic finish no
+-    sooner than one. Separate processes each get their own interpreter
+-    and their own lock, so they genuinely run at once — you pay for it
+-    in startup time and in having to pickle whatever you send across.
+-
+-    I/O work suits threads because a thread blocked on a socket holds
+-    the GIL for none of that time. Everything you already have works
+-    unchanged: requests, boto3, psycopg, all of it.
+-
+-    Past a hundred or so concurrent operations, threads stop being
+-    cheap — each one is a real OS thread with its own stack, and the
+-    scheduler starts costing more than the work. An event loop runs
+-    thousands of waits on one thread. The catch is that every library
+-    in the path has to be async-aware; one blocking call inside a
+-    coroutine freezes the whole loop, which is why "just use async" is
+-    not automatically the right answer.
+-    """
+-    raise NotImplementedError
+-
+-
+-HINTS = [
+-    ("One fact carries most of this: the GIL means only one thread runs "
+-    "Python bytecode at a time, so threads buy you nothing while computing "
+-    "and everything while waiting. That settles the cpu case on its own. The "
+-    "count only enters the picture on the waiting side, where the question "
+-    "is how many threads is too many."),
+-    ("One pass over the list, one label appended per workload. Check the kind "
+-    "first — cpu has a single answer whatever the count is. Then one "
+-    ">= 100 test splits the io case in two. Mind the boundary the spec "
+-    "states: exactly 100 is async, not threads."),
+-    ("Different data — same two-level decision, sizing disk jobs:\n"
+-    "    jobs = [{'size': 5}, {'size': 40}, {'size': 40000}]\n"
+-    "    out = []\n"
+-    "    for j in jobs:\n"
+-    "        if j['size'] < 10:\n"
+-    "            out.append('small')\n"
+-    "        elif j['size'] < 1000:\n"
+-    "            out.append('medium')\n"
+-    "        else:\n"
+-    "            out.append('large')\n"
+-    "    print(out)       # ['small', 'medium', 'large']\n"
+-    "Yours branches on two fields rather than one: kind first, then count "
+-    "inside the io branch."),
+-]
+-
+-
+-# ─────────────────────────────  below here is the machinery  ──────────────
+-
+-def _gen(r):
+-    workloads = []
+-    for _ in range(r.randint(4, 9)):
+-        kind = r.choice(["io", "io", "cpu"])
+-        count = r.choice([1, 2, 8, r.randint(3, 98), 99, 100, 101,
+-                          r.randint(100, 20000), r.randint(1, 5000)])
+-        workloads.append({"kind": kind, "count": count})
+-    # the boundary always shows up, so an off-by-one cannot slip through a seed
+-    for edge in ({"kind": "io", "count": 100}, {"kind": "io", "count": 99},
+-                 {"kind": "cpu", "count": r.randint(200, 900)}):
+-        workloads.insert(r.randint(0, len(workloads)), edge)
+-    return workloads
+-
+-
+-def _reference(workloads):
+-    labels = []
+-    for w in workloads:
+-        if w["kind"] == "cpu":
+-            labels.append("processes")
+-        elif w["count"] >= 100:
+-            labels.append("async")
+-        else:
+-            labels.append("threads")
+-    return labels
+-
+-
+-def test_solve():
+-    r = rng()
+-    for _ in range(4):
+-        workloads = _gen(r)
+-        assert solve(workloads) == _reference(workloads)
+diff --git a/rsample_drill/ex_08_asyncio.py b/rsample_drill/ex_08_asyncio.py
+deleted file mode 100644
+index 315546a..0000000
+--- a/rsample_drill/ex_08_asyncio.py
++++ /dev/null
+@@ -1,112 +0,0 @@
+-"""asyncio — run many waits at once instead of one after another."""
+-# READ FIRST:
+-#   https://realpython.com/async-io-python/  — THE asyncio walkthrough; read 'Async IO Explained' and 'The asyncio Package' before anything below
+-#   https://docs.python.org/3/library/asyncio-task.html#asyncio.gather
+-# (copy of exercises/ex_056_asyncio.py — same file, just placed in the take-home order)
+-
+-import asyncio
+-import inspect
+-
+-from _lib import rng
+-
+-META = {"topic": 8, "title": "asyncio — gather, don't queue", "tier": 4,
+-        "minutes": 20, "prereqs": []}
+-
+-
+-def solve():
+-    """WHY: A status page must fetch the state of a dozen services before it
+-    can render. Each fetch is mostly waiting on the network. If the code
+-    waits for service 1 to answer before it even asks service 2, the page
+-    takes the sum of all the waits; asking everyone at once and then
+-    collecting the answers takes only the slowest single wait. The team's
+-    code is written in Python's async style, and you are asked to write the
+-    "ask everyone at once, collect the answers in order" helper.
+-
+-    YOU GET: nothing — you build the thing from scratch. Your solve()
+-    returns a helper; the test then calls that helper with its own `worker`
+-    (an async stand-in that pauses and returns a value) and a list of job
+-    ids. No real service is contacted.
+-
+-    YOU RETURN: the helper function itself (an async function that takes a
+-    worker and a list of jobs), not the result of running it. When the test
+-    runs your helper, every job must start before any job finishes, and the
+-    results must come back in the same order as the jobs.
+-
+-    ─── exact rules ───
+-    Return an ASYNC function `fetch_all(worker, jobs)` where:
+-
+-      - `worker` is an async function: `await worker(job)` returns a result
+-      - `jobs` is a list of job ids
+-
+-    fetch_all must start ALL jobs concurrently and return their results
+-    in the same order as `jobs`.
+-
+-        async def worker(j): ...
+-        results = await fetch_all(worker, [3, 1, 2])   # [r3, r1, r2]
+-
+-    The test fails a version that awaits jobs one at a time in a loop —
+-    that is just a slow for-loop wearing async syntax. One asyncio function
+-    does "launch all, wait for all, keep order" in a single call.
+-
+-    Return the function itself (not a coroutine): `return fetch_all`.
+-    """
+-    raise NotImplementedError
+-
+-
+-HINTS = [
+-    ("`await worker(j)` inside a plain for-loop finishes job 1 completely "
+-    "before job 2 even starts — sequential, exactly what async exists to "
+-    "avoid. You need to hand ALL the coroutines to the event loop at once."),
+-    ("Build the list of coroutine objects first — calling worker(j) WITHOUT "
+-    "await creates one without running it. Then look up asyncio.gather: it "
+-    "takes many awaitables, runs them concurrently, and returns results in "
+-    "argument order."),
+-    ("Different data, same shape:\n"
+-    "    import asyncio\n"
+-    "    async def shout(word):\n"
+-    "        await asyncio.sleep(0.01)\n"
+-    "        return word.upper()\n"
+-    "    async def all_shouts(words):\n"
+-    "        return await asyncio.gather(*(shout(w) for w in words))\n"
+-    "    print(asyncio.run(all_shouts(['hi', 'yo'])))   # ['HI', 'YO']\n"
+-    "The * unpacks the coroutines into gather's arguments."),
+-]
+-
+-
+-# ─────────────────────────────  below here is the machinery  ──────────────
+-
+-def _gen(r):
+-    jobs = r.sample(range(100, 999), r.randint(3, 6))
+-    return jobs
+-
+-
+-def _reference():
+-    async def fetch_all(worker, jobs):
+-        return await asyncio.gather(*(worker(j) for j in jobs))
+-    return fetch_all
+-
+-
+-def test_solve():
+-    r = rng()
+-    fetch_all = solve()
+-    assert inspect.iscoroutinefunction(fetch_all), "fetch_all must be async def"
+-    for _ in range(3):
+-        jobs = _gen(r)
+-        log = []
+-
+-        async def worker(j, _jobs=jobs, _log=log):
+-            _log.append(("start", j))
+-            # first-listed job sleeps longest: a sequential loop is forced
+-            # to finish it before later jobs start, and the assert catches that
+-            await asyncio.sleep(0.01 * (len(_jobs) - _jobs.index(j)))
+-            _log.append(("end", j))
+-            return j * 2
+-
+-        results = asyncio.run(fetch_all(worker, list(jobs)))
+-        assert results == [j * 2 for j in jobs], "results must keep job order"
+-        starts = [i for i, (kind, _) in enumerate(log) if kind == "start"]
+-        ends = [i for i, (kind, _) in enumerate(log) if kind == "end"]
+-        assert max(starts) < min(ends), (
+-            "jobs ran one-after-another: every job must START before any "
+-            "job finishes. Launch them all, then wait."
+-        )
+diff --git a/rsample_drill/ex_13_mock.py b/rsample_drill/ex_13_mock.py
+deleted file mode 100644
+index bfee136..0000000
+--- a/rsample_drill/ex_13_mock.py
++++ /dev/null
+@@ -1,150 +0,0 @@
+-"""Tests that hit the real webhook are slow, flaky, and occasionally page a colleague."""
+-# READ FIRST:
+-#   https://realpython.com/python-mock-library/  — swapping a real function for a fake inside a test
+-#   https://docs.python.org/3/library/unittest.mock.html#unittest.mock.patch
+-# (copy of exercises/ex_059_mock.py — same file, just placed in the take-home order)
+-
+-from unittest.mock import patch
+-
+-from _lib import rng
+-
+-META = {"topic": 13, "title": "mocking — patch where it is used, then read the calls",
+-        "tier": 4, "minutes": 20, "prereqs": []}
+-
+-
+-def solve(version, host):
+-    """WHY: The deploy script has a step that posts an alert to the company
+-    chat when a deploy finishes. You need to test that step in CI, but a
+-    test that really posts to chat is slow, needs real credentials, and
+-    spams colleagues on every test run. Instead you temporarily swap the
+-    real "send" function for a stand-in that just records what it was asked
+-    to send, run the code, read the recording, and put the real function
+-    back. Both functions live at the bottom of this file; you write the
+-    test.
+-
+-    YOU GET: `version` — a string like "v2.1.0".
+-    `host` — a string like "hooks.internal:443".
+-    The test creates both. The real send_alert in this file raises an error
+-    if it is ever truly called, which is how the test proves you swapped it
+-    out.
+-
+-    YOU RETURN: a dict with four keys: "result" (what run_deploy returned),
+-    "calls" (how many times the stand-in was called), "url" (the first
+-    argument it received) and "payload" (the second argument). The real
+-    send_alert must be back in place by the time you return.
+-
+-    ─── exact rules ───
+-    Test run_deploy without letting send_alert touch the network.
+-
+-    Two functions live at the bottom of this file. send_alert is the
+-    real call — it raises RuntimeError if it ever actually runs.
+-    run_deploy is the code under test: it builds a URL and a payload,
+-    hands them to send_alert, and folds the reply into its own return
+-    value. Read both before starting.
+-
+-    Do this:
+-      1. Replace send_alert with a Mock, in the module where run_deploy
+-         looks the name up.
+-      2. Make that Mock return {"status": "ok"} when it is called.
+-      3. Call run_deploy(version, host) and keep what it returns.
+-      4. Return a dict with exactly these keys:
+-
+-            {"result": <what run_deploy returned>,
+-             "calls": <how many times the mock was called>,
+-             "url": <the first argument it was called with>,
+-             "payload": <the second argument>}
+-
+-      5. Undo the patch before you return. Use `with patch(...)` or the
+-         decorator — not a bare assignment over the name, which leaks
+-         into every test that runs after yours. The test checks that
+-         the real send_alert is back.
+-
+-        solve("v2.1.0", "hooks.internal:443")
+-        ->  {"result": "v2.1.0 ok",
+-             "calls": 1,
+-             "url": "https://hooks.internal:443/hooks/deploy",
+-             "payload": {"version": "v2.1.0", "status": "done"}}
+-
+-    The rule people get wrong: patch the name in the module that USES
+-    it, not the module that defines it. If run_deploy had done
+-    `from alerts import send_alert`, then this module owns its own
+-    reference called send_alert, and patching "alerts.send_alert"
+-    changes a name nobody looks at any more. Here both live in one
+-    file, and f"{__name__}.send_alert" is how you spell that target.
+-
+-    Constraint: no imports beyond unittest.mock.
+-    """
+-    raise NotImplementedError
+-
+-
+-HINTS = [
+-    ("A Mock is a stand-in that answers any attribute you ask for and records "
+-    "every call it receives. patch swaps one in for a real name for the "
+-    "length of a block and puts the original back afterwards. The part worth "
+-    "slowing down over is which name gets swapped: the one the code under "
+-    "test resolves at call time, which is not always where the function was "
+-    "written."),
+-    ("from unittest.mock import patch, then `with patch(TARGET) as fake:` "
+-    "where TARGET is the string 'module.attribute' — inside this file "
+-    "f'{__name__}.send_alert' builds it. Set fake.return_value before "
+-    "calling run_deploy, since run_deploy reads a key off the reply. "
+-    "Afterwards fake.call_count and fake.call_args carry the recording; "
+-    "call_args.args is the tuple of positional arguments."),
+-    ("Different data — patching a clock that another module imported:\n"
+-    "    # app.py:  from time import time      <- app now owns a name 'time'\n"
+-    "    #          def stamp():\n"
+-    "    #              return f'at {time()}'\n"
+-    "    from unittest.mock import patch\n"
+-    "    with patch('app.time') as fake:       # app.time, NOT time.time\n"
+-    "        fake.return_value = 100.0\n"
+-    "        print(stamp())           # at 100.0\n"
+-    "        print(fake.call_count)   # 1\n"
+-    "        print(fake.call_args)    # call()\n"
+-    "    print(stamp())               # at 1786... the real clock is back\n"
+-    "Same three beats as yours: swap the name the caller uses, configure the "
+-    "return, read the recording."),
+-]
+-
+-
+-# ─────────────────────────────  below here is the machinery  ──────────────
+-
+-def send_alert(url, payload):
+-    """The real call. In a test it must never get this far."""
+-    raise RuntimeError(f"send_alert really tried to POST to {url} — patch it")
+-
+-
+-def run_deploy(version, host):
+-    """The code under test. It looks up send_alert in this module's globals."""
+-    reply = send_alert(f"https://{host}/hooks/deploy",
+-                       {"version": version, "status": "done"})
+-    return f"{version} {reply['status']}"
+-
+-
+-def _gen(r):
+-    version = f"v{r.randint(1, 9)}.{r.randint(0, 20)}.{r.randint(0, 9)}"
+-    host = r.choice(["hooks.internal", "alerts.prod", "chatops.eu"])
+-    return version, f"{host}:{r.choice([80, 443, 8080])}"
+-
+-
+-def _reference(version, host):
+-    with patch(f"{__name__}.send_alert") as fake:
+-        fake.return_value = {"status": "ok"}
+-        result = run_deploy(version, host)
+-        url, payload = fake.call_args.args
+-        return {"result": result, "calls": fake.call_count,
+-                "url": url, "payload": payload}
+-
+-
+-def test_solve():
+-    r = rng()
+-    for _ in range(4):
+-        version, host = _gen(r)
+-        got = solve(version, host)
+-        assert got == _reference(version, host)
+-
+-        try:                                    # the patch has to be gone
+-            send_alert("https://example.invalid/x", {})
+-        except RuntimeError:
+-            pass
+-        else:
+-            raise AssertionError("send_alert is still patched after solve returned")
+diff --git a/rsample_drill/ex_17_whattotest.py b/rsample_drill/ex_17_whattotest.py
+deleted file mode 100644
+index cfec67f..0000000
+--- a/rsample_drill/ex_17_whattotest.py
++++ /dev/null
+@@ -1,138 +0,0 @@
+-"""Coverage percentage is easy to game; knowing which lines deserve a test is the real skill."""
+-# READ FIRST:
+-#   https://martinfowler.com/bliki/TestPyramid.html  — many small unit tests, few big end-to-end ones
+-#   https://realpython.com/pytest-python-testing/  — the pytest tutorial; 'Fixtures' and 'Marks' sections
+-# (copy of exercises/ex_061_whattotest.py — same file, just placed in the take-home order)
+-
+-from _lib import rng
+-
+-META = {"topic": 17, "title": "what to actually test in an ops script",
+-        "tier": 3, "minutes": 8, "prereqs": []}
+-
+-
+-def solve(units):
+-    """WHY: Your team has a big ops script and a rule that "everything must
+-    have tests". Writing a test for every single function wastes days and
+-    produces brittle tests that break on every rename. The tech lead wants a
+-    consistent triage: functions that make decisions get tests; thin
+-    wrappers around a library call, plain config constants, and
+-    straight-line glue code are skipped, unless the glue starts branching,
+-    which makes it decision-making again. You encode that rule so the team
+-    can apply it to a list of functions.
+-
+-    YOU GET: `units` — a list of dicts, one per function in the script, like
+-    {"name": "parse_uptime", "kind": "logic", "branches": 3}, where kind is
+-    "logic", "wrapper", "config" or "glue" and branches is how many if/else
+-    paths it has. Names are unique. The test creates it and hands it to
+-    you.
+-
+-    YOU RETURN: a dict mapping each name to the string "test" or "skip".
+-
+-    ─── exact rules ───
+-    Decide which pieces of a script are worth writing a test for.
+-
+-    Each unit describes one function in the script:
+-
+-        {"name": "parse_uptime", "kind": "logic", "branches": 3}
+-
+-    kind is one of "logic", "wrapper", "config" or "glue", and branches
+-    is how many if/else paths it contains. Return a dict mapping each
+-    name to "test" or "skip". Names are unique.
+-
+-    The rule:
+-      - "logic"   -> "test", always
+-      - "wrapper" -> "skip"
+-      - "config"  -> "skip"
+-      - "glue"    -> "test" if branches >= 2, else "skip"
+-
+-        [{"name": "parse_uptime", "kind": "logic", "branches": 3},
+-         {"name": "get_bucket", "kind": "wrapper", "branches": 0},
+-         {"name": "route_alert", "kind": "glue", "branches": 2},
+-         {"name": "run_all", "kind": "glue", "branches": 0}]
+-        ->  {"parse_uptime": "test", "get_bucket": "skip",
+-             "route_alert": "test", "run_all": "skip"}
+-
+-    Why the rule looks like that:
+-
+-    logic is code that decides something you wrote the rules for —
+-    parsing a line, comparing against a threshold, choosing whether to
+-    retry. It has edge cases, and edge cases are what tests are for.
+-
+-    wrapper is a function whose body is one library call plus a return.
+-    A test there asserts that boto3 still works, which is not your
+-    problem, and it breaks every time you touch the signature. It also
+-    needs a mock to run at all, so the test is mostly mock setup.
+-
+-    config is constants and defaults. The test would restate the value,
+-    so it passes right up until someone changes both together.
+-
+-    glue wires calls into an order. With no branches there is nothing
+-    to get wrong that an end-to-end run would not catch louder. Once it
+-    is picking between paths, that choice is your logic again, and it
+-    is worth pinning down.
+-    """
+-    raise NotImplementedError
+-
+-
+-HINTS = [
+-    ("The question sitting behind the rule: if this broke, would a test have "
+-    "caught it, and would that test break for any other reason. A function "
+-    "that only forwards to a library fails on both counts — it breaks when "
+-    "you rename an argument, not when the behaviour is wrong. Code that "
+-    "decides something passes on both."),
+-    ("One dict, built in a loop over units. Two of the four kinds are always "
+-    "skip and one is always test, so only glue needs to look at branches. "
+-    "Order the if/elif so the glue case comes last and the rest fall through "
+-    "to a single skip. Key the dict by unit['name']."),
+-    ("Different data — same shape of decision, routing health checks:\n"
+-    "    checks = [{'n': 'disk', 'sev': 'page'},\n"
+-    "              {'n': 'cache_hit', 'sev': 'info'}]\n"
+-    "    action = {}\n"
+-    "    for c in checks:\n"
+-    "        if c['sev'] == 'page':\n"
+-    "            action[c['n']] = 'wake someone'\n"
+-    "        else:\n"
+-    "            action[c['n']] = 'dashboard'\n"
+-    "    print(action)    # {'disk': 'wake someone', 'cache_hit': 'dashboard'}\n"
+-    "Yours has four kinds feeding two labels, and one of them needs a second "
+-    "look at a number before it picks."),
+-]
+-
+-
+-# ─────────────────────────────  below here is the machinery  ──────────────
+-
+-_STEMS = {
+-    "logic": ["parse_uptime", "pick_replicas", "threshold_breached", "normalise_tag"],
+-    "wrapper": ["get_object", "put_metric", "list_pods", "read_secret"],
+-    "config": ["DEFAULTS", "REGIONS", "TIMEOUT_SECONDS", "LOG_FORMAT"],
+-    "glue": ["run_rollout", "sync_all", "handle_event", "main"],
+-}
+-
+-
+-def _gen(r):
+-    units = []
+-    for i in range(r.randint(4, 8)):
+-        kind = r.choice(["logic", "wrapper", "config", "glue", "glue"])
+-        branches = 0 if kind == "config" else r.randint(0, 4)
+-        units.append({"name": f"{r.choice(_STEMS[kind])}_{i}",   # _i keeps names unique
+-                      "kind": kind, "branches": branches})
+-    return units
+-
+-
+-def _reference(units):
+-    decisions = {}
+-    for u in units:
+-        if u["kind"] == "logic":
+-            decisions[u["name"]] = "test"
+-        elif u["kind"] == "glue":
+-            decisions[u["name"]] = "test" if u["branches"] >= 2 else "skip"
+-        else:
+-            decisions[u["name"]] = "skip"
+-    return decisions
+-
+-
+-def test_solve():
+-    r = rng()
+-    for _ in range(4):
+-        units = _gen(r)
+-        assert solve(units) == _reference(units)
+diff --git a/rsample_drill/progress.json b/rsample_drill/progress.json
+deleted file mode 100644
+index 5085991..0000000
+--- a/rsample_drill/progress.json
++++ /dev/null
+@@ -1,138 +0,0 @@
+-{
+- "cards": {
+-  "ex_01_sortkey": {
+-   "box": 0,
+-   "due": "2026-08-23",
+-   "seen": 1,
+-   "solution_shown": false
+-  },
+-  "ex_02_sets": {
+-   "box": 0,
+-   "due": "2026-08-23",
+-   "seen": 1,
+-   "solution_shown": false
+-  },
+-  "ex_03_regex": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  },
+-  "ex_04_typehints": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  },
+-  "ex_05_decorators": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  },
+-  "ex_06_contextmanager": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  },
+-  "ex_07_concurrency": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  },
+-  "ex_08_asyncio": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  },
+-  "ex_09_await_under_lock": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  },
+-  "ex_10_semaphore": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  },
+-  "ex_11_async_cm": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  },
+-  "ex_12_lazy_init_lock": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  },
+-  "ex_13_mock": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  },
+-  "ex_14_fixtures": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  },
+-  "ex_15_asgi_test": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  },
+-  "ex_16_rerank": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  },
+-  "ex_17_whattotest": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  },
+-  "ex_18_explain_takehome": {
+-   "box": 0,
+-   "due": "2026-08-21",
+-   "seen": 0,
+-   "solution_shown": false
+-  }
+- },
+- "log": [
+-  {
+-   "date": "2026-08-21",
+-   "slug": "ex_01_sortkey",
+-   "grade": "struggled",
+-   "attempts": 3,
+-   "secs": 893,
+-   "new": true
+-  },
+-  {
+-   "date": "2026-08-21",
+-   "slug": "ex_02_sets",
+-   "grade": "struggled",
+-   "attempts": 3,
+-   "secs": 1372,
+-   "new": true
+-  }
+- ],
+- "current": {
+-  "slug": "ex_04_typehints",
+-  "seed": 4357,
+-  "attempts": 0,
+-  "hints": 0,
+-  "started": "2026-08-22T00:09:19.463506",
+-  "new": true
+- }
+-}
+\ No newline at end of file
+diff --git a/rsample_drill/skipped_ex_03_regex.py b/rsample_drill/skipped_ex_03_regex.py
+deleted file mode 100644
+index 071449e..0000000
+--- a/rsample_drill/skipped_ex_03_regex.py
++++ /dev/null
+@@ -1,128 +0,0 @@
+-"""Pulling fields out of log lines is the regex work ops actually does."""
+-# READ FIRST:
+-#   https://docs.python.org/3/howto/regex.html  — the official intro; read up to 'Grouping'
+-#   https://realpython.com/regex-python/  — re.sub / re.findall with examples
+-#   https://regex101.com  — paste a pattern, see what it matches, live
+-# (copy of exercises/ex_029_regex.py — same file, just placed in the take-home order)
+-
+-import re
+-
+-from _lib import rng
+-
+-META = {
+-    "topic": 3,
+-    "title": "re — named groups on log lines",
+-    "tier": 3,
+-    "minutes": 15,
+-    "prereqs": [],
+-}
+-
+-
+-def solve(text):
+-    """WHY: An application writes its log as free text, one line per event,
+-    with fields like level=, host= and msg="...". Noise lines (stack traces,
+-    retry notes) are mixed in between. The incident commander wants a clean
+-    table of level, host and message for each real event to paste into the
+-    incident report. You pull those fields out of the matching lines and
+-    skip everything else.
+-
+-    YOU GET: `text` — one big multi-line string. Each real event line looks
+-    like the example in the rules below; the noise lines do not. The test
+-    creates it and hands it to you; you never build it yourself.
+-
+-    YOU RETURN: a list of dicts, one per event line in order, each with
+-    exactly the keys "level", "host" and "msg".
+-
+-    ─── exact rules ───
+-    Extract structured records from a raw log blob.
+-
+-    text is one multi-line string. The lines you want look like:
+-
+-        2026-08-12T09:14:02 level=ERROR host=web-1 msg="disk full on /var" trace="a9f3c2"
+-
+-    Return a list of dicts, one per matching line, in file order:
+-
+-        [{"level": "ERROR", "host": "web-1", "msg": "disk full on /var"}, ...]
+-
+-    Ignore the timestamp and trace. Some lines are noise (stack-trace
+-    continuations and the like) — they match nothing and must be skipped.
+-    Careful: msg contains spaces, and there is another quoted field after
+-    it. A greedy .* will eat its way into trace.
+-    """
+-
+-    raise NotImplementedError
+-
+-
+-HINTS = [
+-    (
+-        "One pattern, compiled once, applied across the whole text. Named groups "
+-        "give you a dict per match instead of counting parentheses. And look at "
+-        "how many double quotes sit after msg= on a line — think about which one "
+-        "a greedy match stops at (hint: the last one)."
+-    ),
+-    (
+-        "re.compile the pattern; (?P<name>...) names a group; pat.finditer(text) "
+-        "yields match objects and m.groupdict() is exactly the dict you need "
+-        "(findall would hand you bare tuples, names lost). For the quoted msg "
+-        'use .*? or [^"]* so it stops at the FIRST closing quote.'
+-    ),
+-    (
+-        "Different data, same shape:\n"
+-        "    import re\n"
+-        "    pat = re.compile(r'user=(?P<user>\\w+) cmd=\"(?P<cmd>.*?)\"')\n"
+-        '    log = \'user=ann cmd="rm -rf /tmp" id="7"\\nplain noise\\nuser=bo cmd="ls" id="9"\'\n'
+-        "    print([m.groupdict() for m in pat.finditer(log)])\n"
+-        "    # [{'user': 'ann', 'cmd': 'rm -rf /tmp'}, {'user': 'bo', 'cmd': 'ls'}]\n"
+-        'With a greedy .* the first cmd would swallow everything up to id="7".'
+-    ),
+-]
+-
+-
+-# ─────────────────────────────  below here is the machinery  ──────────────
+-
+-
+-def _gen(r):
+-    hosts = [f"{r.choice(['web', 'db', 'cache'])}-{r.randint(1, 9)}" for _ in range(3)]
+-    msgs = [
+-        "disk full on /var",
+-        "connection reset by peer",
+-        "cert expires in 3 days",
+-        "OOM killed worker 4",
+-        "replica lag high",
+-        "retry budget exhausted",
+-    ]
+-    noise = [
+-        "    at worker.py:88 in flush()",
+-        "Traceback (most recent call last):",
+-        "    retrying in 5s...",
+-    ]
+-    lines = []
+-    for _ in range(r.randint(5, 10)):
+-        ts = (
+-            f"2026-08-{r.randint(10, 28):02d}T"
+-            f"{r.randint(0, 23):02d}:{r.randint(0, 59):02d}:{r.randint(0, 59):02d}"
+-        )
+-        lines.append(
+-            f"{ts} level={r.choice(['INFO', 'WARN', 'ERROR'])} "
+-            f'host={r.choice(hosts)} msg="{r.choice(msgs)}" '
+-            f'trace="{r.randint(0, 16**6 - 1):06x}"'
+-        )
+-        if r.random() < 0.4:
+-            lines.append(r.choice(noise))
+-    return "\n".join(lines)
+-
+-
+-def _reference(text):
+-    import re
+-
+-    pat = re.compile(
+-        r'level=(?P<level>[A-Z]+) host=(?P<host>[\w-]+) msg="(?P<msg>.*?)"'
+-    )
+-    return [m.groupdict() for m in pat.finditer(text)]
+-
+-
+-def test_solve():
+-    r = rng()
+-    for _ in range(4):
+-        text = _gen(r)
+-        assert solve(text) == _reference(text)
+diff --git a/exercises/ex_001_fstrings.py b/exercises/ex_001_fstrings.py
+index b4a66d5..d5676f3 100644
+--- a/exercises/ex_001_fstrings.py
++++ b/exercises/ex_001_fstrings.py
+@@ -1,16 +1,16 @@
+ """f-string format specs — every ops report and CLI table uses them."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 1, "title": "f-strings — aligned report columns", "tier": 3,
+-        "minutes": 10, "prereqs": []}
++        "minutes": 10, "prereqs": [], "tags": ["core"]}
+ 
+ 
+ def solve(rows):
+     """WHY: You run the servers for a company. Every month finance asks
+     "how much did each service cost?" and wants it as a neat table they can
+     read at a glance — numbers lined up under each other, commas in the
+     thousands, always two decimals. Ragged numbers get misread; aligned
+     ones don't. Your job is to turn a plain list of (service, cost) into
+     that table.
+ 
+diff --git a/exercises/ex_002_slicing.py b/exercises/ex_002_slicing.py
+index 0d90606..f0546e3 100644
+--- a/exercises/ex_002_slicing.py
++++ b/exercises/ex_002_slicing.py
+@@ -1,16 +1,16 @@
+ """Slicing — the fastest way to grab exactly the part of a list you mean."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 2, "title": "slicing — combine start, stop, step", "tier": 3,
+-        "minutes": 10, "prereqs": []}
++        "minutes": 10, "prereqs": [], "tags": ["core"]}
+ 
+ 
+ def solve(xs):
+     """WHY: You keep a list of the last few health-check readings for a server,
+     oldest first. The on-call engineer keeps asking for different cuts of it:
+     "drop the warm-up and cool-down readings", "show me only every second
+     sample", "show it newest-first", "just the last three". Pulling out
+     exactly the part of a list you mean, without writing a loop each time, is
+     the skill behind every one of those requests.
+ 
+diff --git a/exercises/ex_004_ordefault.py b/exercises/ex_004_ordefault.py
+index 384f620..9426f3f 100644
+--- a/exercises/ex_004_ordefault.py
++++ b/exercises/ex_004_ordefault.py
+@@ -1,16 +1,16 @@
+ """`x or default` is everywhere in config code — and it eats real zeros."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 4, "title": "defaults without swallowing 0 and ''", "tier": 3,
+-        "minutes": 8, "prereqs": []}
++        "minutes": 8, "prereqs": [], "tags": ["core"]}
+ 
+ 
+ def solve(port, name):
+     """WHY: Your deployment script reads settings from a config file. When a
+     setting is missing it should fall back to a sensible default. But
+     "missing" is not the same as "set to zero" or "set to empty": a port of 0
+     means "let the operating system pick a free port", and an empty name is a
+     deliberate choice. A script that treats those real values as missing
+     quietly overrides what the engineer asked for, and that kind of silent
+     override causes confusing outages.
+diff --git a/exercises/ex_005_enumzip.py b/exercises/ex_005_enumzip.py
+index 639fe27..7d7d196 100644
+--- a/exercises/ex_005_enumzip.py
++++ b/exercises/ex_005_enumzip.py
+@@ -1,16 +1,16 @@
+ """enumerate and zip replace every clumsy `for i in range(len(...))`."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 5, "title": "enumerate + zip — pair and number", "tier": 3,
+-        "minutes": 8, "prereqs": []}
++        "minutes": 8, "prereqs": [], "tags": ["core"]}
+ 
+ 
+ def solve(hosts, ips):
+     """WHY: You have two lists that belong together: server names and the IP
+     addresses assigned to them, in matching order. A teammate asks for a
+     numbered inventory they can paste into a ticket: "1. web 10.0.0.1",
+     "2. db 10.0.0.2", and so on. Walking two lists side by side while
+     numbering the lines is one of the most common small jobs in ops
+     scripting.
+ 
+diff --git a/exercises/ex_006_unpacking.py b/exercises/ex_006_unpacking.py
+index 8790fb7..eec3745 100644
+--- a/exercises/ex_006_unpacking.py
++++ b/exercises/ex_006_unpacking.py
+@@ -1,16 +1,16 @@
+ """Star-unpacking and tuple assignment — Python's way of naming the parts."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 6, "title": "unpacking — star, swap, loop", "tier": 3,
+-        "minutes": 12, "prereqs": []}
++        "minutes": 12, "prereqs": [], "tags": ["core"]}
+ 
+ 
+ def solve(xs, pairs):
+     """WHY: A deploy pipeline hands you a list of build numbers and a list of
+     tag settings. The release manager needs the pieces named: which build is
+     the first, which is the latest, everything in between, and the tags
+     written as "key=value" lines for a config file. Pulling a list apart into
+     named parts without fiddling with index numbers is a daily Python habit,
+     and interviewers watch for it.
+ 
+diff --git a/exercises/ex_007_mutabledefault.py b/exercises/ex_007_mutabledefault.py
+index 74636dd..de0cb1b 100644
+--- a/exercises/ex_007_mutabledefault.py
++++ b/exercises/ex_007_mutabledefault.py
+@@ -1,16 +1,16 @@
+ """The mutable default argument — Python's most-asked trap question."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 7, "title": "mutable default — predict the leak", "tier": 1,
+-        "minutes": 8, "prereqs": []}
++        "minutes": 8, "prereqs": [], "tags": ["core"]}
+ 
+ 
+ def solve(tasks):
+     """WHY: This is a classic interview question and a real production bug. A
+     helper function keeps a "done" list as a default argument so callers can
+     skip passing one. In production a task runner calls it once per job, and
+     after a while every job report lists every job that ever ran, because the
+     default list is shared between calls and never reset. Nothing crashes;
+     the reports are just wrong. Interviewers ask you to predict the output
+     and explain why it happens.
+diff --git a/exercises/ex_008_closures.py b/exercises/ex_008_closures.py
+index 59eac3e..b5a8d13 100644
+--- a/exercises/ex_008_closures.py
++++ b/exercises/ex_008_closures.py
+@@ -1,16 +1,16 @@
+ """Closures capture variables, not values — the late-binding loop surprise."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 8, "title": "closures — late binding in a loop", "tier": 1,
+-        "minutes": 8, "prereqs": []}
++        "minutes": 8, "prereqs": [], "tags": ["core"]}
+ 
+ 
+ def solve(n, x):
+     """WHY: This is a classic interview question and a real production bug. You
+     build a list of small callback functions in a loop, one per server, each
+     meant to remember "its" server number, and hand them to a scheduler to
+     run later. When they finally run, every one of them acts on the last
+     server. Nothing crashes; the wrong machines get restarted. Interviewers
+     ask you to predict the output and explain why the two ways of writing it
+     give different answers.
+diff --git a/exercises/ex_009_sortkey.py b/exercises/ex_009_sortkey.py
+index 78b316f..1a2b5d2 100644
+--- a/exercises/ex_009_sortkey.py
++++ b/exercises/ex_009_sortkey.py
+@@ -1,16 +1,20 @@
+ """sorted(key=...) — top-3 most-used Python in interviews."""
++# READ FIRST:
++#   https://docs.python.org/3/howto/sorting.html  — key=, reverse=, and why Python's sort is 'stable' (ties keep order)
++#   https://realpython.com/python-sort/  — same, slower and with pictures
++#   TAKE-HOME: `sorted(rows, key=score)` in main.py
+ 
+ from _lib import rng
+ 
+ META = {"topic": 9, "title": "sorted with key=", "tier": 3,
+-        "minutes": 10, "prereqs": []}
++        "minutes": 10, "prereqs": [], "tags": ["core", "rsample"]}
+ 
+ 
+ def solve(services):
+     """WHY: A team lead asks "which services are crashing the most?" You have a
+     list of services and how many times each one restarted this week. They
+     want the list ordered worst-first so the top of the page is where the
+     attention should go. Ordering a list of records by one particular field
+     is the single most common data task in ops reporting.
+ 
+     YOU GET: `services` — a list of two-item lists like [["api", 2], ["db",
+diff --git a/exercises/ex_010_comprehension.py b/exercises/ex_010_comprehension.py
+index a4f8571..ce2fc94 100644
+--- a/exercises/ex_010_comprehension.py
++++ b/exercises/ex_010_comprehension.py
+@@ -1,16 +1,16 @@
+ """Comprehension with a filter — transform some, skip the rest."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 10, "title": "comprehension — transform + filter", "tier": 3,
+-        "minutes": 8, "prereqs": []}
++        "minutes": 8, "prereqs": [], "tags": ["core"]}
+ 
+ 
+ def solve(records):
+     """WHY: After a compliance quiz, HR sends you a list of people with their
+     scores and asks for the names of everyone who passed (50 or more), in
+     capital letters for the badge printer. Picking some items out of a list
+     and reshaping them in a single step is the bread and butter of every ops
+     script.
+ 
+     YOU GET: `records` — a list of two-item lists like [["ana", 80], ["bo",
+diff --git a/exercises/ex_011_generators.py b/exercises/ex_011_generators.py
+index ce43893..8723a66 100644
+--- a/exercises/ex_011_generators.py
++++ b/exercises/ex_011_generators.py
+@@ -1,16 +1,16 @@
+ """A generator hands over one item at a time, so a 10 GB log never lands in RAM."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 11, "title": "generators — yield a filtered stream, lazily", "tier": 3,
+-        "minutes": 10, "prereqs": []}
++        "minutes": 10, "prereqs": [], "tags": ["core"]}
+ 
+ 
+ def solve(lines):
+     """WHY: A log file on a production server is 10 GB. Support needs the
+     request ids of every failed request so they can look them up, and they
+     want the first one right away, not after the whole file has been read.
+     Loading the file into memory would crash the box. You need a way to hand
+     out results one at a time, reading only as far as needed for the next
+     answer.
+ 
+diff --git a/exercises/ex_012_decorators.py b/exercises/ex_012_decorators.py
+index ae1d9b8..408573b 100644
+--- a/exercises/ex_012_decorators.py
++++ b/exercises/ex_012_decorators.py
+@@ -1,16 +1,20 @@
+ """A decorator wraps a function in another function — the whole trick is that."""
++# READ FIRST:
++#   https://realpython.com/primer-on-python-decorators/  — @app.get(...) and @pytest.fixture are decorators; this is how they work
++#   https://docs.python.org/3/glossary.html#term-decorator
++#   TAKE-HOME: `@app.get("/search")`, `@pytest.fixture`
+ 
+ from _lib import rng
+ 
+ META = {"topic": 12, "title": "decorators — record every call, pass everything through", "tier": 3,
+-        "minutes": 12, "prereqs": [8]}
++        "minutes": 12, "prereqs": [8], "tags": ["core", "rsample"]}
+ 
+ 
+ def solve(calls):
+     """WHY: An audit team asks: "every time one of our infrastructure tools
+     changes something, we need a record of what was called, with what
+     arguments, and what it returned." The tools are dozens of existing
+     functions and nobody wants to edit each one. You need a single reusable
+     wrapper that can be stuck on any function and quietly logs each call
+     while leaving the function's behaviour exactly as it was.
+ 
+diff --git a/exercises/ex_013_contextmanager.py b/exercises/ex_013_contextmanager.py
+index 910b2ff..7d2fa99 100644
+--- a/exercises/ex_013_contextmanager.py
++++ b/exercises/ex_013_contextmanager.py
+@@ -1,16 +1,20 @@
+ """`with` is a promise that cleanup runs — including on the way out through an error."""
++# READ FIRST:
++#   https://realpython.com/python-with-statement/  — `with` = setup, body, guaranteed cleanup (read the 'async with' section too)
++#   https://docs.python.org/3/library/contextlib.html  — @contextmanager, the short way
++#   TAKE-HOME: the sync half of `async with pool.acquire()`
+ 
+ from _lib import rng
+ 
+ META = {"topic": 13, "title": "context managers — @contextmanager with guaranteed exit", "tier": 3,
+-        "minutes": 12, "prereqs": [12]}
++        "minutes": 12, "prereqs": [12], "tags": ["core", "rsample"]}
+ 
+ 
+ def solve(events, name):
+     """WHY: A deploy script writes "deploy started" and "deploy finished" into
+     a shared event log so the dashboard knows when a deploy is in progress.
+     One day a deploy crashes halfway, the "finished" marker never gets
+     written, and the dashboard shows a deploy stuck for hours. You need a way
+     to guarantee the closing marker is written even when the work in the
+     middle fails, without hiding the failure from whoever ran the script.
+ 
+diff --git a/exercises/ex_014_classes.py b/exercises/ex_014_classes.py
+index a05d914..b6d8de5 100644
+--- a/exercises/ex_014_classes.py
++++ b/exercises/ex_014_classes.py
+@@ -1,16 +1,16 @@
+ """A class bundles state with the things derived from it, and @property keeps them honest."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 14, "title": "classes — __init__, __repr__, @property", "tier": 3,
+-        "minutes": 12, "prereqs": []}
++        "minutes": 12, "prereqs": [], "tags": ["core"]}
+ 
+ 
+ def solve(name, replicas, cpu):
+     """WHY: Your cluster runs services, each with a name, a number of copies
+     (replicas) and a CPU budget per copy. Capacity planning asks "how much
+     CPU does each service use in total?", and that total changes whenever
+     someone scales a service up or down. If you work it out once and store
+     it, it goes stale; it has to be recomputed every time it is asked for.
+     Bundling the facts and the derived figure together is what a class is
+     for.
+diff --git a/exercises/ex_015_dataclasses.py b/exercises/ex_015_dataclasses.py
+index 88d65fb..63ce2e2 100644
+--- a/exercises/ex_015_dataclasses.py
++++ b/exercises/ex_015_dataclasses.py
+@@ -1,16 +1,16 @@
+ """@dataclass writes the boilerplate; frozen=True makes a record you cannot corrupt."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 15, "title": "dataclasses — defaults, frozen=True, sort by a field", "tier": 3,
+-        "minutes": 12, "prereqs": []}
++        "minutes": 12, "prereqs": [], "tags": ["core"]}
+ 
+ 
+ def solve(specs):
+     """WHY: An inventory script reads server records from a short-hand list
+     where people leave out the fields that have sensible defaults: most
+     servers get 100 CPU and live in the main zone unless said otherwise. The
+     records get passed around many scripts, so nobody should be able to
+     change one by accident after it is made. Capacity planning then wants
+     the list ordered smallest-CPU first.
+ 
+diff --git a/exercises/ex_016_typehints.py b/exercises/ex_016_typehints.py
+index cf9b1c8..62826fc 100644
+--- a/exercises/ex_016_typehints.py
++++ b/exercises/ex_016_typehints.py
+@@ -1,16 +1,25 @@
+ """Most of the type hints you meet are ones you read, not ones you wrote."""
++# READ FIRST:
++#   https://realpython.com/python-type-checking/  — the take-home REQUIRED annotations on every signature
++#   https://docs.python.org/3/library/typing.html  — reference, only for lookup
++#   https://docs.python.org/3/tutorial/datastructures.html#dictionaries  — dicts: read, add, remove, loop over
++#   https://realpython.com/python-dicts/  — same, longer; 'Building a Dictionary Incrementally' and
++#       'Dictionary Methods' (.items(), .pop()) are the 70% of this task
++#   https://docs.python.org/3/library/typing.html#typing.get_type_hints  — the one call that reads the hints
++#   https://docs.python.org/3/library/typing.html#typing.get_args  — split `str | None` into its parts
++#   TAKE-HOME: required on every signature
+ 
+ from _lib import rng
+ 
+ META = {"topic": 16, "title": "type hints — read a signature with get_type_hints", "tier": 3,
+-        "minutes": 22, "prereqs": []}
++        "minutes": 22, "prereqs": [], "tags": ["core", "rsample"]}
+ 
+ 
+ def solve(fn):
+     """WHY: You inherit a library of infrastructure functions written by
+     someone who left. Before calling one at 3am you want to know what it
+     expects: the names of its inputs, which ones might be empty (None), and
+     what comes back. The answers are written in the function's own signature
+     as type hints, but stored as plain text. You need to read that text back
+     into something you can check in code, an automated form of reading the
+     docs.
+@@ -50,20 +59,27 @@ def solve(fn):
+          ["zone"],
+          dict[str, int])
+ 
+     The return annotation can itself be nullable. It never belongs in the
+     nullable list — that list is parameters only.
+ 
+     `str | None` is the modern spelling of Optional[str]: this value is a str
+     or it is missing. Spotting those is the practical payoff of reading hints,
+     since they are the ones that will hand you a None at 3am.
+     """
++    from typing import get_type_hints
++    modifications = get_type_hints(fn)
++    zone = modifications["zone"]
++    returnal = modifications["return"]
++
++    print(get_type_hints(fn))
++
+     raise NotImplementedError
+ 
+ 
+ HINTS = [
+     ("Two separate problems. One: annotations arrive as strings and you need "
+     "objects, so something has to evaluate them in the namespace of the module "
+     "that defined the function. Two: once you have the objects, you need to ask "
+     "of each one 'could this be None' — and a compound type like `str | None` "
+     "has parts you can pull apart, while a plain `int` has none."),
+     ("typing.get_type_hints(fn) does the resolving and returns one dict holding "
+diff --git a/exercises/ex_017_functools.py b/exercises/ex_017_functools.py
+index 35a29bf..e38d82c 100644
+--- a/exercises/ex_017_functools.py
++++ b/exercises/ex_017_functools.py
+@@ -1,16 +1,16 @@
+ """lru_cache is the cheapest speedup in Python; wraps is why your wrapper keeps its name."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 17, "title": "functools — lru_cache proven by counting, wraps keeps the name", "tier": 3,
+-        "minutes": 12, "prereqs": [12]}
++        "minutes": 12, "prereqs": [12], "tags": ["core"]}
+ 
+ 
+ def solve(fn):
+     """WHY: A pricing function is slow, and a billing report calls it thousands
+     of times with only a handful of different inputs. The same answer is
+     recomputed over and over. You want to remember each answer the first
+     time and reuse it after that. At the same time, wrapping the function
+     must not change its name or description, or the logs and error messages
+     will start naming a function that does not exist.
+ 
+diff --git a/exercises/ex_018_dictget.py b/exercises/ex_018_dictget.py
+index fe1f3fa..c2d014e 100644
+--- a/exercises/ex_018_dictget.py
++++ b/exercises/ex_018_dictget.py
+@@ -1,16 +1,16 @@
+ """Counting into a dict by hand — the KeyError that bites every beginner."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 18, "title": "dict.get — count without KeyError", "tier": 2,
+-        "minutes": 8, "prereqs": []}
++        "minutes": 8, "prereqs": [], "tags": ["data-structures"]}
+ 
+ 
+ def solve(words):
+     """WHY: A deploy log is a stream of action words: "deploy", "rollback",
+     "pod", "node". Your manager asks "how many of each happened this week?"
+     You need a tally: each distinct word and its count. Interviewers often
+     ask for this "without imports" to see whether you can handle the first
+     time a new word shows up, when there is no count to add to yet.
+ 
+     YOU GET: `words` — a list of strings like ["a", "b", "a"]. The test
+diff --git a/exercises/ex_019_counter.py b/exercises/ex_019_counter.py
+index 2425fd7..2cc1629 100644
+--- a/exercises/ex_019_counter.py
++++ b/exercises/ex_019_counter.py
+@@ -1,16 +1,16 @@
+ """Top-N counting — the single most-asked DevOps screen question."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 19, "title": "Counter — top N by frequency", "tier": 3,
+-        "minutes": 12, "prereqs": [18]}
++        "minutes": 12, "prereqs": [18], "tags": ["data-structures"]}
+ 
+ 
+ def solve(lines, n):
+     """WHY: A web server is under unusual load. The security lead asks "which
+     IP addresses are hitting us the most?" so they can decide whether to
+     block one. You have the access log, one request per line, and need the
+     busiest few addresses with their request counts, biggest first. This is
+     the single most-asked DevOps screening question.
+ 
+     YOU GET: `lines` — a list of log lines like "10.0.0.4 GET /health 200",
+diff --git a/exercises/ex_020_defaultdict.py b/exercises/ex_020_defaultdict.py
+index d6e9f6e..7909fe3 100644
+--- a/exercises/ex_020_defaultdict.py
++++ b/exercises/ex_020_defaultdict.py
+@@ -1,16 +1,16 @@
+ """Grouping records by a key is the most-typed loop in ops scripting."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 20, "title": "defaultdict(list) — group log lines by host", "tier": 3,
+-        "minutes": 10, "prereqs": [18]}
++        "minutes": 10, "prereqs": [18], "tags": ["data-structures"]}
+ 
+ 
+ def solve(lines):
+     """WHY: A central log collector mixes messages from every host into one
+     stream. An engineer investigating an incident asks "show me everything
+     each host said, host by host, in order". You need to sort the lines into
+     buckets by host name, keeping the message text but dropping the severity
+     word. Grouping records by a key is the most-typed loop in ops scripting.
+ 
+     YOU GET: `lines` — a list of log lines like "web-1 ERROR disk full": a
+diff --git a/exercises/ex_021_deque.py b/exercises/ex_021_deque.py
+index 08a847f..17f22d3 100644
+--- a/exercises/ex_021_deque.py
++++ b/exercises/ex_021_deque.py
+@@ -1,16 +1,16 @@
+ """tail -f in Python: keep the newest few lines, forget the rest automatically."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 21, "title": "deque(maxlen) — tail of a stream", "tier": 3,
+-        "minutes": 10, "prereqs": []}
++        "minutes": 10, "prereqs": [], "tags": ["data-structures"]}
+ 
+ 
+ def solve(lines, n):
+     """WHY: An incident is in progress and the on-call engineer asks "what were
+     the last five errors?" The log is a live stream, far too large to hold
+     in memory, and you only get to read it once, front to back. You need to
+     keep just the newest few matching lines as you go and forget the rest
+     automatically. This is tail -f done in Python.
+ 
+     YOU GET: `lines` — a stream of log lines like "10:01 ERROR boom" that
+diff --git a/exercises/ex_022_sets.py b/exercises/ex_022_sets.py
+index 39c2a47..57cee71 100644
+--- a/exercises/ex_022_sets.py
++++ b/exercises/ex_022_sets.py
+@@ -1,16 +1,20 @@
+ """Dedupe with a set — the runner-up trap."""
++# READ FIRST:
++#   https://docs.python.org/3/tutorial/datastructures.html#sets  — what a set is, & | - operators
++#   https://realpython.com/python-sets/  — intersection() is what the take-home reranker used
++#   TAKE-HOME: `query_words & content_words` in reranker.py
+ 
+ from _lib import rng
+ 
+ META = {"topic": 22, "title": "set — second-highest distinct value", "tier": 3,
+-        "minutes": 8, "prereqs": []}
++        "minutes": 8, "prereqs": [], "tags": ["data-structures", "rsample"]}
+ 
+ 
+ def solve(scores):
+     """WHY: A performance review ranks people by score and the runner-up gets a
+     bonus. Two people tied for first. The naive "second item of the sorted
+     list" picks the other first-place person, not the real runner-up. The
+     business wants the second-highest distinct value, so duplicates have to
+     be treated as one value before picking. This is a well-known interview
+     trap.
+ 
+diff --git a/exercises/ex_023_itertools.py b/exercises/ex_023_itertools.py
+index 26ec092..44d1f40 100644
+--- a/exercises/ex_023_itertools.py
++++ b/exercises/ex_023_itertools.py
+@@ -1,16 +1,16 @@
+ """itertools glues paged streams together; groupby bites everyone exactly once."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 23, "title": "itertools — chain, islice, groupby (sort first)", "tier": 3,
+-        "minutes": 15, "prereqs": [9]}
++        "minutes": 15, "prereqs": [9], "tags": ["data-structures"]}
+ 
+ 
+ def solve(pages, first_n):
+     """WHY: An on-call engineer is paged at 2am. The log service hands back log
+     lines in pages (batches), the way an API says "here are the next 50
+     results". The incident lead asks: "in the first N lines after the alert
+     fired, how many came from each service?" to see which service got noisy
+     first. You stitch the pages into one stream, stop after N lines, and
+     count per service.
+ 
+diff --git a/exercises/ex_025_copy.py b/exercises/ex_025_copy.py
+index fbe11af..5ebcbbc 100644
+--- a/exercises/ex_025_copy.py
++++ b/exercises/ex_025_copy.py
+@@ -1,16 +1,16 @@
+ """One shared inner list has silently corrupted many config-cloning scripts."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 25, "title": "shallow vs deep copy — predict the damage", "tier": 1,
+-        "minutes": 6, "prereqs": []}
++        "minutes": 6, "prereqs": [], "tags": ["data-structures"]}
+ 
+ 
+ def solve(cfg):
+     """WHY: A classic interview question and a real production bug. A script
+     takes the base config for one environment, copies it to make a second
+     one, and edits the copy. Weeks later someone notices the ORIGINAL config
+     changed too: a server added to staging showed up in prod. The copy only
+     duplicated the outer container; the lists inside were still shared
+     between both. You are asked to predict, line by line, which edits leak
+     into which dict.
+diff --git a/exercises/ex_026_filelines.py b/exercises/ex_026_filelines.py
+index 7e99736..a1d60a2 100644
+--- a/exercises/ex_026_filelines.py
++++ b/exercises/ex_026_filelines.py
+@@ -1,16 +1,16 @@
+ """Every ops script starts by reading a file that is bigger than you would like."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 26, "title": "open() — stream a file line by line", "tier": 3,
+-        "minutes": 10, "prereqs": []}
++        "minutes": 10, "prereqs": [], "tags": ["files-text"]}
+ 
+ 
+ def solve(path):
+     """WHY: The overnight backup job failed. The log file it wrote is huge, far
+     bigger than the machine's memory. Your manager wants only the ERROR
+     messages, in the order they happened, so the team can see what broke
+     first. You must read the file one line at a time, never the whole thing
+     at once, or your own script will crash the box.
+ 
+     YOU GET: `path` — a string with the location of a log file on disk, like
+diff --git a/exercises/ex_027_pathlib.py b/exercises/ex_027_pathlib.py
+index cd95c37..a3a95cd 100644
+--- a/exercises/ex_027_pathlib.py
++++ b/exercises/ex_027_pathlib.py
+@@ -1,16 +1,16 @@
+ """pathlib turns path string-surgery into readable code — and interviewers notice."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 27, "title": "pathlib.Path — walk and inspect a tree", "tier": 3,
+-        "minutes": 12, "prereqs": []}
++        "minutes": 12, "prereqs": [], "tags": ["files-text"]}
+ 
+ 
+ def solve(root):
+     """WHY: A company keeps one folder per service on a shared server, each
+     with its own log and config subfolders. Before a migration the platform
+     team asks for an inventory: the name of every log file anywhere under
+     the root, the name (minus extension) of every config file, and whether
+     someone already wrote a README at the top. Chopping path strings by hand
+     is error-prone; you need to walk the whole tree and ask questions about
+     each path.
+diff --git a/exercises/ex_028_join.py b/exercises/ex_028_join.py
+index a802c20..c595208 100644
+--- a/exercises/ex_028_join.py
++++ b/exercises/ex_028_join.py
+@@ -1,16 +1,16 @@
+ """split / join — the two directions of every parsing task."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 28, "title": "str — split, transform, join back", "tier": 3,
+-        "minutes": 8, "prereqs": []}
++        "minutes": 8, "prereqs": [], "tags": ["files-text"]}
+ 
+ 
+ def solve(line):
+     """WHY: A colleague pastes a list of service names into a ticket, separated
+     by commas but with random spaces around each name. Your deploy tool
+     needs the names clean, and the status page wants them shown separated by
+     a vertical bar. This tidy-then-reformat step is the first line of nearly
+     every script that takes text typed by a human.
+ 
+     YOU GET: `line` — one string of comma-separated names with messy
+diff --git a/exercises/ex_029_regex.py b/exercises/ex_029_regex.py
+index 6699cbe..300fd01 100644
+--- a/exercises/ex_029_regex.py
++++ b/exercises/ex_029_regex.py
+@@ -1,16 +1,21 @@
+ """Pulling fields out of log lines is the regex work ops actually does."""
++# READ FIRST:
++#   https://docs.python.org/3/howto/regex.html  — the official intro; read up to 'Grouping'
++#   https://realpython.com/regex-python/  — re.sub / re.findall with examples
++#   https://regex101.com  — paste a pattern, see what it matches, live
++#   TAKE-HOME: `_tokenize` in reranker.py
+ 
+ from _lib import rng
+ 
+ META = {"topic": 29, "title": "re — named groups on log lines", "tier": 3,
+-        "minutes": 15, "prereqs": []}
++        "minutes": 15, "prereqs": [], "tags": ["files-text", "rsample"]}
+ 
+ 
+ def solve(text):
+     """WHY: An application writes its log as free text, one line per event,
+     with fields like level=, host= and msg="...". Noise lines (stack traces,
+     retry notes) are mixed in between. The incident commander wants a clean
+     table of level, host and message for each real event to paste into the
+     incident report. You pull those fields out of the matching lines and
+     skip everything else.
+ 
+diff --git a/exercises/ex_030_json.py b/exercises/ex_030_json.py
+index 6bfdf30..4a81b00 100644
+--- a/exercises/ex_030_json.py
++++ b/exercises/ex_030_json.py
+@@ -1,16 +1,16 @@
+ """APIs answer in JSON; the nested-missing-key crash is the classic screen-share failure."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 30, "title": "json — loads, safe nested gets, dumps", "tier": 3,
+-        "minutes": 15, "prereqs": [18]}
++        "minutes": 15, "prereqs": [18], "tags": ["files-text"]}
+ 
+ 
+ def solve(text):
+     """WHY: A cluster API answers with the state of every node as JSON text.
+     Not every node reports CPU load, and not every cluster carries a region
+     tag. The platform team's dashboard script keeps crashing because it
+     assumes those fields are always present. You are asked to write a
+     version that produces a short summary (region plus CPU per node) and
+     never crashes when a field is simply absent.
+ 
+diff --git a/exercises/ex_031_yamlflat.py b/exercises/ex_031_yamlflat.py
+index 14fdb85..eb6faa9 100644
+--- a/exercises/ex_031_yamlflat.py
++++ b/exercises/ex_031_yamlflat.py
+@@ -1,17 +1,17 @@
+ """Half of DevOps config is YAML. PyYAML is not installed here, so this drills
+ the concept by hand on the flat subset — in real code it is one yaml.safe_load call."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 31, "title": "YAML, the concept — flat key: value block by hand",
+-        "tier": 3, "minutes": 12, "prereqs": [28]}
++        "tier": 3, "minutes": 12, "prereqs": [28], "tags": ["files-text"]}
+ 
+ 
+ def solve(text):
+     """WHY: Deployment settings live in a small text file: one setting per line
+     as "key: value", with comments and blank lines in between. The deploy
+     tool needs those settings as real typed values (3 as a number, false as
+     a yes/no flag), not as text. The usual library for this format is not
+     installed here, so you parse the simple flat form by hand. The trap: a
+     value like an image tag nginx:1.25 contains a colon of its own.
+ 
+diff --git a/exercises/ex_032_csv.py b/exercises/ex_032_csv.py
+index e22633a..ab209bc 100644
+--- a/exercises/ex_032_csv.py
++++ b/exercises/ex_032_csv.py
+@@ -1,16 +1,16 @@
+ """split(',') corrupts real CSV the day a field grows a comma."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 32, "title": "csv — parse quoted fields correctly", "tier": 3,
+-        "minutes": 10, "prereqs": []}
++        "minutes": 10, "prereqs": [], "tags": ["files-text"]}
+ 
+ 
+ def solve(text):
+     """WHY: Finance exports a spreadsheet of services and their owners as CSV
+     text. Some owner names are written "Last, First" and wrapped in quotes
+     because they contain a comma. A colleague's script that cuts each line
+     at every comma silently garbles those rows and puts the wrong owner on
+     the wrong service. You are asked to parse the export correctly so the
+     cost report is right.
+ 
+diff --git a/exercises/ex_033_datetime.py b/exercises/ex_033_datetime.py
+index f8572e5..d9aa3f9 100644
+--- a/exercises/ex_033_datetime.py
++++ b/exercises/ex_033_datetime.py
+@@ -1,16 +1,16 @@
+ """'When did it break, and for how long' is a datetime question, every time."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 33, "title": "datetime — strptime, deltas, busiest minute",
+-        "tier": 3, "minutes": 15, "prereqs": []}
++        "tier": 3, "minutes": 15, "prereqs": [], "tags": ["files-text"]}
+ 
+ 
+ def solve(lines):
+     """WHY: After an outage the incident review asks two questions: how long
+     did the event window last, from the first request to the last, and which
+     minute was the busiest? The web server's access log gives one line per
+     request with a timestamp, but the lines are out of order because several
+     servers' logs were merged. You turn the timestamps into real times you
+     can subtract and count.
+ 
+diff --git a/exercises/ex_034_percentile.py b/exercises/ex_034_percentile.py
+index 6663a9b..85accbd 100644
+--- a/exercises/ex_034_percentile.py
++++ b/exercises/ex_034_percentile.py
+@@ -1,16 +1,16 @@
+ """Mean latency lies; the p95 is the number on the dashboard and in the interview."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 34, "title": "p95 latency — nearest-rank percentile", "tier": 3,
+-        "minutes": 10, "prereqs": []}
++        "minutes": 10, "prereqs": [], "tags": ["files-text"]}
+ 
+ 
+ def solve(values, pct):
+     """WHY: The service promise (SLO) says 95 percent of requests must finish
+     under 300 ms. An average hides the slow requests that make customers
+     complain, so the dashboard shows the p95: the response time that 95
+     percent of requests are faster than. Given a list of measured response
+     times, you compute that number the way the team has agreed to define it.
+ 
+     YOU GET: `values` — a list of numbers (response times), like [0.1, 0.5,
+diff --git a/exercises/ex_035_subprocess.py b/exercises/ex_035_subprocess.py
+index f27e126..1050412 100644
+--- a/exercises/ex_035_subprocess.py
++++ b/exercises/ex_035_subprocess.py
+@@ -1,19 +1,19 @@
+ """Every deploy script shells out; subprocess.run is how Python does it safely."""
+ 
+ import subprocess
+ import sys
+ 
+ from _lib import rng
+ 
+ META = {"topic": 35, "title": "subprocess.run — run a command, read the result",
+-        "tier": 3, "minutes": 15, "prereqs": []}
++        "tier": 3, "minutes": 15, "prereqs": [], "tags": ["stdlib-ops"]}
+ 
+ 
+ def solve(argv):
+     """WHY: A deploy script has to run other command-line tools (kubectl,
+     terraform, a health check) and decide what to do based on whether each
+     one succeeded and what it printed. The team lead wants one helper that
+     runs a command and reports back in one tidy package: did it succeed, the
+     exit code, its normal output and its error output. It must never glue
+     the command into one string, because that is how attackers sneak extra
+     commands in.
+diff --git a/exercises/ex_036_env.py b/exercises/ex_036_env.py
+index 280a5c8..201c9b5 100644
+--- a/exercises/ex_036_env.py
++++ b/exercises/ex_036_env.py
+@@ -1,18 +1,18 @@
+ """Twelve-factor apps read config from the environment, so every ops script does too."""
+ 
+ import os
+ 
+ from _lib import rng
+ 
+ META = {"topic": 36, "title": "os.environ.get — config with defaults", "tier": 3,
+-        "minutes": 12, "prereqs": []}
++        "minutes": 12, "prereqs": [], "tags": ["stdlib-ops"]}
+ 
+ TRUTHY = {"1", "true", "yes", "on"}      # given — do not edit
+ 
+ 
+ def solve():
+     """WHY: A service runs inside a container. Operators change its port,
+     timeout, debug mode and region by setting environment variables (named
+     settings the operating system hands to a process at start) instead of
+     editing files. Some settings have sensible defaults; the database
+     address does not, and booting against a guessed database is an incident
+diff --git a/exercises/ex_037_argparse.py b/exercises/ex_037_argparse.py
+index d99d1e3..4fe8ea1 100644
+--- a/exercises/ex_037_argparse.py
++++ b/exercises/ex_037_argparse.py
+@@ -1,20 +1,20 @@
+ """Every internal tool grows a CLI; argparse is the one interviewers expect you to know."""
+ 
+ import argparse
+ import contextlib
+ import io
+ 
+ from _lib import rng
+ 
+ META = {"topic": 37, "title": "argparse — declare a CLI, get validation free",
+-        "tier": 3, "minutes": 15, "prereqs": []}
++        "tier": 3, "minutes": 15, "prereqs": [], "tags": ["stdlib-ops"]}
+ 
+ 
+ def solve():
+     """WHY: The team has an internal deploy tool people run from the terminal:
+     deployctl web -r 3 --env prod. It must accept a service name, a replica
+     count, an environment, a dry-run switch and some tags, and it must
+     reject bad input (a typo in the environment, a replica count that is not
+     a number) with a clear message and a non-zero exit. Writing those checks
+     by hand is tedious and buggy; you declare what the arguments are and let
+     the standard library enforce them.
+diff --git a/exercises/ex_038_logging.py b/exercises/ex_038_logging.py
+index 51c4194..85afae6 100644
+--- a/exercises/ex_038_logging.py
++++ b/exercises/ex_038_logging.py
+@@ -1,18 +1,18 @@
+ """print in a daemon has no level, no timestamp and nowhere to go but stdout."""
+ 
+ import logging
+ 
+ from _lib import rng
+ 
+ META = {"topic": 38, "title": "logging — levels, a formatter, a custom handler",
+-        "tier": 3, "minutes": 18, "prereqs": []}
++        "tier": 3, "minutes": 18, "prereqs": [], "tags": ["stdlib-ops"]}
+ 
+ 
+ def solve(name, level, messages):
+     """WHY: A background service writes hundreds of messages a minute. In
+     production the operators want only warnings and errors; while debugging
+     they want everything — and they want to switch between the two with one
+     setting, not a code change. The messages must also go somewhere you
+     control (a file, a log system, or here a plain list the test can
+     inspect) in one consistent format. You wire up one such logger.
+ 
+diff --git a/exercises/ex_039_exitcodes.py b/exercises/ex_039_exitcodes.py
+index 11e4daf..2da67f2 100644
+--- a/exercises/ex_039_exitcodes.py
++++ b/exercises/ex_039_exitcodes.py
+@@ -1,16 +1,16 @@
+ """A pipeline reads one thing from your script: the exit code."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 39, "title": "exit codes — main(argv) returns an int", "tier": 3,
+-        "minutes": 12, "prereqs": []}
++        "minutes": 12, "prereqs": [], "tags": ["stdlib-ops"]}
+ 
+ KNOWN_SERVICES = ("api", "web", "db", "cache")      # given — do not edit
+ MAX_REPLICAS = 10                                   # given — do not edit
+ 
+ 
+ def solve(argv):
+     """WHY: A CI pipeline runs your deploy script and then decides whether to
+     carry on. It cannot read your printed messages; it reads exactly one
+     number, the exit code. Zero means success, anything else means failure,
+     and different numbers let the pipeline tell a usage mistake from a
+diff --git a/exercises/ex_040_shutil.py b/exercises/ex_040_shutil.py
+index c4f099c..c752b2d 100644
+--- a/exercises/ex_040_shutil.py
++++ b/exercises/ex_040_shutil.py
+@@ -1,21 +1,21 @@
+ """Staging files in scratch space and tidying up afterwards is half of build tooling."""
+ 
+ import glob
+ import os
+ import shutil
+ import tempfile
+ 
+ from _lib import rng
+ 
+ META = {"topic": 40, "title": "shutil / tempfile / glob — stage files, then clean up",
+-        "tier": 3, "minutes": 18, "prereqs": []}
++        "tier": 3, "minutes": 18, "prereqs": [], "tags": ["stdlib-ops"]}
+ 
+ 
+ def solve(root):
+     """WHY: A build job tidies a work folder: log files get copied to a scratch
+     area for upload, temporary files get moved out of the way. The scratch
+     area must be a fresh, uniquely named folder (two jobs on the same
+     machine must not collide) and it must be removed afterward even if
+     something fails halfway. The release engineer wants a report of what was
+     copied, moved, staged and left behind.
+ 
+diff --git a/exercises/ex_042_hashlib.py b/exercises/ex_042_hashlib.py
+index 070c597..7a7299c 100644
+--- a/exercises/ex_042_hashlib.py
++++ b/exercises/ex_042_hashlib.py
+@@ -1,21 +1,21 @@
+ """A checksum is how you prove the artifact you deployed is the artifact you built."""
+ 
+ import hashlib
+ import os
+ import shutil
+ import tempfile
+ 
+ from _lib import rng
+ 
+ META = {"topic": 42, "title": "hashlib — checksum files against a known digest",
+-        "tier": 3, "minutes": 10, "prereqs": []}
++        "tier": 3, "minutes": 10, "prereqs": [], "tags": ["stdlib-ops"]}
+ 
+ 
+ def solve(paths, known_good):
+     """WHY: The release pipeline publishes a checksum (a short fingerprint
+     string computed from a file's bytes) next to every build artifact.
+     Before deploying, you must prove the files that arrived on the server
+     are the exact ones that were built: a single changed byte, from a
+     corrupted download or tampering, must be caught. You compute each file's
+     fingerprint and compare it with the published one.
+ 
+diff --git a/exercises/ex_043_except.py b/exercises/ex_043_except.py
+index 3b218df..c4e58ea 100644
+--- a/exercises/ex_043_except.py
++++ b/exercises/ex_043_except.py
+@@ -1,16 +1,16 @@
+ """try/except — catch the specific thing, not everything."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 43, "title": "try/except — survive bad input", "tier": 3,
+-        "minutes": 10, "prereqs": []}
++        "minutes": 10, "prereqs": [], "tags": ["errors"]}
+ 
+ 
+ def solve(rows):
+     """WHY: A monitoring agent sends metrics as lines like "cpu=90". Now and
+     then a line is garbage: truncated, missing the equals sign, or with a
+     value that is not a number. A parser that crashes on the first bad line
+     takes the whole dashboard down. The team wants a parser that keeps the
+     good lines and quietly skips the bad ones, but only for the specific
+     errors bad input causes, so real bugs still surface.
+ 
+diff --git a/exercises/ex_044_customexc.py b/exercises/ex_044_customexc.py
+index c43fa16..10d4f4a 100644
+--- a/exercises/ex_044_customexc.py
++++ b/exercises/ex_044_customexc.py
+@@ -1,16 +1,16 @@
+ """Custom exceptions let callers catch a whole family of errors with one except."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 44, "title": "custom exceptions — a ConfigError family", "tier": 3,
+-        "minutes": 15, "prereqs": [43]}
++        "minutes": 15, "prereqs": [43], "tags": ["errors"]}
+ 
+ 
+ class ConfigError(Exception):
+     """Base class: anything wrong with a config. Given — do not edit."""
+ 
+ 
+ class MissingKeyError(ConfigError):
+     """A required key is absent."""
+ 
+ 
+diff --git a/exercises/ex_045_retry.py b/exercises/ex_045_retry.py
+index 16d01a2..21ce904 100644
+--- a/exercises/ex_045_retry.py
++++ b/exercises/ex_045_retry.py
+@@ -1,18 +1,18 @@
+ """Retry with backoff and jitter — the standard whiteboard ask for SRE screens."""
+ 
+ import itertools
+ 
+ from _lib import rng
+ 
+ META = {"topic": 45, "title": "retry — exponential backoff with jitter, by hand", "tier": 4,
+-        "minutes": 20, "prereqs": [43]}
++        "minutes": 20, "prereqs": [43], "tags": ["errors"]}
+ 
+ 
+ def solve(call, sleep, rand, max_attempts, base):
+     """WHY: You run a nightly job that pushes metrics to a monitoring vendor's
+     API. Their service sometimes refuses a request for a second or two (a
+     restart, a network blip) and is then fine again. If your job gives up on
+     the first failure, the on-call engineer gets paged at 3am for nothing; if
+     it retries instantly and forever, it hammers a struggling service and
+     makes the outage worse. The team lead asks for one helper every script
+     can use: try again, wait a bit longer each time, add a little randomness
+diff --git a/exercises/ex_046_deadline.py b/exercises/ex_046_deadline.py
+index 78d2242..e2ace4a 100644
+--- a/exercises/ex_046_deadline.py
++++ b/exercises/ex_046_deadline.py
+@@ -1,16 +1,16 @@
+ """Any call that can block needs a deadline — waiting forever is an outage."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 46, "title": "deadlines — poll until ready or time out", "tier": 3,
+-        "minutes": 15, "prereqs": [43]}
++        "minutes": 15, "prereqs": [43], "tags": ["errors"]}
+ 
+ 
+ def solve(check, now, sleep, timeout, interval):
+     """WHY: A deploy script has just asked the cloud to start a new database.
+     The database takes an unknown time to come up: usually a minute,
+     sometimes five, occasionally never (a quota problem, a typo in the
+     config). The next step cannot run until it is ready, so the script must
+     keep looking, pause between looks, and stop with a clear error once a
+     time budget is used up. A script that waits forever blocks the whole
+     pipeline and nobody notices until morning.
+diff --git a/exercises/ex_047_idempotent.py b/exercises/ex_047_idempotent.py
+index 5c939a2..8df195b 100644
+--- a/exercises/ex_047_idempotent.py
++++ b/exercises/ex_047_idempotent.py
+@@ -1,16 +1,16 @@
+ """Ops scripts get re-run — after a crash, by a retry, by a nervous human at 3am."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 47, "title": "idempotency — apply desired state, safe to re-run",
+-        "tier": 3, "minutes": 15, "prereqs": [43]}
++        "tier": 3, "minutes": 15, "prereqs": [43], "tags": ["errors"]}
+ 
+ 
+ def solve(state, desired):
+     """WHY: A service's settings (replica count, image version, debug flag) are
+     applied by a script. That script gets run again and again: after a
+     crash, by an automatic retry, by a colleague at 3am who is not sure it
+     ran. Running it twice must not break anything, and it must only report
+     changes that really happened, so the team can tell genuine drift from
+     noise in the audit log. Your job: compare what is with what should be,
+     change only what differs, and list exactly what you touched.
+diff --git a/exercises/ex_048_requests.py b/exercises/ex_048_requests.py
+index d6fefa4..7f38562 100644
+--- a/exercises/ex_048_requests.py
++++ b/exercises/ex_048_requests.py
+@@ -1,18 +1,18 @@
+ """Half of platform work is one HTTP call to somebody else's API, done properly."""
+ 
+ import requests
+ import responses
+ from _lib import rng
+ 
+ META = {"topic": 48, "title": "requests — params, auth header, timeout, raise_for_status",
+-        "tier": 3, "minutes": 18, "prereqs": []}
++        "tier": 3, "minutes": 18, "prereqs": [], "tags": ["http", "requests"]}
+ 
+ 
+ def solve(url, token, params):
+     """WHY: The team's deploy dashboard needs the latest deploys from an
+     internal deployment service. That service has a web API: you send a
+     request to a web address with a few filters (which environment, how
+     many) and a secret token that proves who you are, and it answers with
+     data. Platform work is full of this one call, and the usual mistakes
+     cause real outages: no time limit, so a dead server freezes your script
+     forever; ignoring error answers, so a broken server looks like "no
+diff --git a/exercises/ex_049_pagination.py b/exercises/ex_049_pagination.py
+index faa0d58..985aa86 100644
+--- a/exercises/ex_049_pagination.py
++++ b/exercises/ex_049_pagination.py
+@@ -1,16 +1,16 @@
+ """Every list API caps the page size, so "get all of them" is always a loop."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 49, "title": "pagination — follow the cursor until it runs out",
+-        "tier": 3, "minutes": 12, "prereqs": []}
++        "tier": 3, "minutes": 12, "prereqs": [], "tags": ["http"]}
+ 
+ 
+ def solve(fetch_page):
+     """WHY: An ops engineer needs a list of every pod in a cluster for a
+     capacity report. The cluster's API never hands back the whole list at
+     once: each answer holds a handful of items plus a bookmark (called a
+     cursor) that you send back to get the next batch. Miss a batch and the
+     report silently under-counts; keep asking after the last batch and the
+     API refuses. The task: fetch batch after batch until the API says there
+     are no more, and glue all the items into one list.
+diff --git a/exercises/ex_050_ratelimit.py b/exercises/ex_050_ratelimit.py
+index dd5d031..875f889 100644
+--- a/exercises/ex_050_ratelimit.py
++++ b/exercises/ex_050_ratelimit.py
+@@ -1,16 +1,16 @@
+ """A 429 is the server asking you to slow down; ignoring it is how you get an IP ban."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 50, "title": "rate limits — honour 429 and Retry-After",
+-        "tier": 3, "minutes": 15, "prereqs": [45]}
++        "tier": 3, "minutes": 15, "prereqs": [45], "tags": ["http"]}
+ 
+ 
+ def solve(request, sleep, max_attempts, default_wait):
+     """WHY: A cleanup script calls a vendor's API hundreds of times in a row.
+     The vendor caps how many calls per minute you may make; go over and it
+     answers with status 429, which means "too many requests, come back in N
+     seconds", instead of doing the work. A script that ignores that and
+     keeps firing gets the whole company's API key blocked. The team lead
+     wants a helper that waits exactly as long as the server asks, uses a
+     sensible default when the server names no time, and stops after a fixed
+diff --git a/exercises/ex_051_session.py b/exercises/ex_051_session.py
+index abded38..7a17b01 100644
+--- a/exercises/ex_051_session.py
++++ b/exercises/ex_051_session.py
+@@ -1,18 +1,18 @@
+ """One Session reuses the connection and carries the auth; ten bare gets do neither."""
+ 
+ import requests
+ import responses
+ from _lib import rng
+ 
+ META = {"topic": 51, "title": "requests.Session — shared headers, reused connection",
+-        "tier": 3, "minutes": 15, "prereqs": [48]}
++        "tier": 3, "minutes": 15, "prereqs": [48], "tags": ["http", "requests"]}
+ 
+ 
+ def solve(base_url, token, agent, names):
+     """WHY: A health-check bot asks an internal status API "how is the api? how
+     is the db? how is the cache?" every minute, one request per service.
+     Every request must carry the same secret token and the same label that
+     names your program (the User-Agent). Done the naive way, each request
+     opens a fresh connection to the server and repeats the headers, which
+     is slow and is exactly where "one call forgot the token" bugs come from.
+     The ask: set up one reusable client with the shared headers configured
+diff --git a/exercises/ex_052_realpagination.py b/exercises/ex_052_realpagination.py
+index f783934..0199336 100644
+--- a/exercises/ex_052_realpagination.py
++++ b/exercises/ex_052_realpagination.py
+@@ -3,21 +3,21 @@
+ Topic 52 on the checklist is FastAPI. That needs a running server and packages we
+ do not have offline, so this slot drills real-API pagination instead — the same
+ loop as topic 49, but against actual requests/Response objects rather than a fake.
+ """
+ 
+ import requests
+ import responses
+ from _lib import rng
+ 
+ META = {"topic": 52, "title": "Link header pagination — follow rel=next with requests",
+-        "tier": 4, "minutes": 25, "prereqs": [48, 49]}
++        "tier": 4, "minutes": 25, "prereqs": [48, 49], "tags": ["http", "requests"]}
+ 
+ 
+ def solve(first_url, token):
+     """WHY: A manager wants every open issue in the team's repo on a
+     GitHub-style server, to build a backlog report. The server hands back
+     issues a few at a time, and it tells you where the next batch lives not
+     in the data but in a response header called Link: a line listing web
+     addresses labelled next, prev, first and last. You must follow the
+     "next" address until there is none, send the token and a time limit
+     with every request, and never guess at addresses yourself, because the
+diff --git a/exercises/ex_053_hmac.py b/exercises/ex_053_hmac.py
+index 0da0cdd..7ba78b7 100644
+--- a/exercises/ex_053_hmac.py
++++ b/exercises/ex_053_hmac.py
+@@ -1,19 +1,19 @@
+ """A webhook endpoint that skips the signature check is an open door into your pipeline."""
+ 
+ import hashlib
+ import hmac
+ 
+ from _lib import rng
+ 
+ META = {"topic": 53, "title": "webhooks — verify an HMAC signature",
+-        "tier": 3, "minutes": 12, "prereqs": []}
++        "tier": 3, "minutes": 12, "prereqs": [], "tags": ["http"]}
+ 
+ 
+ def solve(secret, body, signature):
+     """WHY: Your CI pipeline has a web address that GitHub calls every time
+     code is pushed (a webhook), and that call triggers a deploy. Anyone on
+     the internet can send a request to that address. To prove a message is
+     really from GitHub, both sides share a secret; GitHub computes a
+     fingerprint of the message using that secret and sends it in a header.
+     You recompute the fingerprint yourself and compare. Skip the check and
+     anyone can trigger deploys; compare carelessly and an attacker can guess
+diff --git a/exercises/ex_054_threadpool.py b/exercises/ex_054_threadpool.py
+index 84a1e56..76978fd 100644
+--- a/exercises/ex_054_threadpool.py
++++ b/exercises/ex_054_threadpool.py
+@@ -1,20 +1,20 @@
+ """200 API calls at 200ms each is 40 seconds one at a time, or under a second in a pool."""
+ 
+ import threading
+ import time
+ from concurrent.futures import ThreadPoolExecutor
+ 
+ from _lib import rng
+ 
+ META = {"topic": 54, "title": "ThreadPoolExecutor — fan out, keep the order",
+-        "tier": 3, "minutes": 12, "prereqs": []}
++        "tier": 3, "minutes": 12, "prereqs": [], "tags": ["concurrency"]}
+ 
+ 
+ def solve(work, items, workers):
+     """WHY: A morning report needs to ask 200 hosts for their status. Each ask
+     is mostly waiting on the network, about 200ms; done one after another
+     that is 40 seconds, done a few at once it is under a second. But the
+     report must list the rows in the same order as the host list, and you
+     must not fire all 200 at once because the network team set a limit. The
+     ask: run the checks a fixed number at a time and hand back the answers
+     in the original order.
+diff --git a/exercises/ex_055_concurrency.py b/exercises/ex_055_concurrency.py
+index 40e9976..afa8c0a 100644
+--- a/exercises/ex_055_concurrency.py
++++ b/exercises/ex_055_concurrency.py
+@@ -1,16 +1,20 @@
+ """Reaching for threads on CPU work is the wrong answer that ends a phone screen."""
++# READ FIRST:
++#   https://realpython.com/python-concurrency/  — threads vs processes vs asyncio, when each wins
++#   https://docs.python.org/3/library/concurrency.html
++#   TAKE-HOME: "why async here?"
+ 
+ from _lib import rng
+ 
+ META = {"topic": 55, "title": "threads vs processes vs async — pick one, say why",
+-        "tier": 3, "minutes": 8, "prereqs": []}
++        "tier": 3, "minutes": 8, "prereqs": [], "tags": ["concurrency", "rsample"]}
+ 
+ 
+ def solve(workloads):
+     """WHY: A colleague brings you a list of jobs they want to speed up: resize
+     8 images, call 40 APIs, poll 5000 sensors. Python has three ways to do
+     several things at once, and picking the wrong one makes a job no faster
+     or even slower. The team wants one simple rule written down so everyone
+     picks consistently: heavy calculation gets separate processes, a modest
+     number of network waits gets threads, a huge number of waits gets async.
+     Interviewers ask for this rule and the reasons behind it.
+diff --git a/exercises/ex_056_asyncio.py b/exercises/ex_056_asyncio.py
+index 61a7dab..eeefce5 100644
+--- a/exercises/ex_056_asyncio.py
++++ b/exercises/ex_056_asyncio.py
+@@ -1,19 +1,23 @@
+ """asyncio — run many waits at once instead of one after another."""
++# READ FIRST:
++#   https://realpython.com/async-io-python/  — THE asyncio walkthrough; read 'Async IO Explained' and 'The asyncio Package' before anything below
++#   https://docs.python.org/3/library/asyncio-task.html#asyncio.gather
++#   TAKE-HOME: `loadtest.py`, your concurrency test
+ 
+ import asyncio
+ import inspect
+ 
+ from _lib import rng
+ 
+ META = {"topic": 56, "title": "asyncio — gather, don't queue", "tier": 4,
+-        "minutes": 20, "prereqs": [55]}
++        "minutes": 20, "prereqs": [55], "tags": ["concurrency", "asyncio", "rsample"]}
+ 
+ 
+ def solve():
+     """WHY: A status page must fetch the state of a dozen services before it
+     can render. Each fetch is mostly waiting on the network. If the code
+     waits for service 1 to answer before it even asks service 2, the page
+     takes the sum of all the waits; asking everyone at once and then
+     collecting the answers takes only the slowest single wait. The team's
+     code is written in Python's async style, and you are asked to write the
+     "ask everyone at once, collect the answers in order" helper.
+diff --git a/exercises/ex_059_mock.py b/exercises/ex_059_mock.py
+index a9db347..37b9ca8 100644
+--- a/exercises/ex_059_mock.py
++++ b/exercises/ex_059_mock.py
+@@ -1,18 +1,22 @@
+ """Tests that hit the real webhook are slow, flaky, and occasionally page a colleague."""
++# READ FIRST:
++#   https://realpython.com/python-mock-library/  — swapping a real function for a fake inside a test
++#   https://docs.python.org/3/library/unittest.mock.html#unittest.mock.patch
++#   TAKE-HOME: `monkeypatch.setattr(...)`
+ 
+ from unittest.mock import patch
+ 
+ from _lib import rng
+ 
+ META = {"topic": 59, "title": "mocking — patch where it is used, then read the calls",
+-        "tier": 4, "minutes": 20, "prereqs": []}
++        "tier": 4, "minutes": 20, "prereqs": [], "tags": ["testing", "rsample"]}
+ 
+ 
+ def solve(version, host):
+     """WHY: The deploy script has a step that posts an alert to the company
+     chat when a deploy finishes. You need to test that step in CI, but a
+     test that really posts to chat is slow, needs real credentials, and
+     spams colleagues on every test run. Instead you temporarily swap the
+     real "send" function for a stand-in that just records what it was asked
+     to send, run the code, read the recording, and put the real function
+     back. Both functions live at the bottom of this file; you write the
+diff --git a/exercises/ex_060_responses_mocking.py b/exercises/ex_060_responses_mocking.py
+index b729b0d..87463c4 100644
+--- a/exercises/ex_060_responses_mocking.py
++++ b/exercises/ex_060_responses_mocking.py
+@@ -1,18 +1,18 @@
+ """A test that hits the real API is slow, flaky, and fails when someone else's cert expires."""
+ 
+ import requests
+ import responses
+ from _lib import rng
+ 
+ META = {"topic": 60, "title": "responses — mock the HTTP the code under test will make",
+-        "tier": 4, "minutes": 20, "prereqs": [48]}
++        "tier": 4, "minutes": 20, "prereqs": [48], "tags": ["testing", "requests"]}
+ 
+ 
+ def solve(rsps, spec):
+     """WHY: An inventory script (fetch_inventory, at the bottom of this file,
+     already written) talks to a hosts API: list the hosts, ask each one for
+     its CPU count, then post a report. To test it in CI without a real
+     server, you set up a fake server that answers exactly the requests the
+     script will make: the host list, one answer per host (some of them "404
+     gone"), and the report endpoint. The fake is strict: a request it was
+     not told about fails, and an answer you registered that the script never
+diff --git a/exercises/ex_061_whattotest.py b/exercises/ex_061_whattotest.py
+index 9d721d4..22a285a 100644
+--- a/exercises/ex_061_whattotest.py
++++ b/exercises/ex_061_whattotest.py
+@@ -1,16 +1,20 @@
+ """Coverage percentage is easy to game; knowing which lines deserve a test is the real skill."""
++# READ FIRST:
++#   https://martinfowler.com/bliki/TestPyramid.html  — many small unit tests, few big end-to-end ones
++#   https://realpython.com/pytest-python-testing/  — the pytest tutorial; 'Fixtures' and 'Marks' sections
++#   TAKE-HOME: Task 3 judgement
+ 
+ from _lib import rng
+ 
+ META = {"topic": 61, "title": "what to actually test in an ops script",
+-        "tier": 3, "minutes": 8, "prereqs": []}
++        "tier": 3, "minutes": 8, "prereqs": [], "tags": ["testing", "rsample"]}
+ 
+ 
+ def solve(units):
+     """WHY: Your team has a big ops script and a rule that "everything must
+     have tests". Writing a test for every single function wastes days and
+     produces brittle tests that break on every rename. The tech lead wants a
+     consistent triage: functions that make decisions get tests; thin
+     wrappers around a library call, plain config constants, and
+     straight-line glue code are skipped, unless the glue starts branching,
+     which makes it decision-making again. You encode that rule so the team
+diff --git a/exercises/ex_068_boto3basics.py b/exercises/ex_068_boto3basics.py
+index 592e308..d420b30 100644
+--- a/exercises/ex_068_boto3basics.py
++++ b/exercises/ex_068_boto3basics.py
+@@ -1,21 +1,21 @@
+ """Every AWS list call answers with one page; the rest of the account is on page two."""
+ 
+ import contextlib
+ import os
+ 
+ import boto3
+ from _lib import rng
+ from moto import mock_aws
+ 
+ META = {"topic": 68, "title": "boto3 — client vs resource, and paginators",
+-        "tier": 3, "minutes": 20, "prereqs": []}
++        "tier": 3, "minutes": 20, "prereqs": [], "tags": ["cloud", "boto3"]}
+ 
+ 
+ def solve(s3, bucket):
+     """WHY: Finance asks "how much is stored in the logs bucket, and what
+     exactly is in it?". AWS answers list requests one page at a time, about
+     a thousand entries per page, and only quietly notes that more exist. A
+     script that reads one page reports a fraction of the bucket, and nobody
+     notices until the bill disagrees with the report. You are asked for the
+     full list of object names and the total size, walking every page.
+ 
+diff --git a/exercises/ex_069_s3audit.py b/exercises/ex_069_s3audit.py
+index 7b70aad..e7038a5 100644
+--- a/exercises/ex_069_s3audit.py
++++ b/exercises/ex_069_s3audit.py
+@@ -4,21 +4,21 @@ import contextlib
+ import json
+ import os
+ 
+ import boto3
+ from _lib import rng
+ from botocore.exceptions import ClientError
+ from moto import mock_aws
+ 
+ META = {"topic": 69, "title": "boto3 task — audit S3 buckets for public access",
+         "tier": 4, "minutes": 25, "prereqs": [68],
+-        "practices": [30, 43, 68]}
++        "practices": [30, 43, 68], "tags": ["cloud", "boto3"]}
+ 
+ 
+ def solve(s3):
+     """WHY: A security review asks: "which of our storage buckets can anyone on
+     the internet read?" Data leaks usually come from a bucket that was never
+     meant to be public and that nobody checked. A bucket can be opened two
+     separate ways: an access-control list (ACL, a list of who may do what)
+     that grants everyone read, or an attached policy document that allows
+     everyone. Both must be checked on every bucket, because a script that
+     checks one and stops reports "all clear" on a bucket the world is
+diff --git a/exercises/ex_071_tagaudit.py b/exercises/ex_071_tagaudit.py
+index 7d411ff..43f2517 100644
+--- a/exercises/ex_071_tagaudit.py
++++ b/exercises/ex_071_tagaudit.py
+@@ -2,21 +2,21 @@
+ 
+ import contextlib
+ import os
+ 
+ import boto3
+ from _lib import rng
+ from moto import mock_aws
+ 
+ META = {"topic": 71, "title": "boto3 task — audit EC2 instances for missing tags",
+         "tier": 4, "minutes": 25, "prereqs": [68],
+-        "practices": [18, 20, 68]}
++        "practices": [18, 20, 68], "tags": ["cloud", "boto3"]}
+ 
+ 
+ def solve(ec2, required):
+     """WHY: Every server in the cloud account is supposed to carry labels
+     (tags) like Owner and CostCenter, so finance can bill the right team and
+     on-call knows who to wake. Servers launched without them are the ones
+     nobody can bill, page, or safely delete. The platform team asks for an
+     audit: for each mandatory label, which servers are missing it. A label
+     that is present but set to an empty value counts as missing, since
+     "Owner: " helps nobody.
+diff --git a/exercises/ex_070_ebscleanup.py b/exercises/ex_072_ebscleanup.py
+similarity index 99%
+rename from exercises/ex_070_ebscleanup.py
+rename to exercises/ex_072_ebscleanup.py
+index 59b5b4c..59fda79 100644
+--- a/exercises/ex_070_ebscleanup.py
++++ b/exercises/ex_072_ebscleanup.py
+@@ -7,21 +7,21 @@ holds the S3 public-access audit and these are two separate boto3 tasks.
+ 
+ import contextlib
+ import os
+ 
+ import boto3
+ from _lib import rng
+ from moto import mock_aws
+ 
+ META = {"topic": 72, "title": "boto3 task — find unattached EBS volumes",
+         "tier": 4, "minutes": 25, "prereqs": [68],
+-        "practices": [9, 28, 68]}
++        "practices": [9, 28, 68], "tags": ["cloud", "boto3"]}
+ 
+ 
+ def solve(ec2):
+     """WHY: The cloud bill keeps growing. One common cause is disk volumes
+     (EBS) that were once attached to servers that have since been deleted.
+     A detached volume still costs full price every month and shows up on no
+     dashboard. The finance lead asks for a report: which volumes are
+     attached to nothing, and how many gigabytes would be freed by removing
+     them. A report only; deleting is a separate, reviewed step.
+ 
+diff --git a/exercises/ex_073_p95.py b/exercises/ex_073_p95.py
+index e7141be..96262de 100644
+--- a/exercises/ex_073_p95.py
++++ b/exercises/ex_073_p95.py
+@@ -1,21 +1,21 @@
+ """Whole-task drill: the nginx log question, end to end.
+ 
+ Combines topics 19 (Counter), 22 (set), 28 (str), 34 (percentile).
+ Passing this cleanly pushes those components further out too.
+ """
+ 
+ from _lib import rng
+ 
+ META = {"topic": 73, "title": "DRILL: nginx log -> top IPs, status mix, p95",
+         "tier": 4, "minutes": 30, "prereqs": [19, 28],
+-        "practices": [19, 22, 28, 34]}
++        "practices": [19, 22, 28, 34], "tags": ["whole-task"]}
+ 
+ 
+ def solve(lines):
+     """WHY: The site was slow last night and the manager wants a quick read of
+     the web server's access log: which three visitors (IP addresses) made
+     the most requests, how the responses split between success and error
+     classes (2xx, 4xx, 5xx), and how slow the slowest requests were. That
+     last one is the "p95": the time that 95 percent of requests came in
+     under. This is the single most common hands-on question in DevOps
+     interviews.
+diff --git a/exercises/ex_074_biggest.py b/exercises/ex_074_biggest.py
+index 201dec9..8fa504f 100644
+--- a/exercises/ex_074_biggest.py
++++ b/exercises/ex_074_biggest.py
+@@ -1,20 +1,20 @@
+ """Whole-task drill: the disk is full and someone wants the top offenders now.
+ 
+ Combines topics 27 (pathlib), 9 (sort key), 40 (tempfile).
+ """
+ 
+ from _lib import rng
+ 
+ META = {"topic": 74, "title": "DRILL: N largest files under a directory tree",
+         "tier": 4, "minutes": 25, "prereqs": [27],
+-        "practices": [27, 9, 40]}
++        "practices": [27, 9, 40], "tags": ["whole-task"]}
+ 
+ 
+ def solve(root, n):
+     """WHY: A server's disk is almost full and the on-call engineer needs to
+     know, right now, which files are eating the space so they can delete or
+     move the biggest ones. "Show me the five largest files under /var" is
+     the question. A list sorted biggest-first is what they act on.
+ 
+     YOU GET: `root` — a folder path as text, like "/tmp/ex074_abc". The test
+     creates a small temporary folder tree with files of different sizes and
+diff --git a/exercises/ex_075_configdiff.py b/exercises/ex_075_configdiff.py
+index ad54032..5ae235d 100644
+--- a/exercises/ex_075_configdiff.py
++++ b/exercises/ex_075_configdiff.py
+@@ -1,20 +1,20 @@
+ """Whole-task drill: what changed between two configs, at any depth.
+ 
+ Combines topics 30 (nested dicts from JSON), 18 (dict lookups), 25 (copy).
+ """
+ 
+ from _lib import rng
+ 
+ META = {"topic": 75, "title": "DRILL: recursive diff of two nested configs",
+         "tier": 4, "minutes": 30, "prereqs": [18],
+-        "practices": [30, 18, 25]}
++        "practices": [30, 18, 25], "tags": ["whole-task"]}
+ 
+ 
+ def solve(old, new):
+     """WHY: The staging environment works and production does not. Both were
+     deployed from a config file, and someone on the platform team asks "what
+     exactly is different between the two?" Reading two long files side by
+     side by eye is slow and error-prone; a short list of added, removed and
+     changed settings is what they want.
+ 
+     YOU GET: `old` — a nested dictionary (a dictionary whose values can
+diff --git a/exercises/ex_076_pollhealth.py b/exercises/ex_076_pollhealth.py
+index 3754d8e..41f319b 100644
+--- a/exercises/ex_076_pollhealth.py
++++ b/exercises/ex_076_pollhealth.py
+@@ -1,20 +1,20 @@
+ """Whole-task drill: wait for the deploy to come up, or fail the pipeline.
+ 
+ Combines topics 46 (deadlines), 45 (backoff), 39 (exit codes).
+ """
+ 
+ from _lib import rng
+ 
+ META = {"topic": 76, "title": "DRILL: poll until healthy, back off, exit code",
+         "tier": 4, "minutes": 30, "prereqs": [46],
+-        "practices": [46, 45, 39]}
++        "practices": [46, 45, 39], "tags": ["whole-task"]}
+ 
+ 
+ def solve(check, now, sleep, timeout, interval, max_interval):
+     """WHY: A deploy pipeline has just pushed a new version of a service.
+     Before the pipeline moves to the next stage it has to wait until the
+     service says it is healthy. Waiting forever is not allowed, so there is
+     a time limit; checking every millisecond is wasteful, so the gaps
+     between checks grow. If the service never comes up, the pipeline has to
+     stop with a failure code so nobody ships on top of a broken release.
+ 
+diff --git a/exercises/ex_077_fanout.py b/exercises/ex_077_fanout.py
+index ae31a21..db45f88 100644
+--- a/exercises/ex_077_fanout.py
++++ b/exercises/ex_077_fanout.py
+@@ -1,20 +1,20 @@
+ """Whole-task drill: a batch of hosts, a thread pool, and the order kept.
+ 
+ Combines topics 32 (csv), 54 (ThreadPoolExecutor), 43 (except).
+ """
+ 
+ from _lib import rng
+ 
+ META = {"topic": 77, "title": "DRILL: CSV rows fanned out over a thread pool",
+         "tier": 4, "minutes": 30, "prereqs": [32],
+-        "practices": [32, 54, 43]}
++        "practices": [32, 54, 43], "tags": ["whole-task"]}
+ 
+ 
+ def solve(text, work, max_workers):
+     """WHY: An inventory file lists every host in a fleet, and the ops team
+     needs to run one slow network call against each of them, say to fetch
+     its CPU load. Done one at a time, two hundred hosts at two seconds each
+     is almost seven minutes. Done at the same time, it is seconds. The
+     report must still come back in the file's order so it lines up with the
+     inventory, and one unreachable host must not stop the rest.
+ 
+diff --git a/exercises/ex_078_tailalert.py b/exercises/ex_078_tailalert.py
+index 5e8273c..b903876 100644
+--- a/exercises/ex_078_tailalert.py
++++ b/exercises/ex_078_tailalert.py
+@@ -1,20 +1,20 @@
+ r"""Whole-task drill: watch a log that never ends and alert with context.
+ 
+ Combines topics 26 (line iteration), 29 (regex), 21 (deque).
+ """
+ 
+ from _lib import rng
+ 
+ META = {"topic": 78, "title": "DRILL: tail a growing log, alert with context",
+         "tier": 4, "minutes": 25, "prereqs": [21],
+-        "practices": [26, 29, 21]}
++        "practices": [26, 29, 21], "tags": ["whole-task"]}
+ 
+ 
+ def solve(stream, pattern, window):
+     r"""WHY: A service writes a log file that grows all day and never stops.
+     The on-call team wants to be paged every time an ERROR line shows up,
+     and the page must include the few lines just before it so they can see
+     what led up to the error. The log can be huge, so the tool must never
+     try to hold all of it in memory.
+ 
+     YOU GET: `stream` — a source of log lines you can only read one at a
+diff --git a/exercises/ex_079_deporder.py b/exercises/ex_079_deporder.py
+index 165b42a..3cdcb9d 100644
+--- a/exercises/ex_079_deporder.py
++++ b/exercises/ex_079_deporder.py
+@@ -1,20 +1,20 @@
+ """Whole-task drill: what order do these services start in, and is it even possible.
+ 
+ Combines topics 18 (dict lookups), 20 (defaultdict grouping), 22 (sets).
+ """
+ 
+ from _lib import rng
+ 
+ META = {"topic": 79, "title": "DRILL: start-up order, or the cycle that blocks it",
+         "tier": 4, "minutes": 35, "prereqs": [20],
+-        "practices": [18, 20, 22]}
++        "practices": [18, 20, 22], "tags": ["whole-task"]}
+ 
+ 
+ def solve(graph):
+     """WHY: A platform has many services, and some cannot start until others
+     are already running: the API needs the database, the cache needs the
+     database, and so on. After a full outage someone has to bring everything
+     back up in an order that works. If two services each wait for the other,
+     nothing can start at all, and the team needs to know that before they
+     try.
+ 
+diff --git a/exercises/ex_081_dirtylines.py b/exercises/ex_081_dirtylines.py
+index 8dacd73..95f5e03 100644
+--- a/exercises/ex_081_dirtylines.py
++++ b/exercises/ex_081_dirtylines.py
+@@ -1,16 +1,16 @@
+ """Interviewers feed you a log with junk in it on purpose; one bad line must not kill the run."""
+ 
+ from _lib import rng
+ 
+ META = {"topic": 81, "title": "defensive parsing — skip the junk, count it",
+-        "tier": 3, "minutes": 15, "prereqs": [43]}
++        "tier": 3, "minutes": 15, "prereqs": [43], "tags": ["errors"]}
+ 
+ LEVELS = {"DEBUG", "INFO", "WARN", "ERROR"}
+ 
+ 
+ def solve(lines):
+     """WHY: A log export from a customer has junk mixed in: blank lines,
+     lines cut short, a field that should be a number but says "N/A". Someone
+     in support wants the good records loaded so they can look at response
+     times. A script that crashes on the first bad line is useless; a script
+     that quietly throws lines away is worse, because nobody learns that 40%
+diff --git a/exercises/ex_082_toyscreen.py b/exercises/ex_082_toyscreen.py
+index c41f799..9285d64 100644
+--- a/exercises/ex_082_toyscreen.py
++++ b/exercises/ex_082_toyscreen.py
+@@ -1,20 +1,20 @@
+ """Whole-task drill: the three warm-ups that open half of all phone screens.
+ 
+ Combines topics 28 (str methods), 19 (Counter), 22 (sets and sorting).
+ """
+ 
+ from _lib import rng
+ 
+ META = {"topic": 82, "title": "DRILL: palindrome, anagram, top-N words",
+         "tier": 4, "minutes": 30, "prereqs": [19],
+-        "practices": [28, 19, 22]}
++        "practices": [28, 19, 22], "tags": ["whole-task"]}
+ 
+ 
+ def solve(phrase, pair, text, n):
+     """WHY: Many phone screens for ops roles open with two or three tiny
+     warm-up questions before the real work: is this phrase the same read
+     backwards, are these two words made of the same letters, what are the
+     most common words in this text. They are not about the job; they check
+     that you can state a rule clearly and then write it. Here all three are
+     bundled into one function so you can practise them together.
+ 
+diff --git a/exercises/ex_083_minigrep.py b/exercises/ex_083_minigrep.py
+index 89422cb..c02d8e5 100644
+--- a/exercises/ex_083_minigrep.py
++++ b/exercises/ex_083_minigrep.py
+@@ -1,20 +1,20 @@
+ r"""Whole-task drill: rebuild grep, flags and all.
+ 
+ Combines topics 29 (regex), 37 (argparse), 28 (str methods).
+ """
+ 
+ from _lib import rng
+ 
+ META = {"topic": 83, "title": "DRILL: mini-grep with argparse flags",
+         "tier": 4, "minutes": 25, "prereqs": [29],
+-        "practices": [29, 37, 28]}
++        "practices": [29, 37, 28], "tags": ["whole-task"]}
+ 
+ 
+ def solve(lines, argv):
+     """WHY: grep is the command-line tool every engineer uses to pull
+     matching lines out of a log. Interviewers ask you to rebuild a small
+     version of it because it combines two everyday skills: reading
+     command-line options the standard way, and searching lines for a
+     pattern. The ignore-case, invert and line-number options are the ones
+     people reach for most on a real shell.
+ 
+diff --git a/exercises/ex_084_healthfanout.py b/exercises/ex_084_healthfanout.py
+index 3f4695a..eaf6a1d 100644
+--- a/exercises/ex_084_healthfanout.py
++++ b/exercises/ex_084_healthfanout.py
+@@ -1,20 +1,20 @@
+ """Whole-task drill: health-check a fleet without waiting on it one host at a time.
+ 
+ Combines topics 43 (except), 46 (timeouts), 54 (ThreadPoolExecutor).
+ """
+ 
+ from _lib import rng
+ 
+ META = {"topic": 84, "title": "DRILL: health-check a URL list in parallel",
+         "tier": 4, "minutes": 25, "prereqs": [43],
+-        "practices": [43, 46, 54]}
++        "practices": [43, 46, 54], "tags": ["whole-task"]}
+ 
+ 
+ def solve(urls, get, timeout, max_workers):
+     """WHY: A company runs dozens of small services, each with a health
+     page. Every few minutes a monitor has to ask all of them "are you
+     alive?" and produce one verdict per service. Asked one at a time, a
+     single frozen host makes the whole round take minutes; asked all at once
+     with a time limit on each, it takes seconds. One dead host must not stop
+     the report for the others.
+ 
+diff --git a/exercises/ex_085_csvjoin.py b/exercises/ex_085_csvjoin.py
+index 16bbad7..55f532b 100644
+--- a/exercises/ex_085_csvjoin.py
++++ b/exercises/ex_085_csvjoin.py
+@@ -1,20 +1,20 @@
+ """Whole-task drill: two CSVs, one shared column, join and filter.
+ 
+ Combines topics 32 (csv), 18 (dict lookups), 20 (defaultdict grouping).
+ """
+ 
+ from _lib import rng
+ 
+ META = {"topic": 85, "title": "DRILL: inner-join two CSVs on a shared key",
+         "tier": 4, "minutes": 30, "prereqs": [32],
+-        "practices": [32, 18, 20]}
++        "practices": [32, 18, 20], "tags": ["whole-task"]}
+ 
+ 
+ def solve(services_csv, members_csv, min_cpu):
+     '''WHY: One spreadsheet lists services with the team that owns each and
+     its CPU allocation. Another lists which people are on which team. A
+     manager asks "for every service using at least 200 CPU, who do I
+     contact?" That means matching rows from the two files on the shared
+     "team" column, which is the single most common "write a quick script"
+     request in ops.
+ 
+diff --git a/exercises/ex_086_tokenbucket.py b/exercises/ex_086_tokenbucket.py
+index 02cbe2b..1c2851a 100644
+--- a/exercises/ex_086_tokenbucket.py
++++ b/exercises/ex_086_tokenbucket.py
+@@ -1,20 +1,20 @@
+ """Whole-task drill: a rate limiter you can reason about, with the clock as data.
+ 
+ Combines topics 14 (classes), 46 (clock handling), 47 (idempotency).
+ """
+ 
+ from _lib import rng
+ 
+ META = {"topic": 86, "title": "DRILL: token-bucket rate limiter with a fake clock",
+         "tier": 4, "minutes": 35, "prereqs": [],
+-        "practices": [14, 46, 47]}
++        "practices": [14, 46, 47], "tags": ["whole-task"]}
+ 
+ 
+ def solve(requests, capacity, rate, start):
+     """WHY: A public API gets more requests than it can handle, so it must
+     let a steady stream through and turn the rest away. The standard way is
+     a "token bucket": the bucket holds a few tokens, each accepted request
+     spends one, and tokens trickle back in over time. Clients also retry
+     requests that already went through, and a retry must not be charged
+     twice, or a flaky network eats a customer's whole allowance.
+ 
+diff --git a/exercises/ex_088_runnables.py b/exercises/ex_088_runnables.py
+index 2533b86..0c76862 100644
+--- a/exercises/ex_088_runnables.py
++++ b/exercises/ex_088_runnables.py
+@@ -1,17 +1,17 @@
+ """LCEL: `|` glues small steps into one thing you can call."""
+ 
+ from _lib import rng
+ from langchain_core.runnables import RunnableLambda, RunnableSequence
+ 
+ META = {"topic": 88, "title": "runnables — build a chain with |", "tier": 3,
+-        "minutes": 15, "prereqs": []}
++        "minutes": 15, "prereqs": [], "tags": ["llm", "langchain"]}
+ 
+ 
+ def solve():
+     """WHY: LangChain is a library for wiring steps together around an AI
+     model, and its core idea is that small steps get joined into one
+     pipeline with a single operator. Teams use it to build things like "read
+     a metric line, decide whether it is slow, write the report line". Each
+     step is small and can be swapped on its own, and the finished pipeline
+     can handle one item or a whole list with no extra code. Interviewers ask
+     for this to see that you understand the joining idea, not just one big
+diff --git a/exercises/ex_089_lcel_dict.py b/exercises/ex_089_lcel_dict.py
+index 44f69a7..6f07d49 100644
+--- a/exercises/ex_089_lcel_dict.py
++++ b/exercises/ex_089_lcel_dict.py
+@@ -1,17 +1,17 @@
+ """The dict-of-runnables shape: one input fans out into several named fields."""
+ 
+ from _lib import rng
+ from langchain_core.runnables import Runnable, RunnableLambda, RunnablePassthrough
+ 
+ META = {"topic": 89, "title": "LCEL — a dict of runnables fans one input out",
+-        "tier": 4, "minutes": 20, "prereqs": [88]}
++        "tier": 4, "minutes": 20, "prereqs": [88], "tags": ["llm", "langchain"]}
+ 
+ 
+ def solve(retrieve, render):
+     """WHY: LangChain is a library for wiring steps together around an AI
+     model. A common pattern at companies is "answer a question using our own
+     documents": the question goes in, related documents are looked up, and
+     both the question and the documents are handed to a template that writes
+     the final text. So one input has to reach several steps at once, and
+     their results have to be collected under names. This exercise builds
+     exactly that fan-out.
+diff --git a/exercises/ex_090_streaming.py b/exercises/ex_090_streaming.py
+index aea3a58..66d9338 100644
+--- a/exercises/ex_090_streaming.py
++++ b/exercises/ex_090_streaming.py
+@@ -1,17 +1,17 @@
+ """Streaming: tokens arrive one at a time, and you are allowed to stop pulling."""
+ 
+ from _lib import rng
+ from langchain_core.runnables import RunnableGenerator
+ 
+ META = {"topic": 90, "title": "streaming — accumulate tokens, stop at a sentinel",
+-        "tier": 3, "minutes": 15, "prereqs": [11]}
++        "tier": 3, "minutes": 15, "prereqs": [11], "tags": ["llm", "langchain"]}
+ 
+ 
+ def solve(model, prompt, sentinel):
+     """WHY: LangChain is a library for wiring steps together around an AI
+     model. When a chat assistant answers, the text arrives in small pieces
+     (tokens) one after another, not as one finished block; that is why you
+     see an answer "typing itself out". A company paying per token wants to
+     stop reading the moment a special end marker appears, because every
+     piece you never pull is one you never wait for or pay for.
+ 
+diff --git a/exercises/ex_091_parallel_llm.py b/exercises/ex_091_parallel_llm.py
+index ee3d8e2..a7a66ef 100644
+--- a/exercises/ex_091_parallel_llm.py
++++ b/exercises/ex_091_parallel_llm.py
+@@ -1,20 +1,20 @@
+ """Fan out N model calls at once, keep the order, cap what each one may cost you."""
+ 
+ import asyncio
+ import inspect
+ 
+ from _lib import rng
+ from langchain_core.runnables import RunnableLambda
+ 
+ META = {"topic": 91, "title": "parallel LLM calls — gather with a per-call timeout",
+-        "tier": 4, "minutes": 22, "prereqs": [56]}
++        "tier": 4, "minutes": 22, "prereqs": [56], "tags": ["llm", "asyncio", "langchain"]}
+ 
+ 
+ def solve():
+     """WHY: LangChain is a library for wiring steps together around an AI
+     model. A support team wants ten customer tickets summarised by an AI
+     model. Sent one after another, each waits for the previous one to
+     finish; sent all at once they take about as long as the slowest single
+     one. But any single call can hang, so each needs its own time limit, and
+     a call that runs out of time must just be marked as such without
+     spoiling the other answers.
+diff --git a/exercises/ex_092_llm_retry.py b/exercises/ex_092_llm_retry.py
+index 2dcfc49..21127e3 100644
+--- a/exercises/ex_092_llm_retry.py
++++ b/exercises/ex_092_llm_retry.py
+@@ -1,17 +1,17 @@
+ """Retry the failures that clear on their own — and only those."""
+ 
+ from _lib import rng
+ from langchain_core.runnables import RunnableLambda
+ 
+ META = {"topic": 92, "title": "LLM retry — back off on rate limits, fail fast on bad requests",
+-        "tier": 4, "minutes": 20, "prereqs": [45]}
++        "tier": 4, "minutes": 20, "prereqs": [45], "tags": ["llm", "langchain"]}
+ 
+ 
+ class RateLimited(Exception):
+     """The provider said 429. The identical call will work later."""
+ 
+ 
+ class BadRequest(Exception):
+     """The provider said 400. The identical call will never work."""
+ 
+ 
+diff --git a/exercises/ex_093_message_dig.py b/exercises/ex_093_message_dig.py
+index e4d33aa..c38badb 100644
+--- a/exercises/ex_093_message_dig.py
++++ b/exercises/ex_093_message_dig.py
+@@ -2,21 +2,21 @@
+ 
+ Combines topics 30 (nested JSON), 43 (except), 75 (walking nested dicts).
+ """
+ 
+ import json
+ 
+ from _lib import rng
+ 
+ META = {"topic": 93, "title": "DRILL: dig tool calls out of a model response",
+         "tier": 4, "minutes": 20, "prereqs": [30],
+-        "practices": [30, 43, 75]}
++        "practices": [30, 43, 75], "tags": ["llm"]}
+ 
+ 
+ def solve(payload):
+     """WHY: A company pipeline sends a question to an AI chat service and
+     gets back a nested answer record. Sometimes the answer is text;
+     sometimes the model asks for a tool to be run instead and the text field
+     is empty; sometimes the token-usage section is missing because the
+     request was cut short. A script that assumes every field is always there
+     crashes at 3am. Someone needs a function that pulls the useful facts out
+     of any of these shapes without crashing.
+diff --git a/rsample_drill/ex_09_await_under_lock.py b/exercises/ex_094_await_under_lock.py
+similarity index 96%
+rename from rsample_drill/ex_09_await_under_lock.py
+rename to exercises/ex_094_await_under_lock.py
+index b024179..6c3b385 100644
+--- a/rsample_drill/ex_09_await_under_lock.py
++++ b/exercises/ex_094_await_under_lock.py
+@@ -1,27 +1,28 @@
+ """Take-home Task 1 — do the slow wait BEFORE you borrow the connection."""
+ # READ FIRST:
+ #   https://realpython.com/async-io-python/  — 'Async IO Explained': an `await` is a place where
+ #       this request pauses and lets OTHER requests run. Nothing else matters as much as that sentence.
+ #   https://magicstack.github.io/asyncpg/current/usage.html#connection-pools  — the real pool you used:
+ #       a fixed number of database connections, handed out one per `async with pool.acquire()`
+ #   https://docs.python.org/3/library/asyncio-sync.html#asyncio.Semaphore  — the test's fake pool is
+ #       just this: a counter of free slots
+ #   https://docs.python.org/3/reference/compound_stmts.html#the-async-with-statement
++#   TAKE-HOME: `embed_query` outside `pool.acquire()`
+ 
+ import asyncio
+ import inspect
+ 
+ from _lib import rng
+ 
+-META = {"topic": 9, "title": "take-home Task 1 — embed before you borrow", "tier": 4,
+-        "minutes": 20, "prereqs": []}
++META = {"topic": 94, "title": "take-home Task 1 — embed before you borrow", "tier": 4,
++        "minutes": 20, "prereqs": [56], "tags": ["concurrency", "asyncio", "rsample"]}
+ 
+ 
+ def solve():
+     """WHY: This is the bug you fixed in the take-home, rebuilt small. The
+     `/search` endpoint borrowed a database connection from a pool of 5, and
+     THEN waited 80 ms for the embedding API while still holding it. Under
+     200 concurrent requests only 5 could be "inside" at a time, so the 80 ms
+     waits ran five at a time instead of all at once: 40 rounds x 80 ms is
+     over 3 seconds of pure queueing. The connection did nothing during that
+     wait. Moving the embedding call before the borrow lets all 200 waits
+diff --git a/rsample_drill/ex_10_semaphore.py b/exercises/ex_095_semaphore.py
+similarity index 95%
+rename from rsample_drill/ex_10_semaphore.py
+rename to exercises/ex_095_semaphore.py
+index 483047c..6156741 100644
+--- a/rsample_drill/ex_10_semaphore.py
++++ b/exercises/ex_095_semaphore.py
+@@ -1,24 +1,25 @@
+ """asyncio.Semaphore — run many jobs at once, but never more than N at a time."""
+ # READ FIRST:
+ #   https://superfastpython.com/asyncio-semaphore/  — what a semaphore is, with runnable examples;
+ #       read up to 'Example of Using an Asyncio Semaphore'
+ #   https://docs.python.org/3/library/asyncio-sync.html#asyncio.Semaphore  — the 6-line reference
+ #   https://docs.python.org/3/library/asyncio-task.html#asyncio.gather  — start everything, collect in order
++#   TAKE-HOME: why `FakePool` is a `Semaphore(max_size)`
+ 
+ import asyncio
+ import inspect
+ 
+ from _lib import rng
+ 
+-META = {"topic": 10, "title": "semaphore — at most N in flight", "tier": 4,
+-        "minutes": 20, "prereqs": []}
++META = {"topic": 95, "title": "semaphore — at most N in flight", "tier": 4,
++        "minutes": 20, "prereqs": [56], "tags": ["concurrency", "asyncio", "rsample"]}
+ 
+ 
+ def solve():
+     """WHY: A connection pool is exactly this idea: N slots, and the (N+1)th
+     caller waits until someone gives one back. Your take-home test built a
+     FakePool with `asyncio.Semaphore(max_size)` for that reason — to imitate
+     a pool of 2 without a database. The same tool is what you reach for when
+     a vendor API says "no more than 5 requests at a time" or when 500 hosts
+     must be pinged without opening 500 sockets.
+ 
+diff --git a/rsample_drill/ex_11_async_cm.py b/exercises/ex_096_async_cm.py
+similarity index 96%
+rename from rsample_drill/ex_11_async_cm.py
+rename to exercises/ex_096_async_cm.py
+index 0a8a4f6..592afcd 100644
+--- a/rsample_drill/ex_11_async_cm.py
++++ b/exercises/ex_096_async_cm.py
+@@ -1,26 +1,27 @@
+ """Build the FakePool yourself — an async context manager around a semaphore."""
+ # READ FIRST:
+ #   https://realpython.com/python-with-statement/  — section 'Using the async with Statement' and
+ #       'Creating Custom Context Managers' (__enter__/__exit__ first, then the async twins)
+ #   https://docs.python.org/3/reference/datamodel.html#asynchronous-context-managers  — the two
+ #       methods Python calls: __aenter__ on the way in, __aexit__ on the way out (ALWAYS, even on error)
+ #   https://docs.python.org/3/library/contextlib.html#contextlib.asynccontextmanager  — the shorter
+ #       way: one async generator with a single `yield`
++#   TAKE-HOME: your `tests/test_search.py`
+ 
+ import asyncio
+ import inspect
+ 
+ from _lib import rng
+ 
+-META = {"topic": 11, "title": "async context manager — your own FakePool", "tier": 4,
+-        "minutes": 25, "prereqs": []}
++META = {"topic": 96, "title": "async context manager — your own FakePool", "tier": 4,
++        "minutes": 25, "prereqs": [13, 56], "tags": ["concurrency", "asyncio", "rsample"]}
+ 
+ 
+ def solve():
+     """WHY: In the take-home tests you could not use a real Postgres. You
+     wrote a FakePool class so that `async with pool.acquire() as conn:` in
+     the endpoint kept working unchanged, but behind it was a Semaphore and
+     a canned list of rows. An interviewer will point at `__aenter__` and
+     `__aexit__` and ask what they are and why the slot is given back even
+     when the body raises. This drill makes you build it from nothing.
+ 
+diff --git a/rsample_drill/ex_12_lazy_init_lock.py b/exercises/ex_097_lazy_init_lock.py
+similarity index 95%
+rename from rsample_drill/ex_12_lazy_init_lock.py
+rename to exercises/ex_097_lazy_init_lock.py
+index 5120925..b7e171c 100644
+--- a/rsample_drill/ex_12_lazy_init_lock.py
++++ b/exercises/ex_097_lazy_init_lock.py
+@@ -1,26 +1,27 @@
+ """app/db.py explained — create the pool once, even when 50 requests arrive together."""
+ # READ FIRST:
+ #   https://docs.python.org/3/library/asyncio-sync.html#asyncio.Lock  — one holder at a time;
+ #       `async with lock:` is the whole API you need
+ #   https://en.wikipedia.org/wiki/Double-checked_locking  — read only 'Motivation and original
+ #       pattern': check, lock, check again. (Ignore the Java memory-model parts.)
+ #   https://realpython.com/async-io-python/  — 'Async IO Explained': why an `await` is a gap where
+ #       another request can sneak in between your `if` and your assignment
++#   TAKE-HOME: `app/db.py` (given — you must explain it)
+ 
+ import asyncio
+ import inspect
+ 
+ from _lib import rng
+ 
+-META = {"topic": 12, "title": "lazy init under a lock — why db.py has asyncio.Lock", "tier": 4,
+-        "minutes": 20, "prereqs": []}
++META = {"topic": 97, "title": "lazy init under a lock — why db.py has asyncio.Lock", "tier": 4,
++        "minutes": 20, "prereqs": [56, 95], "tags": ["concurrency", "asyncio", "rsample"]}
+ 
+ 
+ def solve():
+     """WHY: The take-home's `app/db.py` created the connection pool lazily —
+     on the first request, not at import — and guarded that creation with an
+     `asyncio.Lock`. You did not write that file, but you shipped it, and an
+     interviewer will ask "why is the lock there, and why is `_pool is None`
+     checked twice?" The answer: `await create_pool()` pauses. In that pause
+     the other 49 first-arrivers each see `_pool is None` too and each create
+     their own pool — 50 pools, 250 connections, on a server allowed 100.
+diff --git a/rsample_drill/ex_14_fixtures.py b/exercises/ex_098_fixtures.py
+similarity index 96%
+rename from rsample_drill/ex_14_fixtures.py
+rename to exercises/ex_098_fixtures.py
+index 3e8e23c..c20c9d9 100644
+--- a/rsample_drill/ex_14_fixtures.py
++++ b/exercises/ex_098_fixtures.py
+@@ -1,27 +1,28 @@
+ """pytest fixtures + monkeypatch — the setup/teardown you copy-pasted six times."""
+ # READ FIRST:
+ #   https://realpython.com/pytest-python-testing/  — section 'Fixtures: Managing State and Dependencies'
+ #   https://docs.pytest.org/en/stable/how-to/fixtures.html  — read 'What fixtures are', then
+ #       'Factories as fixtures' (a fixture that RETURNS A FUNCTION — exactly what you build here)
+ #   https://docs.pytest.org/en/stable/how-to/monkeypatch.html  — setattr a fake in, and pytest
+ #       puts the real thing back after the test, automatically
+ #   https://docs.pytest.org/en/stable/how-to/fixtures.html#teardown-cleanup-aka-fixture-finalization
++#   TAKE-HOME: what the README asked and you skipped
+ 
+ import asyncio
+ import sys
+ 
+ import pytest
+ from _lib import rng
+ 
+-META = {"topic": 14, "title": "fixtures — one setup, automatic restore", "tier": 4,
+-        "minutes": 25, "prereqs": []}
++META = {"topic": 98, "title": "fixtures — one setup, automatic restore", "tier": 4,
++        "minutes": 25, "prereqs": [59], "tags": ["testing", "asyncio", "rsample"]}
+ 
+ 
+ # ── the "app" under test: a tiny copy of the take-home's main.py ─────────
+ # You do not edit anything in this block. Your fixture swaps the two
+ # module-level names `embed_query` and `get_pool` for fakes.
+ 
+ async def embed_query(text):
+     """The real one: slow network call. Tests must never reach it."""
+     await asyncio.sleep(5)
+     return [0.0] * 16
+diff --git a/rsample_drill/ex_15_asgi_test.py b/exercises/ex_099_asgi_test.py
+similarity index 95%
+rename from rsample_drill/ex_15_asgi_test.py
+rename to exercises/ex_099_asgi_test.py
+index 31abb5f..db0693c 100644
+--- a/rsample_drill/ex_15_asgi_test.py
++++ b/exercises/ex_099_asgi_test.py
+@@ -1,28 +1,29 @@
+ """Test a FastAPI endpoint with no server running — httpx.ASGITransport."""
+ # READ FIRST:
+ #   https://fastapi.tiangolo.com/tutorial/testing/  — the basic idea: call the app from a test
+ #   https://fastapi.tiangolo.com/advanced/async-tests/  — the exact pattern you used:
+ #       AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
+ #   https://www.python-httpx.org/advanced/transports/  — section 'ASGITransport': the client talks
+ #       to the app object in-process; no port, no socket, no uvicorn
+ #   https://fastapi.tiangolo.com/tutorial/query-params/  — why `q` is required and what 422 means
++#   TAKE-HOME: `httpx.ASGITransport(app=app)`
+ 
+ import asyncio
+ import inspect
+ 
+ import httpx
+ from _lib import rng
+ from fastapi import FastAPI
+ 
+-META = {"topic": 15, "title": "ASGITransport — hit the endpoint without a server", "tier": 4,
+-        "minutes": 20, "prereqs": []}
++META = {"topic": 99, "title": "ASGITransport — hit the endpoint without a server", "tier": 4,
++        "minutes": 20, "prereqs": [98], "tags": ["testing", "asyncio", "fastapi", "rsample"]}
+ 
+ 
+ # ── the app under test (do not edit) ────────────────────────────────────
+ _ROWS = []          # the test fills this before each call
+ 
+ app = FastAPI()
+ 
+ 
+ @app.get("/search")
+ async def search(q: str):
+diff --git a/rsample_drill/ex_16_rerank.py b/exercises/ex_100_rerank.py
+similarity index 96%
+rename from rsample_drill/ex_16_rerank.py
+rename to exercises/ex_100_rerank.py
+index 98dfba2..2cfefce 100644
+--- a/rsample_drill/ex_16_rerank.py
++++ b/exercises/ex_100_rerank.py
+@@ -1,26 +1,27 @@
+ """Take-home Task 2 — retrieve wide, then rerank: fraction-of-query-words score, stable top-k."""
+ # READ FIRST:
+ #   https://www.pinecone.io/learn/series/rag/rerankers/  — read the first half: why a cheap wide
+ #       first stage + an expensive narrow second stage beats either alone
+ #   https://en.wikipedia.org/wiki/Precision_and_recall  — just the intro: recall = "did we fetch all
+ #       the relevant ones", precision = "is what we show actually relevant"
+ #   https://docs.python.org/3/howto/sorting.html  — key=, reverse=True, and 'Sort Stability':
+ #       equal scores keep their incoming order, which is how ties stay in vector order
+ #   https://docs.python.org/3/library/stdtypes.html#set  — `&` gives the words in both sets
++#   TAKE-HOME: Task 2 + the "fraction, not count" upgrade
+ 
+ import re
+ 
+ from _lib import rng
+ 
+-META = {"topic": 16, "title": "take-home Task 2 — rerank the candidate pool", "tier": 3,
+-        "minutes": 20, "prereqs": []}
++META = {"topic": 100, "title": "take-home Task 2 — rerank the candidate pool", "tier": 3,
++        "minutes": 20, "prereqs": [9, 22, 29], "tags": ["whole-task", "rsample"]}
+ 
+ 
+ def solve(query, rows, k):
+     """WHY: Vector search returned the 5 geometrically nearest chunks, and
+     they were often not the 5 best answers — two chunks can sit close in
+     embedding space while only one actually contains the words the user
+     typed. The fix was two stages: ask the database for 20 (cheap, wide,
+     recall) and re-score those 20 against the query with a second function
+     (narrow, precision), keeping the top 5. Your submission scored by raw
+     count of overlapping words; here you use the FRACTION of the query's
+diff --git a/rsample_drill/ex_18_explain_takehome.py b/exercises/ex_101_explain_takehome.py
+similarity index 97%
+rename from rsample_drill/ex_18_explain_takehome.py
+rename to exercises/ex_101_explain_takehome.py
+index 5e88cb4..5e91a3c 100644
+--- a/rsample_drill/ex_18_explain_takehome.py
++++ b/exercises/ex_101_explain_takehome.py
+@@ -1,25 +1,26 @@
+ """The interview itself — ten questions a reviewer will ask about your take-home."""
+ # READ FIRST (these are the ones the questions come from — re-read, then answer from memory):
+ #   https://realpython.com/async-io-python/  — 'Async IO Explained'
+ #   https://magicstack.github.io/asyncpg/current/usage.html#connection-pools
+ #   https://docs.python.org/3/library/asyncio-sync.html  — Lock and Semaphore
+ #   https://docs.python.org/3/reference/datamodel.html#asynchronous-context-managers
+ #   https://docs.pytest.org/en/stable/how-to/fixtures.html
+ #   https://fastapi.tiangolo.com/advanced/async-tests/
+ #   https://www.pinecone.io/learn/series/rag/rerankers/
+ #   https://en.wikipedia.org/wiki/Precision_and_recall
++#   TAKE-HOME: the interview
+ 
+ from _lib import rng
+ 
+-META = {"topic": 18, "title": "explain the take-home — ten interview questions", "tier": 4,
+-        "minutes": 15, "prereqs": []}
++META = {"topic": 101, "title": "explain the take-home — ten interview questions", "tier": 4,
++        "minutes": 15, "prereqs": [94, 100], "tags": ["whole-task", "rsample"]}
+ 
+ 
+ def solve():
+     """WHY: You submitted this code. The reviewer's job is to find out
+     whether you understand it, and the README said submissions that look
+     AI-written are disqualified. Every question below is one they can ask
+     while pointing at a line of your diff. Pick the answer you would say
+     out loud. No code to write — the test is whether your mental model is
+     right.
+ 
+diff --git a/progress.json b/progress.json
+new file mode 100644
+index 0000000..87b3369
+--- /dev/null
++++ b/progress.json
+@@ -0,0 +1,61 @@
++{
++ "focus": null,
++ "cards": {
++  "ex_009_sortkey": {
++   "box": 0,
++   "due": "2026-08-23",
++   "seen": 1
++  },
++  "ex_022_sets": {
++   "box": 0,
++   "due": "2026-08-23",
++   "seen": 1
++  }
++ },
++ "open": {
++  "ex_016_typehints": {
++   "seed": 4357,
++   "attempts": 0,
++   "hints": 0,
++   "new": true,
++   "started": "2026-08-25T04:01:07.781830",
++   "last": "2026-08-25T04:01:07.781830",
++   "active": 0,
++   "solution_shown": false
++  }
++ },
++ "log": [
++  {
++   "date": "2026-08-21",
++   "slug": "ex_009_sortkey",
++   "grade": "struggled",
++   "attempts": 3,
++   "secs": 893,
++   "new": true
++  },
++  {
++   "date": "2026-08-21",
++   "slug": "ex_022_sets",
++   "grade": "struggled",
++   "attempts": 3,
++   "secs": 1372,
++   "new": true
++  }
++ ],
++ "archive": {
++  "ex_009_sortkey": [
++   {
++    "date": "2026-08-21",
++    "grade": "struggled",
++    "code": "def solve(services: list):\n    services = sorted(services, reverse=True, key=lambda age: age[1])\n    print(services)\n\n    return services"
++   }
++  ],
++  "ex_022_sets": [
++   {
++    "date": "2026-08-21",
++    "grade": "struggled",
++    "code": "def solve(scores: list):\n    real_val = set(scores)\n    real_val = sorted(real_val, reverse=True)[1]\n    print(real_val)\n    return real_val"
++   }
++  ]
++ }
++}
+\ No newline at end of file
+diff --git a/pyproject.toml b/pyproject.toml
+index 83320fe..5d3ba53 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -13,18 +13,23 @@ dev = [
+     "httpx>=0.28.1",
+     "ipykernel>=7.3.0",
+     "langchain-core>=1.5.4",
+     "moto>=5.2.2",
+     "pytest>=9.1.1",
+     "pytest-timeout>=2.4.0",
+     "pytest-watcher>=0.6.3",
+     "requests>=2.34.2",
+     "responses>=0.26.2",
+     "ruff>=0.16.2",
++    "uvicorn>=0.52.4",
+ ]
+ 
++[tool.ruff]
++extend-exclude = ["drafts"]          # scratch files, not part of the drill set
++
+ [tool.ruff.lint.per-file-ignores]
+ "study.py" = ["DTZ"]  # local wall-clock dates are intended for scheduling
++"exercises/*" = ["E402", "F841"]  # the region is the learner's: mid-file imports, half-used names
+ 
+ [tool.pytest.ini_options]
+ python_files = ["ex_*.py", "test_*.py"]
+-testpaths = ["exercises", "rsample_drill"]
++testpaths = ["exercises", "test_study.py"]
+diff --git a/test_study.py b/test_study.py
+index 1286776..e7a73c4 100644
+--- a/test_study.py
++++ b/test_study.py
+@@ -46,21 +46,24 @@ def _st(**kw):
+ 
+ # ------------------------------------------------------------ region: all files
+ def test_splice_puts_every_file_back_exactly():
+     assert len(FILES) >= 79
+     for f in FILES:
+         src = f.read_text()
+         assert study.splice(src, study.cut(src).body) == src, f.name
+ 
+ 
+ def test_stub_is_identity_on_pristine_files():
++    drafts = set(study.load()["open"])           # an open attempt means the file holds live work
+     for f in FILES:
++        if f.stem in drafts:
++            continue
+         body = study.cut(f.read_text()).body
+         assert study.stub(body) == body, f.name
+ 
+ 
+ def test_spec_survives_the_round_trip_on_every_file():
+     for f in FILES:
+         body, editor, spec_src = _parts(f.read_text())
+         assert ast.get_docstring(study._solve(ast.parse(editor))) is None, f.name
+         assert study.merge_spec(editor, spec_src) == body, f.name
+ 
+diff --git a/uv.lock b/uv.lock
+index 93a2d3f..cccc8a8 100644
+--- a/uv.lock
++++ b/uv.lock
+@@ -268,20 +268,32 @@ wheels = [
+     { url = "https://files.pythonhosted.org/packages/01/68/40613182366d00bd6dbd5f6c84a926cbd120960e038a8269e9ae7d782762/charset_normalizer-3.5.0-cp37-abi3-musllinux_1_2_ppc64le.whl", hash = "sha256:2080aa129a28267984cdc902898993d788c995c384e285d0d19199f56760d52e", size = 259674, upload-time = "2026-08-12T14:34:57.815Z" },
+     { url = "https://files.pythonhosted.org/packages/0a/53/4574a14fa4c9de4a6c9f31725354bfa40b67f653e6d594ce1654f9a41b32/charset_normalizer-3.5.0-cp37-abi3-musllinux_1_2_riscv64.whl", hash = "sha256:fd68c825548a611158230e2f9222e210ceb2e3391995c0aa5865cbdf3ab4bd49", size = 246122, upload-time = "2026-08-12T14:34:59.337Z" },
+     { url = "https://files.pythonhosted.org/packages/5a/02/bd8030d13d92c058ca7b2b9615bbb3169569e144db64d65c149cd45abf5e/charset_normalizer-3.5.0-cp37-abi3-musllinux_1_2_s390x.whl", hash = "sha256:d8a9316f4da85e937242642b537c6d55d7e9287dd38e5634732f8233932aff45", size = 255221, upload-time = "2026-08-12T14:35:00.71Z" },
+     { url = "https://files.pythonhosted.org/packages/77/9d/10ecd3bcbe2666b3d4d4026c97b48f73990682815db516052a1e8f4a31c5/charset_normalizer-3.5.0-cp37-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:d90254c8f609338c53ec180fcd4c4f9c16502e238e3fc88ca7fd4c2f38d445b8", size = 253450, upload-time = "2026-08-12T14:35:02.217Z" },
+     { url = "https://files.pythonhosted.org/packages/e4/0f/d044c4872c0938a84f87b5027a698c0e61bacfc5c3551a4e749ca9b7bc5c/charset_normalizer-3.5.0-cp37-abi3-win32.whl", hash = "sha256:8b3e9e29b8b07cc461b9ce7768db7693a93979d0dadf22046f6f3555ded2f516", size = 173594, upload-time = "2026-08-12T14:35:03.845Z" },
+     { url = "https://files.pythonhosted.org/packages/10/6b/6046773901f1944b9a89436351529811ee958afc7b774563be9d74a6f0c3/charset_normalizer-3.5.0-cp37-abi3-win_amd64.whl", hash = "sha256:0c8953d9d1617794cfc40d81179571c9ba3805dd029623a15c93f1fb70e60a74", size = 198959, upload-time = "2026-08-12T14:35:05.187Z" },
+     { url = "https://files.pythonhosted.org/packages/ab/a6/b57708ac92aefc8e8389d51d5178129b81f03196da61ee2c23e687b8178a/charset_normalizer-3.5.0-cp37-abi3-win_arm64.whl", hash = "sha256:562d24ca7797c1af8852994950c2e623a907b201fc4b0ed29e92af173d3828ca", size = 267055, upload-time = "2026-08-12T14:35:06.533Z" },
+     { url = "https://files.pythonhosted.org/packages/22/c7/754d09943a616937df61e4ba367c409ded2a987e872972098d51a6fcf73b/charset_normalizer-3.5.0-py3-none-any.whl", hash = "sha256:993dfcbe75a85a3784abb5084f2c41b915767c90546fcc92803cffa28611baea", size = 67943, upload-time = "2026-08-12T14:35:30.363Z" },
+ ]
+ 
++[[package]]
++name = "click"
++version = "8.4.2"
++source = { registry = "https://pypi.org/simple" }
++dependencies = [
++    { name = "colorama", marker = "sys_platform == 'win32'" },
++]
++sdist = { url = "https://files.pythonhosted.org/packages/76/d4/81420972a676e8ffea40450d8c8c92943e7218a78fe9b64359836cc9876b/click-8.4.2.tar.gz", hash = "sha256:9a6cea6e60b17ebe0a44c5cc636d94f09bd66142c1cd7d8b4cd731c4917a15f6", size = 338000, upload-time = "2026-06-24T17:45:15.148Z" }
++wheels = [
++    { url = "https://files.pythonhosted.org/packages/fb/e2/79c688af8b210d232694e31e59da9f6ec747bae31c3f5946e4e9b98860d5/click-8.4.2-py3-none-any.whl", hash = "sha256:e6f9f66136c816745b9d65817da91d61d957fb16e02e4dcd0552553c5a197b76", size = 119243, upload-time = "2026-06-24T17:45:13.73Z" },
++]
++
+ [[package]]
+ name = "colorama"
+ version = "0.4.6"
+ source = { registry = "https://pypi.org/simple" }
+ sdist = { url = "https://files.pythonhosted.org/packages/d8/53/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44", size = 27697, upload-time = "2022-10-25T02:36:22.414Z" }
+ wheels = [
+     { url = "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6", size = 25335, upload-time = "2022-10-25T02:36:20.889Z" },
+ ]
+ 
+ [[package]]
+@@ -1224,38 +1236,40 @@ dev = [
+     { name = "httpx" },
+     { name = "ipykernel" },
+     { name = "langchain-core" },
+     { name = "moto" },
+     { name = "pytest" },
+     { name = "pytest-timeout" },
+     { name = "pytest-watcher" },
+     { name = "requests" },
+     { name = "responses" },
+     { name = "ruff" },
++    { name = "uvicorn" },
+ ]
+ 
+ [package.metadata]
+ 
+ [package.metadata.requires-dev]
+ dev = [
+     { name = "boto3", specifier = ">=1.43.69" },
+     { name = "fastapi", specifier = ">=0.141.1" },
+     { name = "httpx", specifier = ">=0.28.1" },
+     { name = "ipykernel", specifier = ">=7.3.0" },
+     { name = "langchain-core", specifier = ">=1.5.4" },
+     { name = "moto", specifier = ">=5.2.2" },
+     { name = "pytest", specifier = ">=9.1.1" },
+     { name = "pytest-timeout", specifier = ">=2.4.0" },
+     { name = "pytest-watcher", specifier = ">=0.6.3" },
+     { name = "requests", specifier = ">=2.34.2" },
+     { name = "responses", specifier = ">=0.26.2" },
+     { name = "ruff", specifier = ">=0.16.2" },
++    { name = "uvicorn", specifier = ">=0.52.4" },
+ ]
+ 
+ [[package]]
+ name = "tenacity"
+ version = "9.1.4"
+ source = { registry = "https://pypi.org/simple" }
+ sdist = { url = "https://files.pythonhosted.org/packages/47/c6/ee486fd809e357697ee8a44d3d69222b344920433d3b6666ccd9b374630c/tenacity-9.1.4.tar.gz", hash = "sha256:adb31d4c263f2bd041081ab33b498309a57c77f9acf2db65aadf0898179cf93a", size = 49413, upload-time = "2026-02-07T10:45:33.841Z" }
+ wheels = [
+     { url = "https://files.pythonhosted.org/packages/d7/c1/eb8f9debc45d3b7918a32ab756658a0904732f75e555402972246b0b8e71/tenacity-9.1.4-py3-none-any.whl", hash = "sha256:6095a360c919085f28c6527de529e76a06ad89b23659fa881ae0649b867a9d55", size = 28926, upload-time = "2026-02-07T10:45:32.24Z" },
+ ]
+@@ -1361,20 +1375,33 @@ wheels = [
+     { url = "https://files.pythonhosted.org/packages/78/bf/328d3c6bb22c496944a1b3b732207d71aa6964eb604e5e3b9dcb91ed0a00/uuid_utils-0.17.0-cp314-cp314t-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:d27c531edb8d1f38ca2eddaa1fa24913a460aeb721f2efd4ef42a124ce94e354", size = 348548, upload-time = "2026-07-09T13:49:35.898Z" },
+     { url = "https://files.pythonhosted.org/packages/3e/76/a07de5cb7b90582fdbbc830fd19be129cbbb9897cfe239fef469d7bd2d09/uuid_utils-0.17.0-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:5670c52a438e21483ce715776144914a4e2a2a5c62d9dee15f8a3e90cf128ae6", size = 498985, upload-time = "2026-07-09T13:49:37.142Z" },
+     { url = "https://files.pythonhosted.org/packages/f4/62/9966e46ae34fcec6b06119631fb3c09705ea78835035ce3a82d3348eb61a/uuid_utils-0.17.0-cp314-cp314t-musllinux_1_2_armv7l.whl", hash = "sha256:6f29689a76fe7a49cbd629a794d0ec1eab48814e323a00a146a741b0195bde68", size = 605183, upload-time = "2026-07-09T13:49:38.648Z" },
+     { url = "https://files.pythonhosted.org/packages/d7/4e/bb962ba0fe31e903b199f22cf4c1a6cba35a8987aef526d287277ab8ca8b/uuid_utils-0.17.0-cp314-cp314t-musllinux_1_2_i686.whl", hash = "sha256:4441600447d340ae103a353f01dbcd22ff680e5ee1a22988efe8d7b791d8fdb3", size = 565412, upload-time = "2026-07-09T13:49:40.115Z" },
+     { url = "https://files.pythonhosted.org/packages/ce/9e/122adfeeeae8a84ccfd43bce627b104d12a2180a93bffd2c0e1b54dad7a6/uuid_utils-0.17.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:e7b04935a79c03c41ad08d0a5f390aac968bfb561f1268897bc5b0f077971efd", size = 529885, upload-time = "2026-07-09T13:49:41.513Z" },
+     { url = "https://files.pythonhosted.org/packages/b3/4f/257304dded339dc35fc9bf35722ac68fd4fdb930f255b8f7bccdf74ebba9/uuid_utils-0.17.0-cp314-cp314t-win32.whl", hash = "sha256:239d8a281fe10bae33205b5d43185834d556b18434e0a113b5dc1dfb2fd97e91", size = 169472, upload-time = "2026-07-09T13:49:42.871Z" },
+     { url = "https://files.pythonhosted.org/packages/35/c8/e78c06db7e9ce317ce7b8759ff2058333eac75caa8c22b75f0059589c9be/uuid_utils-0.17.0-cp314-cp314t-win_amd64.whl", hash = "sha256:e288a06cbbbcd01b44386e767985c9e21d2ad9bf59829aa7058d9a2a494804ab", size = 176271, upload-time = "2026-07-09T13:49:44.105Z" },
+     { url = "https://files.pythonhosted.org/packages/a7/11/bd1c70e1ad3301163cebe66c8d26de26e6814d52f642a849448bd2833626/uuid_utils-0.17.0-cp314-cp314t-win_arm64.whl", hash = "sha256:1776a80d16369999b21627028cc5dbce819be83e1e079fdd7a51b587d2916db9", size = 175004, upload-time = "2026-07-09T13:49:45.591Z" },
+ ]
+ 
++[[package]]
++name = "uvicorn"
++version = "0.52.4"
++source = { registry = "https://pypi.org/simple" }
++dependencies = [
++    { name = "click" },
++    { name = "h11" },
++]
++sdist = { url = "https://files.pythonhosted.org/packages/f2/0f/3f86e61397dd33bf2ccf28188c40db6a740658aeebbbf6e7dbc101a1f487/uvicorn-0.52.4.tar.gz", hash = "sha256:73acfee47a0b133c5de13d219492d62d8a31e935f4fe6e41a232451a15379f86", size = 100627, upload-time = "2026-08-19T06:27:41.821Z" }
++wheels = [
++    { url = "https://files.pythonhosted.org/packages/f1/79/4a20b54ab0491485ccd8c077db2d39187c7f12b3e15485d38a7be37c81b4/uvicorn-0.52.4-py3-none-any.whl", hash = "sha256:f86e41a149d7d05a9969337e3946a9c171c06a5d42680896daaba624aeac8da1", size = 79871, upload-time = "2026-08-19T06:27:40.36Z" },
++]
++
+ [[package]]
+ name = "watchdog"
+ version = "6.0.0"
+ source = { registry = "https://pypi.org/simple" }
+ sdist = { url = "https://files.pythonhosted.org/packages/db/7d/7f3d619e951c88ed75c6037b246ddcf2d322812ee8ea189be89511721d54/watchdog-6.0.0.tar.gz", hash = "sha256:9ddf7c82fda3ae8e24decda1338ede66e1c99883db93711d8fb941eaa2d8c282", size = 131220, upload-time = "2024-11-01T14:07:13.037Z" }
+ wheels = [
+     { url = "https://files.pythonhosted.org/packages/68/98/b0345cabdce2041a01293ba483333582891a3bd5769b08eceb0d406056ef/watchdog-6.0.0-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:490ab2ef84f11129844c23fb14ecf30ef3d8a6abafd3754a6f75ca1e6654136c", size = 96480, upload-time = "2024-11-01T14:06:42.952Z" },
+     { url = "https://files.pythonhosted.org/packages/85/83/cdf13902c626b28eedef7ec4f10745c52aad8a8fe7eb04ed7b1f111ca20e/watchdog-6.0.0-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:76aae96b00ae814b181bb25b1b98076d5fc84e8a53cd8885a318b42b6d3a5134", size = 88451, upload-time = "2024-11-01T14:06:45.084Z" },
+     { url = "https://files.pythonhosted.org/packages/fe/c4/225c87bae08c8b9ec99030cd48ae9c4eca050a59bf5c2255853e18c87b50/watchdog-6.0.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:a175f755fc2279e0b7312c0035d52e27211a5bc39719dd529625b1930917345b", size = 89057, upload-time = "2024-11-01T14:06:47.324Z" },
+     { url = "https://files.pythonhosted.org/packages/a9/c7/ca4bf3e518cb57a686b2feb4f55a1892fd9a3dd13f470fca14e00f80ea36/watchdog-6.0.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:7607498efa04a3542ae3e05e64da8202e58159aa1fa4acddf7678d34a35d4f13", size = 79079, upload-time = "2024-11-01T14:06:59.472Z" },

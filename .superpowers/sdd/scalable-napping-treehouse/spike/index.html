@@ -1,0 +1,25 @@
+<!doctype html><meta charset="utf-8"><title>cm spike</title>
+<style>body{font:14px system-ui;margin:2rem}#ed{border:1px solid #ccc;min-height:120px}</style>
+<div id="ed"></div><pre id="log"></pre>
+<script type="module">
+const log = m => { document.getElementById('log').textContent += m + "\n"; };
+window.__spike = {status: "loading"};
+try {
+  const [{basicSetup}, {EditorView, keymap}, {python}, {indentUnit}, {indentWithTab}, {EditorState}] = await Promise.all([
+    import("https://esm.sh/codemirror@6.0.2"),
+    import("https://esm.sh/@codemirror/view@6"),
+    import("https://esm.sh/@codemirror/lang-python@6"),
+    import("https://esm.sh/@codemirror/language@6"),
+    import("https://esm.sh/@codemirror/commands@6"),
+    import("https://esm.sh/@codemirror/state@6"),
+  ]);
+  const state = EditorState.create({
+    doc: "def solve(rows):\n    raise NotImplementedError\n",
+    extensions: [basicSetup, python(), indentUnit.of("    "),
+      keymap.of([indentWithTab, {key: "Mod-Enter", run: () => { log("run!"); window.__spike.ran = true; return true; }}])]});
+  const view = new EditorView({state, parent: document.getElementById("ed")});
+  window.__cm = view;
+  window.__spike = {status: "ok", lines: view.state.doc.lines, doc: view.state.doc.toString()};
+  log("ok: editor rendered, " + view.state.doc.lines + " lines");
+} catch (e) { window.__spike = {status: "error", error: String(e), stack: String(e.stack)}; log("ERROR " + e); }
+</script>
