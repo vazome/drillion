@@ -452,6 +452,9 @@ park["sorted_names"](["Natasha", "Steve", "Eltran", "Natasha", "Rocket"])
 > Three of the four are graded on what happened to the list you were handed. `remove_the_mean_person` must return that very list (`is`, not merely `==`). `remove_the_last_person` must leave the queue one person shorter. `sorted_names` must return a **different** object and leave the queue in its original order — sorting the caller's list in place produces the right names and still fails.
 
 ## Exercism hints
+
+### General
+
 - Make sure you have a good understanding of how to create and update lists.
 - The Python [documentation on `lists`][python lists] can be really helpful.
 - The Python [tutorial section on `lists`][more on lists] is also a good resource.
