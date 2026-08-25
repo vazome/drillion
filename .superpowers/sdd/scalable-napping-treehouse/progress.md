@@ -200,3 +200,5 @@ N3 part 1 ✓ (20 files, agent died; parse-checked) — REMAINING N3: 093_messag
 096_async_cm 097_lazy_init_lock 098_fixtures 099_asgi_test 100_rerank 101_explain_takehome (special case: ### Q1 headings).
 Still to do for Task 11: dispatch N3 remainder (9 files); one sampling reviewer over N1–N3 (native polish) and an
 accuracy check of You get/You return/split coverage for 206/207/212/213 (X reviewer died before that step).
+Model policy (Daniel, 2026-08-25): controller picks sonnet/opus per task, never fable. N3b → sonnet; native/X reviewer → opus.
+N3b ✓ d8760f1 (sonnet). Task 11 authoring complete; content reviewer (opus) pending. Phase B batch B (opus) running; batch F dispatched (opus).
