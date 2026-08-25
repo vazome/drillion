@@ -1,19 +1,19 @@
 {
  "focus": null,
  "cards": {
-  "ex_009_sortkey": {
+  "009_sortkey": {
    "box": 0,
    "due": "2026-08-23",
    "seen": 1
   },
-  "ex_022_sets": {
+  "022_sets": {
    "box": 0,
    "due": "2026-08-23",
    "seen": 1
   }
  },
  "open": {
-  "ex_016_typehints": {
+  "016_typehints": {
    "seed": 4357,
    "attempts": 0,
    "hints": 0,
@@ -27,7 +27,7 @@
  "log": [
   {
    "date": "2026-08-21",
-   "slug": "ex_009_sortkey",
+   "slug": "009_sortkey",
    "grade": "struggled",
    "attempts": 3,
    "secs": 893,
@@ -35,7 +35,7 @@
   },
   {
    "date": "2026-08-21",
-   "slug": "ex_022_sets",
+   "slug": "022_sets",
    "grade": "struggled",
    "attempts": 3,
    "secs": 1372,
@@ -43,14 +43,14 @@
   }
  ],
  "archive": {
-  "ex_009_sortkey": [
+  "009_sortkey": [
    {
     "date": "2026-08-21",
     "grade": "struggled",
     "code": "def solve(services: list):\n    services = sorted(services, reverse=True, key=lambda age: age[1])\n    print(services)\n\n    return services"
    }
   ],
-  "ex_022_sets": [
+  "022_sets": [
    {
     "date": "2026-08-21",
     "grade": "struggled",
