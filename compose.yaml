@@ -1,0 +1,11 @@
+services:
+  study:
+    build: .
+    ports:
+      - "127.0.0.1:8765:8765"          # loopback only: this is a laptop tool
+    volumes:
+      - ./exercises:/data/exercises    # the drills — the container edits them
+      - ./progress.json:/data/progress.json
+      # ponytail: progress.json is a single-file bind mount, and saving writes
+      # progress.tmp and renames it over the target — which some engines refuse
+      # with EBUSY. If a save fails in the container, swap both lines for `./:/data`.

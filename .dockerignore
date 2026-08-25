@@ -1,0 +1,8 @@
+.venv
+.git
+web/node_modules
+drafts
+__pycache__
+.pytest_cache
+# the generated prep pages at the root; `*` never crosses a /, so web/*.html stays
+*.html
