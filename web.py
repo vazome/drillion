@@ -238,6 +238,8 @@ def open_exercise(slug: str):
 def save_exercise(slug: str, edit: Edit):
     with LOCK:                                   # autosave: the file only, no timer, no save()
         meta = _exercise(slug)
+        if slug not in study.load()["open"]:     # a closed exercise is a stub; keep it one
+            raise HTTPException(409, "no open attempt — open the exercise first")
         src = meta["path"].read_text()
         _check_etag(src, edit.etag)
         new_src = study.validate(edit.code, study.strip_spec(study.cut(src).body).spec_src, src)
