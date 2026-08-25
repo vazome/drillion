@@ -206,3 +206,6 @@ Task 11: content review Approved (95 native+X checked: Why unchanged 95/95, fron
 solve() calls match signatures, 17 Exercism splits/signatures correct, hints.md verbatim 7/7). Minors applied by
 controller: 059 fence → text, 043 WARNING → TIP, 203/213 bool wording. Deferred: adjacent TIP callouts (078/083/085),
 084 table duplicates fence comments. Task 11: complete.
+Batch F ✓ committed; ruling: multi-practice section tag = first listed practice (consistent with batch E).
+Batch C ✓ committed (pretty-leaflet is Exercism 'wip': instructions say class, tests say functions — followed tests, README flags it).
+Batch B: review Approved; minor fixed (chaitanas ### General). Deferred: 218 Hint 2 names all four methods; 228 _HIGHEST narrow.
