@@ -9,54 +9,39 @@ tags: [cloud, boto3]
 *Every AWS list call answers with one page; the rest of the account is on page two.*
 
 ## Why
-Finance asks "how much is stored in the logs bucket, and what
-exactly is in it?". AWS answers list requests one page at a time, about
-a thousand entries per page, and only quietly notes that more exist. A
-script that reads one page reports a fraction of the bucket, and nobody
-notices until the bill disagrees with the report. You are asked for the
-full list of object names and the total size, walking every page.
+Finance asks "how much is stored in the logs bucket, and what exactly is in it?". AWS answers list requests one page at a time, about a thousand entries per page, and only quietly notes that more exist. A script that reads one page reports a fraction of the bucket, and nobody notices until the bill disagrees with the report. You are asked for the full list of object names and the total size, walking every page.
 
 ## You get
-`s3` — an AWS S3 client object, the thing you call to talk to
-the storage service. The test hands in one connected to a fake
-in-memory AWS (moto), so nothing real is contacted and no money is
-spent.
-`bucket` — a string bucket name like "acme-logs-412". It already exists
-and holds more objects than a single page returns.
+`s3` — an AWS S3 client object, the thing you call to talk to the storage service. The test hands in one connected to a fake in-memory AWS (moto), so nothing real is contacted and no money is spent.
+
+`bucket` — a string bucket name like `"acme-logs-412"`. It already exists and holds more objects than a single page returns.
 
 ## You return
-a pair (tuple): a sorted list of every object name (strings),
-and the total size in bytes as a whole number.
+a pair (tuple): a sorted list of every object name (strings), and the total size in bytes as a whole number.
 
 ## Rules
 Report every object in a bucket that is bigger than one page.
 
-`s3` is a boto3 S3 *client*: a thin skin over the HTTP API where one
-method call is one request and every answer is a plain dict. The other
-flavour, `boto3.resource("s3")`, wraps the same API in objects and hides
-the paging from you. The client is the one interviews ask about, and the
-one where the paging is your problem, so work with it here.
+`s3` is a boto3 S3 *client*: a thin skin over the HTTP API where one method call is one request and every answer is a plain dict. The other flavour, `boto3.resource("s3")`, wraps the same API in objects and hides the paging from you. The client is the one interviews ask about, and the one where the paging is your problem, so work with it here.
 
-`bucket` is the name of a bucket that already exists and already holds
-more objects than a single API call will hand back.
+`bucket` is the name of a bucket that already exists and already holds more objects than a single API call will hand back.
 
-Return the tuple (keys, total_bytes):
+Return the tuple `(keys, total_bytes)`:
 
-  - keys: every object key in the bucket, as a sorted list of strings
-  - total_bytes: the sum of every object's Size, as an int
+- `keys`: every object key in the bucket, as a sorted list of strings
+- `total_bytes`: the sum of every object's `Size`, as an `int`
 
 A bucket holding three objects would give:
 
-```
-(["logs/a.log", "logs/b.log", "raw/c.json"], 4096)
+```python
+solve(s3, bucket)
+# -> (["logs/a.log", "logs/b.log", "raw/c.json"], 4096)
 ```
 
-The response dict from a list call puts the objects under "Contents", and
-each one is itself a dict with "Key" and "Size" among other fields. A page
-with nothing on it has no "Contents" key at all, so reach for it with
-.get. Asking for a bigger page does not get you the whole bucket — the
-service caps the page size and ignores you. Do not create or delete
-anything.
+The response dict from a list call puts the objects under `"Contents"`, and each one is itself a dict with `"Key"` and `"Size"` among other fields. A page with nothing on it has no `"Contents"` key at all, so reach for it with `.get`.
+
+> [!WARNING]
+> Asking for a bigger page does not get you the whole bucket — the service caps the page size and ignores you. Do not create or delete anything.
 
 ## Hints
 ### Hint 1

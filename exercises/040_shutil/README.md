@@ -9,51 +9,38 @@ tags: [stdlib-ops]
 *Staging files in scratch space and tidying up afterwards is half of build tooling.*
 
 ## Why
-A build job tidies a work folder: log files get copied to a scratch
-area for upload, temporary files get moved out of the way. The scratch
-area must be a fresh, uniquely named folder (two jobs on the same
-machine must not collide) and it must be removed afterward even if
-something fails halfway. The release engineer wants a report of what was
-copied, moved, staged and left behind.
+A build job tidies a work folder: log files get copied to a scratch area for upload, temporary files get moved out of the way. The scratch area must be a fresh, uniquely named folder (two jobs on the same machine must not collide) and it must be removed afterward even if something fails halfway. The release engineer wants a report of what was copied, moved, staged and left behind.
 
 ## You get
-`root` — a string path to a folder holding files and no
-subfolders, like "/tmp/ex040_abc". The test creates it and hands you the
-path; you never build it yourself.
+`root` — a string path to a folder holding files and no subfolders, like `"/tmp/ex040_abc"`. The test creates it and hands you the path; you never build it yourself.
 
 ## You return
-a dict with the keys "copied", "moved", "staged" and "left"
-(each a sorted list of bare filenames) and "cleaned" (True if the
-scratch folder is gone).
+a dict with the keys `"copied"`, `"moved"`, `"staged"` and `"left"` (each a sorted list of bare filenames) and `"cleaned"` (`True` if the scratch folder is gone).
 
 ## Rules
-`root` is a directory path as a STRING, holding a flat pile of files:
-some *.log, some *.tmp, some with other extensions. No subdirectories.
+`root` is a directory path as a STRING, holding a flat pile of files: some `*.log`, some `*.tmp`, some with other extensions. No subdirectories.
 
 Stage the interesting ones in scratch space and leave no mess behind:
 
-  1. Make a scratch directory with tempfile — not a hardcoded /tmp/staging.
-  2. COPY every *.log from root into it. The originals stay in root.
-  3. MOVE every *.tmp from root into it. The originals leave root.
-  4. Note what ended up in the scratch directory, then delete it.
+1. Make a scratch directory with `tempfile` — not a hardcoded `/tmp/staging`.
+2. COPY every `*.log` from `root` into it. The originals stay in `root`.
+3. MOVE every `*.tmp` from `root` into it. The originals leave `root`.
+4. Note what ended up in the scratch directory, then delete it.
 
 Return, with basenames only and never full paths:
 
-```
-{"copied":  ["api.log", "web.log"],              # what you copied, sorted
- "moved":   ["build.tmp"],                       # what you moved, sorted
- "staged":  ["api.log", "build.tmp", "web.log"], # in scratch before you deleted it, sorted
- "left":    ["api.log", "notes.txt", "web.log"], # still in root at the end, sorted
- "cleaned": True}                                # the scratch directory is gone
+```python
+solve(root)
+# -> {"copied":  ["api.log", "web.log"],              # what you copied, sorted
+#     "moved":   ["build.tmp"],                       # what you moved, sorted
+#     "staged":  ["api.log", "build.tmp", "web.log"], # in scratch before you deleted it, sorted
+#     "left":    ["api.log", "notes.txt", "web.log"], # still in root at the end, sorted
+#     "cleaned": True}                                # the scratch directory is gone
 ```
 
-Match files with glob and a pattern, not by filtering os.listdir yourself.
-Copy with a shutil function that keeps the timestamps. os.path.basename
-turns a path into a bare filename.
+Match files with `glob` and a pattern, not by filtering `os.listdir` yourself. Copy with a `shutil` function that keeps the timestamps. `os.path.basename` turns a path into a bare filename.
 
-tempfile.TemporaryDirectory() used as a `with` block does step 1 and the
-delete in step 4 for you, including when something raises halfway through —
-which is the reason it exists.
+`tempfile.TemporaryDirectory()` used as a `with` block does step 1 and the delete in step 4 for you, including when something raises halfway through — which is the reason it exists.
 
 ## Hints
 ### Hint 1

@@ -9,76 +9,53 @@ tags: [http, requests]
 *One Session reuses the connection and carries the auth; ten bare gets do neither.*
 
 ## Why
-A health-check bot asks an internal status API "how is the api? how
-is the db? how is the cache?" every minute, one request per service.
-Every request must carry the same secret token and the same label that
-names your program (the User-Agent). Done the naive way, each request
-opens a fresh connection to the server and repeats the headers, which
-is slow and is exactly where "one call forgot the token" bugs come from.
-The ask: set up one reusable client with the shared headers configured
-once, then send all the requests through it.
+A health-check bot asks an internal status API "how is the api? how is the db? how is the cache?" every minute, one request per service. Every request must carry the same secret token and the same label that names your program (the User-Agent). Done the naive way, each request opens a fresh connection to the server and repeats the headers, which is slow and is exactly where "one call forgot the token" bugs come from. The ask: set up one reusable client with the shared headers configured once, then send all the requests through it.
 
 ## You get
-`base_url` — a string like "https://ops.example.com".
-`token` — a string secret like "tok-4f".
-`agent` — a string label like "deploybot/1.0" naming your program to
-the server.
-`names` — a list of service names like ["api", "db"].
-The test points the requests library at a fake server and spies on the
-client object, so nothing real is contacted; it checks that every
-request went through the one client you hand back.
+`base_url` — a string like `"https://ops.example.com"`.
+
+`token` — a string secret like `"tok-4f"`.
+
+`agent` — a string label like `"deploybot/1.0"` naming your program to the server.
+
+`names` — a list of service names like `["api", "db"]`.
+
+The test points the requests library at a fake server and spies on the client object, so nothing real is contacted; it checks that every request went through the one client you hand back.
 
 ## You return
-a pair (tuple): first the reusable client object you used
-(a requests Session), then a dict of service name to its status string,
-like {"api": "healthy", "db": "degraded"}.
+a pair (tuple): first the reusable client object you used (a requests `Session`), then a dict of service name to its status string, like `{"api": "healthy", "db": "degraded"}`.
 
 ## Rules
-Ask one API about several services, over a single Session.
+Ask one API about several services, over a single `Session`.
 
-Build a requests.Session, set the two headers every call needs on
-the Session itself, then GET one url per name, in the order given:
+Build a `requests.Session`, set the two headers every call needs on the `Session` itself, then GET one url per name, in the order given:
 
-```
-{base_url}/services/{name}
+```python
+f"{base_url}/services/{name}"
 ```
 
 The two shared headers:
 
-```
-Authorization: Bearer <token>
-User-Agent:    <agent>
-```
+| Header | Value |
+| --- | --- |
+| `Authorization` | `Bearer <token>` |
+| `User-Agent` | `<agent>` |
 
-Each response is JSON like {"name": "api", "status": "healthy"}.
-Call raise_for_status(), then keep the "status" field.
+Each response is JSON like `{"name": "api", "status": "healthy"}`. Call `raise_for_status()`, then keep the `"status"` field.
 
-Return a 2-tuple: the Session you used, then a dict of name to
-status.
+Return a 2-tuple: the `Session` you used, then a dict of name to status.
 
 ```python
-solve("https://ops.example.com", "tok-4f", "deploybot/1.0",
-      ["api", "db"])
-->  (<the Session object>, {"api": "healthy", "db": "degraded"})
+solve("https://ops.example.com", "tok-4f", "deploybot/1.0", ["api", "db"])
+# -> (<the Session object>, {"api": "healthy", "db": "degraded"})
 ```
 
-Rules:
-  - The session goes back with the answer because the test checks
-    it: that its .headers carry both values, and that every request
-    recorded on the wire came from that exact object. Building a
-    Session and then calling requests.get anyway is the mistake
-    this drill exists to catch.
-  - Still pass timeout= on every call. A Session shares headers,
-    cookies and a connection pool — it has no default timeout, and
-    setting one on the object does nothing.
+> [!WARNING]
+> The session goes back with the answer because the test checks it: that its `.headers` carry both values, and that every request recorded on the wire came from that exact object. Building a `Session` and then calling `requests.get` anyway is the mistake this drill exists to catch.
 
-Why bother. Bare requests.get builds a Session, opens a TCP
-connection, does the TLS handshake, sends one request, and throws
-all of it away. Ten services is ten handshakes. A Session keeps a
-pool of open connections and reuses them, so calls two through ten
-are cheap. The other half is auth: set on the Session, the header
-exists in one place instead of at every call site, which is where
-"one endpoint forgot the token" comes from.
+- Still pass `timeout=` on every call. A `Session` shares headers, cookies and a connection pool — it has no default timeout, and setting one on the object does nothing.
+
+Why bother. Bare `requests.get` builds a Session, opens a TCP connection, does the TLS handshake, sends one request, and throws all of it away. Ten services is ten handshakes. A Session keeps a pool of open connections and reuses them, so calls two through ten are cheap. The other half is auth: set on the Session, the header exists in one place instead of at every call site, which is where "one endpoint forgot the token" comes from.
 
 ## Hints
 ### Hint 1

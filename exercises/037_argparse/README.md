@@ -9,51 +9,41 @@ tags: [stdlib-ops]
 *Every internal tool grows a CLI; argparse is the one interviewers expect you to know.*
 
 ## Why
-The team has an internal deploy tool people run from the terminal:
-deployctl web -r 3 --env prod. It must accept a service name, a replica
-count, an environment, a dry-run switch and some tags, and it must
-reject bad input (a typo in the environment, a replica count that is not
-a number) with a clear message and a non-zero exit. Writing those checks
-by hand is tedious and buggy; you declare what the arguments are and let
-the standard library enforce them.
+The team has an internal deploy tool people run from the terminal: `deployctl web -r 3 --env prod`. It must accept a service name, a replica count, an environment, a dry-run switch and some tags, and it must reject bad input (a typo in the environment, a replica count that is not a number) with a clear message and a non-zero exit. Writing those checks by hand is tedious and buggy; you declare what the arguments are and let the standard library enforce them.
 
 ## You get
 nothing — you build the thing from scratch.
 
 ## You return
-the parser object itself, not yet used on anything. The test
-feeds it its own argument lists and checks what it accepts and what it
-rejects.
+the parser object itself, not yet used on anything. The test feeds it its own argument lists and checks what it accepts and what it rejects.
 
 ## Rules
-Build and return an argparse.ArgumentParser for a tool called deployctl.
+Build and return an `argparse.ArgumentParser` for a tool called `deployctl`. The command line looks like:
 
-Return the parser itself. Do not parse anything, do not read sys.argv, do
-not print. The test calls parser.parse_args([...]) with its own lists.
-
-The command line looks like:
-
-```
+```bash
 deployctl web -r 3 --env prod --dry-run --tag canary blue
 ```
 
+> [!WARNING]
+> Return the parser itself. Do not parse anything, do not read `sys.argv`, do not print. The test calls `parser.parse_args([...])` with its own lists.
+
 Declare exactly these, with these dest names:
 
-```python
-service     positional, required, a string
---replicas  int, default 1, also spelled -r
---env       str, default "dev", only "dev" / "stage" / "prod" allowed
---dry-run   a flag: absent -> False, present -> True (dest is dry_run)
---tag       zero or more strings, default []
+| Argument | Declaration |
+| --- | --- |
+| `service` | positional, required, a string |
+| `--replicas` (also spelled `-r`) | `int`, default `1` |
+| `--env` | `str`, default `"dev"`, only `"dev"` / `"stage"` / `"prod"` allowed |
+| `--dry-run` | a flag: absent → `False`, present → `True` (dest is `dry_run`) |
+| `--tag` | zero or more strings, default `[]` |
 
-parse_args(["web"])
-  ->  Namespace(service='web', replicas=1, env='dev', dry_run=False, tag=[])
+```python
+parser = solve()
+parser.parse_args(["web"])
+# -> Namespace(service='web', replicas=1, env='dev', dry_run=False, tag=[])
 ```
 
-Bad input must raise SystemExit: an unknown flag, a missing service, a
---replicas that is not a number, an --env outside the three choices. You do
-not write any of those checks. You declare the type and the choices, and
-argparse does the rejecting, the exit code 2 and the --help text for you.
+Bad input must raise `SystemExit`: an unknown flag, a missing service, a `--replicas` that is not a number, an `--env` outside the three choices. You do not write any of those checks. You declare the type and the choices, and argparse does the rejecting, the exit code 2 and the `--help` text for you.
 
 ## Hints
 ### Hint 1

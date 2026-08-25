@@ -9,43 +9,36 @@ tags: [files-text]
 *'When did it break, and for how long' is a datetime question, every time.*
 
 ## Why
-After an outage the incident review asks two questions: how long
-did the event window last, from the first request to the last, and which
-minute was the busiest? The web server's access log gives one line per
-request with a timestamp, but the lines are out of order because several
-servers' logs were merged. You turn the timestamps into real times you
-can subtract and count.
+After an outage the incident review asks two questions: how long did the event window last, from the first request to the last, and which minute was the busiest? The web server's access log gives one line per request with a timestamp, but the lines are out of order because several servers' logs were merged. You turn the timestamps into real times you can subtract and count.
 
 ## You get
-`lines` — a list of strings, each starting with a timestamp,
-like ["2026-08-12 10:31:04 GET /api/users", ...], in shuffled order. The
-test creates it and hands it to you; you never build it yourself.
+`lines` — a list of strings, each starting with a timestamp, like `["2026-08-12 10:31:04 GET /api/users", ...]`, in shuffled order. The test creates them and hands them to you; you never build them yourself.
 
 ## You return
-a dict with "span_seconds" (a whole number of seconds from
-the earliest to the latest line) and "busiest_minute" (a string like
-"2026-08-12 10:31").
+a dict with `"span_seconds"` (a whole number of seconds from the earliest to the latest line) and `"busiest_minute"` (a string like `"2026-08-12 10:31"`).
 
 ## Rules
 Each line starts with a timestamp, then a request:
 
-```
-2026-08-12 10:31:04 GET /api/users
+```python
+"2026-08-12 10:31:04 GET /api/users"
 ```
 
 The lines arrive SHUFFLED, not in time order. Return:
 
-```
-{"span_seconds": 517,                       # whole seconds, first event to last
- "busiest_minute": "2026-08-12 10:31"}      # minute with most events; ties -> earliest
+```python
+solve(lines)
+# -> {"span_seconds": 517,                  # whole seconds, first event to last
+#     "busiest_minute": "2026-08-12 10:31"} # minute with most events
 ```
 
-The timestamp is exactly the first 19 characters of a line; parse it
-with the format "%Y-%m-%d %H:%M:%S". span_seconds is an int.
+- The timestamp is exactly the first 19 characters of a line; parse it with the format `"%Y-%m-%d %H:%M:%S"`.
+- `span_seconds` is an `int`.
 
-These stamps are naive — no timezone attached. In production you want
-an offset in the log and %z in the format so comparisons survive DST
-and multiple regions; Python refuses to compare naive with aware.
+> [!WARNING]
+> Ties on the busiest minute go to the **earliest** minute.
+
+These stamps are naive — no timezone attached. In production you want an offset in the log and `%z` in the format so comparisons survive DST and multiple regions; Python refuses to compare naive with aware.
 
 ## Hints
 ### Hint 1

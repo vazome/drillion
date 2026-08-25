@@ -9,52 +9,37 @@ tags: [stdlib-ops]
 *Twelve-factor apps read config from the environment, so every ops script does too.*
 
 ## Why
-A service runs inside a container. Operators change its port,
-timeout, debug mode and region by setting environment variables (named
-settings the operating system hands to a process at start) instead of
-editing files. Some settings have sensible defaults; the database
-address does not, and booting against a guessed database is an incident
-waiting to happen. You write the startup code that reads them all and
-converts them from text to the right types.
+A service runs inside a container. Operators change its port, timeout, debug mode and region by setting environment variables (named settings the operating system hands to a process at start) instead of editing files. Some settings have sensible defaults; the database address does not, and booting against a guessed database is an incident waiting to happen. You write the startup code that reads them all and converts them from text to the right types.
 
 ## You get
-nothing — you build the thing from scratch. The test sets the
-environment variables before calling you; you read them.
+nothing — you build the thing from scratch. The test sets the environment variables before calling you; you read them.
 
 ## You return
-a dict with the keys "port", "timeout", "debug", "region"
-and "database_url", typed as described in the rules below. If
-DATABASE_URL is not set you do not return at all: the lookup must fail
-with a KeyError that you let escape.
+a dict with the keys `"port"`, `"timeout"`, `"debug"`, `"region"` and `"database_url"`, typed as described in the rules below. If `DATABASE_URL` is not set you do not return at all: the lookup must fail with a `KeyError` that you let escape.
 
 ## Rules
-Read this program's config out of the environment and return it.
+Read this program's config out of the environment and return it. `solve` takes no arguments: the environment IS the input. Read `os.environ`.
 
-Takes no arguments: the environment IS the input. Read os.environ.
+| Variable | Type | Default |
+| --- | --- | --- |
+| `APP_PORT` | `int` | `8080` |
+| `APP_TIMEOUT` | `float` | `5.0` |
+| `APP_DEBUG` | `bool` | `False` |
+| `APP_REGION` | `str` | `"us-east-1"` |
+| `DATABASE_URL` | `str` | REQUIRED — no default |
 
-```
-APP_PORT      int,   default 8080
-APP_TIMEOUT   float, default 5.0
-APP_DEBUG     bool,  default False
-APP_REGION    str,   default "us-east-1"
-DATABASE_URL  str,   REQUIRED — no default
-```
-
-APP_DEBUG is true when its value, lowercased, is in TRUTHY (given above);
-anything else is false. Every environment value arrives as a string, so
-"8080" is not 8080 and "0" is not False — convert deliberately.
+`APP_DEBUG` is true when its value, lowercased, is in `TRUTHY` (given above); anything else is false. Every environment value arrives as a string, so `"8080"` is not `8080` and `"0"` is not `False` — convert deliberately.
 
 Return exactly:
 
-```
-{"port": 9000, "timeout": 2.5, "debug": True,
- "region": "eu-west-1", "database_url": "postgres://db-7/app"}
+```python
+solve()
+# -> {"port": 9000, "timeout": 2.5, "debug": True,
+#     "region": "eu-west-1", "database_url": "postgres://db-7/app"}
 ```
 
-DATABASE_URL has no sensible default, so do not invent one. Read it with
-os.environ["DATABASE_URL"] and let the KeyError escape. A container that
-dies at startup with a named missing variable is a five-minute fix; one
-that boots against the wrong default database is an incident.
+> [!WARNING]
+> `DATABASE_URL` has no sensible default, so do not invent one. Read it with `os.environ["DATABASE_URL"]` and let the `KeyError` escape. A container that dies at startup with a named missing variable is a five-minute fix; one that boots against the wrong default database is an incident.
 
 ## Hints
 ### Hint 1

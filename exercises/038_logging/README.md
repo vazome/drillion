@@ -9,56 +9,41 @@ tags: [stdlib-ops]
 *print in a daemon has no level, no timestamp and nowhere to go but stdout.*
 
 ## Why
-A background service writes hundreds of messages a minute. In
-production the operators want only warnings and errors; while debugging
-they want everything — and they want to switch between the two with one
-setting, not a code change. The messages must also go somewhere you
-control (a file, a log system, or here a plain list the test can
-inspect) in one consistent format. You wire up one such logger.
+A background service writes hundreds of messages a minute. In production the operators want only warnings and errors; while debugging they want everything — and they want to switch between the two with one setting, not a code change. The messages must also go somewhere you control (a file, a log system, or here a plain list the test can inspect) in one consistent format. You wire up one such logger.
 
 ## You get
-`name` — a string naming the logger, like "drill38.0.solve".
-The test creates it and hands it to you; you never build it yourself.
+`name` — a string naming the logger, like `"drill38.0.solve"`. The test creates it and hands it to you; you never build it yourself.
 
-`level` — a whole number meaning "keep messages at this
-severity or higher", like logging.WARNING.
+`level` — a whole number meaning "keep messages at this severity or higher", like `logging.WARNING`.
 
-`messages` — a list of (severity name, text) pairs, like
-[("INFO", "starting"), ("ERROR", "disk full")].
+`messages` — a list of (severity name, text) pairs, like `[("INFO", "starting"), ("ERROR", "disk full")]`.
 
 ## You return
-a list of strings — the formatted messages that got past the
-level filter, in order, like ["ERROR:disk full"].
+a list of strings — the formatted messages that got past the level filter, in order, like `["ERROR:disk full"]`.
 
 ## Rules
 Set up one logger and capture what it emits, printing nothing.
 
-```
-name      a unique logger name, e.g. "drill38.0.solve"
-level     a level as an int, e.g. logging.WARNING
-messages  list of (levelname, text) pairs, e.g.
-          [("INFO", "starting"), ("ERROR", "disk full")]
-```
+| Argument | What it is |
+| --- | --- |
+| `name` | a unique logger name, e.g. `"drill38.0.solve"` |
+| `level` | a level as an int, e.g. `logging.WARNING` |
+| `messages` | list of `(levelname, text)` pairs, e.g. `[("INFO", "starting"), ("ERROR", "disk full")]` |
 
 Build it in this order:
 
-  1. A handler class of your own: subclass logging.Handler, and in its
-     emit(self, record) append self.format(record) to a list.
-  2. Give the handler logging.Formatter("%(levelname)s:%(message)s").
-  3. Get the logger by name, set its level, attach the handler, and set
-     .propagate = False so records stop here instead of climbing to the
-     root logger and being printed twice by whatever else is running.
-  4. Log every message at its own level, in order.
-  5. Return the list of formatted strings.
+1. A handler class of your own: subclass `logging.Handler`, and in its `emit(self, record)` append `self.format(record)` to a list.
+2. Give the handler `logging.Formatter("%(levelname)s:%(message)s")`.
+3. Get the logger by name, set its level, attach the handler, and set `.propagate = False` so records stop here instead of climbing to the root logger and being printed twice by whatever else is running.
+4. Log every message at its own level, in order.
+5. Return the list of formatted strings.
 
-```
-level=logging.WARNING, [("INFO", "hi"), ("ERROR", "boom")]
-  ->  ["ERROR:boom"]
+```python
+solve("drill38.0.solve", logging.WARNING, [("INFO", "hi"), ("ERROR", "boom")])
+# -> ["ERROR:boom"]
 ```
 
-Only records at or above the logger's level survive; the rest never reach
-the handler. That is the point of levels — the same daemon runs quiet in
-production and chatty at DEBUG without touching a line of code.
+Only records at or above the logger's level survive; the rest never reach the handler. That is the point of levels — the same daemon runs quiet in production and chatty at DEBUG without touching a line of code.
 
 ## Hints
 ### Hint 1

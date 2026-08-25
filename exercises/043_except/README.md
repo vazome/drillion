@@ -9,34 +9,25 @@ tags: [errors]
 *try/except — catch the specific thing, not everything.*
 
 ## Why
-A monitoring agent sends metrics as lines like "cpu=90". Now and
-then a line is garbage: truncated, missing the equals sign, or with a
-value that is not a number. A parser that crashes on the first bad line
-takes the whole dashboard down. The team wants a parser that keeps the
-good lines and quietly skips the bad ones, but only for the specific
-errors bad input causes, so real bugs still surface.
+A monitoring agent sends metrics as lines like "cpu=90". Now and then a line is garbage: truncated, missing the equals sign, or with a value that is not a number. A parser that crashes on the first bad line takes the whole dashboard down. The team wants a parser that keeps the good lines and quietly skips the bad ones, but only for the specific errors bad input causes, so real bugs still surface.
 
 ## You get
-`rows` — a list of strings, like ["cpu=90", "junk", "mem=x",
-"disk=12"]. The test creates it and hands it to you; you never build it
-yourself.
+`rows` — a list of strings, like `["cpu=90", "junk", "mem=x", "disk=12"]`. The test creates it and hands it to you; you never build it yourself.
 
 ## You return
-a dict from name to whole number for the rows that parsed,
-like {"cpu": 90, "disk": 12}.
+a dict from name to whole number for the rows that parsed, like `{"cpu": 90, "disk": 12}`.
 
 ## Rules
-Each row is a string that SHOULD look like "name=42".
+Each row is a string that SHOULD look like `"name=42"`.
 
-Return {name: number} for every row that parses, silently skipping rows
-that are malformed (no "=", or a right-hand side that isn't a whole number).
+Return `{name: number}` for every row that parses, silently skipping rows that are malformed (no `"="`, or a right-hand side that isn't a whole number).
 
+```python
+solve(["cpu=90", "junk", "mem=x", "disk=12"])  # -> {"cpu": 90, "disk": 12}
 ```
-["cpu=90", "junk", "mem=x", "disk=12"]  ->  {"cpu": 90, "disk": 12}
-```
 
-Do not use a bare `except:` — catch the specific errors. Real log parsers
-live or die on this, and interviewers feed you dirty data on purpose.
+> [!WARNING]
+> Do not use a bare `except:` — catch the specific errors. Real log parsers live or die on this, and interviewers feed you dirty data on purpose.
 
 ## Hints
 ### Hint 1
