@@ -8,6 +8,16 @@ Why: Daniel wants Exercism's tasks (good task writing, proper concept grouping) 
 tagged catalogue. Exercism's concept slugs become tags (`dicts`, `string-methods`, `sets`, …),
 which is the "concept grouping" he asked for; our section tags stay alongside.
 
+> **Format change (2026-08-25, after Task 10):** drills are folders `exercises/<NNN>_<slug>/` with
+> `README.md` (guidance, GFM, frontmatter = META) + `drill.py` (learner region above the
+> `# ══ machinery` marker, machinery below). The per-drill contract below still defines *what* a
+> drill contains; *where* it goes is now `content-format-spec.md`, section "Exercism drills — keep
+> their content, add ours": Exercism's `introduction.md` / `instructions.md` / `hints.md` go into
+> the README **verbatim** under `## Introduction` / `## Instructions` (+ hints folded into Hint 1–2),
+> and our `## Why`, `## You get`, `## You return`, `## Rules`, `## Read first`, Hint 3 are added
+> around them. Slugs have no `ex_` prefix (`300_two_fer`). Batches B–I author this format directly;
+> model files after Task 11: `exercises/303_bob/` and `exercises/212_black_jack/`.
+
 ## Scope (batch 1 — 70 Exercism exercises → ~80 drill files)
 
 **Concept exercises (20; `electric-bill` skipped — no concept in config.json).** Each becomes 1–3
