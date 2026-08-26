@@ -182,10 +182,15 @@ def _recent(st, all_tasks):
     to lead you back to. Its `last` touch is a full timestamp, so today's work orders within the
     day; an archived run only knows its date, and sorts as the start of that day.
 
+    Giving up is the way out. A slug whose latest run is `abandoned` drops off — abandoning is
+    the explicit "put this back", and a list that keeps offering it has no exit. Opening it again
+    brings it back, and so does a later pass. (`_practised` still counts the day: you showed up.)
+
     Nothing is held back for being in today's queue. A card worked on Friday and due again
     today is both things at once, and the queue is not the authority on what you were doing."""
     cut = (date.fromisoformat(today()) - timedelta(days=WINDOW - 1)).isoformat()
-    last = {slug: runs[-1]["date"] for slug, runs in st["archive"].items()}
+    last = {slug: runs[-1]["date"] for slug, runs in st["archive"].items()
+            if runs[-1].get("grade") != "abandoned"}
     for slug, o in st["open"].items():
         last[slug] = max(last.get(slug, ""), o["last"])
     return sorted((s for s, d in last.items() if s in all_tasks and d >= cut),   # a rename leaves a dead key
