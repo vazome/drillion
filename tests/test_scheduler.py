@@ -33,8 +33,12 @@ def test_reschedule():
     c = {"box": 0, "due": "2000-01-01", "seen": 1}
     assert scheduler.reschedule(c, "quick") == 8 and c["box"] == 2      # +2 boxes, LADDER[2]
     assert scheduler.reschedule(c, "struggled") == 8 and c["box"] == 2  # same box, same gap
-    assert scheduler.reschedule(c, "fail") == 2 and c["box"] == 0      # -2 boxes, back to the start
-    assert c["due"] == (date.today() + timedelta(days=2)).isoformat()  # noqa: DTZ011
+    assert scheduler.reschedule(c, "pass") == 16 and c["box"] == 3      # +1 box
+    assert c["due"] == (date.today() + timedelta(days=16)).isoformat()  # noqa: DTZ011
+    # the top box is the ceiling: a quick pass there moves nothing, which is why /run has to
+    # tell the page the box the card came from rather than let it infer a step from the grade
+    assert scheduler.reschedule(c, "quick") == 28 and c["box"] == 4
+    assert scheduler.reschedule(c, "quick") == 28 and c["box"] == 4
 
 
 def test_unseen_respects_prereqs():
@@ -66,11 +70,15 @@ def test_queue_puts_the_most_overdue_review_first():
     assert scheduler.pick(st, _exs()) == ("003_c", "review")
 
 
-def test_the_task_screen_mirrors_the_grade_deltas():
-    """`STEP` in web/src/Task.tsx decides whether the pass banner claims a promotion.
-    It is a hand copy of GRADES, so this fails the moment the two drift apart."""
-    line = re.search(r"^const STEP: Record<string, number> = \{(.+?)\};$",
-                     (ROOT / "web/src/Task.tsx").read_text(), re.MULTILINE)
-    assert line, "STEP went missing from Task.tsx"
-    web = dict(re.findall(r"(\w+): (-?\d+)", line[1]))
-    assert {k: int(v) for k, v in web.items()} == scheduler.GRADES
+def test_the_web_ladder_matches_the_scheduler():
+    """LADDER is hand-copied into three web files — two of them vendored design-system
+    components we resync from upstream — so nothing but this keeps them honest."""
+    copies = {"web/src/Stats.tsx": r"const LADDER = \[([^\]]*)\]",
+              "web/src/ds/LadderMeter.jsx": r"intervals = \[([^\]]*)\]",
+              "web/src/ds/Ladder.jsx": r"intervals = \[([^\]]*)\]"}
+    for rel, pattern in copies.items():
+        found = re.search(pattern, (ROOT / rel).read_text())
+        assert found, f"the ladder intervals went missing from {rel}"
+        assert [int(n) for n in re.findall(r"\d+", found[1])] == scheduler.LADDER, rel
+    # and the pass banner names the ladder's height: "box 3 of 5"
+    assert f"of {len(scheduler.LADDER)}" in (ROOT / "web/src/Task.tsx").read_text()

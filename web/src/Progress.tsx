@@ -20,7 +20,7 @@ const TAG_COLS = [
 
 const LOG_COLS = [
   { key: "date", label: "Date", width: "76px", mono: true, muted: true, render: (r: LogRow) => day(r.date) },
-  { key: "slug", label: "Drill", mono: true, render: (r: LogRow) => <a href={`#/task/${encodeURIComponent(r.slug)}`}>{r.slug}</a> },
+  { key: "slug", label: "Task", mono: true, render: (r: LogRow) => <a href={`#/task/${encodeURIComponent(r.slug)}`}>{r.slug}</a> },
   { key: "grade", label: "Grade", width: "96px", render: (r: LogRow) => <StatusBadge status={r.grade} /> },
   { key: "attempts", label: "Attempts", align: "right" as const, mono: true, width: "84px", muted: true },
   { key: "time", label: "Active", align: "right" as const, mono: true, width: "76px" },
@@ -57,7 +57,7 @@ export function Progress() {
       <Card label="The ladder">
         <Ladder boxes={data.boxes} />
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 12 }}>
-          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>A card climbs one box per pass and returns on that box's interval.</span>
+          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>A quick pass climbs two boxes, a pass one, struggled none — and box 5 is the ceiling. Each box returns on its own interval.</span>
           <div style={{ flex: 1 }} />
           <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--text-faint)" }}>
             {data.seen} cards on the ladder · {data.total - data.seen} untouched

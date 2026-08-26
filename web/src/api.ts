@@ -31,7 +31,9 @@ export interface Task {
 }
 export interface RunResult {
   passed: boolean; attempts: number; headline: string[]; output: string; etag: string;
-  grade?: Grade; box?: number; due_in?: number; code?: string;
+  /** `box_before` is null when the card was never seen; it differs from `box` only
+   *  when the pass actually moved the card — a pass at the top box clamps. */
+  grade?: Grade; box?: number; box_before?: number | null; due_in?: number; code?: string;
 }
 
 export class ApiError extends Error {

@@ -17,7 +17,16 @@ The vendored design system in `web/src/ds/` diverges from the Claude Design proj
   `aria-sort` and gives the header button a static `aria-label`, so a screen-reader user gets
   no signal of which column is sorted or what activating a header will do. We add `aria-sort`
   (`"ascending"` / `"descending"` / `"none"`, omitted on non-sortable columns) and make the
-  button's `aria-label` name the direction the existing toggle will actually apply.
+  button's `aria-label` name the direction the existing toggle will actually apply;
+- an `Input` accessible-name prop — upstream `Input` accepts no `ariaLabel`, so the catalogue's
+  search box shipped with no accessible name while the `Select` beside it had one. We add
+  `ariaLabel` and render it as `aria-label`, matching `Select` and `Toggle`;
+- `StatusBadge` drops the `scheduled` status and the `failed` grade — `api.py _status()` emits
+  only `new`/`due`/`open`/`done`, and `scheduler.grade_of()` only `quick`/`pass`/`struggled`
+  (plus `abandoned` from `attempts.abandon()`). `index.d.ts` matches;
+- `Timer` keeps its `parMinutes` prop, and drillion never passes it: par time never leaves the
+  server, so the timer always renders bare elapsed time. The prop is dead here on purpose —
+  leave it, so a resync is a no-op rather than a conflict.
 
 Every entry above is a deliberate local divergence. Apply them upstream before any
 `/design-sync`, or the next sync will silently overwrite them.

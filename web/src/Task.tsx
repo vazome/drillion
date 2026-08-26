@@ -14,9 +14,6 @@ const HEARTBEAT_MS = 60_000;
 const GATE_MS = 4000;
 const draftKey = (slug: string) => `drillion-draft-${slug}`;
 const secs = (n: number) => n >= 60 ? `${Math.floor(n / 60)}m${String(n % 60).padStart(2, "0")}s` : `${n}s`;
-// Mirrors GRADES in src/drillion/scheduler.py; tests/test_scheduler.py asserts the two agree.
-// A card only climbs on a positive delta — a solution-revealed pass grades `struggled` and holds.
-const STEP: Record<string, number> = { fail: -2, struggled: 0, pass: 1, quick: 2 };
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 /** A refused action, shown beside the control that asked for it. */
@@ -25,7 +22,7 @@ type Gate = { at: "hints" | "solution" | "editor"; message: string } | null;
 type Result =
   | { state: "idle" | "running" }
   | { state: "failed"; attempts: number; headline: string; output: string }
-  | { state: "passed"; grade: string; box: number; dueIn: number; attempts: number; code: string };
+  | { state: "passed"; grade: string; box: number; boxBefore: number | null; dueIn: number; attempts: number; code: string };
 
 export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [task, setTask] = useState<TaskData | null>(null);
@@ -154,7 +151,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       dirtyRef.current = false; setDirty(false); setSyntaxBad(false);
       if (r.passed) {
         localStorage.removeItem(draftKey(slug));
-        setResult({ state: "passed", grade: r.grade!, box: r.box!, dueIn: r.due_in!, attempts: r.attempts, code: r.code! });
+        setResult({ state: "passed", grade: r.grade!, box: r.box!, boxBefore: r.box_before ?? null, dueIn: r.due_in!, attempts: r.attempts, code: r.code! });
         setCode(r.code!);
         // what to do next lives on the catalogue, and only matters once the card is cleared
         api<Catalogue>("/catalogue")
@@ -255,7 +252,10 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
 
   const runNo = passed ? result.attempts : attempt ? attempt.attempts + 1 : 0;   // the run you are on
   const resultNo = "attempts" in result ? result.attempts : 0;                   // the run this result came from
-  const stepped = passed && STEP[result.grade] > 0;
+  // The server sends the box the card sat in before this pass. A `quick` at the top box
+  // clamps and moves nothing, so the grade alone cannot answer "did it step up?".
+  const stepped = passed && result.box !== result.boxBefore;
+  const atTop = passed && result.box === 4;
 
   return (
     <div style={{ maxWidth: 1500, margin: "0 auto" }}>
@@ -371,36 +371,43 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
 
           <Editor value={code} onChange={edit} onRun={run} readOnly={passed} dark={dark} height="calc(100vh - 364px)" />
 
-          {/* The result card re-enters on every state change — keyed so `.m-rise` replays. */}
-          <div className="m-rise" key={result.state}>
-            <Card label={resultNo ? `Result · attempt ${resultNo}` : "Result"} padding={16}>
-              <ResultBanner
-                state={result.state}
-                headline={result.state === "failed" ? result.headline : undefined}
-                gradeLine={passed ? `${result.grade.toUpperCase()} · ${secs(active)} · ${plural(result.attempts, "attempt")} · box ${result.box + 1} of 5` : undefined}
-                backIn={passed ? plural(result.dueIn, "day") : undefined} />
+          <Card label={resultNo ? `Result · attempt ${resultNo}` : "Result"} padding={16}>
+            {/* The live region stays mounted and only the banner inside it is keyed, so each
+              * result is *inserted* into a region that already exists — the shape `notice()`
+              * uses. Keying the card itself made the region arrive with its text already in
+              * place, which no screen reader announces. `.m-rise` still replays. */}
+            <div role="status">
+              <div className="m-rise" key={result.state}>
+                <ResultBanner
+                  state={result.state}
+                  headline={result.state === "failed" ? result.headline : undefined}
+                  gradeLine={passed ? `${result.grade.toUpperCase()} · ${secs(active)} · ${plural(result.attempts, "attempt")} · box ${result.box + 1} of 5` : undefined}
+                  backIn={passed ? plural(result.dueIn, "day") : undefined} />
+              </div>
+            </div>
 
-              {result.state === "failed" && result.output ? (
-                <Collapsible label="Full output" meta={`pytest · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
-                  {result.output}
-                </Collapsible>
-              ) : null}
+            {result.state === "failed" && result.output ? (
+              <Collapsible label="Full output" meta={`pytest · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
+                {result.output}
+              </Collapsible>
+            ) : null}
 
-              {passed ? (
-                <div style={{ marginTop: 10, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                  <span className={stepped ? "m-step" : undefined} style={{ display: "inline-flex" }}><LadderMeter box={result.box + 1} /></span>
-                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                    {stepped ? "the card stepped up" : `${result.grade} keeps the card where it is`} — code archived, stub restored for next time
-                  </span>
-                  <div style={{ flex: 1 }} />
-                  <Button variant="quiet" onClick={() => { location.hash = "#/"; }}>Back to Today</Button>
-                  {nextSlug ? (
-                    <Button variant="secondary" onClick={() => { location.hash = `#/task/${encodeURIComponent(nextSlug)}`; }}>Next in Today →</Button>
-                  ) : null}
-                </div>
-              ) : null}
-            </Card>
-          </div>
+            {passed ? (
+              <div style={{ marginTop: 10, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                <span className={stepped ? "m-step" : undefined} style={{ display: "inline-flex" }}><LadderMeter box={result.box + 1} /></span>
+                <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                  {stepped ? "the card stepped up"
+                    : atTop ? "the card is already in the top box and stays there"
+                    : `${result.grade} keeps the card where it is`} — code archived, stub restored for next time
+                </span>
+                <div style={{ flex: 1 }} />
+                <Button variant="quiet" onClick={() => { location.hash = "#/"; }}>Back to Today</Button>
+                {nextSlug ? (
+                  <Button variant="secondary" onClick={() => { location.hash = `#/task/${encodeURIComponent(nextSlug)}`; }}>Next in Today →</Button>
+                ) : null}
+              </div>
+            ) : null}
+          </Card>
         </div>
       </div>
     </div>

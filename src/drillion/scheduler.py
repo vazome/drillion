@@ -12,7 +12,7 @@ from .state import card, today
 LADDER = [2, 4, 8, 16, 28]           # days until the next sighting, per box
 INTERVIEW = date(2026, 11, 2)        # everything recycles before this
 NEW_PER_DAY = 2
-GRADES = {"fail": -2, "struggled": 0, "pass": +1, "quick": +2}
+GRADES = {"struggled": 0, "pass": +1, "quick": +2}   # every grade grade_of() can return
 
 
 def due_today(st, all_tasks):

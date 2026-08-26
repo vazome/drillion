@@ -109,7 +109,7 @@ function TierGroup({ tier, rows, open, onToggle }: { tier: string; rows: Row[]; 
   );
 }
 
-export function Catalogue({ onHead }: { onHead: (h: { total: number; daysLeft: number }) => void }) {
+export function Catalogue() {
   const [data, setData] = useState<Payload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState("");
@@ -121,10 +121,7 @@ export function Catalogue({ onHead }: { onHead: (h: { total: number; daysLeft: n
   });
   useEffect(() => { localStorage.setItem(OPEN_KEY, JSON.stringify(openTiers)); }, [openTiers]);
 
-  const load = useCallback(() => api<Payload>("/catalogue").then((d) => {
-    setData(d);
-    onHead({ total: d.stats.total, daysLeft: d.stats.days_left });
-  }).catch((e) => setError(e.message)), [onHead]);
+  const load = useCallback(() => api<Payload>("/catalogue").then(setData).catch((e) => setError(e.message)), []);
   useEffect(() => { load(); }, [load]);
 
   const focus = data?.focus ?? null;
@@ -185,16 +182,19 @@ export function Catalogue({ onHead }: { onHead: (h: { total: number; daysLeft: n
             <span style={LABEL}>New picks</span>
             <span style={FAINT}>{focus ? `from ${focus}` : "any"}</span>
           </div>
+          {/* Three things empty this list — the daily cap, an unmet prereq and the focus — and
+            * the payload cannot tell them apart, so the copy names all three rather than
+            * blaming the cap for a day the prereqs closed off. */}
           {fresh.length
             ? fresh.map((e) => <TodayRow key={e.slug} row={e} />)
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
-                message={review.length ? "No new picks left today — finish the reviews above, or rest."
-                                       : "Nothing due. Pick anything below, or rest — that's training too."} />}
+                message={review.length ? "No new picks right now — today's cap, an unmet prereq, or the focus. Finish the reviews above, or rest."
+                                       : "Nothing due, and no new pick unlocked — today's cap, an unmet prereq, or the focus. Pick anything below, or rest."} />}
         </div>
       </Card>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6, flexWrap: "wrap" }}>
-        <Input value={q} onChange={setQ} placeholder="search title or topic…" style={{ width: 260 }} />
+        <Input value={q} onChange={setQ} placeholder="search title or topic…" ariaLabel="Search tasks by title or topic" style={{ width: 260 }} />
         <Select value={status} onChange={setStatus} options={STATUSES} placeholder="any status" ariaLabel="Filter by status" style={{ width: 150 }} />
         <div style={{ width: 1, height: 24, background: "var(--border)" }} />
         {/* a tier or track chip is also the focus: it narrows the list and what the scheduler picks next */}
