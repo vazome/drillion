@@ -100,18 +100,67 @@ def test_a_struggle_is_counted_as_well_as_demoted():
     assert c["lapses"] == scheduler.LAPSE_LIMIT  # only a struggle is a lapse
 
 
-def test_a_card_written_before_lapses_existed_still_reads():
+def test_a_card_written_before_the_newest_fields_existed_still_reads():
     """`state.load()` merges defaults over the top-level keys only, so a new per-card field
     cannot arrive that way. Months of progress.json already exist on disk and there is no
-    migration step, so `card()` fills the blank on the way out."""
+    migration step, so `card()` fills the blanks on the way out — `lapses` first, `buried`
+    after it, and whatever comes next by the same route."""
     old = _st(cards={"001_a": {"box": 3, "due": "2020-01-01", "seen": 7}})
     assert state.card(old, "001_a")["lapses"] == 0
+    assert state.card(old, "001_a")["buried"] == ""  # never buried, not buried today
+    assert not scheduler.buried(old, "001_a")
     assert state.card(old, "002_b") == {
         "box": 0,
         "due": state.today(),
         "seen": 0,
         "lapses": 0,
+        "buried": "",
     }
+
+
+def test_a_buried_card_leaves_todays_queue_and_comes_back_tomorrow():
+    """Bury is "not today", and it is the whole of what it does. The card stays due — it is
+    simply not offered — and because the stored day is the day it applies to, tomorrow's date
+    no longer matches it and nothing has to expire anything. A new pick goes the same way: the
+    new picks are half of today's queue, and the next unblocked task takes the freed slot."""
+    yesterday = (date.today() - timedelta(days=1)).isoformat()  # noqa: DTZ011
+    cards = {
+        "001_a": {"box": 2, "due": "2020-01-01", "seen": 3},  # due for review
+        "002_b": {"box": 1, "due": "2020-01-01", "seen": 1},  # due for review
+    }
+    st = _st(cards=cards)
+    q = scheduler.queue(st, _exs())
+    assert q["review"] == ["001_a", "002_b"] and q["new"] == ["003_c"]
+
+    st["cards"]["001_a"]["buried"] = state.today()  # a review: not today
+    st["cards"]["003_c"] = {
+        "box": 0,
+        "due": state.today(),
+        "seen": 0,
+        "buried": state.today(),
+    }
+    q = scheduler.queue(st, _exs())
+    assert q["review"] == ["002_b"] and q["new"] == []  # both bands drop it
+    assert (
+        q["due_total"] == 1
+    )  # ...and the backlog agrees: a buried card is not due today
+    assert scheduler.due_today(st, _exs()) == ["002_b"]
+
+    for slug in ("001_a", "003_c"):  # the next day, with nobody having touched anything
+        st["cards"][slug]["buried"] = yesterday
+    q = scheduler.queue(st, _exs())
+    assert q["review"] == ["001_a", "002_b"] and q["new"] == ["003_c"]
+
+
+def test_burying_a_card_changes_nothing_about_its_schedule():
+    """The safe half of #12 is safe only because it cannot lose anything: no box, no due date,
+    no seen count and no lapse count moves, so a bury that is forgotten costs exactly one day
+    of not being asked. If this ever fails, bury has become suspend by accident."""
+    was = {"box": 3, "due": "2020-01-01", "seen": 5, "lapses": 2}
+    st = _st(cards={"001_a": dict(was)})
+    state.card(st, "001_a")["buried"] = state.today()
+    scheduler.queue(st, _exs())  # and reading the queue must not write to it either
+    assert {k: st["cards"]["001_a"][k] for k in was} == was
 
 
 def test_unseen_respects_prereqs():

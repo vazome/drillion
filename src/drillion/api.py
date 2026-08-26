@@ -56,7 +56,7 @@ from .region import (
     write_region,
 )
 from .runner import run_tests, summarise
-from .scheduler import LADDER, LAPSE_LIMIT, due_today, queue
+from .scheduler import LADDER, LAPSE_LIMIT, buried, due_today, queue
 from .settings import settings
 from .state import card, reading, today, writing
 
@@ -78,6 +78,10 @@ class Etag(BaseModel):
 
 class Focus(BaseModel):
     tag: str | None = None
+
+
+class Bury(BaseModel):
+    buried: bool = True
 
 
 # ---------------------------------------------------------------- errors
@@ -171,6 +175,8 @@ def _payload(st, slug, meta, src):
         "region_start": 1,
         "marker_line": bounds(src),
         "status": _status(st, slug),
+        # not a fifth `status`: a buried card is still exactly `due`, just not offered today
+        "buried": buried(st, slug),
         "lapses": c["lapses"],
         "lapse_limit": LAPSE_LIMIT,
         "reference": solution_text(meta["path"]) if reveal else None,
@@ -269,6 +275,7 @@ def catalogue():
                 **public(m),
                 "text": m["search_text"],
                 "status": _status(st, slug),
+                "buried": buried(st, slug),
                 **{k: card(st, slug)[k] for k in ("box", "due", "seen", "lapses")},
             }
             for slug, m in all_tasks.items()
@@ -452,6 +459,18 @@ def abandon_task(slug: str, sent: Etag):
         log.info("%s abandoned", slug)
         write_region(meta["path"], new_src)
         return _payload(st, slug, meta, new_src)
+
+
+@app.post("/api/task/{slug}/bury")
+def bury_task(slug: str, want: Bury):
+    """Not today. The card keeps its box, its due date, its seen count and its lapses — this
+    only takes it out of today's queue, and the stored day stops matching tomorrow, which is
+    what un-buries it. `{"buried": false}` is the same door, taken early."""
+    with writing() as st:
+        _task(slug)  # a slug that is not a task is a 404, not a card in progress.json
+        card(st, slug)["buried"] = today() if want.buried else ""
+        log.info("%s %s", slug, "buried" if want.buried else "unburied")
+        return {"buried": buried(st, slug)}
 
 
 @app.get("/api/task/{slug}/assets/{name}")
