@@ -68,8 +68,9 @@ def _set_problems(metas):
     """The rules no folder can check alone: task numbers are unique, every reference
     names a real task, nothing gates itself, and no chain of prereqs closes into a loop.
 
-    The loop check is also the reachability check the issue asks for — a task whose
-    prereqs all exist and never cycle can always be reached by working through them."""
+    The loop check is also the reachability check — a task whose prereqs all exist and
+    never cycle can always be reached by working through them. Only the first cycle is
+    named; the next run finds the next one."""
     out, topics = [], {}
     for name in metas:
         if m := SLUG.match(name):
@@ -96,7 +97,6 @@ def _set_problems(metas):
         for t, name in topics.items()
     }
     try:
-        # ponytail: reports the first cycle only; the next run finds the next one.
         graphlib.TopologicalSorter(graph).prepare()
     except graphlib.CycleError as err:
         loop = err.args[1]

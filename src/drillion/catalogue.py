@@ -105,6 +105,8 @@ def _read(folder):
             out.append(
                 f"task.py: the region above the marker is not valid Python — {err.msg}"
             )
+        except UnicodeDecodeError:
+            out.append("task.py: is not valid UTF-8")
         except OSError as err:
             out.append(f"task.py: cannot be read — {err.strerror}")
 
@@ -113,6 +115,8 @@ def _read(folder):
         return None, [*out, "README.md: missing"]
     try:
         meta, md = frontmatter(readme.read_text())
+    except UnicodeDecodeError:
+        return None, [*out, "README.md: is not valid UTF-8"]
     except ValueError as err:
         return None, [*out, f"README.md: {err}"]
     except yaml.YAMLError as err:
@@ -144,12 +148,9 @@ def _read(folder):
     }, out
 
 
-def scan():
-    """[(folder name, record | None, [reason])] — the one place a task is parsed.
-
-    Every folder a contributor authored, in name order, with every rule it breaks. A name
-    starting with `.` or `_` is tooling, not an attempt at a task. The scan is cached
-    against the folders' mtimes, so an edited task still re-reads on the next call."""
+def _scanned():
+    """(the scan, the tasks it yielded), read once per state of tasks/ and cached against
+    the folders' mtimes, so an edited task still re-reads on the next call."""
     global _cache
     folders = [
         f
@@ -158,9 +159,17 @@ def scan():
     ]
     key = (settings.tasks_dir, tuple(_stamp(f) for f in folders))
     if _cache[0] != key:
-        out = [(f.name, *_read(f)) for f in folders]
-        _cache = (key, out, {n: r for n, r, why in out if not why})
-    return _cache[1]
+        found = [(f.name, *_read(f)) for f in folders]
+        _cache = (key, found, {n: r for n, r, why in found if not why})
+    return _cache[1], _cache[2]
+
+
+def scan():
+    """[(folder name, record | None, [reason])] — the one place a task is parsed.
+
+    Every folder a contributor authored, in name order, with every rule it breaks. A name
+    starting with `.` or `_` is tooling, not an attempt at a task."""
+    return _scanned()[0]
 
 
 def tasks():
@@ -168,5 +177,4 @@ def tasks():
 
     Text only: a half-edited task is skipped instead of breaking the menu, and nothing in
     tasks/ is ever imported into this process."""
-    scan()
-    return _cache[2]
+    return _scanned()[1]

@@ -45,7 +45,11 @@ def _root(**folders):
     for name, files in folders.items():
         (tmp / "tasks" / name).mkdir(parents=True)
         for fname, text in files.items():
-            (tmp / "tasks" / name / fname).write_text(text)
+            path = tmp / "tasks" / name / fname
+            if isinstance(text, bytes):
+                path.write_bytes(text)
+            else:
+                path.write_text(text)
     return tmp
 
 
@@ -113,6 +117,12 @@ def test_a_broken_folder_is_skipped_instead_of_breaking_the_menu():
                 "task.py": TASK.replace("def solve", "def nope"),
             },
             "048_noreadme": {"task.py": TASK},
+            "051_notutf8": {"README.md": README, "task.py": TASK.encode() + b"\xff"},
+            "052_readmenotutf8": {
+                "README.md": README.encode() + b"\xff",
+                "task.py": TASK,
+            },
+            "042_Thing": {"README.md": README, "task.py": TASK},
             "049_notier": {
                 "README.md": README.replace("tier: core\n", ""),
                 "task.py": TASK,
@@ -128,6 +138,9 @@ def test_a_broken_folder_is_skipped_instead_of_breaking_the_menu():
         assert reasons["042_thing"] == []
         assert all(why for n, why in reasons.items() if n != "042_thing")
         assert reasons["046_nomarker"] == ["task.py: a task needs the machinery marker"]
+        assert reasons["051_notutf8"] == ["task.py: is not valid UTF-8"]
+        assert reasons["052_readmenotutf8"] == ["README.md: is not valid UTF-8"]
+        assert reasons["042_Thing"][0].startswith("folder name is not")
     finally:
         settings.root = keep
         shutil.rmtree(tmp)
