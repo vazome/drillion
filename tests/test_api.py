@@ -11,22 +11,26 @@ import httpx
 import drillion
 from drillion import region, scheduler, state
 from drillion.api import MAX_BODY, WINDOW, _practised, _recent, app
+from drillion.catalogue import tasks
 from drillion.settings import settings
 
 SLUG = "001_fstrings"
 NEXT_SLUG = "002_slicing"  # no prereqs: what the scheduler offers once 001 is cleared
+PREREQ, GATED = "011_decorators", "016_functools"  # 016 waits on topic 11
 TASKS = settings.tasks_dir  # the real ones — `_api()` repoints settings.root at a copy
 PASSING = 'return "\\n".join(f"{name:<14}{value:>12,.2f}" for name, value in rows)'
 
 
-def _api(flow):
-    """Run `flow(api, path)` against a throwaway copy of one task: the API tests
-    write real files, and Daniel's tasks/ and progress.json are not for that."""
+def _api(flow, extra=()):
+    """Run `flow(api, path)` against a throwaway copy of one task — plus any `extra`
+    slugs a flow needs to see tasks relate to each other: the API tests write real
+    files, and Daniel's tasks/ and progress.json are not for that."""
     tmp, keep = Path(tempfile.mkdtemp(prefix="drillion_api_")), settings.root
     taskdir = tmp / "tasks"
     taskdir.mkdir()
-    shutil.copytree(settings.tasks_dir / SLUG, taskdir / SLUG)
-    shutil.copy(settings.tasks_dir / "_lib.py", taskdir / "_lib.py")
+    for slug in (SLUG, *extra):
+        shutil.copytree(TASKS / slug, taskdir / slug)
+    shutil.copy(TASKS / "_lib.py", taskdir / "_lib.py")
     (taskdir / SLUG / "assets").mkdir()
     (taskdir / SLUG / "assets" / "shape.svg").write_text("<svg/>")
     settings.root = tmp  # tasks/ and progress.json move together
@@ -515,6 +519,53 @@ async def _note(api, _path):
     assert resp.status_code == 404  # a slug is a task or it is nothing
 
 
+async def _blocked_rows(api, _path):
+    """Every unstarted row says what it is waiting for, and it says what the scheduler thinks."""
+    cat = (await api.get("/api/catalogue")).json()
+    rows = {e["slug"]: e for e in cat["tasks"]}
+    assert rows[GATED]["blocked"] == [PREREQ]  # 016 needs topic 11
+    assert rows[PREREQ]["blocked"] == [] and rows[SLUG]["blocked"] == []
+    # the rows waiting for nothing are exactly the ones the scheduler is willing to offer
+    assert sorted(e["slug"] for e in cat["tasks"] if not e["blocked"]) == sorted(
+        scheduler.unseen(state.load(), tasks())
+    )
+
+    st = state.load()
+    st["cards"][PREREQ] = {"box": 1, "due": "2999-01-01", "seen": 1}
+    state.save(st)
+    cat = (await api.get("/api/catalogue")).json()
+    # box 1 is the bar, and clearing it clears the row that was waiting on it
+    assert [e["blocked"] for e in cat["tasks"] if e["slug"] == GATED] == [[]]
+
+
+async def _why_no_new(api, _path):
+    """An empty New picks band carries one reason, the way `behind` carries the cap."""
+    st = state.load()
+    for slug in (SLUG, PREREQ):  # started, not passed: box 0 clears no prereq
+        st["cards"][slug] = {"box": 0, "due": state.today(), "seen": 1}
+    state.save(st)
+    cat = (await api.get("/api/catalogue")).json()
+    assert cat["today"]["new"] == []
+    assert cat["today"]["no_new"] == {"why": "prereqs", "nearest": GATED}
+    assert GATED not in scheduler.unseen(
+        state.load(), tasks()
+    )  # and it really is blocked
+
+    st = state.load()
+    st["cards"][PREREQ] = {"box": 1, "due": "2999-01-01", "seen": 1}  # GATED unlocks
+    st["log"] = [
+        {"date": state.today(), "slug": SLUG, "grade": "pass", "attempts": 1, "secs": 9}
+        | {"new": True}
+        for _ in range(scheduler.NEW_PER_DAY)
+    ]
+    state.save(st)
+    cat = (await api.get("/api/catalogue")).json()
+    assert cat["today"]["new"] == [] and cat["today"]["behind"] is False
+    # unlocked, and held only by the day's allowance — which is a different sentence
+    assert cat["today"]["no_new"] == {"why": "cap", "ready": 1}
+    assert scheduler.unseen(state.load(), tasks()) == [GATED]
+
+
 async def _the_ladder_rides_the_payload(api, _path):
     """Every screen that draws the ladder reads its intervals off the response, so the
     scheduler's list is the only place the rungs are written down."""
@@ -572,6 +623,14 @@ def test_burying_takes_a_card_out_of_today_and_leaves_its_schedule_alone():
 
 def test_a_note_belongs_to_the_task_and_outlives_every_attempt_on_it():
     _api(_note)
+
+
+def test_a_row_carries_the_prereqs_it_is_waiting_on():
+    _api(_blocked_rows, extra=(PREREQ, GATED))
+
+
+def test_an_empty_new_picks_band_carries_its_one_reason():
+    _api(_why_no_new, extra=(PREREQ, GATED))
 
 
 def test_the_practice_count_is_a_rolling_window_not_a_streak():

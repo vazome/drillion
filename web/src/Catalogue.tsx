@@ -20,65 +20,47 @@ const num = (topic: number) => String(topic).padStart(3, "0");
  * en-CA formats it as YYYY-MM-DD, which parses back to the same UTC midnight `due` does. */
 const localToday = () => new Date().toLocaleDateString("en-CA");
 
-/** Everything `focus` may name, mirroring `_facets()` in src/drillion/scheduler.py:23 —
+/** Everything `focus` may name, mirroring `_facets()` in src/drillion/scheduler.py —
  * the tier, the track and the tags alike. The server accepts any of the three, so the
  * catalogue must filter on all three or the screen disagrees with the scheduler. */
 const facets = (row: Row) => [row.tier, row.track, ...row.tags];
 
-/** The prereqs a task has not cleared yet — issue #11.
+/** The copy for `today.no_new`: the one reason New picks is empty, and the way back out of it.
  *
- * Mirrors `unseen()` in src/drillion/scheduler.py: box 1 is the bar, because a first pass
- * graded `struggled` clamps back to box 0 and clears nothing, and under a focus the prereqs
- * outside it are ignored, or a track would stall on a task it does not contain. A card
- * already seen is past the question, so it is never blocked. */
-export function blockedBy(row: Row, byTopic: Map<number, Row>, focus: string | null): Row[] {
-  if (row.seen) return [];
-  return (row.prereqs ?? []).map((t) => byTopic.get(t))
-    .filter((p): p is Row => !!p && p.box < 1 && (!focus || facets(p).includes(focus)));
-}
-
-/** Why New picks is empty, named rather than guessed — issue #11.
- *
- * `queue()` and `unseen()` (src/drillion/scheduler.py) decide this and keep no reason, so the
- * page re-runs the same rules in the same order over rows it already has: the backlog first,
- * because it holds everything else, then today's cap, then the prereqs, then the focus. The
- * copy this replaced printed all three causes at once and left the reader to guess. */
-export function noPicks(all: Row[], blocked: Map<string, Row[]>, focus: string | null,
-                        today: Payload["today"]) {
-  const unseen = all.filter((r) => !r.seen && r.status !== "open");   // queue() drops open ones
-  const inFocus = focus ? unseen.filter((r) => facets(r).includes(focus)) : unseen;
-  const ready = inFocus.filter((r) => !blocked.get(r.slug)?.length);
-  const link = (r: Row) => <a href={href(r)}>#{num(r.topic)} {r.title}</a>;
-
-  if (today.behind) return {
-    why: "behind", act: "backlog" as const,
-    message: <>New picks are paused while you catch up — {plural(today.due_total, "review")} waiting,
-      and a day holds {today.review.length}. They start again on their own once the backlog is under that.</>,
+ * `queue()` in src/drillion/scheduler.py decides which reason it is and the payload carries
+ * it, the way `today.behind` carries the cap — the page names it and never works it out. */
+function noPicks(no: NonNullable<Payload["today"]["no_new"]>, today: Payload["today"],
+                 focus: string | null, by: Map<string, Row>) {
+  const link = (slug: string) => {
+    const r = by.get(slug);
+    return r ? <a href={href(r)}>#{num(r.topic)} {r.title}</a> : null;
   };
-  if (ready.length) return {
-    why: "cap", act: null,
-    message: <>That is today's new material — {plural(today.done_today, "new task")} done.
-      {" "}{plural(ready.length, "task")} unlocked and waiting for tomorrow.</>,
-  };
-  if (inFocus.length) {
-    // the one closest to opening: fewest unmet prereqs, and the lowest number breaks the tie
-    const next = inFocus.reduce((a, b) =>
-      (blocked.get(a.slug)?.length ?? 0) <= (blocked.get(b.slug)?.length ?? 0) ? a : b);
-    const need = blocked.get(next.slug) ?? [];
-    return {
-      why: "prereqs", act: null,
+  switch (no.why) {
+    case "behind": return {
+      act: "backlog" as const,
+      message: <>New picks are paused while you catch up — {plural(today.due_total, "review")} waiting,
+        and a day holds {today.review.length}. They start again on their own once the backlog is under that.</>,
+    };
+    case "cap": return {
+      act: null,
+      message: <>That is today's new material — {plural(today.done_today, "new task")} done.
+        {" "}{plural(no.ready, "task")} unlocked and waiting for tomorrow.</>,
+    };
+    case "prereqs": return {
+      act: null,
       message: <>Every unseen task{focus ? <> under “{focus}”</> : null} is waiting on a prereq.
-        The nearest is {link(next)} — pass {need.map((b, i) => <span key={b.slug}>{i ? ", " : ""}{link(b)}</span>)} first.</>,
+        The nearest is {link(no.nearest)} — pass {(by.get(no.nearest)?.blocked ?? [])
+          .map((s, i) => <span key={s}>{i ? ", " : ""}{link(s)}</span>)} first.</>,
+    };
+    case "focus": return {
+      act: "focus" as const,
+      message: <>Nothing unseen is left under the focus “{focus}” — every task it covers is already started.</>,
+    };
+    default: return {
+      act: null,
+      message: <>Nothing unseen is left: you have opened every task in the catalogue. Reviews are the work now.</>,
     };
   }
-  if (focus) return {
-    why: "focus", act: "focus" as const,
-    message: <>Nothing unseen is left under the focus “{focus}” — every task it covers is already started.</>,
-  };
-  return {
-    why: "done", act: null,
-    message: <>Nothing unseen is left: you have opened every task in the catalogue. Reviews are the work now.</>,
-  };
 }
 
 /** "4 days overdue" / "due today" / "due in 3 days" / "never seen". */
@@ -280,11 +262,6 @@ export function Catalogue() {
   };
 
   const by = useMemo(() => new Map((data?.tasks ?? []).map((e) => [e.slug, e])), [data]);
-  const byTopic = useMemo(() => new Map((data?.tasks ?? []).map((e) => [e.topic, e])), [data]);
-  // what every task is still waiting for, once per payload rather than once per keystroke
-  const blocked = useMemo(
-    () => new Map((data?.tasks ?? []).map((e) => [e.slug, blockedBy(e, byTopic, focus)])),
-    [data, byTopic, focus]);
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
     // `text` is the spec, flattened and lowercased by the server — the same substring
@@ -331,8 +308,8 @@ export function Catalogue() {
     fresh.length ? `${fresh.length} new ${fresh.length === 1 ? "pick" : "picks"}` : null,
     `${today.done_today} done today`,
   ].filter(Boolean).join(" · ");
-  // The reason New picks is empty, and the way back out of it — see noPicks().
-  const empty = fresh.length ? null : noPicks(data.tasks, blocked, focus, today);
+  // The reason New picks is empty, and the way back out of it — the server names it.
+  const empty = today.no_new ? noPicks(today.no_new, today, focus, by) : null;
   const act = empty?.act === "backlog" ? { label: "Show the backlog", run: () => setStatus("due") }
     : empty?.act === "focus" ? { label: "Clear focus", run: () => setFocus(null) }
     : null;
@@ -413,7 +390,7 @@ export function Catalogue() {
                 * sort and every keystroke in the search box — 171 rows replaying dsRise each time
                 * reads as a flicker, not as a list that moved. The Today card keeps it; it arrives once. */}
               <div>{sorted.map((row, i) => <ListRow key={row.slug} row={row} first={i === 0}
-                blocked={blocked.get(row.slug) ?? []} ladder={stats.ladder} limit={stats.lapse_limit} />)}</div>
+                blocked={pick(row.blocked ?? [])} ladder={stats.ladder} limit={stats.lapse_limit} />)}</div>
             </>}
       </Card>
     </div>

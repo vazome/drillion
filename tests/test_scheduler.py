@@ -182,6 +182,32 @@ def test_focus_ignores_out_of_focus_prereqs():
     assert scheduler.unseen(_st(focus="llm"), _exs()) == ["003_c"]
 
 
+def test_an_empty_day_names_the_one_reason_and_a_bury_is_not_one():
+    """`no_new` is the page's only source for "why is New picks empty", so it has to name the
+    rule that actually bit. A bury is the trap: it takes a task out of today's queue without
+    unlocking anything, so a day whose only unstarted work is buried is a day at its cap, not
+    a finished catalogue."""
+    st = _st(focus="core")  # 002_b waits on 001_a; 003_c is out of focus
+    assert scheduler.queue(st, _exs())["no_new"] is None  # 001_a is on offer
+
+    state.card(st, "001_a")["buried"] = state.today()
+    q = scheduler.queue(st, _exs())
+    assert q["new"] == [] and q["no_new"] == {"why": "cap", "ready": 1}
+
+    st = _st(focus="core", cards={"001_a": {"box": 0, "due": "2999-01-01", "seen": 1}})
+    assert scheduler.queue(st, _exs())["no_new"] == {
+        "why": "prereqs",
+        "nearest": "002_b",
+    }  # started at box 0 clears nothing
+
+    st = _st(focus="core", cards={"001_a": {"box": 0, "due": "2999-01-01", "seen": 1}})
+    st["cards"]["002_b"] = {"box": 0, "due": "2999-01-01", "seen": 1}
+    assert scheduler.queue(st, _exs())["no_new"] == {"why": "focus"}
+    st["focus"] = None
+    st["cards"]["003_c"] = {"box": 0, "due": "2999-01-01", "seen": 1}
+    assert scheduler.queue(st, _exs())["no_new"] == {"why": "done"}
+
+
 def test_queue_caps_new_picks_and_skips_open_attempts():
     q = scheduler.queue(_st(open={"001_a": {}}), _exs())
     assert q == {
@@ -190,6 +216,7 @@ def test_queue_caps_new_picks_and_skips_open_attempts():
         "done_today": 0,
         "due_total": 0,
         "behind": False,
+        "no_new": None,  # there is something new to offer, so there is no reason to give
     }
     done = [
         {

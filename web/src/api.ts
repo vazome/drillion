@@ -6,7 +6,7 @@ export type Grade = "quick" | "pass" | "struggled" | "abandoned";
 export interface Row {
   slug: string; topic: number; title: string;
   difficulty: "easy" | "medium" | "hard"; tier: "core" | "advanced" | "packages"; track?: string;
-  tags: string[]; prereqs?: number[]; source?: string;
+  tags: string[]; source?: string;
   status: Status; box: number; due: string; seen: number;
   /** Struggles on this card, never reset. At `stats.lapse_limit` the row says so. */
   lapses: number;
@@ -17,6 +17,10 @@ export interface Row {
   /** Catalogue rows only: the spec's Why / You get / You return / Rules, flattened and
    *  already lowercased for the search box. `GET /api/task` sends `spec_md` instead. */
   text?: string;
+  /** Catalogue rows only: the prereqs this task has not passed yet, so it is not offered as
+   *  a new pick — `blocked()` in src/drillion/scheduler.py, focus and all. Empty on a task
+   *  already started, and never the page's to work out. */
+  blocked?: string[];
 }
 /** GET /api/health — the version the header shows; never hardcode it here. */
 export interface Health { status: string; version: string; tasks: number; root: string }
@@ -29,6 +33,11 @@ export interface Catalogue {
     new: string[];
     recent: string[]; done_today: number;
     due_total: number; behind: boolean;
+    /** the one reason `new` is empty, named by `queue()` rather than inferred here, and
+     *  `null` whenever there is something new to offer. `ready` counts what is unlocked and
+     *  waiting for tomorrow; `nearest` is the task closest to opening. */
+    no_new: { why: "behind" | "focus" | "done" } | { why: "cap"; ready: number }
+      | { why: "prereqs"; nearest: string } | null;
   };
   /** `due` is the whole backlog, not `review.length` — the two differ once `behind`. */
   stats: { boxes: number[]; ladder: number[]; due: number; seen: number; total: number; practised: number; window: number; lapse_limit: number };
