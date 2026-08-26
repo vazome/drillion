@@ -253,6 +253,7 @@ async def _struggled_first_sighting(api, _path):
         "due": state.today(),
         "seen": 0,
         "lapses": 0,
+        "buried": "",
     }
 
     etag = task["etag"]
@@ -359,6 +360,41 @@ async def _health(api, _path):
     assert health == {"status": "ok", "tasks": 1, "root": str(settings.root)}
 
 
+async def _bury(api, _path):
+    """Bury from the API's side: out of today, back by itself, and reversible before then.
+
+    The card is the point. Everything the ladder owns — box, due date, seen count, lapses —
+    has to read back byte-identical afterwards, because that is the entire argument for
+    shipping bury without suspend: a bury you forget about costs one day of not being asked.
+    """
+    st = state.load()
+    st["cards"][SLUG] = {"box": 2, "due": "2020-01-01", "seen": 4, "lapses": 1}
+    state.save(st)
+    was = dict(st["cards"][SLUG])
+
+    cat = (await api.get("/api/catalogue")).json()
+    assert cat["today"]["review"] == [SLUG] and cat["tasks"][0]["buried"] is False
+
+    assert (await api.post(f"/api/task/{SLUG}/bury", json={})).json() == {
+        "buried": True
+    }
+    cat = (await api.get("/api/catalogue")).json()
+    assert cat["today"]["review"] == [] and cat["today"]["due_total"] == 0
+    # the way to see it: still `due`, never a fifth status, and the row says it is buried
+    assert cat["tasks"][0]["status"] == "due" and cat["tasks"][0]["buried"] is True
+    assert (await api.get(f"/api/task/{SLUG}")).json()["buried"] is True
+    assert {k: state.card(state.load(), SLUG)[k] for k in was} == was  # nothing moved
+
+    # the way out, taken early — the other way out is tomorrow arriving
+    resp = await api.post(f"/api/task/{SLUG}/bury", json={"buried": False})
+    assert resp.json() == {"buried": False}
+    cat = (await api.get("/api/catalogue")).json()
+    assert cat["today"]["review"] == [SLUG] and cat["tasks"][0]["buried"] is False
+    assert {k: state.card(state.load(), SLUG)[k] for k in was} == was
+
+    assert (await api.post("/api/task/nope_9999/bury", json={})).status_code == 404
+
+
 def test_the_api_carries_a_task_from_stub_to_pass():
     _api(_stub_to_pass)
 
@@ -385,6 +421,10 @@ def test_the_api_serves_a_tasks_assets():
 
 def test_the_api_reports_its_health():
     _api(_health)
+
+
+def test_burying_takes_a_card_out_of_today_and_leaves_its_schedule_alone():
+    _api(_bury)
 
 
 def test_the_practice_count_is_a_rolling_window_not_a_streak():

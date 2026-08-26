@@ -31,11 +31,14 @@ def today():
 
 
 def card(st, slug):
-    """Your standing with one task, blanks filled in. `lapses` arrived after people had months
-    of progress.json on disk and `load()` only defaults top-level keys, so it is filled in here
-    per card: an older file reads back as a card with no lapses, and no migration step exists."""
+    """Your standing with one task, blanks filled in. `lapses` and `buried` arrived after people
+    had months of progress.json on disk and `load()` only defaults top-level keys, so they are
+    filled in here per card: an older file reads back with both blank, and no migration exists.
+
+    `buried` is the one day the card is out of today's queue, or "" — see `scheduler.buried()`."""
     c = st["cards"].setdefault(slug, {"box": 0, "due": today(), "seen": 0})
     c.setdefault("lapses", 0)
+    c.setdefault("buried", "")
     return c
 
 

@@ -152,6 +152,10 @@ function Flags({ row, blocked, limit }: { row: Row; blocked: Row[]; limit: numbe
     marks.push(<span key="needs" title={`Not offered as a new pick until these are passed: ${blocked.map((b) => `#${num(b.topic)} ${b.title}`).join(", ")}`}>
       needs {blocked.map((b) => `#${num(b.topic)}`).join(" ")}
     </span>);
+  if (row.buried)
+    marks.push(<span key="buried" title="Put aside for today. It is back in the queue tomorrow, in the same box and on the same due date — unbury it from the Today panel to have it back sooner.">
+      buried today
+    </span>);
   if (limit && row.lapses >= limit)
     marks.push(<span key="lapses" title={`You have struggled with this ${row.lapses} times; the hints or the prereqs may be the problem, not you.`}>
       struggled {row.lapses}×
@@ -160,23 +164,35 @@ function Flags({ row, blocked, limit }: { row: Row; blocked: Row[]; limit: numbe
 }
 
 /** A row of the Today card: when it is due, where it sits on the ladder, and one way in.
- * No status badge — the section it is under already says what it is. */
-function TodayRow({ row, limit }: { row: Row; limit: number }) {
+ * No status badge — the section it is under already says what it is.
+ *
+ * `onBury` puts a real button on the row, so the row is a flex box holding the link rather
+ * than being the link: an anchor inside an anchor is invalid HTML, and so is a button inside
+ * one. Without it the row is exactly what it always was. */
+function TodayRow({ row, limit, onBury }: { row: Row; limit: number; onBury?: (buried: boolean) => void }) {
   const [hover, hoverProps] = useHover();
   return (
-    <a href={href(row)} className="m-tint" {...hoverProps}
-      style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "inherit", borderTop: "1px solid var(--border)", background: hover ? "var(--surface-2)" : "transparent", margin: "0 -18px", padding: "9px 18px" }}>
-      <span style={{ ...FAINT, width: 110, color: "var(--text-muted)" }}>{dueText(row)}</span>
-      <LadderMeter box={rung(row)} />
-      <span style={{ ...MONO, width: 30, textAlign: "right" }}>{num(row.topic)}</span>
-      <span style={{ fontSize: 14.5, fontWeight: 500, flex: 1, display: "flex", alignItems: "baseline", gap: 10 }}>
-        {/* nothing in this card is blocked: a new pick is offered only once its prereqs are
-          * cleared, and recent work has been seen. Only the lapse flag can show here. */}
-        {row.title}<Flags row={row} blocked={[]} limit={limit} />
-      </span>
-      {/* the whole row is the link; the button is the affordance, so it takes no focus of its own */}
-      <span inert aria-hidden="true"><Button variant="secondary" style={{ padding: "6px 12px", fontSize: 13 }}>Open</Button></span>
-    </a>
+    <div {...hoverProps}
+      style={{ display: "flex", alignItems: "center", borderTop: "1px solid var(--border)", background: hover ? "var(--surface-2)" : "transparent", margin: "0 -18px", padding: "0 18px" }}>
+      <a href={href(row)} className="m-tint"
+        style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0, textDecoration: "none", color: "inherit", padding: "9px 0" }}>
+        <span style={{ ...FAINT, width: 110, color: "var(--text-muted)" }}>{dueText(row)}</span>
+        <LadderMeter box={rung(row)} />
+        <span style={{ ...MONO, width: 30, textAlign: "right" }}>{num(row.topic)}</span>
+        <span style={{ fontSize: 14.5, fontWeight: 500, flex: 1, display: "flex", alignItems: "baseline", gap: 10 }}>
+          {/* nothing in this card is blocked: a new pick is offered only once its prereqs are
+            * cleared, and recent work has been seen. Only the lapse flag can show here. */}
+          {row.title}<Flags row={row} blocked={[]} limit={limit} />
+        </span>
+        {/* the whole row is the link; the button is the affordance, so it takes no focus of its own */}
+        <span inert aria-hidden="true"><Button variant="secondary" style={{ padding: "6px 12px", fontSize: 13 }}>Open</Button></span>
+      </a>
+      {onBury ? (
+        <Button variant="quiet" onClick={() => onBury(!row.buried)} style={{ fontSize: 13, marginLeft: 12 }}>
+          {row.buried ? "Unbury" : "Bury"}
+        </Button>
+      ) : null}
+    </div>
   );
 }
 
@@ -255,6 +271,14 @@ export function Catalogue() {
     post("/focus", { tag }).then(load).catch((e) => setNotice(`Focus is still “${focus ?? "any"}” — the change did not save: ${e.message}`));
   };
 
+  // burying moves a card in and out of today's queue, so the queue, the counts and the row
+  // all change at once — reload the payload rather than patch three places from one boolean
+  const setBuried = (row: Row, buried: boolean) => {
+    setNotice(null);
+    post(`/task/${encodeURIComponent(row.slug)}/bury`, { buried }).then(load)
+      .catch((e) => setNotice(`#${num(row.topic)} ${row.title} is still ${row.buried ? "buried" : "in today’s queue"} — the change did not save: ${e.message}`));
+  };
+
   const by = useMemo(() => new Map((data?.tasks ?? []).map((e) => [e.slug, e])), [data]);
   const byTopic = useMemo(() => new Map((data?.tasks ?? []).map((e) => [e.topic, e])), [data]);
   // what every task is still waiting for, once per payload rather than once per keystroke
@@ -280,6 +304,12 @@ export function Catalogue() {
   const { today, stats } = data;
   const pick = (slugs: string[]) => slugs.map((s) => by.get(s)).filter(Boolean) as Row[];
   const review = pick(today.review), fresh = pick(today.new), recent = pick(today.recent ?? []);   // a server still running last build sends no `recent`
+  // every buried card, not just the ones today's panel would have offered: a bury made from
+  // the task page has to show up here too, or the only way to see it is the row you left
+  const buried = data.tasks.filter((e) => e.buried);
+  // ...and a buried card collects there rather than twice: recent activity holds everything
+  // worked this week, buried or not, and one card on two rows of one panel is just noise
+  const stillOffered = recent.filter((e) => !e.buried);
   const filtered = !!(q || status || activeTags.length || focus);
   const unsorted = sort.key === DEFAULT_SORT.key && sort.dir === DEFAULT_SORT.dir;
   const clear = () => { setQ(""); setStatus(""); setActiveTags([]); if (focus) setFocus(null); };
@@ -324,16 +354,24 @@ export function Catalogue() {
             * what you were last doing beats the queue. The daily cap rations new material and
             * has no say here — this lists as many as the week holds. */}
           <Band label="Recent activity" aside={`last ${stats.window} days`} first />
-          {recent.length
-            ? recent.map((e) => <TodayRow key={e.slug} row={e} limit={stats.lapse_limit} />)
+          {stillOffered.length
+            ? stillOffered.map((e) => <TodayRow key={e.slug} row={e} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
                 message="Nothing yet this week. Whatever you open collects here, passed or not." />}
           {/* the sub-header carries the focus note, so it stays on screen on an empty day too */}
           <Band label="New picks" aside={today.behind ? "paused — catching up" : focus ? `from ${focus}` : "any"} />
           {fresh.length
-            ? fresh.map((e) => <TodayRow key={e.slug} row={e} limit={stats.lapse_limit} />)
+            ? fresh.map((e) => <TodayRow key={e.slug} row={e} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
                 message={empty!.message} actionLabel={act?.label} onAction={act?.run} />}
+          {/* The way to see a bury, and the way out of one before tomorrow takes it. No band
+            * on a day with nothing buried: an empty state would describe a control most days
+            * never touch. These cards keep their box, their due date and their counts — the
+            * only thing a bury changed is that they are not offered until tomorrow. */}
+          {buried.length ? <>
+            <Band label="Buried" aside="not today — back in the queue tomorrow" />
+            {buried.map((e) => <TodayRow key={e.slug} row={e} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)}
+          </> : null}
         </div>
       </Card>
 
