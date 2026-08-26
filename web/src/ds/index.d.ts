@@ -34,6 +34,8 @@ export interface InputProps {
   placeholder?: string;
   /** monospace text (topic numbers, seeds) */
   mono?: boolean;
+  /** label when no visible <label> names the field */
+  ariaLabel?: string;
   style?: Style;
 }
 export declare function Input(props: InputProps): El;
@@ -128,7 +130,7 @@ export declare function Table(props: TableProps): El;
 
 /** Status / grade pill. Words carry the meaning; colour is never the only signal. */
 export interface StatusBadgeProps {
-  status?: "new" | "due" | "scheduled" | "open" | "done" | "easy" | "medium" | "hard" | "quick" | "pass" | "struggled" | "failed" | "abandoned" | string;
+  status?: "new" | "due" | "open" | "done" | "easy" | "medium" | "hard" | "quick" | "pass" | "struggled" | "abandoned" | string;
   /** override label (e.g. "done 6 d") */
   children?: React.ReactNode;
   style?: Style;
@@ -148,7 +150,7 @@ export declare function TagChip(props: TagChipProps): El;
 
 /** Miniature 5-cell Leitner meter for rows and banners. box 0 = all empty. */
 export interface LadderMeterProps {
-  /** current box, 0–5 */
+  /** which rung to fill, 0–5; 0 is a card that is not on the ladder yet */
   box?: number;
   intervals?: number[];
   style?: Style;

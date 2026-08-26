@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Toggle } from "./ds/index.js";
+import { api, type Catalogue as CataloguePayload } from "./api";
 import { Catalogue } from "./Catalogue";
 import { Task } from "./Task";
 import { Progress } from "./Progress";
@@ -55,9 +56,14 @@ function Header({ route, dark, setDark, total, daysLeft }: {
 export function App() {
   const route = useHash();
   const [dark, setDark] = useTheme();
-  // The header's counts live on the catalogue payload; one shared copy, refetched on nav.
+  // The header's counts live on the catalogue payload, so the header fetches them itself:
+  // routed off the catalogue — a deep link to #/progress or a task — it used to render blank.
   const [head, setHead] = useState({ total: 0, daysLeft: 0 });
-  const onHead = useCallback((h: typeof head) => setHead(h), []);
+  useEffect(() => {
+    api<CataloguePayload>("/catalogue")
+      .then((c) => setHead({ total: c.stats.total, daysLeft: c.stats.days_left }))
+      .catch(() => {});                    // a header without its counts is not worth an error
+  }, []);
 
   const slug = route.startsWith("/task/") ? decodeURIComponent(route.slice(6)) : null;
   return (
@@ -66,7 +72,7 @@ export function App() {
       <main style={{ padding: "24px" }}>
         {slug ? <Task slug={slug} dark={dark} />
           : route === "/progress" ? <Progress />
-          : <Catalogue onHead={onHead} />}
+          : <Catalogue />}
       </main>
     </>
   );
