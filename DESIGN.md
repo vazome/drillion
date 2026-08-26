@@ -13,7 +13,7 @@ cards on a desk") was not taken.
 
 A single-user, local web app for practising Python. A catalogue of 171 short tasks, each
 with a spec, a code editor, and a test that grades the code on fresh random data.
-A spaced-repetition scheduler decides what comes back when (5-box ladder: 2/4/8/16/28 days). Hints
+A spaced-repetition scheduler decides what comes back when (7-box ladder: 2/4/8/16/28/60/120 days). Hints
 unlock with time; the solution unlocks after real effort. Sessions are 20–40 minutes a day, on a
 laptop browser, kept up over months — there is no deadline and no countdown, because a habit is
 what carries the practice. The user is one person learning Python — not a classroom, not a
@@ -52,14 +52,14 @@ Data: `GET /api/catalogue` →
   included and leading, and a task whose last act was abandoning it left out; never filtered
   against the other two, since a card worked on Friday and due again today is both things at
   once; `today.done_today` (count)
-- `stats` — `boxes` (5 counts, one per ladder box), `due` (the whole backlog, not the capped
+- `stats` — `boxes` (7 counts, one per ladder box), `due` (the whole backlog, not the capped
   list), `lapse_limit` (the lapse count a task is flagged at), `seen`, `total`, and `practised` of
   `window`: distinct days worked in the last 7, a rolling count rather than a streak
 - `focus` — one string or null; it restricts *new* picks and is matched against a task's **tier,
   track and tags alike**. `tags[]`, `tiers[]`, `tracks[]` — the three vocabularies to filter by
 - `tasks[]` — per row: `slug`, `topic` (number), `title`, `difficulty`, `tier`, `track?`, `tags[]`,
   `prereqs[]` (numbers), `source?`,
-  `status` ∈ `new | due | open | done`, `box` (0–4, the ladder has five), `due` (date),
+  `status` ∈ `new | due | open | done`, `box` (0–6, the ladder has seven), `due` (date),
   `seen` (count), `lapses` (count — at `stats.lapse_limit` the row is flagged as a task that
   keeps beating you: "you have struggled with this four times; the hints or the prereqs may be
   the problem, not you"), `buried` (boolean — put aside for today only).
@@ -138,7 +138,7 @@ state shows what is still needed), **Abandon**, archive access.
 Results panel (below or beside the editor), states:
 - idle (never run) · running · **failed** (headline lines — the assertion/exception — plus a
   collapsible full pytest output; line numbers refer to the editor) ·
-  **passed**: grade line `QUICK · 4m12s · 1 attempt · box 3 of 5` — elapsed time, never time
+  **passed**: grade line `QUICK · 4m12s · 1 attempt · box 3 of 7` — elapsed time, never time
   against par — the ladder visibly stepping, the passing code read-only, a way to go to the
   next Today item. A `struggled` pass steps the card *down* a box, so the banner must be able
   to show a fall as well as a climb, and carries `lapses` for the flag at `lapse_limit`.
@@ -152,10 +152,10 @@ dot and surfaces on Run), **conflict banner** (file changed on disk: reload / ov
 
 Answers: *where am I on the ladder?*
 
-Data: `GET /api/progress` → `boxes[5]`, `due`, `seen`, `total`, `practised`, `window`,
+Data: `GET /api/progress` → `boxes[7]`, `due`, `seen`, `total`, `practised`, `window`,
 `per_tag{tag: {seen, total}}`, `log[]` (last 30: `date, slug, grade, attempts, secs, new`).
 
-Elements: the same stats strip, the full-size ladder (5 boxes with counts and next-return
+Elements: the same stats strip, the full-size ladder (7 boxes with counts and next-return
 intervals), a per-tag coverage table, the recent log.
 
 ## Vocabulary (use these words)
@@ -177,7 +177,7 @@ widen this: a buried card is still exactly `due`, and `buried` rides alongside a
 Anything that genuinely is a fifth state — suspend, which no timer ever ends — has to reopen this
 rule on purpose rather than widen it quietly.
 
-Boxes render 1–5 although state stores them 0–4. Hints are "levels". The solution "unlocks".
+Boxes render 1–7 although state stores them 0–6. Hints are "levels". The solution "unlocks".
 Showing up is counted as days practised.
 
 ## Out of scope
