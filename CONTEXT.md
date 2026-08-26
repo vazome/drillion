@@ -166,6 +166,13 @@ _Avoid_: lock, timer, paywall
 Every version of your code that got anywhere, kept per task, passed or abandoned alike.
 _Avoid_: history, backup, snapshots
 
+**Note**:
+What you wrote down about a **task**, in your own words. One per task, edited in place — no
+history, no versions, and never one per **attempt**. It belongs to the task and not to the
+sitting, so a **grade**, a new attempt and an abandon all leave it alone; clearing it deletes it.
+The one thing on the task page drillion did not generate.
+_Avoid_: comment, annotation, journal, memo; and above all "notes" plural on a single task
+
 **Log**:
 The record of passes — one row each, with its date, **grade**, **runs** and time.
 _Avoid_: journal, feed, timeline

@@ -448,6 +448,64 @@ async def _bury(api, _path):
     assert (await api.post("/api/task/nope_9999/bury", json={})).status_code == 404
 
 
+async def _note(api, _path):
+    """One note per task, edited in place — and it belongs to the task, not to the sitting.
+
+    That last part is the whole product call in #15. A `struggled` grade, a fresh attempt and
+    an abandon all have to leave the note exactly as it was; if any of them wiped it, the note
+    would really be an attempt log and it would be stored in the wrong place.
+    """
+    assert (await api.get(f"/api/task/{SLUG}")).json()["note"] == ""
+    assert state.load()["notes"] == {}
+
+    kept = "sorted() needs key=, every single time"
+    resp = await api.put(f"/api/task/{SLUG}/note", json={"text": f"  {kept}  "})
+    assert resp.json() == {"note": kept}  # stored trimmed, not as typed
+    assert (await api.get(f"/api/task/{SLUG}")).json()["note"] == kept
+    assert state.load()["notes"] == {SLUG: kept}
+
+    # a struggled pass: three attempts, and a struggle is the grade most likely to be read
+    # as "start over" — the card steps back, and the note still must not move
+    task = (await api.post(f"/api/task/{SLUG}/open")).json()
+    etag = task["etag"]
+    for _ in range(2):
+        run = (
+            await api.post(
+                f"/api/task/{SLUG}/run", json={"code": task["code"], "etag": etag}
+            )
+        ).json()
+        etag = run["etag"]
+    solved = task["code"].replace("raise NotImplementedError", PASSING)
+    run = (
+        await api.post(f"/api/task/{SLUG}/run", json={"code": solved, "etag": etag})
+    ).json()
+    assert run["passed"] is True and run["grade"] == "struggled"
+    assert (await api.get(f"/api/task/{SLUG}")).json()["note"] == kept
+
+    # ...and a fresh attempt on the same card, given up on
+    assert (await api.post(f"/api/task/{SLUG}/open")).json()["note"] == kept
+    task = (await api.get(f"/api/task/{SLUG}")).json()
+    abandoned = await api.post(f"/api/task/{SLUG}/abandon", json={"etag": task["etag"]})
+    assert abandoned.json()["note"] == kept
+
+    # edited in place: one string, sharpened. No history to read back.
+    sharper = "sorted(x, key=...) — the key is a function, not the thing to sort by"
+    assert (await api.put(f"/api/task/{SLUG}/note", json={"text": sharper})).json() == {
+        "note": sharper
+    }
+    assert state.load()["notes"] == {SLUG: sharper}
+
+    # the way out: emptying the box deletes it, and leaves nothing behind in the file
+    assert (await api.put(f"/api/task/{SLUG}/note", json={"text": "  \n "})).json() == {
+        "note": ""
+    }
+    assert state.load()["notes"] == {}
+    assert (await api.get(f"/api/task/{SLUG}")).json()["note"] == ""
+
+    resp = await api.put("/api/task/nope_9999/note", json={"text": "x"})
+    assert resp.status_code == 404  # a slug is a task or it is nothing
+
+
 def test_the_api_carries_a_task_from_stub_to_pass():
     _api(_stub_to_pass)
 
@@ -486,6 +544,10 @@ def test_the_api_reports_its_health():
 
 def test_burying_takes_a_card_out_of_today_and_leaves_its_schedule_alone():
     _api(_bury)
+
+
+def test_a_note_belongs_to_the_task_and_outlives_every_attempt_on_it():
+    _api(_note)
 
 
 def test_the_practice_count_is_a_rolling_window_not_a_streak():
