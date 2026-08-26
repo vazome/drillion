@@ -9,6 +9,9 @@ const MONO = { fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-
 const STATUSES = ["new", "due", "open", "done"];   // api.py _status(): a seen, not-due card is "done"
 const DIFFICULTY = ["easy", "medium", "hard"];     // the order the word means, not the alphabet
 const DAY = 86400000;
+// One column geometry for the header and the rows. The uppercase labels set the widths:
+// "DIFFICULTY" plus a sort arrow needs more room than the badge under it does.
+const COL = { num: 30, path: 230, difficulty: 104, box: 56, status: 78, reset: 28 };
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
@@ -90,33 +93,21 @@ function TodayRow({ row, first = false }: { row: Row; first?: boolean }) {
   );
 }
 
-/** A row of a tier group: quiet id, title, the tier/tag path, difficulty, ladder, status. */
-function ListRow({ row }: { row: Row }) {
+/** A row of the list: quiet id, title, the tier/tag path, difficulty, ladder, status.
+ * The trailing spacer holds the reset control's column, so the header stays aligned. */
+function ListRow({ row, first = false }: { row: Row; first?: boolean }) {
   const [hover, hoverProps] = useHover();
   return (
     <a href={href(row)} className="m-tint" {...hoverProps}
-      style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 44, borderTop: "1px solid var(--border)", textDecoration: "none", color: "inherit", background: hover ? "var(--surface-2)" : "transparent" }}>
-      <span style={{ ...MONO, width: 30, textAlign: "right" }}>{String(row.topic).padStart(3, "0")}</span>
+      style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 44, borderTop: first ? "none" : "1px solid var(--border)", textDecoration: "none", color: "inherit", background: hover ? "var(--surface-2)" : "transparent" }}>
+      <span style={{ ...MONO, width: COL.num, textAlign: "right" }}>{String(row.topic).padStart(3, "0")}</span>
       <span style={{ fontSize: 15, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.title}</span>
-      <span style={{ width: 230, display: "flex", overflow: "hidden" }}><Path row={row} /></span>
-      <span style={{ width: 74 }}><StatusBadge status={row.difficulty} /></span>
-      <span style={{ width: 52, height: 16, display: "flex", alignItems: "center" }}><LadderMeter box={rung(row)} /></span>
-      <span style={{ width: 74 }}><StatusBadge status={row.status} /></span>
+      <span style={{ width: COL.path, display: "flex", overflow: "hidden" }}><Path row={row} /></span>
+      <span style={{ width: COL.difficulty }}><StatusBadge status={row.difficulty} /></span>
+      <span style={{ width: COL.box, height: 16, display: "flex", alignItems: "center" }}><LadderMeter box={rung(row)} /></span>
+      <span style={{ width: COL.status }}><StatusBadge status={row.status} /></span>
+      <span style={{ width: COL.reset }} />
     </a>
-  );
-}
-
-/** One tier as a band inside the list: a name, a count, and its rows. Not collapsible —
- * the tier is already on every row as the first segment of the path. */
-function TierGroup({ tier, rows, first }: { tier: string; rows: Row[]; first: boolean }) {
-  return (
-    <>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, height: 34, padding: "0 16px", background: "var(--surface-2)", borderTop: first ? "none" : "1px solid var(--border-strong)", fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>
-        <span>{tier}</span>
-        <span style={MONO}>({rows.length})</span>
-      </div>
-      <div className="m-stagger">{rows.map((row) => <ListRow key={row.slug} row={row} />)}</div>
-    </>
   );
 }
 
@@ -134,9 +125,23 @@ function SortHead({ label, col, align, sort, onSort, style }: {
   return (
     <button type="button" onClick={() => onSort(next)} {...hoverProps}
       aria-label={active ? `${label}, sorted ${way(sort.dir)}. Sort ${way(next.dir)}` : `Sort by ${label} ${way(next.dir)}`}
-      style={{ ...style, display: "inline-flex", alignItems: "center", gap: 5, justifyContent: align === "right" ? "flex-end" : "flex-start", height: 32, padding: 0, background: "transparent", border: "none", font: "inherit", letterSpacing: "inherit", textTransform: "inherit", color: active || hover ? "var(--text)" : "var(--text-muted)", cursor: "pointer" }}>
+      style={{ ...style, display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, whiteSpace: "nowrap", justifyContent: align === "right" ? "flex-end" : "flex-start", height: 32, padding: 0, background: "transparent", border: "none", font: "inherit", letterSpacing: "inherit", textTransform: "inherit", color: active || hover ? "var(--text)" : "var(--text-muted)", cursor: "pointer" }}>
       <span>{label}</span>
       <span aria-hidden="true" style={{ fontSize: 8, lineHeight: 1, width: 7, color: active ? "var(--accent)" : "var(--text-faint)" }}>{arrow}</span>
+    </button>
+  );
+}
+
+/** Back to `#` ascending. It sits past Status in the header rather than with the filters,
+ * because it undoes the header, not the filtering — and it stays put, greyed, when there is
+ * nothing to undo, so the column it occupies never changes width. */
+function ResetSort({ disabled, onClick }: { disabled: boolean; onClick: () => void }) {
+  const [hover, hoverProps] = useHover();
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} {...hoverProps}
+      title="Reset sort" aria-label="Reset sort to task number, ascending"
+      style={{ width: COL.reset, height: 24, display: "inline-flex", alignItems: "center", justifyContent: "center", background: hover && !disabled ? "var(--surface-2)" : "transparent", border: "none", borderRadius: "var(--radius-sm)", fontSize: 15, lineHeight: 1, color: disabled ? "var(--border-strong)" : hover ? "var(--text)" : "var(--text-muted)", cursor: disabled ? "default" : "pointer" }}>
+      <span aria-hidden="true">↺</span>
     </button>
   );
 }
@@ -232,7 +237,6 @@ export function Catalogue() {
         {data.tracks.map((t) => <TagChip key={t} label={t} active={focus === t} onClick={() => setFocus(focus === t ? null : t)} />)}
         <div style={{ flex: 1 }} />
         <span style={FAINT}>{rows.length} of {stats.total} tasks{activeTags.length > 1 ? " · tags matched with AND" : ""}</span>
-        {unsorted ? null : <Button variant="secondary" onClick={() => setSort(DEFAULT_SORT)} style={{ padding: "6px 10px", fontSize: 13, fontWeight: 500, color: "var(--text-muted)" }}>↺ Reset sort</Button>}
         {filtered ? <Button variant="quiet" onClick={clear}>Clear</Button> : null}
       </div>
       {/* every tag, wrapped and whole: a scroller hid two thirds of the map and moved the
@@ -241,23 +245,22 @@ export function Catalogue() {
         {data.tags.map((t) => <TagChip key={t} label={t} active={tagOn(t)} onClick={() => toggleTag(t)} />)}
       </div>
 
-      {/* one table: the tiers are bands inside it, not three cards */}
+      {/* one flat table: the tier is the first segment of every row's path, so a band
+        * header for it was a second copy of the same word and a count nobody reads */}
       <Card padding={0} style={{ overflow: "hidden" }}>
         {sorted.length === 0
           ? <EmptyState message="No task matches those filters. Loosen a tag or clear the search." actionLabel="Clear filters" onAction={clear} />
           : <>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 32, borderBottom: "1px solid var(--border-strong)", background: "var(--surface)", ...LABEL }}>
-                <SortHead label="#" col="topic" align="right" sort={sort} onSort={setSort} style={{ width: 30 }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 34, borderBottom: "1px solid var(--border-strong)", background: "var(--surface)", ...LABEL }}>
+                <SortHead label="#" col="topic" align="right" sort={sort} onSort={setSort} style={{ width: COL.num }} />
                 <SortHead label="Task" col="title" sort={sort} onSort={setSort} style={{ flex: 1 }} />
-                <SortHead label="tier/tag" col="path" sort={sort} onSort={setSort} style={{ width: 230 }} />
-                <SortHead label="Difficulty" col="difficulty" sort={sort} onSort={setSort} style={{ width: 74 }} />
-                <SortHead label="Box" col="box" sort={sort} onSort={setSort} style={{ width: 52 }} />
-                <SortHead label="Status" col="status" sort={sort} onSort={setSort} style={{ width: 74 }} />
+                <SortHead label="tier/tag" col="path" sort={sort} onSort={setSort} style={{ width: COL.path }} />
+                <SortHead label="Difficulty" col="difficulty" sort={sort} onSort={setSort} style={{ width: COL.difficulty }} />
+                <SortHead label="Box" col="box" sort={sort} onSort={setSort} style={{ width: COL.box }} />
+                <SortHead label="Status" col="status" sort={sort} onSort={setSort} style={{ width: COL.status }} />
+                <ResetSort disabled={unsorted} onClick={() => setSort(DEFAULT_SORT)} />
               </div>
-              {data.tiers.map((tier, i) => {
-                const group = sorted.filter((e) => e.tier === tier);
-                return group.length ? <TierGroup key={tier} tier={tier} rows={group} first={i === 0} /> : null;
-              })}
+              <div className="m-stagger">{sorted.map((row, i) => <ListRow key={row.slug} row={row} first={i === 0} />)}</div>
             </>}
       </Card>
     </div>
