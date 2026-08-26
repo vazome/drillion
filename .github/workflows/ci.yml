@@ -142,3 +142,20 @@ jobs:
           docker logs drillion
           exit 1
       - run: docker exec drillion drillion selfcheck
+      # And the published shape: a volume, a port, nothing brought from the host. The mount
+      # above cannot catch an image that carries no tasks of its own, which is exactly what
+      # #38 was. The container seeds /data on its first start and serves from there.
+      - name: start it again with nothing but a volume
+        run: |
+          docker rm -f drillion
+          docker run -d --name seeded -v drillion-data:/data -p 127.0.0.1:8765:8765 drillion:ci
+          for _ in $(seq 30); do
+            case "$(docker inspect -f '{{.State.Health.Status}}' seeded)" in
+              healthy) break ;;
+              unhealthy) docker logs seeded; exit 1 ;;
+            esac
+            sleep 2
+          done
+          test "$(curl -fsS http://127.0.0.1:8765/api/health | jq .tasks)" = 171
+          curl -fsS -o /dev/null http://127.0.0.1:8765/
+          curl -fsS -o /dev/null -X POST http://127.0.0.1:8765/api/task/001_fstrings/open
