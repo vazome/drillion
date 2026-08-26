@@ -55,6 +55,42 @@ The most common defect in this repo is a change that works on the path you teste
 - Comments describe how a thing is used, and move when the code moves. To be used mostly to describe functions, not to annotate every line of behavior.
 - If a rule here fights the task in front of you, say so loudly and get a human sign-off before breaking it.
 
+### Creating Pull Requests
+
+**Always push to the user's fork (`origin`)**, not to `upstream` or "GitHub".
+Never push directly to `main`.
+
+Before pushing, confirm the remote setup matches the conventions above
+(`upstream` → `vazome/drillion`, `origin` → your fork). Run `git remote -v` and,
+if the names don't match, propose renames as described in "Git remote naming
+conventions" — ask the user to confirm before running them.
+
+If the fork remote does not exist at all, create one:
+
+```bash
+gh repo fork vazome/drillion --remote --remote-name origin
+```
+
+Before pushing, perform a self-review of your changes.
+
+Before pushing, always rebase your branch onto the latest target branch (usually `main`)
+to avoid merge conflicts and ensure CI runs against up-to-date code:
+
+```bash
+git fetch upstream <target_branch>
+git rebase upstream/<target_branch>
+```
+
+If there are conflicts, resolve them and continue the rebase. If the rebase is too complex,
+ask the user for guidance.
+```
+
+Remind the user to:
+
+1. Review the PR title — keep it short (under 70 chars), in the imperative mood, and focused on user impact. Do not use Conventional Commits prefixes (`fix:`, `feat:`, `chore:`, …).
+2. Add a brief description of the changes at the top of the body.
+3. Reference related issues when applicable.
+
 ## Boundaries
 
 - **Ask first**
@@ -86,3 +122,17 @@ participating in that same PR/issue discussion.
 
 - Don't verify with browsers or computer use unless the user explicitly agrees or requests it.
 - Security is important, but should not be over-indexed on, especially for dev features.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues on `vazome/study`, driven with the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage roles, each label string equal to its name. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` plus `docs/adr/` at the repo root. See `docs/agents/domain.md`.
