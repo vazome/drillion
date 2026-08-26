@@ -56,6 +56,33 @@ jobs:
         working-directory: web
       - run: pnpm build
         working-directory: web
+      # Build the sdist HERE, after `pnpm install` has put node_modules on disk, because
+      # that is the only state in which this can fail. hatchling ignores nested .gitignore
+      # files, so `web/node_modules` is invisible to it and only pyproject's own exclude
+      # list keeps it out — drillion 0.1.0 shipped 113 MB of it. A clean local build proves
+      # nothing; a build with node_modules present proves the exclude still works.
+      - run: uv build --sdist -o /tmp/sdist
+      - name: the sdist carries the source, not the workspace
+        run: |
+          python3 - <<'PY'
+          import glob, sys, tarfile
+          names = [m.name for m in tarfile.open(glob.glob("/tmp/sdist/*.tar.gz")[0]).getmembers()]
+          banned = [n for n in names
+                    if any(b in n for b in ("node_modules", ".tsbuildinfo", "/screenshots/",
+                                            "/test-results/", "/.vscode/", "/.idea/"))]
+          if banned:
+              print(f"::error::the sdist contains {len(banned)} files it should not, e.g. {banned[:3]}")
+              sys.exit(1)
+          tasks = {n.split("/")[2] for n in names if "/tasks/" in n and n.count("/") > 2}
+          if len(tasks) != 171:
+              print(f"::error::the sdist carries {len(tasks)} task folders, expected 171")
+              sys.exit(1)
+          if not any("/web/dist/" in n for n in names):
+              print("::error::the sdist has no web/dist, so a wheel built from it serves no page")
+              sys.exit(1)
+          print(f"sdist ok: {len(names)} entries, {len(tasks)} tasks, web/dist present")
+          PY
+        working-directory: web
 
   # #29: reviewing the client meant checking the branch out and starting a server, so the only
   # person who could review it was whoever had it running. This drives the real client against

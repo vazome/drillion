@@ -1,6 +1,6 @@
 [project]
 name = "drillion"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python practice drills that come back before you forget them. Graded by pytest, runs on your machine."
 readme = "README.md"
 license = "MIT"
@@ -51,9 +51,27 @@ packages = ["src/drillion"]
 # sdist drops the wheel cannot force-include. web/dist is generated and git-ignored, and
 # `artifacts` is the one selector the VCS rules do not apply to.
 artifacts = ["web/dist/**"]
-# The sdist is the source, not the workspace: agent instructions and IDE settings are not
-# part of what anyone builds or reads on PyPI.
-exclude = ["/.idea", "/AGENTS.md", "/CLAUDE.md", "/DESIGN.md"]
+# The sdist is the source, not the workspace: agent instructions, IDE settings and build
+# output are not part of what anyone builds or reads on PyPI.
+#
+# Every `/web/` line here is already in `web/.gitignore`, and has to be repeated because
+# hatchling reads only the ROOT .gitignore — a nested one is invisible to it. Nothing warns
+# you: the sdist is correct until someone runs `pnpm install` before `uv build`, which is
+# exactly what CI does, so it built clean locally and shipped 113 MB of node_modules in
+# drillion 0.1.0. Anything ignored under `web/` must be named again here.
+exclude = [
+    "/.idea",
+    "/.vscode",
+    "/.design-sync",
+    "/AGENTS.md",
+    "/CLAUDE.md",
+    "/DESIGN.md",
+    "/web/node_modules",
+    "/web/screenshots",
+    "/web/test-results",
+    "/web/.check.bundle.mjs",
+    "*.tsbuildinfo",
+]
 
 [dependency-groups]
 dev = [
