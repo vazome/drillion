@@ -17,11 +17,17 @@ SOLUTION_GATE = (3, 600)             # attempts, active seconds
 
 
 class Gated(Exception):
-    """A hint (or the solution) that has not been earned yet."""
+    """A hint (or the solution) that has not been earned yet. `owed` carries what is
+    still to be spent: nothing for an exhausted hint list, attempts and seconds for
+    the answer. Callers report it; they never re-derive it."""
 
-    def __init__(self, wait_secs=0):
+    def __init__(self, wait_secs=0, **owed):
         super().__init__(f"wait {wait_secs}s")
-        self.wait_secs = wait_secs
+        self.wait_secs, self.owed = wait_secs, owed
+
+
+class NoAttempt(Exception):
+    """An action that needs an open attempt, on an exercise that has none."""
 
 
 def touch(o):
@@ -30,6 +36,15 @@ def touch(o):
     o["active"] += int(min((now - datetime.fromisoformat(o["last"])).total_seconds(), 120))
     o["last"] = now.isoformat()
     return o["active"]
+
+
+def current(st, slug):
+    """The open attempt, its timer wound on. Every acting route starts here."""
+    if slug not in st["open"]:
+        raise NoAttempt(slug)
+    o = st["open"][slug]
+    touch(o)
+    return o
 
 
 def open_attempt(st, slug):
@@ -86,17 +101,45 @@ def next_hint(st, slug, hints):
     return level + 1, hints[level]
 
 
-def unlock_solution(st, slug):
-    """The answer opens only after real effort, and marks the attempt as peeked."""
-    o = st["open"][slug]
+def _gate(o):
+    """(unlocked, attempts still owed, active seconds still owed). Pure — the one
+    definition of "has this been earned"; `unlock_solution` is this plus the mark."""
     attempts, secs = SOLUTION_GATE
-    if o["attempts"] < attempts or o["active"] < secs:
-        return False
+    if o is None:
+        return False, attempts, secs
+    return (o["solution_shown"] or (o["attempts"] >= attempts and o["active"] >= secs),
+            max(0, attempts - o["attempts"]), max(0, secs - o["active"]))
+
+
+def unlock_solution(st, slug):
+    """The answer opens only after real effort, and marks the attempt as peeked.
+    Raises Gated carrying what is still owed, so no caller re-derives the gate."""
+    o = st["open"][slug]
+    unlocked, need_attempts, need_secs = _gate(o)
+    if not unlocked:
+        raise Gated(need_attempts=need_attempts, need_secs=need_secs)
     o["solution_shown"] = True
-    return True
 
 
-def _solution(path):
+def solution_text(path):
+    """The reference answer, read from disk. The gate is the caller's line above."""
     txt = path.read_text()
     marker = "def _reference("
     return txt[txt.index(marker):].split("\ndef test_")[0].strip()
+
+
+def attempt_view(o, hints):
+    """What the page may know about an attempt: the timer, the hints, the gate.
+
+    `o` is None when nothing is open. Every number here answers exactly as the
+    matching action would, because both read `_gate` and HINT_GAP from this module."""
+    unlocked, need_attempts, need_secs = _gate(o)
+    shown = o["hints"] if o else 0
+    next_in = None
+    if o and shown < len(hints):
+        next_in = max(0, HINT_GAP * (shown + 1) - o["active"]) if shown else 0
+    return {"attempt": {k: o[k] for k in ("attempts", "hints", "active", "seed",
+                                          "solution_shown")} if o else None,
+            "hints": {"total": len(hints), "shown": hints[:shown], "next_in": next_in},
+            "solution": {"unlocked": unlocked, "need_attempts": need_attempts,
+                         "need_secs": need_secs}}

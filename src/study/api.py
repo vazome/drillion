@@ -1,9 +1,10 @@
 """JSON API over the drill core, and the built page that drives it.
 
-Every route is a plain `def`. They all touch the disk under one lock, and an
-`async def` blocking on a `threading.Lock` would freeze the whole server while
-a 60 s pytest run held it; FastAPI runs sync handlers in a threadpool, where
-blocking is what threads are for.
+Every route is a plain `def`. Each one that touches progress.json opens a
+`state.writing()` (or `state.reading()`) block, which holds the lock and is the
+only place the file is committed; an `async def` blocking on that lock would
+freeze the whole server while a 60 s pytest run held it, and FastAPI runs sync
+handlers in a threadpool, where blocking is what threads are for.
 
 Nothing here re-implements a rule: `region` owns validation and the splice,
 `scheduler` and `attempts` own grading, and the exercise files are read as text
@@ -28,18 +29,18 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .attempts import (
-    HINT_GAP,
-    SOLUTION_GATE,
     Gated,
-    _solution,
+    NoAttempt,
     abandon,
+    attempt_view,
+    current,
     next_hint,
     open_attempt,
     record_pass,
-    touch,
+    solution_text,
     unlock_solution,
 )
-from .catalogue import exercises
+from .catalogue import exercises, public
 from .region import (
     Invalid,
     bounds,
@@ -54,12 +55,10 @@ from .region import (
 from .runner import run_tests, summarise
 from .scheduler import INTERVIEW, LADDER, due_today, queue
 from .settings import settings
-from .state import card, load, save, today
+from .state import card, reading, today, writing
 
 log = logging.getLogger(__name__)
 MAX_BODY = 256 * 1024
-LOCK = threading.Lock()      # read → validate → write → save() is one transaction
-CATALOGUE_ONLY = ("path", "dir", "hints", "spec_md", "marker_line")   # never shipped in `meta`
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -82,6 +81,12 @@ class Focus(BaseModel):
 async def _rejected(_request, exc):
     """A refused edit is the learner's problem, not a crash: 400 with coordinates."""
     return JSONResponse({"error": exc.msg, "line": exc.line, "col": exc.col}, 400)
+
+
+@app.exception_handler(NoAttempt)
+async def _no_attempt(_request, _exc):
+    """Acting on an exercise nobody opened: the learner's problem, not a crash."""
+    return JSONResponse({"error": "no open attempt — open the exercise first"}, 409)
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -115,37 +120,11 @@ def _exercise(slug):
     return exs[slug]
 
 
-def _attempt(st, slug):
-    """The open attempt, its timer wound on. The core would raise KeyError."""
-    if slug not in st["open"]:
-        raise HTTPException(409, "no open attempt — open the exercise first")
-    o = st["open"][slug]
-    touch(o)
-    return o
-
-
 def _check_etag(src, sent):
     """Optimistic lock: the editor may only write what it last read."""
     if sent != etag(src):
         raise HTTPException(409, {"error": "the file changed on disk",
                                   "etag": etag(src), "code": cut(src).body})
-
-
-def _gate(o):
-    """(unlocked, attempts still owed, active seconds still owed) — pure, unlike
-    `unlock_solution`, which marks the attempt as peeked."""
-    attempts, secs = SOLUTION_GATE
-    if o is None:
-        return False, attempts, secs
-    return (o["solution_shown"] or (o["attempts"] >= attempts and o["active"] >= secs),
-            max(0, attempts - o["attempts"]), max(0, secs - o["active"]))
-
-
-def _next_hint_in(o, total):
-    """Seconds until the next hint; 0 if it is ready, None if there is none."""
-    if o is None or o["hints"] >= total:
-        return None
-    return max(0, HINT_GAP * (o["hints"] + 1) - o["active"]) if o["hints"] else 0
 
 
 def _status(st, slug):
@@ -162,11 +141,11 @@ def _payload(st, slug, meta, src):
     body = cut(src).body
     o = st["open"].get(slug)
     c = card(st, slug)
-    unlocked, need_attempts, need_secs = _gate(o)
+    att = attempt_view(o, meta["hints"])
     # a due review must not be handed last time's answer; a locked attempt neither
-    show_code = c["seen"] > 0 and (unlocked if o else c["due"] > today())
+    show_code = c["seen"] > 0 and (att["solution"]["unlocked"] if o else c["due"] > today())
     return {"slug": slug,
-            "meta": {k: v for k, v in meta.items() if k not in CATALOGUE_ONLY},
+            "meta": public(meta),
             "spec_md": meta["spec_md"],
             "code": body,
             "etag": etag(src),
@@ -174,13 +153,7 @@ def _payload(st, slug, meta, src):
             "region_start": 1,
             "marker_line": bounds(src),
             "status": _status(st, slug),
-            "attempt": {k: o[k] for k in ("attempts", "hints", "active", "seed",
-                                          "solution_shown")} if o else None,
-            "hints": {"total": len(meta["hints"]),
-                      "shown": meta["hints"][:o["hints"]] if o else [],
-                      "next_in": _next_hint_in(o, len(meta["hints"]))},
-            "solution": {"unlocked": unlocked, "need_attempts": need_attempts,
-                         "need_secs": need_secs},
+            **att,
             "archive": [{"date": a["date"], "grade": a["grade"],
                          **({"code": a["code"]} if show_code else {})}
                         for a in st["archive"].get(slug, [])]}
@@ -205,12 +178,10 @@ def health():
 
 @app.get("/api/catalogue")
 def catalogue():
-    with LOCK:                                   # GETs never save(): card() only fills blanks
-        st, exs = load(), exercises()
+    with reading() as st:                        # card() only fills blanks; nothing commits
+        exs = exercises()
         q = queue(st, exs)
-        rows = [{"slug": slug, "topic": m["topic"], "title": m["title"],
-                 "minutes": m["minutes"], "tags": m["tags"], "prereqs": m.get("prereqs", []),
-                 "practices": m.get("practices", []), "status": _status(st, slug),
+        rows = [{"slug": slug, **public(m), "status": _status(st, slug),
                  **{k: card(st, slug)[k] for k in ("box", "due", "seen")}}
                 for slug, m in exs.items()]
         boxes = _boxes(st, exs)
@@ -225,8 +196,8 @@ def catalogue():
 
 @app.get("/api/progress")
 def progress():
-    with LOCK:
-        st, exs = load(), exercises()
+    with reading() as st:
+        exs = exercises()
         per_tag = {}
         for slug, meta in exs.items():
             seen = card(st, slug)["seen"] > 0
@@ -240,28 +211,26 @@ def progress():
 
 @app.get("/api/ex/{slug}")
 def get_exercise(slug: str):
-    with LOCK:
+    with reading() as st:
         meta = _exercise(slug)
-        return _payload(load(), slug, meta, meta["path"].read_text())
+        return _payload(st, slug, meta, meta["path"].read_text())
 
 
 # ---------------------------------------------------------------- the attempt
 @app.post("/api/ex/{slug}/open")
 def open_exercise(slug: str):
-    with LOCK:
+    with writing() as st:
         meta = _exercise(slug)
-        st = load()
         open_attempt(st, slug)                   # the file is already a stub: nothing is written
-        save(st)
         return _payload(st, slug, meta, meta["path"].read_text())
 
 
 @app.put("/api/ex/{slug}")
 def save_exercise(slug: str, edit: Edit):
-    with LOCK:                                   # autosave: the file only, no timer, no save()
+    with reading() as st:                        # autosave: the file only, no timer, no commit
         meta = _exercise(slug)
-        if slug not in load()["open"]:           # a closed exercise is a stub; keep it one
-            raise HTTPException(409, "no open attempt — open the exercise first")
+        if slug not in st["open"]:               # a closed exercise is a stub; keep it one
+            raise NoAttempt(slug)
         src = meta["path"].read_text()
         _check_etag(src, edit.etag)
         new_src = validate(edit.code, src)
@@ -272,10 +241,9 @@ def save_exercise(slug: str, edit: Edit):
 @app.post("/api/ex/{slug}/run")
 def run_exercise(slug: str, edit: Edit):
     """Save, then run. A rejected save is a 400 and costs no attempt."""
-    with LOCK:
+    with writing() as st:
         meta = _exercise(slug)
-        st = load()
-        o = _attempt(st, slug)
+        o = current(st, slug)
         src = meta["path"].read_text()
         _check_etag(src, edit.etag)
         new_src = validate(edit.code, src)
@@ -292,25 +260,20 @@ def run_exercise(slug: str, edit: Edit):
             new_src = splice(new_src, stub(body))
             write_region(meta["path"], new_src)                     # back to the stub
             resp |= {"grade": grade, "box": box, "due_in": gap, "code": code}
-        save(st)
         return resp | {"etag": etag(new_src)}
 
 
 @app.post("/api/ex/{slug}/touch")
 def touch_exercise(slug: str):
-    with LOCK:                                   # no catalogue lookup: this runs every 60 s and
-        st = load()                              # only an opened — known — slug can be in `open`
-        active = _attempt(st, slug)["active"]
-        save(st)
-        return {"active": active}
+    with writing() as st:                        # no catalogue lookup: this runs every 60 s and
+        return {"active": current(st, slug)["active"]}   # only an opened — known — slug is open
 
 
 @app.post("/api/ex/{slug}/hint")
 def hint_exercise(slug: str):
-    with LOCK:
+    with writing() as st:
         meta = _exercise(slug)
-        st = load()
-        _attempt(st, slug)
+        current(st, slug)
         try:
             level, text = next_hint(st, slug, meta["hints"])
         except Gated as gate:
@@ -318,36 +281,32 @@ def hint_exercise(slug: str):
                 "error": "not yet — sit with it a little longer" if gate.wait_secs
                          else "no hints left — the solution is the next step",
                 "wait_secs": gate.wait_secs, "exhausted": not gate.wait_secs}) from None
-        save(st)
         return {"level": level, "total": len(meta["hints"]), "text": text}
 
 
 @app.post("/api/ex/{slug}/solution")
 def solution_exercise(slug: str):
-    with LOCK:
+    with writing() as st:
         meta = _exercise(slug)
-        st = load()
-        o = _attempt(st, slug)
-        if not unlock_solution(st, slug):
-            _, need_attempts, need_secs = _gate(o)
+        current(st, slug)
+        try:
+            unlock_solution(st, slug)
+        except Gated as gate:
             raise HTTPException(423, {"error": "the answer opens after real effort",
-                                      "need_attempts": need_attempts, "need_secs": need_secs})
-        save(st)
-        return {"code": _solution(meta["path"])}       # the gate is right above
+                                      **gate.owed}) from None
+        return {"code": solution_text(meta["path"])}   # the gate is right above
 
 
 @app.post("/api/ex/{slug}/abandon")
 def abandon_exercise(slug: str, sent: Etag):
     """Give up: keep the work in the archive, put the stub back, drop the timer."""
-    with LOCK:
+    with writing() as st:
         meta = _exercise(slug)
-        st = load()
         src = meta["path"].read_text()
         _check_etag(src, sent.etag)
         new_src = abandon(st, slug, src)
         log.info("%s abandoned", slug)
         write_region(meta["path"], new_src)
-        save(st)
         return _payload(st, slug, meta, new_src)
 
 
@@ -363,10 +322,8 @@ def asset(slug: str, name: str):
 
 @app.post("/api/focus")
 def set_focus(focus: Focus):
-    with LOCK:
-        st = load()
+    with writing() as st:
         st["focus"] = focus.tag
-        save(st)
         return {"focus": st["focus"]}
 
 

@@ -30,7 +30,7 @@ def _st(**kw):
 
 
 def test_solution_returns_only_the_reference():
-    text = attempts._solution(settings.exercises_dir / "001_fstrings" / "drill.py")
+    text = attempts.solution_text(settings.exercises_dir / "001_fstrings" / "drill.py")
     assert text.startswith("def _reference(") and "def test_" not in text
 
 
@@ -73,10 +73,28 @@ def test_solution_unlocks_after_three_attempts_and_ten_minutes():
     st = _st()
     o = attempts.open_attempt(st, "001_a")
     o.update(attempts=3, active=599)
-    assert attempts.unlock_solution(st, "001_a") is False
+    with pytest.raises(attempts.Gated) as gate:
+        attempts.unlock_solution(st, "001_a")
+    assert gate.value.owed == {"need_attempts": 0, "need_secs": 1}    # what is still to be spent
     o["active"] = 600
-    assert attempts.unlock_solution(st, "001_a") is True
+    attempts.unlock_solution(st, "001_a")
     assert o["solution_shown"] is True
+
+
+def test_the_view_answers_the_same_gate_the_action_enforces():
+    st, hints = _st(), ["a", "b", "c"]
+    assert attempts.attempt_view(None, hints) == {
+        "attempt": None,
+        "hints": {"total": 3, "shown": [], "next_in": None},
+        "solution": {"unlocked": False, "need_attempts": 3, "need_secs": 600}}
+    o = attempts.open_attempt(st, "001_a")
+    assert attempts.attempt_view(o, hints)["hints"]["next_in"] == 0    # the first is free
+    attempts.next_hint(st, "001_a", hints)
+    assert attempts.attempt_view(o, hints)["hints"] == {
+        "total": 3, "shown": ["a"], "next_in": 120}                    # HINT_GAP * 2, none spent
+    o.update(attempts=3, active=600)
+    assert attempts.attempt_view(o, hints)["solution"]["unlocked"] is True
+    attempts.unlock_solution(st, "001_a")                              # the action agrees
 
 
 def test_abandon_archives_real_work_and_resets_the_file():
@@ -105,6 +123,25 @@ def test_load_fills_in_the_keys_an_older_file_lacks():
         assert st["cards"]["001_a"]["box"] == 1                       # what was there is kept
         assert st["focus"] is None and st["open"] == {} and st["log"] == []
         assert not list(tmp.glob("*.tmp"))                           # the write was atomic
+    finally:
+        settings.root = keep
+        shutil.rmtree(tmp)
+
+
+def test_writing_commits_once_and_reading_never_does():
+    tmp, keep = Path(tempfile.mkdtemp()), settings.root
+    try:
+        settings.root = tmp
+        with state.writing() as st:
+            st["focus"] = "core"
+        with state.reading() as st:
+            assert st["focus"] == "core"
+            st["focus"] = "gone"                                  # a GET may scribble on its copy
+        assert state.load()["focus"] == "core"                    # nothing it scribbles is kept
+        with pytest.raises(RuntimeError), state.writing() as st:
+            st["focus"] = "half"
+            raise RuntimeError("mid-transaction")
+        assert state.load()["focus"] == "core"                    # a failed route commits nothing
     finally:
         settings.root = keep
         shutil.rmtree(tmp)

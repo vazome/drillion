@@ -1,5 +1,6 @@
 """Catalogue: one folder per drill, README.md frontmatter and Markdown guidance."""
 
+import os
 import shutil
 import tempfile
 from pathlib import Path
@@ -53,7 +54,8 @@ def test_every_drill_folder_is_read():
     assert m["dir"].name == "001_fstrings" and isinstance(m["tags"], list)
     assert m["spec_md"].startswith("# ") and "## Why" in m["spec_md"]
     assert "## Hints" not in m["spec_md"]                    # hints are never in the spec
-    assert m["marker_line"] > 1
+    assert set(catalogue.public(m)) <= set(catalogue.BROWSER)        # no paths, hints or spec
+    assert "hints" not in catalogue.public(m) and "path" not in catalogue.public(m)
 
 
 def test_every_readme_has_the_contract():
@@ -98,6 +100,23 @@ def test_a_broken_folder_is_skipped_instead_of_breaking_the_menu():
     try:
         settings.root = tmp
         assert list(catalogue.exercises()) == ["042_thing"]
+    finally:
+        settings.root = keep
+        shutil.rmtree(tmp)
+
+
+def test_the_scan_is_cached_but_an_edited_drill_is_re_read():
+    tmp, keep = _root(**{"001_a": {"README.md": README, "drill.py": DRILL}}), settings.root
+    try:
+        settings.root = tmp
+        first = catalogue.exercises()
+        assert catalogue.exercises() is first                     # same folders, same mtimes
+        drill = tmp / "exercises" / "001_a" / "drill.py"
+        drill.write_text(DRILL.replace("def solve(x):", "def solve(x, y):"))
+        os.utime(drill, (0, 0))                                   # a same-nanosecond edit is still an edit
+        assert catalogue.exercises() is not first
+        (tmp / "exercises" / "002_b").mkdir()
+        assert catalogue.exercises() is not first                 # a new folder counts too
     finally:
         settings.root = keep
         shutil.rmtree(tmp)
