@@ -6,13 +6,26 @@ export type Grade = "quick" | "pass" | "struggled" | "abandoned";
 export interface Row {
   slug: string; topic: number; title: string;
   difficulty: "easy" | "medium" | "hard"; tier: "core" | "advanced" | "packages"; track?: string;
-  tags: string[]; prereqs?: number[]; practices?: number[]; source?: string;
+  tags: string[]; prereqs?: number[]; source?: string;
   status: Status; box: number; due: string; seen: number;
+  /** Struggles on this card, never reset. At `stats.lapse_limit` the row says so. */
+  lapses: number;
+  /** Catalogue rows only: the spec's Why / You get / You return / Rules, flattened and
+   *  already lowercased for the search box. `GET /api/task` sends `spec_md` instead. */
+  text?: string;
 }
 export interface Catalogue {
   focus: string | null; tags: string[]; tiers: string[]; tracks: string[];
-  today: { review: string[]; new: string[]; recent: string[]; done_today: number };
-  stats: { boxes: number[]; due: number; seen: number; total: number; practised: number; window: number };
+  today: {
+    /** the day's reviews, most overdue first — CAPPED. `due_total` is the real backlog. */
+    review: string[];
+    /** held empty while `behind`: no new material until the backlog is back under the cap */
+    new: string[];
+    recent: string[]; done_today: number;
+    due_total: number; behind: boolean;
+  };
+  /** `due` is the whole backlog, not `review.length` — the two differ once `behind`. */
+  stats: { boxes: number[]; due: number; seen: number; total: number; practised: number; window: number; lapse_limit: number };
   tasks: Row[];
 }
 export interface Progress {
@@ -21,7 +34,7 @@ export interface Progress {
   log: { date: string; slug: string; grade: Grade; attempts: number; secs: number; new: boolean }[];
 }
 export interface Task {
-  slug: string; meta: Omit<Row, "slug" | "status" | "box" | "due" | "seen">;
+  slug: string; meta: Omit<Row, "slug" | "status" | "box" | "due" | "seen" | "lapses">;
   spec_md: string; code: string; etag: string; has_given: boolean;
   marker_line: number; status: Status;
   attempt: { attempts: number; hints: number; active: number; seed: number; solution_shown: boolean } | null;
