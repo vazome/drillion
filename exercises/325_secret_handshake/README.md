@@ -96,7 +96,7 @@ The four action bits are read from the **right-hand end** of the string:
 | 1st | `1` | `"wink"` |
 | 2nd | `1` | `"double blink"` |
 | 3rd | `0` | `"close your eyes"` |
-| 4th | `1` | `"jump"` |
+| 4th | `0` | `"jump"` |
 | 5th (leftmost) | `1` | reverse the whole list |
 
 - the action strings are exactly `"wink"`, `"double blink"`, `"close your eyes"`, `"jump"` — lower case, spaces as written
