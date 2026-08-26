@@ -57,33 +57,36 @@ The most common defect in this repo is a change that works on the path you teste
 
 ### Creating Pull Requests
 
-**Always push to the user's fork (`origin`)**, not to `upstream` or "GitHub".
-Never push directly to `main`.
+Never push to `main`, and never force-push a branch someone else may have pulled.
 
-Before pushing, confirm the remote setup matches the conventions above
-(`upstream` → `vazome/drillion`, `origin` → your fork). Run `git remote -v` and,
-if the names don't match, propose renames as described in "Git remote naming
-conventions" — ask the user to confirm before running them.
+Work out where to push **once**, with `git remote -v`. There are two shapes, and only one of
+them involves a fork:
 
-If the fork remote does not exist at all, create one:
+- **You can push to `vazome/drillion` directly** — it is `origin`, and there is no `upstream`.
+  This is a maintainer's own clone, and it is the common case. Push the feature branch to
+  `origin` and open the PR against `origin/main`. Do **not** fork, and do **not** add an
+  `upstream` remote pointing at the repo `origin` already points at.
+- **You cannot** — then `origin` is your fork and `upstream` is `vazome/drillion`. Push to
+  `origin`, never to `upstream`. If the fork remote is missing:
+
+  ```bash
+  gh repo fork vazome/drillion --remote --remote-name origin
+  ```
+
+Either way, the remote you open the PR against is the **canonical remote**: `upstream` when a
+fork is in play, `origin` otherwise. If the remotes match neither shape, say so and ask before
+renaming anything.
+
+Before pushing, perform a self-review of your changes, then rebase onto the latest target
+branch (usually `main`) so CI runs against up-to-date code:
 
 ```bash
-gh repo fork vazome/drillion --remote --remote-name origin
-```
-
-Before pushing, perform a self-review of your changes.
-
-Before pushing, always rebase your branch onto the latest target branch (usually `main`)
-to avoid merge conflicts and ensure CI runs against up-to-date code:
-
-```bash
-git fetch upstream <target_branch>
-git rebase upstream/<target_branch>
+git fetch <canonical-remote> <target-branch>
+git rebase <canonical-remote>/<target-branch>
 ```
 
 If there are conflicts, resolve them and continue the rebase. If the rebase is too complex,
 ask the user for guidance.
-```
 
 Remind the user to:
 
