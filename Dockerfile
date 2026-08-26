@@ -17,7 +17,7 @@ ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
 COPY pyproject.toml uv.lock README.md ./
 COPY src/ ./src/
-RUN uv sync --frozen --no-dev
+RUN uv sync --locked --no-dev
 
 # Only web/dist is ever served, and the API runs without it. No package.json reaches
 # this stage, so `build_web()` finds nothing to build and leaves the baked dist alone.
