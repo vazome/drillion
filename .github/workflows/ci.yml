@@ -55,6 +55,7 @@ jobs:
       - run: pnpm lint
         working-directory: web
       - run: pnpm build
+        working-directory: web
       # Build the sdist HERE, after `pnpm install` has put node_modules on disk, because
       # that is the only state in which this can fail. hatchling ignores nested .gitignore
       # files, so `web/node_modules` is invisible to it and only pyproject's own exclude
