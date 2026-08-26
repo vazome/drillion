@@ -2,7 +2,7 @@
 
 from datetime import date, timedelta
 
-from study import scheduler, state
+from drillion import scheduler, state
 
 
 def _exs():

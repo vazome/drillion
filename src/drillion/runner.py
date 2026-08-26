@@ -29,7 +29,7 @@ def run_tests(path, seed):
     """Exercise code only ever runs here, in its own process."""
     cmd = [sys.executable, "-m", "pytest", str(path), "-x", "--timeout=10", *_PYTEST]
     try:
-        r = subprocess.run(cmd, env=_env(STUDY_SEED=str(seed)), cwd=settings.root,
+        r = subprocess.run(cmd, env=_env(DRILLION_SEED=str(seed)), cwd=settings.root,
                            capture_output=True, text=True, check=False, timeout=60)
     except subprocess.TimeoutExpired:
         return False, "timed out after 60s — an endless loop, most likely"

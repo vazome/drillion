@@ -1,5 +1,5 @@
 services:
-  study:
+  drillion:
     build: .
     ports:
       - "127.0.0.1:8765:8765"          # loopback only: this is a laptop tool

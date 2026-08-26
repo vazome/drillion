@@ -1,5 +1,5 @@
 [project]
-name = "study"
+name = "drillion"
 version = "0.1.0"
 description = "Spaced-repetition Python drills: pytest-graded exercises on a Leitner ladder, in a browser"
 readme = "README.md"
@@ -22,14 +22,14 @@ dependencies = [
 ]
 
 [project.scripts]
-study = "study.cli:main"
+drillion = "drillion.cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/study"]
+packages = ["src/drillion"]
 
 [dependency-groups]
 dev = [
@@ -42,7 +42,7 @@ dev = [
 extend-exclude = ["drafts"]          # scratch files, not part of the drill set
 
 [tool.ruff.lint.per-file-ignores]
-"src/study/*" = ["DTZ"]  # local wall-clock dates are intended for scheduling
+"src/drillion/*" = ["DTZ"]  # local wall-clock dates are intended for scheduling
 "exercises/*/drill.py" = ["E402", "F841"]  # the region is the learner's, and the
 # machinery imports below the marker are deliberately not at the top of the file
 

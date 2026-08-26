@@ -13,4 +13,4 @@ jobs:
       - run: uv sync --frozen
       - run: uv run ruff check .
       - run: uv run pytest tests -q
-      - run: uv run study selfcheck
+      - run: uv run drillion selfcheck

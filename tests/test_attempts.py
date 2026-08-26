@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from study import attempts, region, state
-from study.settings import settings
+from drillion import attempts, region, state
+from drillion.settings import settings
 
 SRC = (settings.exercises_dir / "001_fstrings" / "drill.py").read_text()
 

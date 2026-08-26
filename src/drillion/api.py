@@ -342,7 +342,7 @@ def _open_browser(url):
 
 def serve():
     url = f"http://{settings.host}:{settings.port}/"
-    print(f"study → {url}   (ctrl-c to stop)", flush=True)   # piped output too
+    print(f"drillion → {url}   (ctrl-c to stop)", flush=True)   # piped output too
     if settings.open_browser and settings.host == "127.0.0.1":   # not from a container
         threading.Timer(0.7, _open_browser, [url]).start()
     uvicorn.run(app, host=settings.host, port=settings.port, log_level="info")
