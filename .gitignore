@@ -30,3 +30,7 @@ _selfcheck.py
 # your practice history: yours, never shipped with a clone (#4)
 progress.json
 progress.json.bak
+
+# agent worktrees: real checkouts of other branches, so every repo-wide tool
+# (ruff, pytest, doctor) walks into them and reports another branch's files
+.claude/
