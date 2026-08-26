@@ -107,6 +107,9 @@ async def _stub_to_pass(api, path):
         and run["due_in"] == scheduler.LADDER[run["box"]]
     )
     assert run["box"] == 1 and run["stepped"] is True  # box 0 -> 1: a real promotion
+    assert run["from_box"] == 0  # ...and it is a climb, not a fall
+    assert run["reason"] == "the runs it took"  # the cause, never par's number
+    assert run["reference"].startswith("def _reference(")  # passing is what opens it
     body = region.cut(path.read_text()).body
     assert region.stub(body) == body  # passing puts the stub back on disk
 
@@ -114,7 +117,14 @@ async def _stub_to_pass(api, path):
     assert st["open"] == {} and [e["slug"] for e in st["log"]] == [SLUG]
     assert PASSING in st["archive"][SLUG][0]["code"]
 
+    done = (await api.get(f"/api/task/{SLUG}")).json()
+    assert done["reference"].startswith(
+        "def _reference("
+    )  # a passed card may re-read it
+    assert done["nudge"] is False and done["lapses"] == 0
+
     again = (await api.post(f"/api/task/{SLUG}/open")).json()
+    assert again["reference"] is None  # ...and a new sitting starts clean
     assert again["attempt"] == {
         "attempts": 0,
         "hints": 0,
@@ -158,6 +168,10 @@ async def _guards(api, path):
 
     task = (await api.get(f"/api/task/{SLUG}")).json()
     assert task["attempt"] is None and task["hints"]["shown"] == []
+    assert (
+        task["reference"] is None
+    )  # nobody has passed it: the answer is not in the payload
+    assert "_reference" not in str(task)  # ...and it is nowhere else in it either
     nobody = await api.post(
         f"/api/task/{SLUG}/run", json={"code": task["code"], "etag": task["etag"]}
     )
@@ -258,9 +272,74 @@ async def _struggled_first_sighting(api, _path):
     assert run["passed"] is True and run["attempts"] == 3
     assert run["grade"] == "struggled" and run["box"] == 0
     assert run["stepped"] is False  # box 0 -> box 0: it did not step anywhere
+    assert run["from_box"] == 0  # ...and there was no box below to fall to
+    assert run["reason"] == "the runs it took"  # three runs, not the clock
     assert run["lapses"] == 1  # ...but the struggle itself is counted and said
     task = (await api.get(f"/api/task/{SLUG}")).json()
     assert task["lapses"] == 1 and task["lapse_limit"] == scheduler.LAPSE_LIMIT
+
+
+async def _a_slow_pass_falls_a_box(api, _path):
+    """The other half of the same fix: a card that is *up* the ladder steps back down.
+
+    The page animated a climb and said "the card stepped up" for every move there was, so a
+    demotion read as a promotion. `from_box` is the direction, `stepped` is still the fact of
+    the move, and the reason says which of the grade's causes landed it — here the clock, on
+    a single run. Also the moment the lapse count reaches the limit, which the page flags.
+    """
+    task = (await api.post(f"/api/task/{SLUG}/open")).json()
+    st = state.load()  # a card three boxes up, one lapse short of the flag
+    st["cards"][SLUG] = {
+        "box": 3,
+        "due": state.today(),
+        "seen": 4,
+        "lapses": scheduler.LAPSE_LIMIT - 1,
+    }
+    st["open"][SLUG]["active"] = 9000  # an afternoon on it: over par whatever par is
+    state.save(st)
+
+    solved = task["code"].replace("raise NotImplementedError", PASSING)
+    run = (
+        await api.post(
+            f"/api/task/{SLUG}/run", json={"code": solved, "etag": task["etag"]}
+        )
+    ).json()
+    assert run["passed"] is True and run["grade"] == "struggled"
+    assert (run["from_box"], run["box"], run["stepped"]) == (
+        3,
+        2,
+        True,
+    )  # a fall, not a climb
+    assert run["reason"] == "the time it took"  # one run: the clock, not the runs
+    assert run["lapses"] == scheduler.LAPSE_LIMIT  # the count the page says out loud
+
+    task = (await api.get(f"/api/task/{SLUG}")).json()
+    assert task["lapses"] == task["lapse_limit"] == scheduler.LAPSE_LIMIT
+
+
+async def _the_reference_needs_the_peek_not_just_its_price(api, _path):
+    """Passing a task opens the reference. Affording it must not.
+
+    `solution.unlocked` goes true the moment three runs and ten minutes have been spent —
+    but taking the answer is what sets `solution_shown`, and that is what costs the
+    promotion. Shipping the reference in the payload one moment earlier would hand it over
+    for free, with the page left to decide whether to look. The server owns the gate.
+    """
+    await api.post(f"/api/task/{SLUG}/open")
+    st = state.load()
+    st["cards"][SLUG] = {"box": 2, "due": state.today(), "seen": 2, "lapses": 0}
+    st["open"][SLUG].update(attempts=3, active=600)  # the whole price, unspent
+    state.save(st)
+
+    task = (await api.get(f"/api/task/{SLUG}")).json()
+    assert task["solution"]["unlocked"] is True and task["reference"] is None
+    assert "_reference" not in str(task)
+
+    took = (await api.post(f"/api/task/{SLUG}/solution")).json()
+    assert took["code"].startswith("def _reference(")
+    assert state.load()["open"][SLUG]["solution_shown"] is True  # ...and it is marked
+    reread = (await api.get(f"/api/task/{SLUG}")).json()
+    assert reread["reference"] == took["code"]  # a reload does not un-take it
 
 
 async def _assets(api, _path):
@@ -290,6 +369,14 @@ def test_the_api_guards_its_edges():
 
 def test_a_struggled_first_sighting_does_not_step_up():
     _api(_struggled_first_sighting)
+
+
+def test_a_slow_pass_steps_the_card_back_down():
+    _api(_a_slow_pass_falls_a_box)
+
+
+def test_the_reference_opens_on_the_peek_not_on_the_price():
+    _api(_the_reference_needs_the_peek_not_just_its_price)
 
 
 def test_the_api_serves_a_tasks_assets():

@@ -38,16 +38,28 @@ export interface Task {
   spec_md: string; code: string; etag: string; has_given: boolean;
   marker_line: number; status: Status;
   attempt: { attempts: number; hints: number; active: number; seed: number; solution_shown: boolean } | null;
+  /** the task has cost this many lapses; at `lapse_limit` it is flagged as one that keeps
+   *  beating you — a message about the task, never a punishment on the card */
+  lapses: number; lapse_limit: number;
+  /** half an hour of active reading with nothing run and no hint taken. The server owns
+   *  the threshold; the page renders the offer. */
+  nudge: boolean;
+  /** the reference answer, once the server's gate has opened it: `null` until the task has
+   *  been passed, and `null` again while that card is due back. Never the page's call. */
+  reference: string | null;
   hints: { total: number; shown: string[]; next_in: number | null };
   solution: { unlocked: boolean; need_attempts: number; need_secs: number };
   archive: { date: string; grade: Grade; code?: string }[];
 }
 export interface RunResult {
   passed: boolean; attempts: number; headline: string[]; output: string; etag: string;
-  /** `stepped` is the scheduler's answer to "did the card move?" — false for a
-   *  `struggled` pass, for a `quick` that clamps at the top box, and for a first
-   *  sighting that stayed in box 0. Never re-derive it from `box`. */
-  grade?: Grade; box?: number; stepped?: boolean; due_in?: number; code?: string;
+  /** `stepped` is the scheduler's answer to "did the card move?" — false for a `quick`
+   *  that clamps at the top box, and for a first sighting that stayed in box 0. Never
+   *  re-derive it from `box`. `from_box` is where the card stood before the grade landed:
+   *  a `struggled` pass steps it *down*, so a move has a direction. */
+  grade?: Grade; box?: number; stepped?: boolean; from_box?: number; due_in?: number; code?: string;
+  /** why `grade` landed where it did — the cause, never par's number. See issue #13. */
+  reason?: string; reference?: string; lapses?: number;
 }
 
 export class ApiError extends Error {
