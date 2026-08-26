@@ -73,7 +73,7 @@ jobs:
     timeout-minutes: 20
     # this image tag and web/package.json's @playwright/test pin are one version, bumped together
     container:
-      image: mcr.microsoft.com/playwright:v1.62.0-noble
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
       options: --user 1001 --ipc=host
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
