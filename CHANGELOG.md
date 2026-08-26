@@ -4,6 +4,15 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## Unreleased
+
+- `POST …/hint` and `POST …/solution` answer with the whole task, the same shape as `GET /api/task`.
+- Catalogue rows carry `blocked` (the prereq slugs not yet passed) instead of `prereqs`, and
+  `today.no_new` names the one reason there are no new picks; the page no longer re-derives either.
+- `ladder` rides the catalogue, progress and task payloads; `region_start` is gone.
+- A pass returns `next`, the scheduler's suggestion, so the page stops refetching the catalogue.
+- The source distribution, the wheel and the image are unchanged in what they carry.
+
 ## 0.1.1 — 2026-08-26
 
 - The source distribution no longer carries `web/node_modules`. 0.1.0's sdist was 39 MB, of

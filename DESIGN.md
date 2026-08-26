@@ -51,14 +51,15 @@ Data: `GET /api/catalogue` →
   `today.recent[]` — every task worked in the last `window` days, newest first, open attempts
   included and leading, and a task whose last act was abandoning it left out; never filtered
   against the other two, since a card worked on Friday and due again today is both things at
-  once; `today.done_today` (count)
+  once; `today.done_today` (count); `today.no_new` — null while there are new picks, else the one
+  reason there are none (`behind`, `cap`, `prereqs` with the nearest task, `focus`, `done`)
 - `stats` — `boxes` (7 counts, one per ladder box), `ladder` (the return intervals, one per box), `due` (the whole backlog, not the capped
   list), `lapse_limit` (the lapse count a task is flagged at), `seen`, `total`, and `practised` of
   `window`: distinct days worked in the last 7, a rolling count rather than a streak
 - `focus` — one string or null; it restricts *new* picks and is matched against a task's **tier,
   track and tags alike**. `tags[]`, `tiers[]`, `tracks[]` — the three vocabularies to filter by
 - `tasks[]` — per row: `slug`, `topic` (number), `title`, `difficulty`, `tier`, `track?`, `tags[]`,
-  `prereqs[]` (numbers), `source?`,
+  `blocked[]` (slugs of prereqs not yet passed; empty once started), `source?`,
   `status` ∈ `new | due | open | done`, `box` (0–6, the ladder has seven), `due` (date),
   `seen` (count), `lapses` (count — at `stats.lapse_limit` the row is flagged as a task that
   keeps beating you: "you have struggled with this four times; the hints or the prereqs may be
@@ -101,8 +102,7 @@ filter the screen cannot display is a screen that says "0 of 171" with no way to
 Answers: *what exactly is asked, and does my code pass?*
 
 Data: `GET /api/task/{slug}` →
-- `meta` — `topic`, `title`, `difficulty`, `tier`, `track?`, `tags`, `prereqs`,
-  `source` (Exercism tasks). No `minutes` — see the vocabulary below.
+- `meta` — `topic`, `title`, `difficulty`, `tier`, `track?`, `tags`, `source` (Exercism tasks). No `minutes` — see the vocabulary below.
 - `spec_md` — the task's guidance as **GitHub-flavoured Markdown**, ~25–120 lines: `# title`,
   then `## Why` (business context), `## You get`, `## You return`, `## Rules` with worked
   examples, `## Read first` (the links, with notes), and whatever else the task adds
@@ -116,6 +116,8 @@ Data: `GET /api/task/{slug}` →
 - `attempt` — null, or `{attempts, hints, active (seconds), seed, solution_shown}`
 - `hints` — `{total: 3, shown[]: Markdown already revealed, next_in: seconds}`, rendered the same
   way as the spec
+- also `ladder`, `lapses`, `lapse_limit`, `nudge`, `reference`, `buried` — `web/src/api.ts` is the
+  field-for-field contract for every payload
 - `solution` — `{unlocked, need_attempts, need_secs}`
 - `archive[]` — previous passes `{date, grade, code?}` (code shown only when allowed)
 - `note` — the learner's own words about this task, `""` when there is none
