@@ -70,6 +70,30 @@ If the task is adapted from another source (Exercism or elsewhere), say so hones
 `source:` frontmatter field and a closing attribution line, and confirm the licence permits it —
 see [NOTICE](NOTICE) for how the 84 Exercism-derived tasks already do this.
 
+## Versioning
+
+drillion is on `0.x`, which means anything may change. `1.0` will be a claim that the
+`progress.json` schema has settled, not a badge.
+
+The version is declared in **exactly one place**, `version` in `pyproject.toml`, and bumped by
+hand. `drillion --version`, `GET /api/health` and the page's header all read it back from the
+installed package metadata, so nothing in the source repeats the number. It is deliberately not
+derived from git tags: the container build context carries the source but no git history, so a
+VCS-derived version would build as a development placeholder inside the image.
+
+Semantic versioning, defined against drillion's real public surface — the CLI, the HTTP API,
+the `progress.json` schema, and the task-folder format:
+
+- **MAJOR** — an existing `progress.json` stops loading or needs migrating, existing task
+  folders stop being valid, or a CLI/HTTP contract breaks. A learner's saved progress is the
+  thing they cannot afford to lose, so it is the thing MAJOR is about.
+- **MINOR** — new features, new payload fields, new tasks. Task content is content; adding
+  drills is not a breaking change.
+- **PATCH** — fixes, no new surface.
+
+Releasing: bump `pyproject.toml`, add the entry to [CHANGELOG.md](CHANGELOG.md), tag the commit
+`v<version>`. CI fails a tag whose name disagrees with the declared version.
+
 ## Code style
 
 - `ruff` must pass (`uv run ruff check .`); it runs in CI.
