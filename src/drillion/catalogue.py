@@ -1,8 +1,8 @@
-"""The catalogue: one folder per drill, read from disk and never executed.
+"""The catalogue: one folder per task, read from disk and never executed.
 
 `<NNN>_<name>/README.md` is the guidance — YAML frontmatter and GitHub-flavoured
-Markdown — and `<NNN>_<name>/drill.py` is the code. A half-written folder is skipped
-instead of breaking the menu, and nothing in `exercises/` is ever imported into this
+Markdown — and `<NNN>_<name>/task.py` is the code. A half-written folder is skipped
+instead of breaking the menu, and nothing in `tasks/` is ever imported into this
 process: the answers stay on disk.
 """
 
@@ -14,8 +14,10 @@ import yaml
 from .region import _solve, bounds, cut
 from .settings import settings
 
-REQUIRED = ("title", "minutes", "tags")
-BROWSER = ("topic", "title", "minutes", "tags", "prereqs", "practices", "source")
+REQUIRED = ("title", "difficulty", "tier", "minutes", "tags")
+BROWSER = ("topic", "title", "difficulty", "tier", "track", "tags", "prereqs",
+           "practices", "source")
+# `minutes` is deliberately absent: par time is grade_of()'s input, not the learner's to see.
 HINT = re.compile(r"^### Hint \d+[ \t]*$", re.MULTILINE)
 _cache = (None, None)   # (key, records) — rebinding a global is atomic, so a race just re-scans
 
@@ -27,10 +29,10 @@ def public(meta):
 
 
 def _stamp(folder):
-    """Cheap identity for a drill folder: its name and both files' mtimes. Two stats
+    """Cheap identity for a task folder: its name and both files' mtimes. Two stats
     beat re-reading and re-parsing the whole set on every request."""
     out = [folder.name]
-    for name in ("README.md", "drill.py"):
+    for name in ("README.md", "task.py"):
         try:
             out.append((folder / name).stat().st_mtime_ns)
         except OSError:
@@ -54,32 +56,32 @@ def guidance(md):
     return spec.strip(), [h.strip() for h in HINT.split(rest)[1:]]
 
 
-def exercises():
+def tasks():
     """{slug: frontmatter + topic, path, dir, spec_md, hints}.
 
-    Text only: a half-edited drill is skipped instead of breaking the menu, and
-    nothing in exercises/ is ever imported into this process. The scan is cached
-    against the folders' mtimes, so an edited drill still re-reads on the next call."""
+    Text only: a half-edited task is skipped instead of breaking the menu, and
+    nothing in tasks/ is ever imported into this process. The scan is cached
+    against the folders' mtimes, so an edited task still re-reads on the next call."""
     global _cache
-    folders = sorted(settings.exercises_dir.iterdir())
-    key = (settings.exercises_dir, tuple(_stamp(f) for f in folders))
+    folders = sorted(settings.tasks_dir.iterdir())
+    key = (settings.tasks_dir, tuple(_stamp(f) for f in folders))
     if _cache[0] == key:
         return _cache[1]
     out = {}
     for folder in folders:
         try:
             topic = int(folder.name.split("_")[0])
-            src = (folder / "drill.py").read_text()
-            bounds(src)                    # no marker line, no drill
+            src = (folder / "task.py").read_text()
+            bounds(src)                    # no marker line, no task
             _solve(ast.parse(cut(src).body))
             meta, md = frontmatter((folder / "README.md").read_text())
             spec_md, hints = guidance(md)
             if any(meta.get(k) in (None, "", []) for k in REQUIRED) or len(hints) != 3:
-                raise ValueError("a drill needs a title, minutes, tags and 3 hints")
+                raise ValueError("a task needs a title, difficulty, tier, minutes, tags and 3 hints")
         except Exception:  # noqa: BLE001, S112 — a half-written folder must not break the menu
             continue
         out[folder.name] = {"prereqs": [], "practices": [], **meta, "topic": topic,
-                            "path": folder / "drill.py", "dir": folder, "hints": hints,
+                            "path": folder / "task.py", "dir": folder, "hints": hints,
                             "spec_md": spec_md}
     _cache = (key, out)
     return out

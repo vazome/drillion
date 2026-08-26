@@ -1,0 +1,22 @@
+:root{
+--bg:#F4F6F7;--surface:#FFFFFF;--surface-2:#EDF0F2;--editor:#FAFBFC;--gutter:#F0F3F5;
+--border:#DEE4E7;--border-strong:#C6CFD5;
+--text:#1C2226;--text-muted:#5B6770;--text-faint:#8A959D;
+--accent:#2A62C9;--accent-hover:#2251A8;--on-accent:#FFFFFF;--accent-tint:#E5EDFA;--accent-line:#B9CDF0;
+--pass:#22795B;--pass-bg:#E0F1E9;--fail:#C2333F;--fail-bg:#FAE4E5;--warn:#835B08;--warn-bg:#F8EFD4;
+--syn-keyword:#2A62C9;--syn-string:#22795B;--syn-number:#A2522C;--syn-comment:#9AA5AD;--syn-function:#1C2226;
+--surface-card:var(--surface);--text-body:var(--text);
+--focus-ring:0 0 0 2px var(--surface),0 0 0 4px var(--accent);
+--shadow-card:0 1px 2px rgba(28,34,38,.05),0 0 0 1px var(--border);
+color-scheme:light;
+}
+.dark{
+--bg:#171C21;--surface:#1F262D;--surface-2:#262E37;--editor:#1B2127;--gutter:#232B33;
+--border:#303A44;--border-strong:#3D4954;
+--text:#E4E9ED;--text-muted:#93A0AB;--text-faint:#6B7883;
+--accent:#6FA2F5;--accent-hover:#8DB4F7;--on-accent:#171C21;--accent-tint:#263243;--accent-line:#3A5480;
+--pass:#5CC496;--pass-bg:#20332B;--fail:#F08A8A;--fail-bg:#392527;--warn:#E0B45C;--warn-bg:#363023;
+--syn-keyword:#6FA2F5;--syn-string:#5CC496;--syn-number:#E0A46F;--syn-comment:#5E6A74;--syn-function:#E4E9ED;
+--shadow-card:0 1px 2px rgba(0,0,0,.25),0 0 0 1px var(--border);
+color-scheme:dark;
+}

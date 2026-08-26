@@ -14,3 +14,13 @@ jobs:
       - run: uv run ruff check .
       - run: uv run pytest tests -q
       - run: uv run drillion selfcheck
+      # the page is real code now: `pnpm build` is `tsc -b && vite build`, so this is the
+      # type check too. Node and pnpm come in the same way the Dockerfile's web stage gets them.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+        working-directory: web
+      - run: pnpm build
+        working-directory: web

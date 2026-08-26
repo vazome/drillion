@@ -1,0 +1,27 @@
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:var(--fs-body);line-height:var(--lh-body)}
+a{color:var(--accent);text-decoration:none}
+a:hover{color:var(--accent-hover);text-decoration:underline}
+:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+::selection{background:var(--accent-tint)}
+kbd{font-family:var(--font-mono);font-size:11px;padding:1px 5px;border:1px solid var(--border-strong);border-bottom-width:2px;border-radius:4px;background:var(--surface-2);color:var(--text-muted)}
+code,pre{font-family:var(--font-mono)}
+.tabular{font-variant-numeric:tabular-nums}
+
+/* Callouts (remark-github-blockquote-alert). GitHub's own sheet ships with the plugin: a
+   left rule in the type's colour, and a title row of octicon + word. We keep the rule and
+   drop the icon — the uppercase label already names the type, and one 16px glyph per panel
+   was the only illustration on the page. Each type is tinted with its own token pair, so
+   the panel reads as the same object as a StatusBadge of that colour. */
+.markdown-alert{border-left:3px solid var(--accent);background:var(--accent-tint);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:10px 14px;margin:2px 0 12px;max-width:64ch}
+.markdown-alert>:last-child{margin-bottom:0}
+.markdown-alert-title{display:block;font-size:var(--fs-label);font-weight:600;letter-spacing:var(--ls-label);color:var(--accent);margin:0 0 4px}
+.markdown-alert-title svg{display:none}
+.markdown-alert-tip{border-left-color:var(--pass);background:var(--pass-bg)}
+.markdown-alert-tip .markdown-alert-title{color:var(--pass)}
+.markdown-alert-warning{border-left-color:var(--warn);background:var(--warn-bg)}
+.markdown-alert-warning .markdown-alert-title{color:var(--warn)}
+.markdown-alert-caution{border-left-color:var(--fail);background:var(--fail-bg)}
+.markdown-alert-caution .markdown-alert-title{color:var(--fail)}
+.markdown-alert-important{border-left-color:var(--accent-line);background:var(--surface-2)}
+.markdown-alert-important .markdown-alert-title{color:var(--text-muted)}
+.spec table{display:block;overflow-x:auto;max-width:100%}
