@@ -297,3 +297,32 @@ example in our own sections against _reference; (2) READ prose tables and prose 
 per-character/per-position facts — both Important findings in G and H were of that class and passed
 every scripted check; (3) if a batch was written by more than one agent, tell the reviewer which
 files are inherited and unverified.
+
+## Phase B COMPLETE 2026-08-26
+Batch I (340–349) authored and committed as c7b453e. Catalogue 171 drills, selfcheck 171/171,
+ruff clean, tests 40 passed. **All Phase B batches A–I are done. Phase B is finished.**
+
+Batch I ran as 2 implementers (opus, 5 drills each) → 2 reviewers (opus, cross-assigned) → 1 fix
+agent. Both reviewers ruled Needs fixes, one Important each, and both Importants were prose no test
+could catch: 341's Hint 3 was `allergic_to`/`lst` with the nouns renamed; 349's Rules claimed
+`values.index(target)` "passes every test" when `list.index` raises ValueError with Python's own
+wording. That is four batches running (C, G, H, I). The three reviewer-contract additions recorded
+after H did their job — keep them for any future content batch.
+
+Two brief errors the implementers caught and diverged from, independently of each other, before
+the controller's correction arrived:
+- The attribution line is NOT the last line of the file. `guidance()` partitions at `\n## Hints\n`,
+  so a line below the hints is swallowed into Hint 3 and never renders. It goes after
+  `## Read first`, before `## Hints`. content-format-spec.md said "a last line" and has been fixed.
+- Exercism drills carry NO `practices:` frontmatter key. That field holds int topic numbers for
+  native drills (`069_s3audit` → `[30, 43, 68]`); all 33 pre-existing Exercism drills omit it.
+  Open question, deliberately not settled inside a batch: whether 300–349 should carry it at all.
+  If ever yes, it is a type decision across all 50, not a per-batch fix.
+
+Controller decision during the batch: dropped the `with-statement` tag from 344_grep. It was the
+slug's only config practice, but the drill has no `with` and no `open()` because the controller
+told the implementer not to touch the filesystem. A tag promising a concept the drill does not
+practise is worse than deviating from "copy config.json verbatim".
+
+Prompts live in this session's scratchpad, not /tmp: phaseb-common.md, phaseb-I{1,2}.md,
+phaseb-review-common.md, phaseb-review-I{1,2}.md. Copy them forward if another content batch runs.
