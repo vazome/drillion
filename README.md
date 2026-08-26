@@ -25,6 +25,26 @@ Requirements: Python 3.13 and [uv](https://docs.astral.sh/uv/). Docker is option
 is missing or older than anything in `web/src/`, or than `web/package.json`, `web/index.html` or
 `web/vite.config.ts`. Without pnpm the JSON API still serves and only `/` 404s.
 
+## Install from PyPI
+
+```bash
+uvx drillion                 # run it without installing anything
+uv tool install drillion     # or keep it on your PATH
+```
+
+No clone, no Node toolchain, no build step: the wheel carries the tasks and the built page.
+Tasks and progress are seeded into a writable data directory on first run, and a checkout is
+still used as-is when you run from one, so upgrading never touches code you have written.
+
+Releases are cut by pushing a `v<version>` tag, which
+[`.github/workflows/release.yml`](.github/workflows/release.yml) refuses unless the tag matches
+the declared version. It publishes through PyPI's trusted publishing, so drillion stores no
+upload token anywhere, and every sdist and wheel carries a
+[PEP 740](https://peps.python.org/pep-0740/) attestation naming the workflow run that built it:
+
+```bash
+pypi-attestations verify pypi --repository https://github.com/vazome/drillion \
+  pypi:drillion-0.1.0-py3-none-any.whl
 ## Docker
 
 No clone and no build: a version tag publishes the image, and it carries the tasks.
