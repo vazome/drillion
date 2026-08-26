@@ -1,5 +1,5 @@
 import React from "react";
-const ringConflict = (e) => { try { return e.target.matches(":focus-visible"); } catch (_) { return true; } };
+const ringConflict = (e) => { try { return e.target.matches(":focus-visible"); } catch { return true; } };
 function Action({ label, onClick, strong, disabled }) {
   const [hover, setHover] = React.useState(false);
   const [focus, setFocus] = React.useState(false);

@@ -1,5 +1,5 @@
 import React from "react";
-const ringTable = (e) => { try { return e.target.matches(":focus-visible"); } catch (_) { return true; } };
+const ringTable = (e) => { try { return e.target.matches(":focus-visible"); } catch { return true; } };
 export function Table({ columns = [], rows = [], sortKey, sortDir = "asc", onSort, onRowClick, emptyMessage, style }) {
   const [hoverRow, setHoverRow] = React.useState(null);
   const [focusRow, setFocusRow] = React.useState(null);
