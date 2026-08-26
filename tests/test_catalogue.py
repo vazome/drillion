@@ -87,6 +87,7 @@ def test_topic_comes_from_the_folder_name():
 
 
 def test_a_broken_folder_is_skipped_instead_of_breaking_the_menu():
+    """And `scan()` still names it, with why — the menu and doctor read one parse."""
     keep = settings.root
     tmp = _root(
         **{
@@ -122,6 +123,11 @@ def test_a_broken_folder_is_skipped_instead_of_breaking_the_menu():
     try:
         settings.root = tmp
         assert list(catalogue.tasks()) == ["042_thing"]
+        reasons = {n: why for n, _, why in catalogue.scan()}
+        assert set(reasons) == {f.name for f in (tmp / "tasks").iterdir()}
+        assert reasons["042_thing"] == []
+        assert all(why for n, why in reasons.items() if n != "042_thing")
+        assert reasons["046_nomarker"] == ["task.py: a task needs the machinery marker"]
     finally:
         settings.root = keep
         shutil.rmtree(tmp)

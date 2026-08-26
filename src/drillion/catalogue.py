@@ -11,7 +11,7 @@ import re
 
 import yaml
 
-from .region import _solve, bounds, cut
+from .region import Invalid, _solve, bounds, cut
 from .settings import settings
 
 REQUIRED = ("title", "difficulty", "tier", "minutes", "tags")
@@ -24,10 +24,12 @@ HINT = re.compile(r"^### Hint \d+[ \t]*$", re.MULTILINE)
 SEARCHED = ("why", "you get", "you return", "rules")
 SECTION = re.compile(r"^## +(.+)$", re.MULTILINE)
 FENCE = re.compile(r"^```.*?^```", re.DOTALL | re.MULTILINE)
+SLUG = re.compile(r"^(\d{3})_[a-z0-9_]+$")
 _cache = (
     None,
     None,
-)  # (key, records) — rebinding a global is atomic, so a race just re-scans
+    None,
+)  # (key, scan, tasks) — rebinding a global is atomic, so a race just re-scans
 
 
 def public(meta):
@@ -80,41 +82,91 @@ def guidance(md):
     return spec.strip(), [h.strip() for h in HINT.split(rest)[1:]]
 
 
-def tasks():
-    """{slug: frontmatter + topic, path, dir, spec_md, hints}.
+def _read(folder):
+    """(record | None, [reason]) for one folder: every rule a task must pass to reach the
+    menu, and the record when it passes them all. The record comes back whenever the
+    frontmatter parsed, so a caller can still read the values of a folder that is wrong."""
+    out = []
+    if not (slug := SLUG.match(folder.name)):
+        out.append(
+            "folder name is not <NNN>_<name>: three digits, then a lowercase name"
+        )
+    src = folder / "task.py"
+    if not src.is_file():
+        out.append("task.py: missing")
+    else:
+        try:
+            text = src.read_text()
+            bounds(text)  # no marker line, no task
+            _solve(ast.parse(cut(text).body))
+        except Invalid as err:
+            out.append(f"task.py: {err}")
+        except SyntaxError as err:
+            out.append(
+                f"task.py: the region above the marker is not valid Python — {err.msg}"
+            )
+        except OSError as err:
+            out.append(f"task.py: cannot be read — {err.strerror}")
 
-    Text only: a half-edited task is skipped instead of breaking the menu, and
-    nothing in tasks/ is ever imported into this process. The scan is cached
+    readme = folder / "README.md"
+    if not readme.is_file():
+        return None, [*out, "README.md: missing"]
+    try:
+        meta, md = frontmatter(readme.read_text())
+    except ValueError as err:
+        return None, [*out, f"README.md: {err}"]
+    except yaml.YAMLError as err:
+        return None, [*out, f"README.md: the frontmatter is not valid YAML — {err}"]
+    except OSError as err:
+        return None, [*out, f"README.md: cannot be read — {err.strerror}"]
+    if not isinstance(meta, dict):
+        return None, [
+            *out,
+            "README.md: the frontmatter is not a block of key: value lines",
+        ]
+    out += [
+        f"README.md: frontmatter is missing `{k}`"
+        for k in REQUIRED
+        if meta.get(k) in (None, "", [])
+    ]
+    spec_md, hints = guidance(md)
+    if len(hints) != 3:
+        out.append(f"README.md: found {len(hints)} hints, need exactly 3")
+    return {
+        "prereqs": [],
+        **meta,
+        "topic": int(slug.group(1)) if slug else None,
+        "path": src,
+        "dir": folder,
+        "hints": hints,
+        "spec_md": spec_md,
+        "search_text": search_text(spec_md),
+    }, out
+
+
+def scan():
+    """[(folder name, record | None, [reason])] — the one place a task is parsed.
+
+    Every folder a contributor authored, in name order, with every rule it breaks. A name
+    starting with `.` or `_` is tooling, not an attempt at a task. The scan is cached
     against the folders' mtimes, so an edited task still re-reads on the next call."""
     global _cache
-    folders = sorted(settings.tasks_dir.iterdir())
+    folders = [
+        f
+        for f in sorted(settings.tasks_dir.iterdir())
+        if f.is_dir() and not f.name.startswith((".", "_"))
+    ]
     key = (settings.tasks_dir, tuple(_stamp(f) for f in folders))
-    if _cache[0] == key:
-        return _cache[1]
-    out = {}
-    for folder in folders:
-        try:
-            topic = int(folder.name.split("_")[0])
-            src = (folder / "task.py").read_text()
-            bounds(src)  # no marker line, no task
-            _solve(ast.parse(cut(src).body))
-            meta, md = frontmatter((folder / "README.md").read_text())
-            spec_md, hints = guidance(md)
-            if any(meta.get(k) in (None, "", []) for k in REQUIRED) or len(hints) != 3:
-                raise ValueError(
-                    "a task needs a title, difficulty, tier, minutes, tags and 3 hints"
-                )
-        except Exception:  # noqa: BLE001, S112 — a half-written folder must not break the menu
-            continue
-        out[folder.name] = {
-            "prereqs": [],
-            **meta,
-            "topic": topic,
-            "path": folder / "task.py",
-            "dir": folder,
-            "hints": hints,
-            "spec_md": spec_md,
-            "search_text": search_text(spec_md),
-        }
-    _cache = (key, out)
-    return out
+    if _cache[0] != key:
+        out = [(f.name, *_read(f)) for f in folders]
+        _cache = (key, out, {n: r for n, r, why in out if not why})
+    return _cache[1]
+
+
+def tasks():
+    """{slug: frontmatter + topic, path, dir, spec_md, hints} for the folders that pass.
+
+    Text only: a half-edited task is skipped instead of breaking the menu, and nothing in
+    tasks/ is ever imported into this process."""
+    scan()
+    return _cache[2]
