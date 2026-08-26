@@ -143,13 +143,11 @@ async def _stub_to_pass(api, path):
     }
 
     hint = await api.post(f"/api/task/{SLUG}/hint")
-    assert hint.status_code == 200 and (hint.json()["level"], hint.json()["total"]) == (
-        1,
-        3,
-    )
-    assert (
-        hint.json()["text"]
-        == (await api.get(f"/api/task/{SLUG}")).json()["hints"]["shown"][0]
+    assert hint.status_code == 200 and hint.json()["hints"]["total"] == 3
+    assert (  # the whole task, like every other acting route: the new hint is already in it
+        hint.json()["hints"]["shown"]
+        == (await api.get(f"/api/task/{SLUG}")).json()["hints"]["shown"]
+        != []
     )
     soon = await api.post(f"/api/task/{SLUG}/hint")
     assert soon.status_code == 423 and 0 < soon.json()["wait_secs"] <= 120
@@ -339,10 +337,12 @@ async def _the_reference_needs_the_peek_not_just_its_price(api, _path):
     assert "_reference" not in str(task)
 
     took = (await api.post(f"/api/task/{SLUG}/solution")).json()
-    assert took["code"].startswith("def _reference(")
+    assert took["reference"].startswith(
+        "def _reference("
+    )  # the payload carries the answer
     assert state.load()["open"][SLUG]["solution_shown"] is True  # ...and it is marked
     reread = (await api.get(f"/api/task/{SLUG}")).json()
-    assert reread["reference"] == took["code"]  # a reload does not un-take it
+    assert reread["reference"] == took["reference"]  # a reload does not un-take it
 
 
 async def _abandon_needs_an_attempt_like_every_other_route(api, path):

@@ -422,7 +422,7 @@ def hint_task(slug: str):
         meta = _task(slug)
         current(st, slug)
         try:
-            level, text = next_hint(st, slug, meta["hints"])
+            next_hint(st, slug, meta["hints"])
         except Gated as gate:
             raise HTTPException(
                 423,
@@ -434,7 +434,7 @@ def hint_task(slug: str):
                     "exhausted": not gate.wait_secs,
                 },
             ) from None
-        return {"level": level, "total": len(meta["hints"]), "text": text}
+        return _payload(st, slug, meta, meta["path"].read_text())
 
 
 @app.post("/api/task/{slug}/solution")
@@ -448,7 +448,8 @@ def solution_task(slug: str):
             raise HTTPException(
                 423, {"error": "the answer opens after real effort", **gate.owed}
             ) from None
-        return {"code": solution_text(meta["path"])}  # the gate is right above
+        # after `unlock_solution`, so `solution_shown` is set and the payload carries the answer
+        return _payload(st, slug, meta, meta["path"].read_text())
 
 
 @app.post("/api/task/{slug}/abandon")

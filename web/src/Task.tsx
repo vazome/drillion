@@ -47,7 +47,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [conflict, setConflict] = useState<{ etag: string; code: string } | null>(null);
   const [draftOffer, setDraftOffer] = useState<string | null>(null);
   const [gate, setGate] = useState<Gate>(null);
-  const [solutionCode, setSolutionCode] = useState<string | null>(null);
   const [active, setActive] = useState(0);
   const [nextHintIn, setNextHintIn] = useState<number | null>(null);
   const [nextSlug, setNextSlug] = useState<string | null>(null);
@@ -90,7 +89,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   // ---- load, and offer a newer local draft over what the file holds
   useEffect(() => {
     let live = true;
-    setTask(null); attemptRef.current = false; dropped.current = false; setError(null); setResult({ state: "idle" }); setConflict(null); setSolutionCode(null); setGate(null); setNextSlug(null); setNudgeOff(false);
+    setTask(null); attemptRef.current = false; dropped.current = false; setError(null); setResult({ state: "idle" }); setConflict(null); setGate(null); setNextSlug(null); setNudgeOff(false);
     setNote(""); noteRef.current = ""; noteDirtyRef.current = false; setNoteDirty(false);   // the last task's note is not this one's
     api<TaskData>(`/task/${encodeURIComponent(slug)}`).then((p) => {
       if (!live) return;
@@ -238,12 +237,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     setBusy(true);
     try {
       await ensureOpen();
-      const r = await post<{ level: number; total: number; text: string }>(`/task/${encodeURIComponent(slug)}/hint`);
+      adopt(await post<TaskData>(`/task/${encodeURIComponent(slug)}/hint`), dirtyRef.current);
       setGate(null);
-      setNudge(false);                     // taking the offer is the way out of it
-      setTask((p) => p && ({ ...p, hints: { ...p.hints, shown: [...p.hints.shown, r.text] } }));
-      setNextHintIn(null);
-      api<TaskData>(`/task/${encodeURIComponent(slug)}`).then((p) => setNextHintIn(p.hints.next_in)).catch(() => {});
     } catch (e) {
       const err = e as ApiError;
       const wait = err.status === 423 ? err.detail?.wait_secs : 0;
@@ -259,9 +254,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     setBusy(true);
     try {
       await ensureOpen();
-      const r = await post<{ code: string }>(`/task/${encodeURIComponent(slug)}/solution`);
-      setSolutionCode(r.code); setGate(null);
-      setTask((p) => p && ({ ...p, solution: { ...p.solution, unlocked: true } }));
+      adopt(await post<TaskData>(`/task/${encodeURIComponent(slug)}/solution`), dirtyRef.current);
+      setGate(null);
     } catch (e) {
       const err = e as ApiError;
       const d = err.detail ?? {};
@@ -279,7 +273,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       const p = await post<TaskData>(`/task/${encodeURIComponent(slug)}/abandon`, { etag: etagRef.current });
       localStorage.removeItem(draftKey(slug));
       dropped.current = true;
-      adopt(p); setResult({ state: "idle" }); setSolutionCode(null); setGate(null); setNextSlug(null);
+      adopt(p); setResult({ state: "idle" }); setGate(null); setNextSlug(null);
     } catch (e) {
       const err = e as ApiError;
       if (err.status === 409 && err.detail?.etag) setConflict(err.detail); else setGate({ at: "editor", message: err.message });
@@ -318,13 +312,12 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   if (error) return <EmptyState message={`Could not load ${slug}: ${error}`} actionLabel="Back to Today" onAction={() => { location.hash = "#/"; }} />;
   if (!task) return <EmptyState message="Loading…" />;
 
-  const { meta, hints, solution: gateState, attempt } = task;
+  const { meta, hints, solution: gateState, attempt, reference } = task;
   const hintsLeft = hints.total - hints.shown.length;
   const hintReady = nextHintIn === null || nextHintIn <= 0;
   /** Peeked this sitting, or earned by passing — either way the server decided it was open.
    * `solution_shown` is what a reload reads back: a peek survives one, and still costs. */
-  const reference = solutionCode ?? task.reference;
-  const peeked = !!solutionCode || !!attempt?.solution_shown;
+  const peeked = !!attempt?.solution_shown;
   const flagged = task.lapses >= task.lapse_limit;
   /** The gate banner, under the control that raised it. The container is always in the tree
    * so screen readers have a live region to announce into when a message lands in it. */
