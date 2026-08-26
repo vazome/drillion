@@ -7,14 +7,21 @@ kbd{font-family:var(--font-mono);font-size:11px;padding:1px 5px;border:1px solid
 code,pre{font-family:var(--font-mono)}
 .tabular{font-variant-numeric:tabular-nums}
 
-/* remark-github-blockquote-alert, styled from the tokens (design system's alert look) */
-.markdown-alert{border-left:3px solid var(--accent);background:var(--surface-2);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:8px 12px;margin:2px 0 12px}
+/* Callouts (remark-github-blockquote-alert). GitHub's own sheet ships with the plugin: a
+   left rule in the type's colour, and a title row of octicon + word. We keep the rule and
+   drop the icon — the uppercase label already names the type, and one 16px glyph per panel
+   was the only illustration on the page. Each type is tinted with its own token pair, so
+   the panel reads as the same object as a StatusBadge of that colour. */
+.markdown-alert{border-left:3px solid var(--accent);background:var(--accent-tint);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:10px 14px;margin:2px 0 12px;max-width:64ch}
 .markdown-alert>:last-child{margin-bottom:0}
-.markdown-alert-title{display:block;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--accent);margin-bottom:2px}
+.markdown-alert-title{display:block;font-size:var(--fs-label);font-weight:600;letter-spacing:var(--ls-label);color:var(--accent);margin:0 0 4px}
 .markdown-alert-title svg{display:none}
-.markdown-alert-tip{border-left-color:var(--pass)}
+.markdown-alert-tip{border-left-color:var(--pass);background:var(--pass-bg)}
 .markdown-alert-tip .markdown-alert-title{color:var(--pass)}
-.markdown-alert-warning,.markdown-alert-caution{border-left-color:var(--warn)}
-.markdown-alert-warning .markdown-alert-title,.markdown-alert-caution .markdown-alert-title{color:var(--warn)}
-.markdown-alert-important{border-left-color:var(--accent-line)}
+.markdown-alert-warning{border-left-color:var(--warn);background:var(--warn-bg)}
+.markdown-alert-warning .markdown-alert-title{color:var(--warn)}
+.markdown-alert-caution{border-left-color:var(--fail);background:var(--fail-bg)}
+.markdown-alert-caution .markdown-alert-title{color:var(--fail)}
+.markdown-alert-important{border-left-color:var(--accent-line);background:var(--surface-2)}
+.markdown-alert-important .markdown-alert-title{color:var(--text-muted)}
 .spec table{display:block;overflow-x:auto;max-width:100%}
