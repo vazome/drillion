@@ -45,6 +45,8 @@ async def _stub_to_pass(api, path):
     assert [e["slug"] for e in cat["tasks"]] == [SLUG]
     assert cat["tasks"][0]["status"] == "new" and cat["today"]["new"] == [SLUG]
     assert cat["tags"] == ["f-strings"] and cat["stats"]["total"] == 1
+    assert cat["today"]["due_total"] == 0 and cat["today"]["behind"] is False
+    assert cat["stats"]["due"] == 0        # the real backlog, not the capped list's length
     assert cat["tiers"] == ["core", "advanced", "packages"] and cat["tracks"] == []
     assert cat["tasks"][0]["tier"] == "core" and cat["tasks"][0]["difficulty"] == "easy"
     assert "minutes" not in cat["tasks"][0]      # par time is never the learner's

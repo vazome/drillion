@@ -229,7 +229,7 @@ def catalogue():
                 "tiers": ["core", "advanced", "packages"],       # fixed order: easiest first
                 "tracks": sorted({m["track"] for m in all_tasks.values() if m.get("track")}),
                 "today": q,
-                "stats": {"boxes": boxes, "due": len(q["review"]), "seen": sum(boxes),
+                "stats": {"boxes": boxes, "due": q["due_total"], "seen": sum(boxes),
                           "total": len(all_tasks),
                           "practised": _practised(st), "window": WINDOW},
                 "tasks": rows}

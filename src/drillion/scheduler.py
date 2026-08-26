@@ -12,6 +12,11 @@ from .state import card, today
 
 LADDER = [2, 4, 8, 16, 28]           # days until the next sighting, per box
 NEW_PER_DAY = 2
+# The most reviews a day may hand you. Unbounded, the day you come back from three weeks
+# away is 100 rows deep and the ladder never recovers. Anki ships 200 against 20 new — a
+# 10:1 ratio — but a drillion review is a whole coding task rather than a flashcard, so 12
+# is roughly the same hour. A constant, not a setting: there is no settings screen.
+REVIEWS_PER_DAY = 12
 # every grade grade_of() can return. A struggle costs a box: without a negative step the
 # ladder is not adaptive at all — a task that fights you every sitting would hold box 4 and its
 # 28-day gap forever, on the same schedule as one you have aced. -1 rather than back to box 0:
@@ -48,13 +53,25 @@ def unseen(st, all_tasks):
 
 
 def queue(st, all_tasks):
-    """Today: every due review (most overdue first), then the new picks left."""
+    """Today: the most overdue reviews up to the cap, then the new picks left.
+
+    Both lists are capped, and the caps interact. While the backlog is deeper than the review
+    cap you are `behind`, and drillion offers nothing new until you are not — starting new
+    material while already behind only makes the backlog worse.
+
+    `due_total` and `behind` ride along because a silent cap is worse than no cap: twelve rows
+    read as "done for today" when ninety cards are still waiting. The page must say both out
+    loud — "showing 12 of 100 due", "new picks paused while you catch up"."""
     done_today = sum(1 for e in st["log"] if e["date"] == today() and e["new"])
+    due = sorted(due_today(st, all_tasks), key=lambda s: card(st, s)["due"])
+    behind = len(due) > REVIEWS_PER_DAY
     fresh = sorted((s for s in unseen(st, all_tasks) if s not in st["open"]),
                    key=lambda s: all_tasks[s]["topic"])
-    return {"review": sorted(due_today(st, all_tasks), key=lambda s: card(st, s)["due"]),
-            "new": fresh[:max(0, NEW_PER_DAY - done_today)],
-            "done_today": done_today}
+    return {"review": due[:REVIEWS_PER_DAY],
+            "new": [] if behind else fresh[:max(0, NEW_PER_DAY - done_today)],
+            "done_today": done_today,
+            "due_total": len(due),
+            "behind": behind}
 
 
 def pick(st, all_tasks):
