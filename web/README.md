@@ -21,6 +21,7 @@ Notes:
 - `src/ds/` is the drillion design system ("Mineral Blue"), authored in Claude Design and
   vendored here. Treat it as vendored — changes belong upstream. The one exception is
   `SpecText.jsx`, whose regex Markdown parser was replaced with `react-markdown` + `remark-gfm`.
+  Run `pnpm check` against a live server after touching it.
 - `pnpm-workspace.yaml` is deliberate: without it a `pnpm-workspace.yaml` further up the tree
   (e.g. in `$HOME`) swallows this package and installs nothing here.
 - No Tailwind, no shadcn/ui, no TanStack Query, no react-router — the design system's components

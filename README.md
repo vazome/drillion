@@ -16,11 +16,13 @@ tasks are folders of Markdown and Python on your disk, and your progress is one 
 
 ```bash
 uvx drillion                                   # run it without installing anything
-pip install drillion && drillion               # or install it
+uv tool install drillion && drillion           # or keep it on your PATH
+pip install drillion && drillion               # same, with pip
 docker run -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion
 ```
 
-Needs Python 3.13. It serves <http://127.0.0.1:8765> and opens your browser.
+Python 3.13 or newer, and not even that for Docker. It serves <http://127.0.0.1:8765>; the first
+three open your browser.
 
 ## Commands
 

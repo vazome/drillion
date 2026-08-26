@@ -63,6 +63,7 @@ tool; do not put it on a public address.
 
 ## Verifying a release
 
+Releases go out through PyPI's trusted publishing, so drillion stores no upload token anywhere.
 Every wheel and sdist carries a [PEP 740](https://peps.python.org/pep-0740/) attestation naming
 the workflow run that built it, and every image carries a build provenance attestation:
 

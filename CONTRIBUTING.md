@@ -86,8 +86,9 @@ names `_reference`/`_gen`/`test_*`, is refused.
 its stub and runs the test — every task must go green this way before it is trusted, and the
 count it prints (`N/N`) is the thing to watch. A folder the catalogue cannot parse (missing
 frontmatter key, no machinery marker, a hint count that isn't 3) is silently skipped rather than
-reported, so if your new task doesn't show up in the catalogue, `selfcheck`'s count is the first
-thing to check.
+reported, so if your new task doesn't show up in the catalogue, run `uv run drillion doctor` — it
+names every rule the folder breaks, which `selfcheck` cannot, because it never sees a folder the
+catalogue dropped.
 
 If the task is adapted from another source (Exercism or elsewhere), say so honestly in a
 `source:` frontmatter field and a closing attribution line, and confirm the licence permits it —
