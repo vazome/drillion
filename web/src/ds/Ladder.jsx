@@ -1,5 +1,5 @@
 import React from "react";
-export function Ladder({ boxes = [0, 0, 0, 0, 0], highlight = -1, intervals = [2, 4, 8, 16, 28], style }) {
+export function Ladder({ boxes = [0, 0, 0, 0, 0, 0, 0], highlight = -1, intervals = [2, 4, 8, 16, 28, 60, 120], style }) {
   return (
     <div style={{ display: "flex", gap: "8px", ...style }}>
       {boxes.map((n, i) => (

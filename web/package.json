@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "lint": "oxlint",
     "preview": "vite preview",
-    "check": "node check.mjs"
+    "check": "node check.mjs",
+    "screens": "playwright test"
   },
   "dependencies": {
     "@codemirror/lang-python": "^6.2.1",
@@ -23,10 +25,12 @@
     "remark-github-blockquote-alert": "^2.1.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.62.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.1",
     "@vitejs/plugin-react": "^6.1.0",
     "esbuild": "^0.28.2",
+    "oxlint": "^1.80.0",
     "typescript": "^7.0.2",
     "vite": "^8.2.2"
   }

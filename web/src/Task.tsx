@@ -6,7 +6,7 @@ import { Editor } from "./Editor";
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
 const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };          // the faint line beside a section label
 const PLAIN = { fontWeight: 400, textTransform: "none" as const, letterSpacing: 0, ...ASIDE };
-const BOXES = 5;      // ladder height; tests/test_scheduler.py holds it to scheduler.LADDER
+const BOXES = 7;      // ladder height; tests/test_scheduler.py holds it to scheduler.LADDER
 const AUTOSAVE_MS = 800;
 const ATTEMPT_MS = 5000;    // reading the task is work: the clock starts once the page settles
 const HEARTBEAT_MS = 60_000;

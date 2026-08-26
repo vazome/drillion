@@ -1,5 +1,5 @@
 import React from "react";
-const ringCollapsible = (e) => { try { return e.target.matches(":focus-visible"); } catch (_) { return true; } };
+const ringCollapsible = (e) => { try { return e.target.matches(":focus-visible"); } catch { return true; } };
 export function Collapsible({ label, meta, open, defaultOpen = false, onToggle, disabled = false, mono = true, children, style }) {
   const [inner, setInner] = React.useState(defaultOpen);
   const [hover, setHover] = React.useState(false);
