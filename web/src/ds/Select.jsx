@@ -1,5 +1,5 @@
 import React from "react";
-const ringSelect = (e) => { try { return e.target.matches(":focus-visible"); } catch (_) { return true; } };
+const ringSelect = (e) => { try { return e.target.matches(":focus-visible"); } catch { return true; } };
 export function Select({ value, onChange, options = [], placeholder, disabled = false, mono = false, ariaLabel, style }) {
   const [focus, setFocus] = React.useState(false);
   const [hover, setHover] = React.useState(false);
