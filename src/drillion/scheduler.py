@@ -1,8 +1,8 @@
 """The Leitner ladder: what comes back today, what is new, and what a pass is worth.
 
-A 5-box ladder, not FSRS: fixed intervals over a season of practice, sized near
+A 7-box ladder, not FSRS: fixed intervals over a season of practice, sized near
 Cepeda 2008's 10-20% of the retention interval rather than fitted per card.
-ponytail: a 5-element list beats a dependency with 21 trained weights we have no
+ponytail: a 7-element list beats a dependency with 21 trained weights we have no
 data to fit.
 """
 
@@ -10,7 +10,12 @@ from datetime import date, timedelta
 
 from .state import card, today
 
-LADDER = [2, 4, 8, 16, 28]  # days until the next sighting, per box
+# days until the next sighting, per box. The tail past 28 is what keeps review load from
+# growing without bound: while 28 was the ceiling, every card you had mastered still came
+# back monthly, so a finished catalogue settled at ~6 reviews a day before a single new
+# pick. 60 and 120 shed that load without inventing a fifth status for "retired" — the card
+# is simply `done`, and a done card you keep getting right comes back rarely.
+LADDER = [2, 4, 8, 16, 28, 60, 120]
 NEW_PER_DAY = 2
 # The most reviews a day may hand you. Unbounded, the day you come back from three weeks
 # away is 100 rows deep and the ladder never recovers. Anki ships 200 against 20 new — a
@@ -22,10 +27,10 @@ REVIEWS_PER_DAY = 12
 # time arrives around 4. Flag only: nothing is suspended, hidden or rescheduled by it.
 LAPSE_LIMIT = 4
 # every grade grade_of() can return. A struggle costs a box: without a negative step the
-# ladder is not adaptive at all — a task that fights you every sitting would hold box 4 and its
-# 28-day gap forever, on the same schedule as one you have aced. -1 rather than back to box 0:
-# `struggled` is the grade for anything slow, anything over two runs and anything peeked, so it
-# is common, and a repeated struggle still walks the card all the way down over a few sittings.
+# ladder is not adaptive at all — a task that fights you every sitting would hold the top box
+# and its 120-day gap forever, on the same schedule as one you have aced. -1 rather than back
+# to box 0: `struggled` is the grade for anything slow, anything over two runs and anything
+# peeked, so it is common, and a repeated struggle still walks the card all the way down.
 GRADES = {"struggled": -1, "pass": +1, "quick": +2}
 
 
