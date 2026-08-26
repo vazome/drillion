@@ -132,34 +132,22 @@ intervals), a per-tag coverage table, the recent log.
 
 ## Vocabulary (use these words)
 
-**task** — the unit, and the only noun for it. One folder in `tasks/`, one spec, one `solve()`.
-171 of them, numbered `001`–`171`; the number is an id, nothing more.
+Every term — task, tier, difficulty, track, tag, card, box, attempt, grade, status, focus — is
+defined once in [CONTEXT.md](CONTEXT.md), along with the synonyms to avoid. Use those words on
+screen. This brief deliberately keeps no second copy: the copy it used to keep had already grown
+two entries the original did not have.
 
-**tier** — `core` · `advanced` · `packages`, in that order, easiest first. How far into the
-language a task reaches, and whether stock Python can run it: `packages` needs a `pip install`.
-
-**difficulty** — `easy` · `medium` · `hard`. How hard the task is to get right the first time, not
-how long it takes.
-
-**track** — optional, at most one: a themed run across tiers (`rsample`).
-
-**tags** — the Python concepts a task practises, 76 of them across the catalogue.
-
-**grade** — `quick` (first try, under par) · `pass` · `struggled` · `abandoned`. Lowercase in the
-payload; the UI may set them in caps. `easy` is a *difficulty* and never a grade.
+Two entries are UI *constraints* rather than definitions, so they stay here:
 
 **Par time is never shown.** `minutes` is the grader's input and stops at the server, so the
 attempt timer counts up and changes no colour at any threshold. Nothing on any screen tells the
 learner how long they were supposed to take.
 
-**status** — `new` (never attempted) · `due` (a card whose date has arrived) · `open` (an attempt
-is in progress) · `done` (seen, and not due yet). Four, and only four: `_status()` in `api.py` has
-no fifth branch, so a filter offering one matches nothing.
+**`status` has exactly four members** — `new` · `due` · `open` · `done`. `_status()` in `api.py`
+has no fifth branch, so a filter offering a fifth matches nothing.
 
-Boxes 1–5. Hints are "levels". The solution "unlocks". Showing up is counted as days practised.
-
-The full definitions, and the rules for adding a task, are in
-[README.md](README.md#vocabulary) — this list is the UI's copy of them.
+Boxes render 1–5 although state stores them 0–4. Hints are "levels". The solution "unlocks".
+Showing up is counted as days practised.
 
 ## Out of scope
 

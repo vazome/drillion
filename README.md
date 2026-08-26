@@ -140,8 +140,9 @@ system, and why there is no Tailwind and no router — is in [`web/README.md`](w
 
 ## Vocabulary
 
-Six words carry the whole content model. The code, the API and the UI all use them, so a new task
-should too.
+Every word the code, the API and the UI use is defined in [CONTEXT.md](CONTEXT.md), together with
+the synonyms to avoid. This section is the other half: how to **choose** a tier, a difficulty, a
+track or a tag when you write a new task.
 
 **task** — the unit: one folder under `tasks/`, one spec, one `solve()`, one test. One noun, used
 everywhere: the code, the API, the UI and these docs never reach for a synonym. There are 171.
