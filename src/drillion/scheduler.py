@@ -21,7 +21,7 @@ def due_today(st, all_tasks):
 
 def _facets(meta):
     """Everything `focus` may name: the tier, the track and the tags, as one set."""
-    return {meta.get("tier"), meta.get("track"), *meta.get("tags", [])}
+    return {meta.get("tier"), meta.get("track"), *meta.get("tags", [])} - {None}
 
 
 def unseen(st, all_tasks):
