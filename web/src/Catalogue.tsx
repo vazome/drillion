@@ -303,7 +303,7 @@ export function Catalogue() {
 
   const { today, stats } = data;
   const pick = (slugs: string[]) => slugs.map((s) => by.get(s)).filter(Boolean) as Row[];
-  const review = pick(today.review), fresh = pick(today.new), recent = pick(today.recent ?? []);   // a server still running last build sends no `recent`
+  const review = pick(today.review), fresh = pick(today.new), recent = pick(today.recent);
   // every buried card, not just the ones today's panel would have offered: a bury made from
   // the task page has to show up here too, or the only way to see it is the row you left
   const buried = data.tasks.filter((e) => e.buried);

@@ -61,23 +61,36 @@ export interface Task {
    *  all leave it alone. `PUT /api/task/{slug}/note`; an empty note deletes it. */
   note: string;
 }
-export interface RunResult {
-  passed: boolean; attempts: number; headline: string[]; output: string; etag: string;
-  /** `stepped` is the scheduler's answer to "did the card move?" — false for a `quick`
-   *  that clamps at the top box, and for a first sighting that stayed in box 0. Never
-   *  re-derive it from `box`. `from_box` is where the card stood before the grade landed:
-   *  a `struggled` pass steps it *down*, so a move has a direction. */
-  grade?: Grade; box?: number; stepped?: boolean; from_box?: number; due_in?: number; code?: string;
-  /** why `grade` landed where it did — the cause, never par's number. See issue #13. */
-  reason?: string; reference?: string; lapses?: number;
-  /** the scheduler's one suggestion for what to sit down with next, or null when the
-   *  day's queue is empty. Only sent on a pass — clearing the card is what asks it. */
-  next?: string | null;
+interface RunBase { attempts: number; headline: string[]; output: string; etag: string }
+/** The grade and everything it decided exist iff `passed` — which is how `run_task` builds
+ *  the response — so `if (r.passed)` is what opens them. `stepped` is the scheduler's answer
+ *  to "did the card move?": false for a `quick` that clamps at the top box, and for a first
+ *  sighting that stayed in box 0. Never re-derive it from `box`. `from_box` is where the card
+ *  stood before the grade landed: a `struggled` pass steps it *down*, so a move has a
+ *  direction. `reason` is why `grade` landed where it did — the cause, never par's number
+ *  (#13). `next` is the scheduler's one suggestion for what to sit down with next, null when
+ *  the day's queue is empty. */
+export type RunResult =
+  | (RunBase & { passed: false })
+  | (RunBase & {
+      passed: true; grade: Grade; box: number; stepped: boolean; from_box: number;
+      due_in: number; code: string; reason: string; reference: string; lapses: number;
+      next: string | null;
+    });
+
+/** Every non-2xx body api.py can send, in one all-optional shape: `{error, line, col}` for a
+ *  refused edit, `{error, etag, code}` for the optimistic lock, `{error, wait_secs, exhausted}`
+ *  for the hint gate and `{error, need_attempts, need_secs}` for the solution's. */
+export interface ApiErrorBody {
+  error?: string; line?: number; col?: number;
+  etag?: string; code?: string;
+  wait_secs?: number; exhausted?: boolean;
+  need_attempts?: number; need_secs?: number;
 }
 
 export class ApiError extends Error {
-  constructor(readonly status: number, readonly detail: any) {
-    super(typeof detail === "string" ? detail : detail?.error || `HTTP ${status}`);
+  constructor(readonly status: number, readonly detail: ApiErrorBody | null) {
+    super(detail?.error || `HTTP ${status}`);
   }
 }
 

@@ -65,7 +65,7 @@ async def _stub_to_pass(api, path):
         "## Hints" not in task["spec_md"] and "spec" not in task
     )  # guidance is Markdown now
     assert task["meta"]["topic"] == 1 and "spec_md" not in task["meta"]
-    assert task["region_start"] == 1 and task["marker_line"] > 1
+    assert task["marker_line"] > 1
     assert (
         "raise NotImplementedError" in task["code"] and "_reference" not in task["code"]
     )

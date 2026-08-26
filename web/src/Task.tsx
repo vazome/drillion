@@ -21,6 +21,13 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 /** A refused action, shown beside the control that asked for it. */
 type Gate = { at: "hints" | "solution" | "editor" | "note"; message: string } | null;
 
+/** The optimistic lock's 409, or null for any other failure: `_check_etag` is the only thing
+ *  that raises it, and it always sends the disk version's etag and body together. */
+const conflictOf = ({ status, detail }: ApiError) =>
+  status === 409 && detail?.etag !== undefined && detail.code !== undefined
+    ? { etag: detail.etag, code: detail.code }
+    : null;
+
 type Result =
   | { state: "idle" | "running" }
   | { state: "failed"; attempts: number; headline: string; output: string }
@@ -131,8 +138,9 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       // Never rethrow: `edit()` fires this unawaited and `run()` awaits it, so a rejection here
       // used to sink Run without a word. Every failure becomes something the learner can see.
       if (!(e instanceof ApiError)) { setGate({ at: "editor", message: `could not save — ${(e as Error).message}` }); return; }
+      const clash = conflictOf(e);
       if (e.status === 400) setSyntaxBad(true);                       // silent: an amber dot, no banner
-      else if (e.status === 409 && e.detail?.etag) setConflict(e.detail);
+      else if (clash) setConflict(clash);
       else if (e.status === 409) setGate({ at: "editor", message: e.detail?.error ?? e.message }); // no open attempt
       else setGate({ at: "editor", message: e.message });
     }
@@ -215,18 +223,18 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       setNudge(false);                     // a run answers the nudge, whichever way it went
       if (r.passed) {
         localStorage.removeItem(draftKey(slug));
-        setResult({ state: "passed", grade: r.grade!, box: r.box!, stepped: !!r.stepped, fromBox: r.from_box!, reason: r.reason!, dueIn: r.due_in!, attempts: r.attempts, code: r.code! });
-        setCode(r.code!);
+        setResult({ state: "passed", grade: r.grade, box: r.box, stepped: r.stepped, fromBox: r.from_box, reason: r.reason, dueIn: r.due_in, attempts: r.attempts, code: r.code });
+        setCode(r.code);
         // the pass is what opens the reference, and what may have just hit the lapse limit
-        setTask((p) => p && ({ ...p, reference: r.reference ?? p.reference, lapses: r.lapses ?? p.lapses }));
-        setNextSlug(r.next ?? null);       // the scheduler's suggestion, now the card is cleared
+        setTask((p) => p && ({ ...p, reference: r.reference, lapses: r.lapses }));
+        setNextSlug(r.next);               // the scheduler's suggestion, now the card is cleared
       } else {
         setResult({ state: "failed", attempts: r.attempts, headline: r.headline.join("\n") || "The tests did not pass.", output: r.output });
         setTask((p) => p && p.attempt ? { ...p, attempt: { ...p.attempt, attempts: r.attempts } } : p);
       }
     } catch (e) {
-      const err = e as ApiError;
-      if (err.status === 409 && err.detail?.etag) { setConflict(err.detail); setResult({ state: "idle" }); }
+      const err = e as ApiError, clash = conflictOf(err);
+      if (clash) { setConflict(clash); setResult({ state: "idle" }); }
       else if (err.status === 400) { setSyntaxBad(true); setResult({ state: "failed", attempts: 0, headline: `${err.detail?.error} (line ${err.detail?.line})`, output: "" }); }
       else { setResult({ state: "failed", attempts: 0, headline: err.message, output: "" }); }
     }
@@ -275,8 +283,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       dropped.current = true;
       adopt(p); setResult({ state: "idle" }); setGate(null); setNextSlug(null);
     } catch (e) {
-      const err = e as ApiError;
-      if (err.status === 409 && err.detail?.etag) setConflict(err.detail); else setGate({ at: "editor", message: err.message });
+      const err = e as ApiError, clash = conflictOf(err);
+      if (clash) setConflict(clash); else setGate({ at: "editor", message: err.message });
     }
   };
 

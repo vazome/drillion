@@ -176,7 +176,6 @@ def _payload(st, slug, meta, src):
         "code": body,
         "etag": etag(src),
         "has_given": has_given(body),
-        "region_start": 1,
         "marker_line": bounds(src),
         "status": _status(st, slug),
         # not a fifth `status`: a buried card is still exactly `due`, just not offered today
@@ -518,26 +517,6 @@ def set_focus(focus: Focus):
         return {"focus": st["focus"]}
 
 
-class _Web(StaticFiles):
-    """web/dist, resolved per request and optional.
-
-    `check_dir=False` only skips the constructor's check: Starlette still stats the directory
-    on the first request and raises `RuntimeError` if it is missing. A clone that has not run
-    `pnpm build` yet — CI between `pytest` and the web job, or a machine without pnpm — must
-    get a 404 on `/`, not a 500 on every unmatched route. CI runs pytest before the web build,
-    so it is the standing guard against this coming back."""
-
-    async def check_config(self):
-        return
-
-
-# The page itself, last: an unmatched /api/... must 404 as JSON, not as a missing file.
-# Mounted rather than resolved at import, so `serve()` may build web/dist after this module loads.
-app.mount(
-    "/", _Web(directory=settings.web_dist, html=True, check_dir=False), name="web"
-)
-
-
 def _open_browser(url):
     version = Path("/proc/version")
     if version.exists() and "microsoft" in version.read_text().lower():
@@ -579,6 +558,10 @@ def build_web():
 
 def serve():
     build_web()
+    # The page itself, mounted after every /api route so an unmatched /api/... 404s as JSON,
+    # and after build_web() so a clone without pnpm simply has no `/` rather than a 500.
+    if settings.web_dist.is_dir():
+        app.mount("/", StaticFiles(directory=settings.web_dist, html=True), name="web")
     url = f"http://{settings.host}:{settings.port}/"
     print(f"drillion → {url}   (ctrl-c to stop)", flush=True)  # piped output too
     if settings.open_browser and settings.host == "127.0.0.1":  # not from a container
