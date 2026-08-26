@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Button, Card, EmptyState, Input, LadderMeter, NoticeBanner, Select, StatusBadge, TagChip } from "./ds/index.js";
 import { api, post, type Catalogue as Payload, type Row } from "./api";
 import { Stats } from "./Stats";
@@ -14,6 +14,7 @@ const DAY = 86400000;
 const COL = { num: 30, path: 230, difficulty: 104, box: 56, status: 78, reset: 28 };
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const num = (topic: number) => String(topic).padStart(3, "0");
 
 /** Today as the server means it: `state.py today()` is `date.today()`, a LOCAL date.
  * en-CA formats it as YYYY-MM-DD, which parses back to the same UTC midnight `due` does. */
@@ -23,6 +24,62 @@ const localToday = () => new Date().toLocaleDateString("en-CA");
  * the tier, the track and the tags alike. The server accepts any of the three, so the
  * catalogue must filter on all three or the screen disagrees with the scheduler. */
 const facets = (row: Row) => [row.tier, row.track, ...row.tags];
+
+/** The prereqs a task has not cleared yet — issue #11.
+ *
+ * Mirrors `unseen()` in src/drillion/scheduler.py: box 1 is the bar, because a first pass
+ * graded `struggled` clamps back to box 0 and clears nothing, and under a focus the prereqs
+ * outside it are ignored, or a track would stall on a task it does not contain. A card
+ * already seen is past the question, so it is never blocked. */
+export function blockedBy(row: Row, byTopic: Map<number, Row>, focus: string | null): Row[] {
+  if (row.seen) return [];
+  return (row.prereqs ?? []).map((t) => byTopic.get(t))
+    .filter((p): p is Row => !!p && p.box < 1 && (!focus || facets(p).includes(focus)));
+}
+
+/** Why New picks is empty, named rather than guessed — issue #11.
+ *
+ * `queue()` and `unseen()` (src/drillion/scheduler.py) decide this and keep no reason, so the
+ * page re-runs the same rules in the same order over rows it already has: the backlog first,
+ * because it holds everything else, then today's cap, then the prereqs, then the focus. The
+ * copy this replaced printed all three causes at once and left the reader to guess. */
+export function noPicks(all: Row[], blocked: Map<string, Row[]>, focus: string | null,
+                        today: Payload["today"]) {
+  const unseen = all.filter((r) => !r.seen && r.status !== "open");   // queue() drops open ones
+  const inFocus = focus ? unseen.filter((r) => facets(r).includes(focus)) : unseen;
+  const ready = inFocus.filter((r) => !blocked.get(r.slug)?.length);
+  const link = (r: Row) => <a href={href(r)}>#{num(r.topic)} {r.title}</a>;
+
+  if (today.behind) return {
+    why: "behind", act: "backlog" as const,
+    message: <>New picks are paused while you catch up — {plural(today.due_total, "review")} waiting,
+      and a day holds {today.review.length}. They start again on their own once the backlog is under that.</>,
+  };
+  if (ready.length) return {
+    why: "cap", act: null,
+    message: <>That is today's new material — {plural(today.done_today, "new task")} done.
+      {" "}{plural(ready.length, "task")} unlocked and waiting for tomorrow.</>,
+  };
+  if (inFocus.length) {
+    // the one closest to opening: fewest unmet prereqs, and the lowest number breaks the tie
+    const next = inFocus.reduce((a, b) =>
+      (blocked.get(a.slug)?.length ?? 0) <= (blocked.get(b.slug)?.length ?? 0) ? a : b);
+    const need = blocked.get(next.slug) ?? [];
+    return {
+      why: "prereqs", act: null,
+      message: <>Every unseen task{focus ? <> under “{focus}”</> : null} is waiting on a prereq.
+        The nearest is {link(next)} — pass {need.map((b, i) => <span key={b.slug}>{i ? ", " : ""}{link(b)}</span>)} first.</>,
+    };
+  }
+  if (focus) return {
+    why: "focus", act: "focus" as const,
+    message: <>Nothing unseen is left under the focus “{focus}” — every task it covers is already started.</>,
+  };
+  return {
+    why: "done", act: null,
+    message: <>Nothing unseen is left: you have opened every task in the catalogue. Reviews are the work now.</>,
+  };
+}
 
 /** "4 days overdue" / "due today" / "due in 3 days" / "never seen". */
 function dueText(row: Row) {
@@ -84,17 +141,39 @@ const Band = ({ label, aside, first = false }: { label: string; aside: string; f
   </div>
 );
 
+/** The two quiet notes a row can carry: what it is waiting for, and whether it keeps beating
+ * you. Muted text rather than a badge, deliberately — the lapse flag says "the hints or the
+ * prereqs may be the problem, not you", which is worth mentioning and not worth shouting.
+ * The prereq numbers are plain text here: the whole row is one anchor already, and an anchor
+ * inside an anchor is not valid HTML. The Today card names them as real links instead. */
+function Flags({ row, blocked, limit }: { row: Row; blocked: Row[]; limit: number }) {
+  const marks: ReactNode[] = [];
+  if (blocked.length)
+    marks.push(<span key="needs" title={`Not offered as a new pick until these are passed: ${blocked.map((b) => `#${num(b.topic)} ${b.title}`).join(", ")}`}>
+      needs {blocked.map((b) => `#${num(b.topic)}`).join(" ")}
+    </span>);
+  if (limit && row.lapses >= limit)
+    marks.push(<span key="lapses" title={`You have struggled with this ${row.lapses} times; the hints or the prereqs may be the problem, not you.`}>
+      struggled {row.lapses}×
+    </span>);
+  return marks.length ? <span style={{ ...FAINT, display: "inline-flex", gap: 10 }}>{marks}</span> : null;
+}
+
 /** A row of the Today card: when it is due, where it sits on the ladder, and one way in.
  * No status badge — the section it is under already says what it is. */
-function TodayRow({ row }: { row: Row }) {
+function TodayRow({ row, limit }: { row: Row; limit: number }) {
   const [hover, hoverProps] = useHover();
   return (
     <a href={href(row)} className="m-tint" {...hoverProps}
       style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "inherit", borderTop: "1px solid var(--border)", background: hover ? "var(--surface-2)" : "transparent", margin: "0 -18px", padding: "9px 18px" }}>
       <span style={{ ...FAINT, width: 110, color: "var(--text-muted)" }}>{dueText(row)}</span>
       <LadderMeter box={rung(row)} />
-      <span style={{ ...MONO, width: 30, textAlign: "right" }}>{String(row.topic).padStart(3, "0")}</span>
-      <span style={{ fontSize: 14.5, fontWeight: 500, flex: 1 }}>{row.title}</span>
+      <span style={{ ...MONO, width: 30, textAlign: "right" }}>{num(row.topic)}</span>
+      <span style={{ fontSize: 14.5, fontWeight: 500, flex: 1, display: "flex", alignItems: "baseline", gap: 10 }}>
+        {/* nothing in this card is blocked: a new pick is offered only once its prereqs are
+          * cleared, and recent work has been seen. Only the lapse flag can show here. */}
+        {row.title}<Flags row={row} blocked={[]} limit={limit} />
+      </span>
       {/* the whole row is the link; the button is the affordance, so it takes no focus of its own */}
       <span inert aria-hidden="true"><Button variant="secondary" style={{ padding: "6px 12px", fontSize: 13 }}>Open</Button></span>
     </a>
@@ -103,13 +182,16 @@ function TodayRow({ row }: { row: Row }) {
 
 /** A row of the list: quiet id, title, the tier/tag path, difficulty, ladder, status.
  * The trailing spacer holds the reset control's column, so the header stays aligned. */
-function ListRow({ row, first = false }: { row: Row; first?: boolean }) {
+function ListRow({ row, blocked, limit, first = false }: { row: Row; blocked: Row[]; limit: number; first?: boolean }) {
   const [hover, hoverProps] = useHover();
   return (
     <a href={href(row)} className="m-tint" {...hoverProps}
       style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 44, borderTop: first ? "none" : "1px solid var(--border)", textDecoration: "none", color: "inherit", background: hover ? "var(--surface-2)" : "transparent" }}>
-      <span style={{ ...MONO, width: COL.num, textAlign: "right" }}>{String(row.topic).padStart(3, "0")}</span>
-      <span style={{ fontSize: 15, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.title}</span>
+      <span style={{ ...MONO, width: COL.num, textAlign: "right" }}>{num(row.topic)}</span>
+      <span style={{ flex: 1, display: "flex", alignItems: "baseline", gap: 10, overflow: "hidden" }}>
+        <span style={{ fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.title}</span>
+        <Flags row={row} blocked={blocked} limit={limit} />
+      </span>
       <span style={{ width: COL.path, display: "flex", overflow: "hidden" }}><Path row={row} /></span>
       <span style={{ width: COL.difficulty }}><StatusBadge status={row.difficulty} /></span>
       <span style={{ width: COL.box, height: 16, display: "flex", alignItems: "center" }}><LadderMeter box={rung(row)} /></span>
@@ -174,10 +256,18 @@ export function Catalogue() {
   };
 
   const by = useMemo(() => new Map((data?.tasks ?? []).map((e) => [e.slug, e])), [data]);
+  const byTopic = useMemo(() => new Map((data?.tasks ?? []).map((e) => [e.topic, e])), [data]);
+  // what every task is still waiting for, once per payload rather than once per keystroke
+  const blocked = useMemo(
+    () => new Map((data?.tasks ?? []).map((e) => [e.slug, blockedBy(e, byTopic, focus)])),
+    [data, byTopic, focus]);
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
+    // `text` is the spec, flattened and lowercased by the server — the same substring
+    // contract the title already offered, so every filter still composes with it (#14)
     return (data?.tasks ?? []).filter((e) =>
-      (!needle || e.title.toLowerCase().includes(needle) || e.slug.includes(needle) || String(e.topic).padStart(3, "0").includes(needle)) &&
+      (!needle || e.title.toLowerCase().includes(needle) || e.slug.includes(needle)
+        || num(e.topic).includes(needle) || !!e.text?.includes(needle)) &&
       (!status || e.status === status) &&
       (!focus || facets(e).includes(focus)) &&
       activeTags.every((t) => e.tags.includes(t)));
@@ -201,11 +291,21 @@ export function Catalogue() {
   };
   const here = new Set(rows.flatMap((e) => e.tags).concat(activeTags));
   const tagsHere = data.tags.filter((t) => here.has(t));
+  // `today.review` is capped, so its length is not the backlog. A cap the page hides reads
+  // as "done for today" with ninety cards still waiting, so say both numbers out loud.
+  const dueLine = !today.due_total ? "nothing due"
+    : review.length < today.due_total ? `showing ${review.length} of ${today.due_total} due`
+    : plural(today.due_total, "review");
   const todayLine = [
-    review.length ? plural(review.length, "review") : "nothing due",
+    dueLine,
     fresh.length ? `${fresh.length} new ${fresh.length === 1 ? "pick" : "picks"}` : null,
     `${today.done_today} done today`,
   ].filter(Boolean).join(" · ");
+  // The reason New picks is empty, and the way back out of it — see noPicks().
+  const empty = fresh.length ? null : noPicks(data.tasks, blocked, focus, today);
+  const act = empty?.act === "backlog" ? { label: "Show the backlog", run: () => setStatus("due") }
+    : empty?.act === "focus" ? { label: "Clear focus", run: () => setFocus(null) }
+    : null;
 
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", display: "grid", gap: 18 }}>
@@ -225,24 +325,20 @@ export function Catalogue() {
             * has no say here — this lists as many as the week holds. */}
           <Band label="Recent activity" aside={`last ${stats.window} days`} first />
           {recent.length
-            ? recent.map((e) => <TodayRow key={e.slug} row={e} />)
+            ? recent.map((e) => <TodayRow key={e.slug} row={e} limit={stats.lapse_limit} />)
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
                 message="Nothing yet this week. Whatever you open collects here, passed or not." />}
           {/* the sub-header carries the focus note, so it stays on screen on an empty day too */}
-          <Band label="New picks" aside={focus ? `from ${focus}` : "any"} />
-          {/* Three things empty this list — the daily cap, an unmet prereq and the focus — and
-            * the payload cannot tell them apart, so the copy names all three rather than
-            * blaming the cap for a day the prereqs closed off. */}
+          <Band label="New picks" aside={today.behind ? "paused — catching up" : focus ? `from ${focus}` : "any"} />
           {fresh.length
-            ? fresh.map((e) => <TodayRow key={e.slug} row={e} />)
+            ? fresh.map((e) => <TodayRow key={e.slug} row={e} limit={stats.lapse_limit} />)
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
-                message={review.length ? `No new picks right now — today's cap, an unmet prereq, or the focus. ${plural(review.length, "review")} still due below, or rest.`
-                                       : "Nothing due, and no new pick unlocked — today's cap, an unmet prereq, or the focus. Pick anything below, or rest."} />}
+                message={empty!.message} actionLabel={act?.label} onAction={act?.run} />}
         </div>
       </Card>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6, flexWrap: "wrap" }}>
-        <Input value={q} onChange={setQ} placeholder="search title or topic…" ariaLabel="Search tasks by title or topic" style={{ width: 260 }} />
+        <Input value={q} onChange={setQ} placeholder="search tasks and specs…" ariaLabel="Search tasks by title, number or what the spec says" style={{ width: 260 }} />
         <Select value={status} onChange={setStatus} options={STATUSES} placeholder="any status" ariaLabel="Filter by status" style={{ width: 150 }} />
         <div style={{ width: 1, height: 24, background: "var(--border)" }} />
         {/* a tier or track chip is also the focus: it narrows the list and what the scheduler picks next */}
@@ -278,7 +374,8 @@ export function Catalogue() {
               {/* no `m-stagger` here: it is an arrival animation, and this list re-orders on every
                 * sort and every keystroke in the search box — 171 rows replaying dsRise each time
                 * reads as a flicker, not as a list that moved. The Today card keeps it; it arrives once. */}
-              <div>{sorted.map((row, i) => <ListRow key={row.slug} row={row} first={i === 0} />)}</div>
+              <div>{sorted.map((row, i) => <ListRow key={row.slug} row={row} first={i === 0}
+                blocked={blocked.get(row.slug) ?? []} limit={stats.lapse_limit} />)}</div>
             </>}
       </Card>
     </div>
