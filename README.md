@@ -17,13 +17,47 @@ task's `README.md`, rendered as Markdown.
 uv run drillion              # start the server on http://127.0.0.1:8765 and open the browser
 uv run drillion selfcheck    # prove every task passes with its own reference solution
 uv run drillion doctor       # say why a task folder would be skipped, exit non-zero if any would
-docker compose up            # the same app in a container (tasks and progress mounted from ./)
+docker compose up -d         # or run the published image instead — see Docker below
 ```
 
 Requirements: Python 3.13 and [uv](https://docs.astral.sh/uv/). Docker is optional. The frontend
 (React + Vite, in `web/`) builds itself on start: `uv run drillion` runs `pnpm build` when `web/dist`
 is missing or older than anything in `web/src/`, or than `web/package.json`, `web/index.html` or
 `web/vite.config.ts`. Without pnpm the JSON API still serves and only `/` 404s.
+
+## Docker
+
+No clone and no build: a version tag publishes the image, and it carries the tasks.
+
+```bash
+docker run -d --name drillion -p 127.0.0.1:8765:8765 -v drillion:/data \
+  ghcr.io/vazome/drillion:latest
+```
+
+Then open <http://127.0.0.1:8765>. `latest` follows the newest release; name a version —
+`ghcr.io/vazome/drillion:0.1.0` — to stay put.
+
+Everything the app owns, `tasks/` and `progress.json`, lives in the named volume mounted at
+`/data`. It outlives the container, so upgrading is `docker pull` and start again, and your
+progress is still there. To keep those files in a directory you can open, bind-mount one and hand
+the container your own uid — it runs as uid 1000 and cannot write a directory Docker made for root:
+
+```bash
+mkdir -p drillion-data
+docker run -d --name drillion -p 127.0.0.1:8765:8765 \
+  --user "$(id -u):$(id -g)" -v "$PWD/drillion-data:/data" \
+  ghcr.io/vazome/drillion:latest
+```
+
+[compose.yaml](compose.yaml) is the first of those two spelled out. It needs nothing else from the
+repo: save that one file anywhere and `docker compose up -d`, then `docker compose pull` to upgrade.
+
+Every published image is signed with a build provenance attestation, so you can ask where the one
+you pulled came from before you run it:
+
+```bash
+gh attestation verify oci://ghcr.io/vazome/drillion:latest -R vazome/drillion
+```
 
 ## How a session works
 

@@ -23,3 +23,60 @@ jobs:
             exit 1
           fi
           echo "$GITHUB_REF_NAME matches the declared version"
+
+  # #5: the image people pull. `needs` is the whole point of the guard above —
+  # nothing reaches the registry under a version the source does not claim.
+  image:
+    needs: tag-matches-version
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read        # read the checkout that is the build context
+      packages: write       # push the image to ghcr.io
+      id-token: write       # mint the OIDC token Sigstore signs the provenance with
+      attestations: write   # persist the attestation against this repository
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # ghcr.io/<owner>/<repo>, so the image name follows the repository rather than
+      # being written down anywhere. pep440, not semver: the number this mirrors is
+      # pyproject.toml's, and Python spells a pre-release `0.2.0rc1`. Two tags come out
+      # of a release — `0.1.0` and, from the default `latest=auto` flavor, `latest` —
+      # and a pre-release gets only its own number. A moving `0.1` would say nothing
+      # `latest` does not, and the digest below is the immutable name.
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: type=pep440,pattern={{version}}
+      # No cache and no second platform: this builds what ci.yml's `image` job already
+      # smoke-tested on the pull request, once, on the same linux/amd64 it tested on.
+      - id: push
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Off, or this action pushes a second, unsigned provenance document of its
+          # own — BuildKit defaults to `mode=max` on a public repo — and wraps the
+          # image in an index to carry it, which is what shows up on the package page
+          # as a phantom `unknown/unknown` architecture. One signed attestation, the
+          # one the README tells people to verify, is the whole story. `sbom` needs no
+          # line: BuildKit adds an SBOM only when asked.
+          provenance: false
+      # Binds the pushed digest to this run, so anyone can ask where the image came from:
+      # `gh attestation verify oci://ghcr.io/vazome/drillion:0.1.0 -R vazome/drillion`.
+      # `subject-name` carries no tag on purpose — the digest identifies the image.
+      # attest-build-provenance is a wrapper over this action and says so in its own
+      # README; with no predicate or SBOM input, build provenance is what this generates.
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ghcr.io/${{ github.repository }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
