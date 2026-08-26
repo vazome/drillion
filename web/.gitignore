@@ -2,3 +2,8 @@ node_modules/
 dist/
 *.tsbuildinfo
 .check.bundle.mjs
+
+# what `pnpm screens` drops: the PNGs a reviewer looks at, and the traces of a failed run.
+# CI uploads both; neither is worth committing (issue #29 — no baselines here).
+screenshots/
+test-results/

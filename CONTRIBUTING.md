@@ -21,6 +21,28 @@ pnpm --dir web lint                          # lint — CI fails if this fails, 
 pnpm --dir web check 8765                    # renders all 171 task specs against a running server
 ```
 
+## Seeing the client without running it
+
+Every pull request gets a **`client-screenshots`** artifact: the catalogue, a task, that task
+after its tests have been run — failed and passed — and the progress page, captured from the
+real client talking to the real API. Download it from the run's summary page and look. It is a
+review aid, not a visual regression test: nothing is compared against a committed baseline, so
+a UI change shows up as a different picture and never as a red build. When a run does fail, a
+`client-traces` artifact comes with it; `pnpm --dir web exec playwright show-trace <zip>` replays
+it step by step.
+
+To produce the same PNGs locally:
+
+```bash
+pnpm --dir web exec playwright install chromium   # once, ~120 MB
+pnpm --dir web screens                            # → web/screenshots/, both git-ignored
+```
+
+It starts and stops the server itself on port 8766, against a throwaway copy of `tasks/` in
+your temp directory — never the checkout, so your own `progress.json` and task files cannot be
+touched. The last test in `web/e2e/screens.spec.ts` asserts exactly that. Nothing has to be
+running first, and a dev server on 8765 is left alone.
+
 See the root [README](README.md) for the full architecture and vocabulary, and
 [`web/README.md`](web/README.md) for frontend-specific notes.
 
