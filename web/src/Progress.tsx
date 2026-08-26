@@ -54,7 +54,7 @@ export function Progress() {
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, padding: "9px 0", borderBottom: i < data.log.length - 1 ? "1px solid var(--border)" : "none" }}>
                 <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)" }}>{row.date}</span>
                 <a href={`#/task/${encodeURIComponent(row.slug)}`} style={{ fontFamily: "var(--font-mono)", fontSize: 13.5, flex: 1, color: "var(--text)" }}>{row.slug}</a>
-                <StatusBadge status={row.grade.toLowerCase()} />
+                <StatusBadge status={row.grade} />
                 <span className="tabular" style={{ fontSize: 13, color: "var(--text-muted)" }}>{row.attempts} attempts</span>
                 <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-muted)", width: 64, textAlign: "right" }}>{mmss(row.secs)}</span>
               </div>

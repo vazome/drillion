@@ -57,7 +57,7 @@ memorising vocabulary over years. Fixed intervals are also the *more* correct ch
 known deadline, the research (Cepeda 2008) puts the optimal gap at 10–20% of the time remaining,
 which is a number you can just write down.
 
-**Grades are computed, not self-reported.** First try under par = EASY (+2 boxes). Two tries = PASS
+**Grades are computed, not self-reported.** First try under par = QUICK (+2 boxes). Two tries = PASS
 (+1). Slow, or three-plus tries = STRUGGLED (stays put). Looked at the solution = never promotes,
 regardless of the tests going green. That last rule is the important one: hint-assisted passes are
 how people finish a curriculum and still can't code.

@@ -3,11 +3,11 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { remarkAlert } from "remark-github-blockquote-alert";
 
-// The design system shipped a hand-rolled regex Markdown parser. It mis-renders real drill
+// The design system shipped a hand-rolled regex Markdown parser. It mis-renders real task
 // content: plain blockquotes (143/171 READMEs), _emphasis_ (113), ordered lists (17), h4+ (16)
 // and nested lists (5) all fell through to paragraphs. Same visual decisions, real parser.
-// ponytail: mermaid and assets/ video dropped — 0 of 171 drills use either; add the `img`
-// override back if a drill ever ships one.
+// ponytail: mermaid and assets/ video dropped — 0 of 171 tasks use either; add the `img`
+// override back if a task ever ships one.
 
 const KEYWORDS = /(#[^\n]*)|("[^"]*"|'[^']*')|\b(def|return|for|in|if|else|elif|from|import|lambda|None|True|False|not|and|or|while|class|raise|with|as|try|except|finally|yield|assert|pass|break|continue|global|nonlocal|del|is)\b|\b(\d+(?:\.\d+)?)\b/g;
 
@@ -31,7 +31,7 @@ const label = { fontSize: "12px", fontWeight: 600, letterSpacing: "var(--ls-labe
 const fence = { margin: "2px 0 12px", fontFamily: "var(--font-mono)", fontSize: "13px", lineHeight: 1.55, background: "var(--editor)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", padding: "10px 12px", overflowX: "auto", color: "var(--text)" };
 const cellPad = { padding: "6px 12px", borderBottom: "1px solid var(--border)", fontSize: "13.5px", textAlign: "left", verticalAlign: "top" };
 
-/** Renders a drill's spec_md (GitHub-flavoured Markdown). `slug` resolves relative asset links. */
+/** Renders a task's spec_md (GitHub-flavoured Markdown). `slug` resolves relative asset links. */
 export function SpecText({ text = "", hideTitle = true, slug, style }) {
   const components = React.useMemo(() => ({
     h1: hideTitle ? () => null : ({ children }) => <h1 style={{ font: "600 20px/1.3 var(--font-sans)", margin: "0 0 6px" }}>{children}</h1>,
@@ -45,7 +45,7 @@ export function SpecText({ text = "", hideTitle = true, slug, style }) {
     blockquote: ({ children }) => <blockquote style={{ margin: "0 0 12px", paddingLeft: 12, borderLeft: "3px solid var(--border-strong)", color: "var(--text-muted)" }}>{children}</blockquote>,
     hr: () => <hr style={{ border: "none", borderTop: "1px solid var(--border)", margin: "16px 0" }} />,
     a: ({ href, children }) => <a href={href} target="_blank" rel="noreferrer">{children}</a>,
-    img: ({ src, alt }) => <img src={src && slug && !/^\w+:/.test(src) ? `/api/ex/${slug}/${src}` : src} alt={alt} style={{ display: "block", maxWidth: "100%", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", margin: "4px 0 12px" }} />,
+    img: ({ src, alt }) => <img src={src && slug && !/^\w+:/.test(src) ? `/api/task/${slug}/assets/${src}` : src} alt={alt} style={{ display: "block", maxWidth: "100%", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", margin: "4px 0 12px" }} />,
     table: ({ children }) => <table style={{ borderCollapse: "collapse", margin: "2px 0 12px", border: "1px solid var(--border)" }}>{children}</table>,
     th: ({ children }) => <th style={{ ...cellPad, fontSize: "12px", fontWeight: 600, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--text-muted)", background: "var(--surface-2)" }}>{children}</th>,
     td: ({ children }) => <td style={cellPad}>{children}</td>,

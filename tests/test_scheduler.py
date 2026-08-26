@@ -17,7 +17,7 @@ def _st(**kw):
 
 
 def test_grade_of():
-    assert scheduler.grade_of(1, 120, 10, False) == "easy"
+    assert scheduler.grade_of(1, 120, 10, False) == "quick"
     assert scheduler.grade_of(2, 900, 10, False) == "pass"
     assert scheduler.grade_of(4, 100, 10, False) == "struggled"
     assert scheduler.grade_of(1, 10, 10, True) == "struggled"          # a peeked answer never promotes
@@ -25,7 +25,7 @@ def test_grade_of():
 
 def test_reschedule():
     c = {"box": 0, "due": "2000-01-01", "seen": 1}
-    assert scheduler.reschedule(c, "easy") == 8 and c["box"] == 2      # +2 boxes, LADDER[2]
+    assert scheduler.reschedule(c, "quick") == 8 and c["box"] == 2      # +2 boxes, LADDER[2]
     assert scheduler.reschedule(c, "struggled") == 8 and c["box"] == 2  # same box, same gap
     assert scheduler.reschedule(c, "fail") == 2 and c["box"] == 0      # -2 boxes, back to the start
     assert c["due"] == (date.today() + timedelta(days=2)).isoformat()  # noqa: DTZ011

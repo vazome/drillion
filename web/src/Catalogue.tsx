@@ -14,7 +14,6 @@ function Line({ task, today }: { task: Row; today?: boolean }) {
       <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)", width: 30, textAlign: "right" }}>{task.topic}</span>
       <span style={{ fontSize: today ? 14.5 : 15, fontWeight: today ? 500 : 400, flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{task.title}</span>
       {task.tags.slice(0, 3).map((t) => <TagChip key={t} label={t} small />)}
-      <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--text-muted)", width: 40, textAlign: "right" }}>{task.minutes} m</span>
       {/* the API numbers boxes 0-4; the meter fills 1-5, and an unseen card sits on no rung */}
       <LadderMeter box={task.seen ? task.box + 1 : 0} />
       <span style={{ width: 92, display: "flex", justifyContent: "flex-end" }}><StatusBadge status={task.status} /></span>
