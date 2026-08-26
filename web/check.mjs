@@ -2,7 +2,7 @@
 // with an assert that nothing leaks or throws.
 // Needs a running server:  DRILLION_PORT=8816 uv run drillion &   then  node check.mjs [port]
 import { build } from "esbuild";
-import { readFileSync, rmSync } from "node:fs";
+import { rmSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 const port = process.argv[2] || "8765";
@@ -100,26 +100,26 @@ const problems = [];
 
 for (const slug of slugs) {
   const task = await (await fetch(`${base}/task/${encodeURIComponent(slug)}`)).json();
-  let html;
-  try { html = render(task.spec_md, slug); }
+  let markup;
+  try { markup = render(task.spec_md, slug); }
   catch (e) { problems.push(`${slug}: threw ${e.message}`); continue; }
 
   // an unparsed GitHub alert marker means the alert plugin stopped firing
   for (const kind of ["NOTE", "TIP", "WARNING", "IMPORTANT", "CAUTION"]) {
-    if (html.includes(`[!${kind}]`)) problems.push(`${slug}: literal [!${kind}] in output`);
+    if (markup.includes(`[!${kind}]`)) problems.push(`${slug}: literal [!${kind}] in output`);
   }
   // …and a callout whose label lost its class renders unstyled, with the raw octicon showing
   const alerts = (task.spec_md.match(/^> \[!\w+\]/gm) || []).length;
-  const titled = (html.match(/class="markdown-alert-title"/g) || []).length;
+  const titled = (markup.match(/class="markdown-alert-title"/g) || []).length;
   if (alerts !== titled) problems.push(`${slug}: ${alerts} callouts, ${titled} styled labels`);
   // every `## Heading` in the source must come out as an <h2>
   const heads = [...task.spec_md.matchAll(/^## (.+)$/gm)].map((m) => m[1].trim());
-  const rendered = (html.match(/<h2[^>]*>/g) || []).length;
+  const rendered = (markup.match(/<h2[^>]*>/g) || []).length;
   if (heads.length !== rendered) problems.push(`${slug}: ${heads.length} '## ' headings, ${rendered} <h2>`);
   // ordered lists must not degrade into paragraphs (the old regex parser's failure)
-  if (/^\d+\. /m.test(task.spec_md) && !html.includes("<ol")) problems.push(`${slug}: ordered list did not render as <ol>`);
-  if (/^\s*[-*] /m.test(task.spec_md) && !html.includes("<ul")) problems.push(`${slug}: bullet list did not render as <ul>`);
-  if (html.includes("undefined")) problems.push(`${slug}: 'undefined' leaked into the markup`);
+  if (/^\d+\. /m.test(task.spec_md) && !markup.includes("<ol")) problems.push(`${slug}: ordered list did not render as <ol>`);
+  if (/^\s*[-*] /m.test(task.spec_md) && !markup.includes("<ul")) problems.push(`${slug}: bullet list did not render as <ul>`);
+  if (markup.includes("undefined")) problems.push(`${slug}: 'undefined' leaked into the markup`);
   checked++;
 }
 

@@ -1,5 +1,5 @@
 import React from "react";
-const ringEmpty = (e) => { try { return e.target.matches(":focus-visible"); } catch (_) { return true; } };
+const ringEmpty = (e) => { try { return e.target.matches(":focus-visible"); } catch { return true; } };
 export function EmptyState({ message, actionLabel, onAction, actionDisabled = false, align = "center", style }) {
   const [hover, setHover] = React.useState(false);
   const [focus, setFocus] = React.useState(false);

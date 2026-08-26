@@ -1,5 +1,5 @@
 import React from "react";
-const ringToggle = (e) => { try { return e.target.matches(":focus-visible"); } catch (_) { return true; } };
+const ringToggle = (e) => { try { return e.target.matches(":focus-visible"); } catch { return true; } };
 export function Toggle({ checked = false, onChange, label, disabled = false, ariaLabel, style }) {
   const [focus, setFocus] = React.useState(false);
   const [hover, setHover] = React.useState(false);
