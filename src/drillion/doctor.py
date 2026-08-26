@@ -22,7 +22,7 @@ SLUG = re.compile(r"^(\d{3})_[a-z0-9_]+$")
 TAG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 DIFFICULTIES = ("easy", "medium", "hard")
 TIERS = ("core", "advanced", "packages")
-REFERENCES = ("prereqs",)          # optional frontmatter lists of task numbers
+REFERENCES = ("prereqs",)  # optional frontmatter lists of task numbers
 
 
 def _folder_problems(folder):
@@ -31,19 +31,23 @@ def _folder_problems(folder):
     it is `{}` when the README could not be read at all."""
     out = []
     if not SLUG.match(folder.name):
-        out.append("folder name is not <NNN>_<name>: three digits, then a lowercase name")
+        out.append(
+            "folder name is not <NNN>_<name>: three digits, then a lowercase name"
+        )
     src = folder / "task.py"
     if not src.is_file():
         out.append("task.py: missing")
     else:
         try:
             text = src.read_text()
-            bounds(text)                            # no marker line, no task
+            bounds(text)  # no marker line, no task
             _solve(ast.parse(cut(text).body))
         except Invalid as err:
             out.append(f"task.py: {err}")
         except SyntaxError as err:
-            out.append(f"task.py: the region above the marker is not valid Python — {err.msg}")
+            out.append(
+                f"task.py: the region above the marker is not valid Python — {err.msg}"
+            )
         except OSError as err:
             out.append(f"task.py: cannot be read — {err.strerror}")
 
@@ -57,29 +61,44 @@ def _folder_problems(folder):
     except yaml.YAMLError as err:
         return [*out, f"README.md: the frontmatter is not valid YAML — {err}"], {}
     if not isinstance(meta, dict):
-        return [*out, "README.md: the frontmatter is not a block of key: value lines"], {}
+        return [
+            *out,
+            "README.md: the frontmatter is not a block of key: value lines",
+        ], {}
 
-    out += [f"README.md: frontmatter is missing `{k}`"
-            for k in REQUIRED if meta.get(k) in (None, "", [])]
-    if (difficulty := meta.get("difficulty")) is not None and difficulty not in DIFFICULTIES:
-        out.append(f"README.md: difficulty {difficulty!r} is not one of "
-                   f"{' / '.join(DIFFICULTIES)}")
+    out += [
+        f"README.md: frontmatter is missing `{k}`"
+        for k in REQUIRED
+        if meta.get(k) in (None, "", [])
+    ]
+    if (
+        difficulty := meta.get("difficulty")
+    ) is not None and difficulty not in DIFFICULTIES:
+        out.append(
+            f"README.md: difficulty {difficulty!r} is not one of "
+            f"{' / '.join(DIFFICULTIES)}"
+        )
     if (tier := meta.get("tier")) is not None and tier not in TIERS:
         out.append(f"README.md: tier {tier!r} is not one of {' / '.join(TIERS)}")
     minutes = meta.get("minutes")
-    if minutes is not None and (isinstance(minutes, bool) or not isinstance(minutes, int)
-                                or minutes <= 0):
+    if minutes is not None and (
+        isinstance(minutes, bool) or not isinstance(minutes, int) or minutes <= 0
+    ):
         out.append(f"README.md: minutes {minutes!r} is not a positive whole number")
     tags = meta.get("tags")
     if tags is not None and not isinstance(tags, list):
         out.append("README.md: tags must be a list")
     elif tags:
-        out += [f"README.md: tag {t!r} is not lowercase kebab-case"
-                for t in tags if not isinstance(t, str) or not TAG.match(t)]
+        out += [
+            f"README.md: tag {t!r} is not lowercase kebab-case"
+            for t in tags
+            if not isinstance(t, str) or not TAG.match(t)
+        ]
     for key in REFERENCES:
         value = meta.get(key)
-        if value is not None and (not isinstance(value, list)
-                                  or not all(isinstance(n, int) for n in value)):
+        if value is not None and (
+            not isinstance(value, list) or not all(isinstance(n, int) for n in value)
+        ):
             out.append(f"README.md: {key} must be a list of task numbers")
     hints = guidance(md)[1]
     if len(hints) != 3:
@@ -98,7 +117,12 @@ def _set_problems(metas):
         if m := SLUG.match(name):
             topic = int(m.group(1))
             if topic in topics:
-                out.append((name, f"task number {m.group(1)} is already used by {topics[topic]}"))
+                out.append(
+                    (
+                        name,
+                        f"task number {m.group(1)} is already used by {topics[topic]}",
+                    )
+                )
             else:
                 topics[topic] = name
     for name, meta in metas.items():
@@ -107,20 +131,26 @@ def _set_problems(metas):
             refs = meta.get(key)
             for n in refs if isinstance(refs, list) else []:
                 if not isinstance(n, int):
-                    continue                             # already reported as a bad list
+                    continue  # already reported as a bad list
                 if mine and n == int(mine.group(1)):
                     out.append((name, f"{key} lists the task itself"))
                 elif n not in topics:
                     out.append((name, f"{key} names task {n}, which does not exist"))
-    graph = {t: [n for n in metas[name].get("prereqs") or [] if n in topics]
-             for t, name in topics.items()}
+    graph = {
+        t: [n for n in metas[name].get("prereqs") or [] if n in topics]
+        for t, name in topics.items()
+    }
     try:
         # ponytail: reports the first cycle only; the next run finds the next one.
         graphlib.TopologicalSorter(graph).prepare()
     except graphlib.CycleError as err:
         loop = err.args[1]
-        out.append((topics[loop[0]], "prereqs form a cycle: "
-                                     + " → ".join(f"{n:03d}" for n in loop)))
+        out.append(
+            (
+                topics[loop[0]],
+                "prereqs form a cycle: " + " → ".join(f"{n:03d}" for n in loop),
+            )
+        )
     return out
 
 
@@ -128,8 +158,11 @@ def _task_folders():
     """The folders a contributor authored. A name starting with `.` or `_` is tooling, not
     an attempt at a task — `tasks/__pycache__` appears the moment anything imports a task —
     so it is not a task folder and not a problem. A misnamed `bad_name` still is."""
-    return [f for f in sorted(settings.tasks_dir.iterdir())
-            if f.is_dir() and not f.name.startswith((".", "_"))]
+    return [
+        f
+        for f in sorted(settings.tasks_dir.iterdir())
+        if f.is_dir() and not f.name.startswith((".", "_"))
+    ]
 
 
 def problems():
@@ -145,9 +178,12 @@ def problems():
         out += [(folder.name, r) for r in reasons]
     out += _set_problems(metas)
     named, loaded = {name for name, _ in out}, tasks()
-    out += [(f.name, "the catalogue skips this folder and doctor cannot say why")
-            for f in folders if f.name not in loaded and f.name not in named]
-    out.sort(key=lambda pair: pair[0])          # stable: reasons keep their reading order
+    out += [
+        (f.name, "the catalogue skips this folder and doctor cannot say why")
+        for f in folders
+        if f.name not in loaded and f.name not in named
+    ]
+    out.sort(key=lambda pair: pair[0])  # stable: reasons keep their reading order
     return out
 
 
@@ -165,6 +201,8 @@ def doctor():
         print(f"{total} tasks, no problems")
     else:
         skipped = len(bad - set(tasks()))
-        print(f"{len(found)} problems in {len(bad)} of {total} tasks; "
-              f"{skipped} would be skipped by the catalogue")
+        print(
+            f"{len(found)} problems in {len(bad)} of {total} tasks; "
+            f"{skipped} would be skipped by the catalogue"
+        )
     return len(found)

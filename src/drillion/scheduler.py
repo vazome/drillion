@@ -10,7 +10,7 @@ from datetime import date, timedelta
 
 from .state import card, today
 
-LADDER = [2, 4, 8, 16, 28]           # days until the next sighting, per box
+LADDER = [2, 4, 8, 16, 28]  # days until the next sighting, per box
 NEW_PER_DAY = 2
 # The most reviews a day may hand you. Unbounded, the day you come back from three weeks
 # away is 100 rows deep and the ladder never recovers. Anki ships 200 against 20 new — a
@@ -30,7 +30,11 @@ GRADES = {"struggled": -1, "pass": +1, "quick": +2}
 
 
 def due_today(st, all_tasks):
-    return [s for s in all_tasks if card(st, s)["seen"] > 0 and card(st, s)["due"] <= today()]
+    return [
+        s
+        for s in all_tasks
+        if card(st, s)["seen"] > 0 and card(st, s)["due"] <= today()
+    ]
 
 
 def _facets(meta):
@@ -69,13 +73,17 @@ def queue(st, all_tasks):
     done_today = sum(1 for e in st["log"] if e["date"] == today() and e["new"])
     due = sorted(due_today(st, all_tasks), key=lambda s: card(st, s)["due"])
     behind = len(due) > REVIEWS_PER_DAY
-    fresh = sorted((s for s in unseen(st, all_tasks) if s not in st["open"]),
-                   key=lambda s: all_tasks[s]["topic"])
-    return {"review": due[:REVIEWS_PER_DAY],
-            "new": [] if behind else fresh[:max(0, NEW_PER_DAY - done_today)],
-            "done_today": done_today,
-            "due_total": len(due),
-            "behind": behind}
+    fresh = sorted(
+        (s for s in unseen(st, all_tasks) if s not in st["open"]),
+        key=lambda s: all_tasks[s]["topic"],
+    )
+    return {
+        "review": due[:REVIEWS_PER_DAY],
+        "new": [] if behind else fresh[: max(0, NEW_PER_DAY - done_today)],
+        "done_today": done_today,
+        "due_total": len(due),
+        "behind": behind,
+    }
 
 
 def pick(st, all_tasks):
@@ -89,7 +97,7 @@ def pick(st, all_tasks):
 
 def grade_of(attempts, secs, par, solution_shown):
     if solution_shown:
-        return "struggled"          # a peeked answer never promotes (Aleven: hint abuse)
+        return "struggled"  # a peeked answer never promotes (Aleven: hint abuse)
     if attempts == 1 and secs < par * 60:
         return "quick"
     if attempts <= 2 and secs < par * 60 * 2:

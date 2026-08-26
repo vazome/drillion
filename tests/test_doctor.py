@@ -29,9 +29,11 @@ two
 ### Hint 3
 three
 """
-TASK = ("def solve(x):\n    raise NotImplementedError\n\n\n"
-        f"{region.MARKER}\nfrom _lib import rng  # noqa: E402\n\n\n"
-        "def _reference(x):\n    return x\n\n\ndef test_solve():\n    assert rng()\n")
+TASK = (
+    "def solve(x):\n    raise NotImplementedError\n\n\n"
+    f"{region.MARKER}\nfrom _lib import rng  # noqa: E402\n\n\n"
+    "def _reference(x):\n    return x\n\n\ndef test_solve():\n    assert rng()\n"
+)
 
 
 def _reasons(**folders):
@@ -62,27 +64,43 @@ def test_every_reason_is_reported_not_just_the_first():
     steps: fix one thing, run again, learn about the next."""
     both = README.replace("tags: [core]\n", "").replace("### Hint 3\nthree\n", "")
     reasons = _reasons(**{"172_asyncqueue": {"README.md": both, "task.py": TASK}})
-    assert reasons["172_asyncqueue"] == ["README.md: frontmatter is missing `tags`",
-                                         "README.md: found 2 hints, need exactly 3"]
+    assert reasons["172_asyncqueue"] == [
+        "README.md: frontmatter is missing `tags`",
+        "README.md: found 2 hints, need exactly 3",
+    ]
 
 
 def test_each_skipping_rule_says_which_one_was_broken():
     """One folder per rule the catalogue drops a task for. Each must come back named,
     because a task that simply never appears in a menu of 171 is undebuggable."""
-    reasons = _reasons(**{
-        "043_nofrontmatter": {"README.md": README.split("---\n")[2], "task.py": TASK},
-        "044_notitle": {"README.md": README.replace("title: A test task\n", ""),
-                        "task.py": TASK},
-        "045_badyaml": {"README.md": README.replace("tags: [core]", "tags: [core"),
-                        "task.py": TASK},
-        "046_nomarker": {"README.md": README,
-                         "task.py": "def solve(x):\n    raise NotImplementedError\n"},
-        "047_nosolve": {"README.md": README, "task.py": TASK.replace("def solve", "def nope")},
-        "048_noreadme": {"task.py": TASK},
-        "049_notaskpy": {"README.md": README},
-        "050_syntax": {"README.md": README, "task.py": "def solve(:\n" + TASK},
-        "notanumber": {"README.md": README, "task.py": TASK},
-    })
+    reasons = _reasons(
+        **{
+            "043_nofrontmatter": {
+                "README.md": README.split("---\n")[2],
+                "task.py": TASK,
+            },
+            "044_notitle": {
+                "README.md": README.replace("title: A test task\n", ""),
+                "task.py": TASK,
+            },
+            "045_badyaml": {
+                "README.md": README.replace("tags: [core]", "tags: [core"),
+                "task.py": TASK,
+            },
+            "046_nomarker": {
+                "README.md": README,
+                "task.py": "def solve(x):\n    raise NotImplementedError\n",
+            },
+            "047_nosolve": {
+                "README.md": README,
+                "task.py": TASK.replace("def solve", "def nope"),
+            },
+            "048_noreadme": {"task.py": TASK},
+            "049_notaskpy": {"README.md": README},
+            "050_syntax": {"README.md": README, "task.py": "def solve(:\n" + TASK},
+            "notanumber": {"README.md": README, "task.py": TASK},
+        }
+    )
     assert "frontmatter" in reasons["043_nofrontmatter"][0]
     assert reasons["044_notitle"] == ["README.md: frontmatter is missing `title`"]
     assert "not valid YAML" in reasons["045_badyaml"][0]
@@ -97,17 +115,23 @@ def test_each_skipping_rule_says_which_one_was_broken():
 def test_the_value_rules_the_catalogue_never_checked():
     """A task with `difficulty: simple` loads fine and then sorts, filters and grades
     wrong. The catalogue only asks whether a key is filled in; doctor asks what it says."""
-    bad = (README.replace("difficulty: easy", "difficulty: simple")
-                 .replace("tier: core", "tier: basics")
-                 .replace("minutes: 7", "minutes: 0")
-                 .replace("tags: [core]", "tags: [Core Strings]")
-                 .replace("prereqs: []", "prereqs: [9]"))
-    reasons = _reasons(**{"042_thing": {"README.md": bad, "task.py": TASK}})["042_thing"]
-    assert reasons == ["README.md: difficulty 'simple' is not one of easy / medium / hard",
-                       "README.md: tier 'basics' is not one of core / advanced / packages",
-                       "README.md: minutes 0 is not a positive whole number",
-                       "README.md: tag 'Core Strings' is not lowercase kebab-case",
-                       "prereqs names task 9, which does not exist"]
+    bad = (
+        README.replace("difficulty: easy", "difficulty: simple")
+        .replace("tier: core", "tier: basics")
+        .replace("minutes: 7", "minutes: 0")
+        .replace("tags: [core]", "tags: [Core Strings]")
+        .replace("prereqs: []", "prereqs: [9]")
+    )
+    reasons = _reasons(**{"042_thing": {"README.md": bad, "task.py": TASK}})[
+        "042_thing"
+    ]
+    assert reasons == [
+        "README.md: difficulty 'simple' is not one of easy / medium / hard",
+        "README.md: tier 'basics' is not one of core / advanced / packages",
+        "README.md: minutes 0 is not a positive whole number",
+        "README.md: tag 'Core Strings' is not lowercase kebab-case",
+        "prereqs names task 9, which does not exist",
+    ]
 
 
 def test_the_rules_that_need_the_whole_set():
@@ -115,22 +139,34 @@ def test_the_rules_that_need_the_whole_set():
     missing task, a task that gates itself, or a loop leaves someone permanently locked
     out with no way to see why from inside either folder."""
     loop = README.replace("prereqs: []", "prereqs: [43]")
-    reasons = _reasons(**{
-        "042_thing": {"README.md": loop, "task.py": TASK},
-        "043_other": {"README.md": README.replace("prereqs: []", "prereqs: [42]"),
-                      "task.py": TASK},
-        "044_itself": {"README.md": README.replace("prereqs: []", "prereqs: [44]"),
-                       "task.py": TASK},
-    })
+    reasons = _reasons(
+        **{
+            "042_thing": {"README.md": loop, "task.py": TASK},
+            "043_other": {
+                "README.md": README.replace("prereqs: []", "prereqs: [42]"),
+                "task.py": TASK,
+            },
+            "044_itself": {
+                "README.md": README.replace("prereqs: []", "prereqs: [44]"),
+                "task.py": TASK,
+            },
+        }
+    )
     assert reasons["044_itself"] == ["prereqs lists the task itself"]
-    cycle = [r for rs in reasons.values() for r in rs if r.startswith("prereqs form a cycle")]
+    cycle = [
+        r for rs in reasons.values() for r in rs if r.startswith("prereqs form a cycle")
+    ]
     assert len(cycle) == 1 and "042" in cycle[0] and "043" in cycle[0]
 
 
 def test_a_duplicate_task_number_is_reported():
     """Two folders numbered 042: one silently shadows the other in every ordering."""
-    reasons = _reasons(**{"042_thing": {"README.md": README, "task.py": TASK},
-                          "042_other": {"README.md": README, "task.py": TASK}})
+    reasons = _reasons(
+        **{
+            "042_thing": {"README.md": README, "task.py": TASK},
+            "042_other": {"README.md": README, "task.py": TASK},
+        }
+    )
     assert reasons == {"042_thing": ["task number 042 is already used by 042_other"]}
 
 
@@ -144,9 +180,13 @@ def test_tooling_directories_are_not_broken_tasks():
     """`tasks/__pycache__` appears the moment anything imports a task, so it is there for
     anyone who has run the suite once. It is not an attempt at a task and doctor must not
     report it — while a genuinely misnamed folder still has to be caught."""
-    reasons = _reasons(**{"__pycache__": {"whatever.pyc": "x"},
-                          ".ruff_cache": {"x": "y"},
-                          "001_ok": {"README.md": README, "task.py": TASK}})
+    reasons = _reasons(
+        **{
+            "__pycache__": {"whatever.pyc": "x"},
+            ".ruff_cache": {"x": "y"},
+            "001_ok": {"README.md": README, "task.py": TASK},
+        }
+    )
     assert "__pycache__" not in reasons and ".ruff_cache" not in reasons
     assert reasons.get("001_ok", []) == []
 

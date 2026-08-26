@@ -18,7 +18,10 @@ REQUIRED = ("title", "difficulty", "tier", "minutes", "tags")
 BROWSER = ("topic", "title", "difficulty", "tier", "track", "tags", "prereqs", "source")
 # `minutes` is deliberately absent: par time is grade_of()'s input, not the learner's to see.
 HINT = re.compile(r"^### Hint \d+[ \t]*$", re.MULTILINE)
-_cache = (None, None)   # (key, records) — rebinding a global is atomic, so a race just re-scans
+_cache = (
+    None,
+    None,
+)  # (key, records) — rebinding a global is atomic, so a race just re-scans
 
 
 def public(meta):
@@ -71,16 +74,24 @@ def tasks():
         try:
             topic = int(folder.name.split("_")[0])
             src = (folder / "task.py").read_text()
-            bounds(src)                    # no marker line, no task
+            bounds(src)  # no marker line, no task
             _solve(ast.parse(cut(src).body))
             meta, md = frontmatter((folder / "README.md").read_text())
             spec_md, hints = guidance(md)
             if any(meta.get(k) in (None, "", []) for k in REQUIRED) or len(hints) != 3:
-                raise ValueError("a task needs a title, difficulty, tier, minutes, tags and 3 hints")
+                raise ValueError(
+                    "a task needs a title, difficulty, tier, minutes, tags and 3 hints"
+                )
         except Exception:  # noqa: BLE001, S112 — a half-written folder must not break the menu
             continue
-        out[folder.name] = {"prereqs": [], **meta, "topic": topic,
-                            "path": folder / "task.py", "dir": folder, "hints": hints,
-                            "spec_md": spec_md}
+        out[folder.name] = {
+            "prereqs": [],
+            **meta,
+            "topic": topic,
+            "path": folder / "task.py",
+            "dir": folder,
+            "hints": hints,
+            "spec_md": spec_md,
+        }
     _cache = (key, out)
     return out
