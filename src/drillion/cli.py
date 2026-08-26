@@ -3,6 +3,7 @@
     drillion             open the web UI
     drillion selfcheck   solve every task with its own _reference
     drillion doctor      say why a task folder would be skipped
+    drillion --version   the installed version, the same one /api/health reports
 
 This is the only module that imports the web layer, and it does so lazily: a
 selfcheck must not need a server to run.
@@ -11,6 +12,7 @@ selfcheck must not need a server to run.
 import argparse
 import logging
 
+from . import __version__
 from .settings import settings
 
 
@@ -18,6 +20,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(
         prog="drillion", description="Spaced-repetition Python tasks."
     )
+    ap.add_argument("--version", action="version", version=f"drillion {__version__}")
     ap.add_argument(
         "command",
         nargs="?",

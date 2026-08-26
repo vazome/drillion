@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Toggle } from "./ds/index.js";
-import { api, type Catalogue as CataloguePayload } from "./api";
+import { api, type Catalogue as CataloguePayload, type Health } from "./api";
 import { Catalogue } from "./Catalogue";
 import { Task } from "./Task";
 import { Progress } from "./Progress";
@@ -31,8 +31,8 @@ function useTheme(): [boolean, (v: boolean) => void] {
   return [dark, (v) => { applyTheme(v); setDark(v); }];
 }
 
-function Header({ route, dark, setDark, total }: {
-  route: string; dark: boolean; setDark: (v: boolean) => void; total: number;
+function Header({ route, dark, setDark, total, version }: {
+  route: string; dark: boolean; setDark: (v: boolean) => void; total: number; version: string;
 }) {
   const link = (href: string, text: string) => (
     <a href={href} style={{ fontSize: 14, fontWeight: route === href.slice(1) ? 600 : 400, color: route === href.slice(1) ? "var(--text)" : "var(--text-muted)" }}>{text}</a>
@@ -42,6 +42,7 @@ function Header({ route, dark, setDark, total }: {
       <a href="#/" style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
         <span style={{ fontSize: 17, fontWeight: 600, color: "var(--text)" }}>drillion</span>
         {total ? <span style={{ fontSize: 13, color: "var(--text-faint)" }}>{total} tasks</span> : null}
+        {version ? <span style={{ fontSize: 13, color: "var(--text-faint)" }}>v{version}</span> : null}
       </a>
       <div style={{ flex: 1 }} />
       {link("#/", "Catalogue")}
@@ -60,11 +61,16 @@ export function App() {
   // Catalogue must keep its own fetch (it remounts per visit, which is what makes Today
   // current after a pass, and it refetches after POST /api/focus). Sharing one fetch buys
   // either a stale Today or a refetch on every route change — dearer than one local GET.
-  const [head, setHead] = useState({ total: 0 });
+  // The version rides on /api/health, the one endpoint that reports it, so the page
+  // never carries a number of its own to go stale.
+  const [head, setHead] = useState({ total: 0, version: "" });
   useEffect(() => {
     api<CataloguePayload>("/catalogue")
-      .then((c) => setHead({ total: c.stats.total }))
+      .then((c) => setHead((h) => ({ ...h, total: c.stats.total })))
       .catch(() => {});                    // a header without its counts is not worth an error
+    api<Health>("/health")
+      .then((h) => setHead((s) => ({ ...s, version: h.version })))
+      .catch(() => {});
   }, []);
 
   const slug = route.startsWith("/task/") ? decodeURIComponent(route.slice(6)) : null;
