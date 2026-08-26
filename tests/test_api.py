@@ -229,11 +229,16 @@ def test_recent_activity_is_the_week_most_recent_first():
     def day(n):
         return (date.today() - timedelta(days=n)).isoformat()  # noqa: DTZ011
 
-    st = {"archive": {"001_a": [{"date": day(3)}, {"date": day(1)}],
-                      "002_b": [{"date": day(2)}],
-                      "003_c": [{"date": day(WINDOW)}],          # a day past the window
-                      "004_d": [{"date": day(0)}],
-                      "009_gone": [{"date": day(0)}]}}           # renamed away: no row for it
-    tasks = {"001_a": {}, "002_b": {}, "003_c": {}, "004_d": {}}
+    st = {"open": {}, "archive": {
+        "001_a": [{"date": day(3)}, {"date": day(1)}],
+        "002_b": [{"date": day(2)}],
+        "003_c": [{"date": day(WINDOW)}],                        # a day past the window
+        "004_d": [{"date": day(0)}],
+        "009_gone": [{"date": day(0)}]}}                         # renamed away: no row for it
+    tasks = {"001_a": {}, "002_b": {}, "003_c": {}, "004_d": {}, "005_e": {}}
     assert _recent(st, tasks) == ["004_d", "001_a", "002_b"]
-    assert _recent({"archive": {}}, tasks) == []
+
+    # an open attempt is work in progress: it reaches no archive, and it still leads the list
+    st["open"] = {"005_e": {"last": f"{day(0)}T09:30:00"}, "002_b": {"last": f"{day(0)}T09:31:00"}}
+    assert _recent(st, tasks) == ["002_b", "005_e", "004_d", "001_a"]
+    assert _recent({"open": {}, "archive": {}}, tasks) == []

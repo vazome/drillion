@@ -177,12 +177,19 @@ def _recent(st, all_tasks):
     count. Read from the archive for the same reason `_practised` is: it holds the days you
     gave up on as well as the days you passed.
 
+    An attempt still open counts, and counts first: nothing reaches the archive until a pass or
+    an abandon, so a task you are in the middle of right now is exactly the work this list exists
+    to lead you back to. Its `last` touch is a full timestamp, so today's work orders within the
+    day; an archived run only knows its date, and sorts as the start of that day.
+
     Nothing is held back for being in today's queue. A card worked on Friday and due again
     today is both things at once, and the queue is not the authority on what you were doing."""
     cut = (date.fromisoformat(today()) - timedelta(days=WINDOW - 1)).isoformat()
-    last = {slug: runs[-1]["date"] for slug, runs in st["archive"].items()
-            if slug in all_tasks}                              # a renamed task leaves a dead key
-    return sorted((s for s, d in last.items() if d >= cut), key=lambda s: last[s], reverse=True)
+    last = {slug: runs[-1]["date"] for slug, runs in st["archive"].items()}
+    for slug, o in st["open"].items():
+        last[slug] = max(last.get(slug, ""), o["last"])
+    return sorted((s for s, d in last.items() if s in all_tasks and d >= cut),   # a rename leaves a dead key
+                  key=lambda s: last[s], reverse=True)
 
 
 def _boxes(st, all_tasks):
