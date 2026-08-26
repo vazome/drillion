@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Select, Toggle } from "./ds/index.js";
-import { post } from "./api";
+import { Toggle } from "./ds/index.js";
 import { Catalogue } from "./Catalogue";
 import { Task } from "./Task";
 import { Progress } from "./Progress";
@@ -31,10 +30,9 @@ function useTheme(): [boolean, (v: boolean) => void] {
   return [dark, (v) => { applyTheme(v); setDark(v); }];
 }
 
-function Header({ route, dark, setDark, focus, tags, total, daysLeft, onFocus }: {
+function Header({ route, dark, setDark, total, daysLeft }: {
   route: string; dark: boolean; setDark: (v: boolean) => void;
-  focus: string | null; tags: string[]; total: number; daysLeft: number;
-  onFocus: (tag: string) => void;
+  total: number; daysLeft: number;
 }) {
   const link = (href: string, text: string) => (
     <a href={href} style={{ fontSize: 14, fontWeight: route === href.slice(1) ? 600 : 400, color: route === href.slice(1) ? "var(--text)" : "var(--text-muted)" }}>{text}</a>
@@ -46,10 +44,6 @@ function Header({ route, dark, setDark, focus, tags, total, daysLeft, onFocus }:
         {total ? <span style={{ fontSize: 13, color: "var(--text-faint)" }}>{total} tasks</span> : null}
       </a>
       <div style={{ flex: 1 }} />
-      <label style={{ fontSize: 13, color: "var(--text-muted)", display: "flex", gap: 6, alignItems: "center" }}>
-        Focus:
-        <Select value={focus ?? ""} onChange={onFocus} options={tags} placeholder="no focus" ariaLabel="Focus tag" style={{ height: 30, fontSize: 13 }} />
-      </label>
       {link("#/", "Catalogue")}
       {link("#/progress", "Progress")}
       {daysLeft ? <span className="tabular" style={{ fontSize: 13, color: "var(--text-faint)", fontFamily: "var(--font-mono)" }}>{daysLeft} days left</span> : null}
@@ -61,22 +55,18 @@ function Header({ route, dark, setDark, focus, tags, total, daysLeft, onFocus }:
 export function App() {
   const route = useHash();
   const [dark, setDark] = useTheme();
-  // The header's focus/tags/total live on the catalogue payload; one shared copy, refetched on nav.
-  const [head, setHead] = useState({ focus: null as string | null, tags: [] as string[], total: 0, daysLeft: 0 });
+  // The header's counts live on the catalogue payload; one shared copy, refetched on nav.
+  const [head, setHead] = useState({ total: 0, daysLeft: 0 });
   const onHead = useCallback((h: typeof head) => setHead(h), []);
-  const setFocus = (tag: string) => {
-    setHead((h) => ({ ...h, focus: tag || null }));
-    post("/focus", { tag: tag || null }).catch(() => {});
-  };
 
   const slug = route.startsWith("/task/") ? decodeURIComponent(route.slice(6)) : null;
   return (
     <>
-      <Header route={route} dark={dark} setDark={setDark} onFocus={setFocus} {...head} />
+      <Header route={route} dark={dark} setDark={setDark} {...head} />
       <main style={{ padding: "24px" }}>
         {slug ? <Task slug={slug} dark={dark} />
           : route === "/progress" ? <Progress />
-          : <Catalogue onHead={onHead} focus={head.focus} />}
+          : <Catalogue onHead={onHead} />}
       </main>
     </>
   );

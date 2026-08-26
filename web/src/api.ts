@@ -6,7 +6,7 @@ export type Grade = "quick" | "pass" | "struggled" | "abandoned";
 export interface Row {
   slug: string; topic: number; title: string;
   difficulty: "easy" | "medium" | "hard"; tier: "core" | "advanced" | "packages"; track?: string;
-  tags: string[]; prereqs?: string[]; practices?: number[]; source?: string;
+  tags: string[]; prereqs?: number[]; practices?: number[]; source?: string;
   status: Status; box: number; due: string; seen: number;
 }
 export interface Catalogue {
