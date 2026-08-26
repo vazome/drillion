@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from drillion import attempts, region, state
+from drillion import attempts, region, scheduler, state
 from drillion.settings import settings
 
 SRC = (settings.tasks_dir / "001_fstrings" / "task.py").read_text()
@@ -50,10 +50,10 @@ def test_attempt_lifecycle():
     assert o["new"] and o["attempts"] == 0 and 1000 <= o["seed"] <= 9999
     assert attempts.open_attempt(st, "001_a") is o  # reopening keeps the timer
     o["attempts"], o["active"] = 1, 30
-    grade, gap, box = attempts.record_pass(
+    grade, gap, box, reason = attempts.record_pass(
         st, "001_a", all_tasks["001_a"], "def solve(x):\n    return x"
     )
-    assert (grade, gap, box) == ("quick", 8, 2)
+    assert (grade, gap, box, reason) == ("quick", 8, 2, "one run, inside par")
     assert st["open"] == {} and st["cards"]["001_a"]["seen"] == 1
     assert st["log"][-1] == {
         "date": state.today(),
@@ -67,6 +67,47 @@ def test_attempt_lifecycle():
     assert (
         attempts.open_attempt(st, "001_a")["new"] is False
     )  # a review, not a new pick
+
+
+def test_a_grade_names_the_cause_that_landed_it():
+    """The verdict was real and the rubric was withheld: you were told `struggled` and could
+    not tell whether it was the runs, the clock or the peek. Par itself still never leaves
+    the server, so the reason names causes and no number to race."""
+
+    def why(attempts_, secs, shown=False):
+        o = {"attempts": attempts_, "active": secs, "solution_shown": shown}
+        return attempts.grade_reason(
+            o, 5, scheduler.grade_of(attempts_, secs, 5, shown)
+        )
+
+    assert why(1, 30) == "one run, inside par"  # par = 5 min = 300 s
+    assert why(1, 30, shown=True) == "the solution was shown"
+    assert why(2, 30) == "the runs it took"  # fast, but a second run
+    assert why(1, 400) == "the time it took"  # one run, over par
+    assert why(3, 30) == "the runs it took"
+    assert why(1, 700) == "the time it took"
+    assert (
+        why(5, 4000) == "the runs it took and the time it took"
+    )  # both, independently
+    # whatever the rubric grades, it says why: an unexplained verdict is the bug
+    assert all(why(a, s) for a in (1, 2, 3, 9) for s in (0, 299, 300, 599, 600, 9000))
+
+
+def test_the_nudge_offers_a_hint_after_half_an_hour_of_reading():
+    """The hint gate opens silently, which is no use to the learner who is not looking at the
+    panel. Half an hour of active work with nothing run and no hint taken is that learner."""
+    st = _st()
+    o = attempts.open_attempt(st, "001_a")
+    assert attempts.nudge_due(o) is False and attempts.nudge_due(None) is False
+    o["active"] = attempts.NUDGE_SECS - 1
+    assert attempts.nudge_due(o) is False
+    o["active"] = attempts.NUDGE_SECS
+    assert attempts.nudge_due(o) is True
+    assert attempts.attempt_view(o, ["one"])["nudge"] is True  # the page reads it here
+    o["hints"] = 1  # taking the offer answers it
+    assert attempts.nudge_due(o) is False
+    o["hints"], o["attempts"] = 0, 1  # ...and so does running
+    assert attempts.nudge_due(o) is False
 
 
 def test_hints_are_gated_by_active_time():
@@ -102,6 +143,7 @@ def test_the_view_answers_the_same_gate_the_action_enforces():
     st, hints = _st(), ["a", "b", "c"]
     assert attempts.attempt_view(None, hints) == {
         "attempt": None,
+        "nudge": False,
         "hints": {"total": 3, "shown": [], "next_in": None},
         "solution": {"unlocked": False, "need_attempts": 3, "need_secs": 600},
     }

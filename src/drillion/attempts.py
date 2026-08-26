@@ -14,6 +14,7 @@ from .state import card, today
 
 HINT_GAP = 60  # active seconds between hints, times the level
 SOLUTION_GATE = (3, 600)  # attempts, active seconds
+NUDGE_SECS = 1800  # active seconds of reading before a hint is offered
 
 
 class Gated(Exception):
@@ -70,13 +71,46 @@ def open_attempt(st, slug):
     return st["open"][slug]
 
 
+def grade_reason(o, par, grade):
+    """Why `grade_of` landed where it did — the cause, never the number.
+
+    Par is the grader's input and never reaches the browser, so the reason names what
+    counted (the runs, the time, the peek) and no threshold to race. The rubric stays
+    defined once: each factor is probed by asking `grade_of` what it would have graded
+    on that factor alone, rather than restating its branches here."""
+    if o["solution_shown"]:
+        return "the solution was shown"
+    if grade == "quick":
+        return "one run, inside par"
+    causes = []
+    if (
+        grade_of(o["attempts"], 0, par, False) == grade
+    ):  # the runs alone cost it this grade
+        causes.append("the runs it took")
+    if grade_of(1, o["active"], par, False) == grade:  # ...and so did the time alone
+        causes.append("the time it took")
+    return " and ".join(causes)
+
+
+def nudge_due(o):
+    """Half an hour of active reading with nothing run and no hint taken: offer one.
+
+    The gate opens hints silently, which is no use to the learner who is not looking at
+    the panel — you cannot brute-force something nobody has told you about. Taking a hint
+    or running the tests answers it, so the nudge clears itself once it has been acted on."""
+    return (
+        bool(o) and not o["attempts"] and not o["hints"] and o["active"] >= NUDGE_SECS
+    )
+
+
 def record_pass(st, slug, meta, code):
-    """Grade, reschedule, log and archive a pass; return (grade, gap_days, box).
+    """Grade, reschedule, log and archive a pass; return (grade, gap_days, box, reason).
     The caller writes stub(body) back to the file."""
     o = st["open"][slug]
     touch(o)
     c = card(st, slug)
     grade = grade_of(o["attempts"], o["active"], meta["minutes"], o["solution_shown"])
+    reason = grade_reason(o, meta["minutes"], grade)
     gap = reschedule(c, grade)
     c["seen"] += 1
     st["log"].append(
@@ -93,7 +127,7 @@ def record_pass(st, slug, meta, code):
         {"date": today(), "grade": grade, "code": code}
     )
     del st["open"][slug]
-    return grade, gap, c["box"]
+    return grade, gap, c["box"], reason
 
 
 def abandon(st, slug, disk_src):
@@ -167,6 +201,7 @@ def attempt_view(o, hints):
         }
         if o
         else None,
+        "nudge": nudge_due(o),
         "hints": {"total": len(hints), "shown": hints[:shown], "next_in": next_in},
         "solution": {
             "unlocked": unlocked,
