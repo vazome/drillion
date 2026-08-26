@@ -15,7 +15,27 @@ from .region import _solve, bounds, cut
 from .settings import settings
 
 REQUIRED = ("title", "minutes", "tags")
+BROWSER = ("topic", "title", "minutes", "tags", "prereqs", "practices", "source")
 HINT = re.compile(r"^### Hint \d+[ \t]*$", re.MULTILINE)
+_cache = (None, None)   # (key, records) — rebinding a global is atomic, so a race just re-scans
+
+
+def public(meta):
+    """The fields the browser may see. An allowlist, so a field added to the record
+    is private until someone puts it here — paths, hints and the spec never are."""
+    return {k: meta[k] for k in BROWSER if k in meta}
+
+
+def _stamp(folder):
+    """Cheap identity for a drill folder: its name and both files' mtimes. Two stats
+    beat re-reading and re-parsing the whole set on every request."""
+    out = [folder.name]
+    for name in ("README.md", "drill.py"):
+        try:
+            out.append((folder / name).stat().st_mtime_ns)
+        except OSError:
+            out.append(0)
+    return tuple(out)
 
 
 def frontmatter(md):
@@ -35,16 +55,22 @@ def guidance(md):
 
 
 def exercises():
-    """{slug: frontmatter + topic, path, dir, spec_md, hints, marker_line}.
+    """{slug: frontmatter + topic, path, dir, spec_md, hints}.
 
     Text only: a half-edited drill is skipped instead of breaking the menu, and
-    nothing in exercises/ is ever imported into this process."""
+    nothing in exercises/ is ever imported into this process. The scan is cached
+    against the folders' mtimes, so an edited drill still re-reads on the next call."""
+    global _cache
+    folders = sorted(settings.exercises_dir.iterdir())
+    key = (settings.exercises_dir, tuple(_stamp(f) for f in folders))
+    if _cache[0] == key:
+        return _cache[1]
     out = {}
-    for folder in sorted(settings.exercises_dir.iterdir()):
+    for folder in folders:
         try:
             topic = int(folder.name.split("_")[0])
             src = (folder / "drill.py").read_text()
-            marker_line = bounds(src)
+            bounds(src)                    # no marker line, no drill
             _solve(ast.parse(cut(src).body))
             meta, md = frontmatter((folder / "README.md").read_text())
             spec_md, hints = guidance(md)
@@ -54,5 +80,6 @@ def exercises():
             continue
         out[folder.name] = {"prereqs": [], "practices": [], **meta, "topic": topic,
                             "path": folder / "drill.py", "dir": folder, "hints": hints,
-                            "spec_md": spec_md, "marker_line": marker_line}
+                            "spec_md": spec_md}
+    _cache = (key, out)
     return out

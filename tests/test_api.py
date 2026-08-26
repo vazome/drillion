@@ -108,6 +108,7 @@ async def _guards(api, path):
     assert ex["attempt"] is None and ex["hints"]["shown"] == []
     nobody = await api.post(f"/api/ex/{SLUG}/run", json={"code": ex["code"], "etag": ex["etag"]})
     assert nobody.status_code == 409                 # no attempt open: nothing to time or count
+    assert nobody.json()["error"].startswith("no open attempt")
     closed = await api.put(f"/api/ex/{SLUG}", json={"code": ex["code"], "etag": ex["etag"]})
     assert closed.status_code == 409                 # ...and no autosave may un-stub a closed file
 
@@ -130,7 +131,10 @@ async def _guards(api, path):
                                  "etag": ex["etag"]})
     assert pasted.status_code == 400                 # the marker is the grader's, not the editor's
 
-    assert (await api.post(f"/api/ex/{SLUG}/solution")).status_code == 423
+    locked = await api.post(f"/api/ex/{SLUG}/solution")
+    assert locked.status_code == 423                 # the refusal repeats the payload's own numbers
+    assert {"unlocked": False, **{k: locked.json()[k]
+                                  for k in ("need_attempts", "need_secs")}} == ex["solution"]
     assert (await api.post("/api/focus", json={"tag": "core"})).json() == {"focus": "core"}
     assert (await api.get("/api/catalogue")).json()["focus"] == "core"
     assert (await api.get("/api/progress")).json()["per_tag"] == {"core": {"seen": 0, "total": 1}}
