@@ -1,7 +1,7 @@
 ---
 title: fixtures — one setup, automatic restore
 difficulty: medium
-tier: advanced
+tier: packages
 track: rsample
 minutes: 25
 prereqs: [54]

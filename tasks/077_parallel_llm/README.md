@@ -1,7 +1,7 @@
 ---
 title: parallel LLM calls — gather with a per-call timeout
 difficulty: hard
-tier: advanced
+tier: packages
 minutes: 22
 prereqs: [53]
 tags: [llm, asyncio, langchain]

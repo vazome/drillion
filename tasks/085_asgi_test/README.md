@@ -1,7 +1,7 @@
 ---
 title: ASGITransport — hit the endpoint without a server
 difficulty: medium
-tier: advanced
+tier: packages
 track: rsample
 minutes: 20
 prereqs: [84]

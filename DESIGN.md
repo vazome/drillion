@@ -47,9 +47,9 @@ Data: `GET /api/catalogue` →
 - `stats` — `boxes` (5 counts, one per ladder box), `due`, `seen`, `total`, `days_left` to the deadline
 - `focus` — one string or null; it restricts *new* picks and is matched against a task's **tier,
   track and tags alike**. `tags[]`, `tiers[]`, `tracks[]` — the three vocabularies to filter by
-- `tasks[]` — per row: `topic` (number), `title`, `difficulty`, `tier`, `track?`, `tags[]`,
+- `tasks[]` — per row: `slug`, `topic` (number), `title`, `difficulty`, `tier`, `track?`, `tags[]`,
   `prereqs[]` (numbers), `practices[]`, `source?`,
-  `status` ∈ `new | due | scheduled | open | done`, `box` (0–5), `due` (date), `seen` (count).
+  `status` ∈ `new | due | open | done`, `box` (0–5), `due` (date), `seen` (count).
   **No `minutes`**: par time never leaves the server.
 
 Elements: Today panel (reviews, then new picks, focus selector), search, filter chips (tier, track,
@@ -115,7 +115,7 @@ table, the recent log, days-left to the deadline.
 171 of them, numbered `001`–`171`; the number is an id, nothing more.
 
 **tier** — `core` · `advanced` · `packages`, in that order, easiest first. How far into the
-language a task reaches.
+language a task reaches, and whether stock Python can run it: `packages` needs a `pip install`.
 
 **difficulty** — `easy` · `medium` · `hard`. How hard the task is to get right the first time, not
 how long it takes.
@@ -131,8 +131,11 @@ payload; the UI may set them in caps. `easy` is a *difficulty* and never a grade
 attempt timer counts up and changes no colour at any threshold. Nothing on any screen tells the
 learner how long they were supposed to take.
 
-Boxes 1–5. "Due", "new", "scheduled" (returns on a date), "open" (an attempt is in progress).
-Hints are "levels". The solution "unlocks". The deadline is shown as days left.
+**status** — `new` (never attempted) · `due` (a card whose date has arrived) · `open` (an attempt
+is in progress) · `done` (seen, and not due yet). Four, and only four: `_status()` in `api.py` has
+no fifth branch, so a filter offering one matches nothing.
+
+Boxes 1–5. Hints are "levels". The solution "unlocks". The deadline is shown as days left.
 
 The full definitions, and the rules for adding a task, are in
 [README.md](README.md#vocabulary) — this list is the UI's copy of them.

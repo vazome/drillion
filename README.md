@@ -21,7 +21,8 @@ docker compose up            # the same app in a container (tasks and progress m
 
 Requirements: Python 3.13 and [uv](https://docs.astral.sh/uv/). Docker is optional. The frontend
 (React + Vite, in `web/`) builds itself on start: `uv run drillion` runs `pnpm build` when `web/dist`
-is missing or older than `web/src`. Without pnpm the JSON API still serves and only `/` 404s.
+is missing or older than anything in `web/src/`, or than `web/package.json`, `web/index.html` or
+`web/vite.config.ts`. Without pnpm the JSON API still serves and only `/` 404s.
 
 ## How a session works
 
@@ -49,8 +50,9 @@ never existed. This is the one feature that stops spaced repetition from degradi
 files.
 
 **A 5-box ladder, not a fancy algorithm.** Pass a task and it returns in 2 → 4 → 8 → 16 → 28
-days. Fail and it drops two boxes instead of resetting, because a lapse here costs 30 minutes, not
-5 seconds. Nothing is ever scheduled past a week before the target date.
+days. Only a pass moves a card: a failing run costs an attempt and nothing else, and a pass you
+took the solution for grades `struggled`, which leaves the card exactly where it was. Nothing is
+ever scheduled past a week before the target date.
 
 The obvious choice was FSRS (what Anki uses). Tested it: with default settings a task you get right
 three times comes back in 46 days, then 90 — i.e. after the interview. It's tuned for people
@@ -150,12 +152,13 @@ them in this order:
 
 | tier | what belongs in it | today |
 |---|---|---|
-| `core` | the language and its standard library: syntax, data structures, files and text, errors, `itertools`, `pathlib` | 136 |
-| `advanced` | still the standard library, but you can work a long while without it: `asyncio`, concurrency, generators, decorators, closures, `functools` | 20 |
-| `packages` | the task is *about* a third-party library: `requests`/`responses`, `boto3`/`moto`, `langchain` | 15 |
+| `core` | the language and its standard library, and every coder needs it: syntax, data structures, files and text, errors, `itertools`, `pathlib` | 139 |
+| `advanced` | still the standard library, but you can work a long while without it: `asyncio`, concurrency, generators, decorators, closures, `functools` | 17 |
+| `packages` | running it needs something `pip` installs: `requests`, `responses`, `boto3`, `moto`, `pytest`, `fastapi`, `langchain` | 15 |
 
-Tier follows what the task **practises**, not what it imports. An `asyncio` task that happens to stand
-up a FastAPI app to have something to await is `advanced`, not `packages`.
+Tier answers "can I run this with stock Python?", so `packages` wins whenever a task is both — an
+`asyncio` task that stands up a FastAPI app to have something to await is `packages`, not
+`advanced`. Read the task's imports: anything outside the standard library makes it `packages`.
 
 **difficulty** — how hard the task is to get **right the first time**: `easy`, `medium` or `hard`.
 It is not how long the task takes. Thirty minutes of unsurprising typing is `easy`; six lines you
@@ -168,15 +171,23 @@ Today: 36 easy · 108 medium · 27 hard.
 tiers. `rsample` (18 tasks) is a RAG take-home broken into steps. Leave the key out unless the task
 belongs to such a run.
 
-**tags** — what Python you practise. Lowercase, kebab-case, and one rule decides every one of them:
+**tags** — what Python you practise. Lowercase, kebab-case, 1–3 per task, and one rule decides
+every one of them:
 
 > A tag names a **Python concept you can practise** — never the task's identity, never its story.
 
-`recursion`, `dict-get`, `context-managers`, `bitwise` are tags. `flatten-array`, `phone-screens`
-and `take-home-task-2` are not: each names exactly one task, so nobody can ever filter on it. That
-is the whole point of the rule — a tag that matches one row is a tag nobody will use. Reach for an
-existing tag before inventing a synonym; the live vocabulary is 76 tags and `GET /api/catalogue`
-returns all of them under `tags`.
+`recursion`, `dict-get`, `context-managers` and `bitwise` are tags: each names something you could
+sit down and get better at, and something a *future* task could also be tagged with.
+`flatten-array`, `phone-screens` and `take-home-task-2` are not. They name one task and could never
+name another, so they are the task's identity wearing a tag's clothes.
+
+A tag on a single task is fine — 37 of the 76 are, because 171 tasks cannot cover every concept
+twice. The test is not "does more than one task have it?" but "**could** another task have it?".
+That is what makes a tag an answer to *what do I want to practise today*, which is the job it does
+in the catalogue filter and in the per-tag coverage table on the progress screen. So reach for an
+existing tag before minting a synonym — `sets` not `set`, `strings` not `str-stuff` — and when
+nothing fits, name the concept, not the task. `GET /api/catalogue` returns the whole vocabulary
+under `tags`.
 
 **grade** — what a pass was worth, computed by `grade_of()` and never self-reported:
 `quick` (+2 boxes) · `pass` (+1) · `struggled` (stays put) · `abandoned`.
@@ -226,9 +237,20 @@ source: exercism/python practice/two-fer (MIT, adapted)   # optional
 ### Hint 1 … ### Hint 2 … ### Hint 3
 ```
 
-Write the keys in that order. `title`, `difficulty`, `tier`, `minutes` and `tags` are required, and
-a folder missing one is **skipped** rather than allowed to break the menu — so a typo in the
-frontmatter looks like a task that vanished. `prereqs:` and `practices:` are lists of task
+Write the keys in that order. `title`, `difficulty`, `tier`, `minutes` and `tags` are required.
+
+A folder the catalogue cannot read is **skipped**, not reported: a half-written task must never
+break the menu for the other 170. That makes a mistake look like a task that simply is not there,
+so check this list first when your new task does not appear —
+
+- a required key missing, empty, or misspelt (`tags: []` counts as missing);
+- frontmatter that is not a closed `---` block, or is not valid YAML;
+- `task.py` with no machinery marker line, or with no `solve()` as the last statement of the
+  learner's region, or that does not parse;
+- a hint count that is not **exactly 3** — `### Hint 1`, `### Hint 2`, `### Hint 3` under `## Hints`.
+
+`uv run drillion selfcheck` counts what it found: if it says `170/170` after you added a task, the
+task is one of the above. `prereqs:` and `practices:` are lists of task
 **numbers**, not slugs. No real task carries all nine keys — the block above shows the order, not a
 typical task.
 
