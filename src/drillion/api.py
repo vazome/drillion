@@ -56,7 +56,7 @@ from .region import (
     write_region,
 )
 from .runner import run_tests, summarise
-from .scheduler import LADDER, LAPSE_LIMIT, buried, due_today, queue
+from .scheduler import LADDER, LAPSE_LIMIT, buried, due_today, pick, queue
 from .settings import settings
 from .state import card, reading, today, writing
 
@@ -163,11 +163,6 @@ def _payload(st, slug, meta, src):
     # One rule, both answers. Passing the task is what opens them, and the next sitting on
     # that card starts clean again; while an attempt is open only the deliberate peek opens
     # them, because taking the answer is what marks the attempt and costs the grade.
-    #
-    # `archive[].code` used to read `unlocked` instead, and `unlocked` goes true the moment
-    # the gate's *price* has been spent rather than when the learner asks. So sitting on a
-    # review long enough handed back your own previously accepted code — every bit as much
-    # an answer as the reference — unmarked, unpenalised, and never routed through /solution.
     reveal = o["solution_shown"] if o else c["seen"] > 0 and c["due"] > today()
     return {
         "slug": slug,
@@ -176,7 +171,6 @@ def _payload(st, slug, meta, src):
         "code": body,
         "etag": etag(src),
         "has_given": has_given(body),
-        "region_start": 1,
         "marker_line": bounds(src),
         "status": _status(st, slug),
         # not a fifth `status`: a buried card is still exactly `due`, just not offered today
@@ -403,6 +397,8 @@ def run_task(slug: str, edit: Edit):
                 "code": code,
                 "reference": solution_text(meta["path"]),  # passing is what opens it
                 "lapses": card(st, slug)["lapses"],
+                # over a copy: `pick` reads every card, and `card()` fills blanks in place
+                "next": pick({**st, "cards": dict(st["cards"])}, tasks())[0],
             }  # the page reads lapse_limit off /task
         return resp | {"etag": etag(new_src)}
 
@@ -420,7 +416,7 @@ def hint_task(slug: str):
         meta = _task(slug)
         current(st, slug)
         try:
-            level, text = next_hint(st, slug, meta["hints"])
+            next_hint(st, slug, meta["hints"])
         except Gated as gate:
             raise HTTPException(
                 423,
@@ -432,7 +428,7 @@ def hint_task(slug: str):
                     "exhausted": not gate.wait_secs,
                 },
             ) from None
-        return {"level": level, "total": len(meta["hints"]), "text": text}
+        return _payload(st, slug, meta, meta["path"].read_text())
 
 
 @app.post("/api/task/{slug}/solution")
@@ -446,7 +442,8 @@ def solution_task(slug: str):
             raise HTTPException(
                 423, {"error": "the answer opens after real effort", **gate.owed}
             ) from None
-        return {"code": solution_text(meta["path"])}  # the gate is right above
+        # after `unlock_solution`, so `solution_shown` is set and the payload carries the answer
+        return _payload(st, slug, meta, meta["path"].read_text())
 
 
 @app.post("/api/task/{slug}/abandon")
@@ -515,26 +512,6 @@ def set_focus(focus: Focus):
         return {"focus": st["focus"]}
 
 
-class _Web(StaticFiles):
-    """web/dist, resolved per request and optional.
-
-    `check_dir=False` only skips the constructor's check: Starlette still stats the directory
-    on the first request and raises `RuntimeError` if it is missing. A clone that has not run
-    `pnpm build` yet — CI between `pytest` and the web job, or a machine without pnpm — must
-    get a 404 on `/`, not a 500 on every unmatched route. CI runs pytest before the web build,
-    so it is the standing guard against this coming back."""
-
-    async def check_config(self):
-        return
-
-
-# The page itself, last: an unmatched /api/... must 404 as JSON, not as a missing file.
-# Mounted rather than resolved at import, so `serve()` may build web/dist after this module loads.
-app.mount(
-    "/", _Web(directory=settings.web_dist, html=True, check_dir=False), name="web"
-)
-
-
 def _open_browser(url):
     version = Path("/proc/version")
     if version.exists() and "microsoft" in version.read_text().lower():
@@ -576,6 +553,9 @@ def build_web():
 
 def serve():
     build_web()
+    # The page itself, mounted after every /api route so an unmatched /api/... 404s as JSON.
+    if settings.web_dist.is_dir():
+        app.mount("/", StaticFiles(directory=settings.web_dist, html=True), name="web")
     url = f"http://{settings.host}:{settings.port}/"
     print(f"drillion → {url}   (ctrl-c to stop)", flush=True)  # piped output too
     if settings.open_browser and settings.host == "127.0.0.1":  # not from a container

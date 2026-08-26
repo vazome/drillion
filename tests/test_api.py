@@ -14,6 +14,8 @@ from drillion.api import MAX_BODY, WINDOW, _practised, _recent, app
 from drillion.settings import settings
 
 SLUG = "001_fstrings"
+NEXT_SLUG = "002_slicing"  # no prereqs: what the scheduler offers once 001 is cleared
+TASKS = settings.tasks_dir  # the real ones — `_api()` repoints settings.root at a copy
 PASSING = 'return "\\n".join(f"{name:<14}{value:>12,.2f}" for name, value in rows)'
 
 
@@ -65,7 +67,7 @@ async def _stub_to_pass(api, path):
         "## Hints" not in task["spec_md"] and "spec" not in task
     )  # guidance is Markdown now
     assert task["meta"]["topic"] == 1 and "spec_md" not in task["meta"]
-    assert task["region_start"] == 1 and task["marker_line"] > 1
+    assert task["marker_line"] > 1
     assert (
         "raise NotImplementedError" in task["code"] and "_reference" not in task["code"]
     )
@@ -96,6 +98,9 @@ async def _stub_to_pass(api, path):
         and "return ''" in stale.json()["code"]
     )
 
+    # a second task, so the pass has somewhere to point and `next` can be wrong
+    shutil.copytree(TASKS / NEXT_SLUG, path.parent.parent / NEXT_SLUG)
+
     solved = task["code"].replace("raise NotImplementedError", PASSING)
     run = (
         await api.post(
@@ -111,11 +116,15 @@ async def _stub_to_pass(api, path):
     assert run["from_box"] == 0  # ...and it is a climb, not a fall
     assert run["reason"] == "the runs it took"  # the cause, never par's number
     assert run["reference"].startswith("def _reference(")  # passing is what opens it
+    assert run["next"] == NEXT_SLUG  # what to sit down with now this card is cleared
     body = region.cut(path.read_text()).body
     assert region.stub(body) == body  # passing puts the stub back on disk
 
     st = state.load()
     assert st["open"] == {} and [e["slug"] for e in st["log"]] == [SLUG]
+    # only the card that was graded: `card()` fills blanks in place, so anything that walks
+    # every task inside `writing()` writes a blank card for each of them
+    assert list(st["cards"]) == [SLUG]
     assert PASSING in st["archive"][SLUG][0]["code"]
 
     done = (await api.get(f"/api/task/{SLUG}")).json()
@@ -142,13 +151,11 @@ async def _stub_to_pass(api, path):
     }
 
     hint = await api.post(f"/api/task/{SLUG}/hint")
-    assert hint.status_code == 200 and (hint.json()["level"], hint.json()["total"]) == (
-        1,
-        3,
-    )
-    assert (
-        hint.json()["text"]
-        == (await api.get(f"/api/task/{SLUG}")).json()["hints"]["shown"][0]
+    assert hint.status_code == 200 and hint.json()["hints"]["total"] == 3
+    assert (  # the whole task, like every other acting route: the new hint is already in it
+        hint.json()["hints"]["shown"]
+        == (await api.get(f"/api/task/{SLUG}")).json()["hints"]["shown"]
+        != []
     )
     soon = await api.post(f"/api/task/{SLUG}/hint")
     assert soon.status_code == 423 and 0 < soon.json()["wait_secs"] <= 120
@@ -338,10 +345,12 @@ async def _the_reference_needs_the_peek_not_just_its_price(api, _path):
     assert "_reference" not in str(task)
 
     took = (await api.post(f"/api/task/{SLUG}/solution")).json()
-    assert took["code"].startswith("def _reference(")
+    assert took["reference"].startswith(
+        "def _reference("
+    )  # the payload carries the answer
     assert state.load()["open"][SLUG]["solution_shown"] is True  # ...and it is marked
     reread = (await api.get(f"/api/task/{SLUG}")).json()
-    assert reread["reference"] == took["code"]  # a reload does not un-take it
+    assert reread["reference"] == took["reference"]  # a reload does not un-take it
 
 
 async def _abandon_needs_an_attempt_like_every_other_route(api, path):

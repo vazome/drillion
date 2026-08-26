@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Card, Collapsible, ConflictBanner, EmptyState, LadderMeter, NoticeBanner, ResultBanner, SpecText, StatusBadge, TagChip, Timer } from "./ds/index.js";
-import { ApiError, api, post, type Catalogue, type Task as TaskData, type RunResult } from "./api";
+import { ApiError, api, post, type Task as TaskData, type RunResult } from "./api";
 import { Editor } from "./Editor";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
@@ -20,6 +20,13 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 /** A refused action, shown beside the control that asked for it. */
 type Gate = { at: "hints" | "solution" | "editor" | "note"; message: string } | null;
+
+/** The optimistic lock's 409, or null for any other failure: `_check_etag` is the only thing
+ *  that raises it, and it always sends the disk version's etag and body together. */
+const conflictOf = ({ status, detail }: ApiError) =>
+  status === 409 && detail?.etag !== undefined && detail.code !== undefined
+    ? { etag: detail.etag, code: detail.code }
+    : null;
 
 type Result =
   | { state: "idle" | "running" }
@@ -47,7 +54,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [conflict, setConflict] = useState<{ etag: string; code: string } | null>(null);
   const [draftOffer, setDraftOffer] = useState<string | null>(null);
   const [gate, setGate] = useState<Gate>(null);
-  const [solutionCode, setSolutionCode] = useState<string | null>(null);
   const [active, setActive] = useState(0);
   const [nextHintIn, setNextHintIn] = useState<number | null>(null);
   const [nextSlug, setNextSlug] = useState<string | null>(null);
@@ -90,7 +96,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   // ---- load, and offer a newer local draft over what the file holds
   useEffect(() => {
     let live = true;
-    setTask(null); attemptRef.current = false; dropped.current = false; setError(null); setResult({ state: "idle" }); setConflict(null); setSolutionCode(null); setGate(null); setNextSlug(null); setNudgeOff(false);
+    setTask(null); attemptRef.current = false; dropped.current = false; setError(null); setResult({ state: "idle" }); setConflict(null); setGate(null); setNextSlug(null); setNudgeOff(false);
     setNote(""); noteRef.current = ""; noteDirtyRef.current = false; setNoteDirty(false);   // the last task's note is not this one's
     api<TaskData>(`/task/${encodeURIComponent(slug)}`).then((p) => {
       if (!live) return;
@@ -132,8 +138,9 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       // Never rethrow: `edit()` fires this unawaited and `run()` awaits it, so a rejection here
       // used to sink Run without a word. Every failure becomes something the learner can see.
       if (!(e instanceof ApiError)) { setGate({ at: "editor", message: `could not save — ${(e as Error).message}` }); return; }
+      const clash = conflictOf(e);
       if (e.status === 400) setSyntaxBad(true);                       // silent: an amber dot, no banner
-      else if (e.status === 409 && e.detail?.etag) setConflict(e.detail);
+      else if (clash) setConflict(clash);
       else if (e.status === 409) setGate({ at: "editor", message: e.detail?.error ?? e.message }); // no open attempt
       else setGate({ at: "editor", message: e.message });
     }
@@ -216,21 +223,18 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       setNudge(false);                     // a run answers the nudge, whichever way it went
       if (r.passed) {
         localStorage.removeItem(draftKey(slug));
-        setResult({ state: "passed", grade: r.grade!, box: r.box!, stepped: !!r.stepped, fromBox: r.from_box!, reason: r.reason!, dueIn: r.due_in!, attempts: r.attempts, code: r.code! });
-        setCode(r.code!);
+        setResult({ state: "passed", grade: r.grade, box: r.box, stepped: r.stepped, fromBox: r.from_box, reason: r.reason, dueIn: r.due_in, attempts: r.attempts, code: r.code });
+        setCode(r.code);
         // the pass is what opens the reference, and what may have just hit the lapse limit
-        setTask((p) => p && ({ ...p, reference: r.reference ?? p.reference, lapses: r.lapses ?? p.lapses }));
-        // what to do next lives on the catalogue, and only matters once the card is cleared
-        api<Catalogue>("/catalogue")
-          .then((c) => setNextSlug([...c.today.review, ...c.today.new].find((s) => s !== slug) ?? null))
-          .catch(() => {});
+        setTask((p) => p && ({ ...p, reference: r.reference, lapses: r.lapses }));
+        setNextSlug(r.next);
       } else {
         setResult({ state: "failed", attempts: r.attempts, headline: r.headline.join("\n") || "The tests did not pass.", output: r.output });
         setTask((p) => p && p.attempt ? { ...p, attempt: { ...p.attempt, attempts: r.attempts } } : p);
       }
     } catch (e) {
-      const err = e as ApiError;
-      if (err.status === 409 && err.detail?.etag) { setConflict(err.detail); setResult({ state: "idle" }); }
+      const err = e as ApiError, clash = conflictOf(err);
+      if (clash) { setConflict(clash); setResult({ state: "idle" }); }
       else if (err.status === 400) { setSyntaxBad(true); setResult({ state: "failed", attempts: 0, headline: `${err.detail?.error} (line ${err.detail?.line})`, output: "" }); }
       else { setResult({ state: "failed", attempts: 0, headline: err.message, output: "" }); }
     }
@@ -240,13 +244,10 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     if (busy) return;
     setBusy(true);
     try {
+      await inflight.current;              // the payload carries an etag: never over a live PUT
       await ensureOpen();
-      const r = await post<{ level: number; total: number; text: string }>(`/task/${encodeURIComponent(slug)}/hint`);
+      adopt(await post<TaskData>(`/task/${encodeURIComponent(slug)}/hint`), dirtyRef.current);
       setGate(null);
-      setNudge(false);                     // taking the offer is the way out of it
-      setTask((p) => p && ({ ...p, hints: { ...p.hints, shown: [...p.hints.shown, r.text] } }));
-      setNextHintIn(null);
-      api<TaskData>(`/task/${encodeURIComponent(slug)}`).then((p) => setNextHintIn(p.hints.next_in)).catch(() => {});
     } catch (e) {
       const err = e as ApiError;
       const wait = err.status === 423 ? err.detail?.wait_secs : 0;
@@ -261,10 +262,10 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     if (busy) return;
     setBusy(true);
     try {
+      await inflight.current;              // the payload carries an etag: never over a live PUT
       await ensureOpen();
-      const r = await post<{ code: string }>(`/task/${encodeURIComponent(slug)}/solution`);
-      setSolutionCode(r.code); setGate(null);
-      setTask((p) => p && ({ ...p, solution: { ...p.solution, unlocked: true } }));
+      adopt(await post<TaskData>(`/task/${encodeURIComponent(slug)}/solution`), dirtyRef.current);
+      setGate(null);
     } catch (e) {
       const err = e as ApiError;
       const d = err.detail ?? {};
@@ -282,10 +283,10 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       const p = await post<TaskData>(`/task/${encodeURIComponent(slug)}/abandon`, { etag: etagRef.current });
       localStorage.removeItem(draftKey(slug));
       dropped.current = true;
-      adopt(p); setResult({ state: "idle" }); setSolutionCode(null); setGate(null); setNextSlug(null);
+      adopt(p); setResult({ state: "idle" }); setGate(null); setNextSlug(null);
     } catch (e) {
-      const err = e as ApiError;
-      if (err.status === 409 && err.detail?.etag) setConflict(err.detail); else setGate({ at: "editor", message: err.message });
+      const err = e as ApiError, clash = conflictOf(err);
+      if (clash) setConflict(clash); else setGate({ at: "editor", message: err.message });
     }
   };
 
@@ -321,13 +322,12 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   if (error) return <EmptyState message={`Could not load ${slug}: ${error}`} actionLabel="Back to Today" onAction={() => { location.hash = "#/"; }} />;
   if (!task) return <EmptyState message="Loading…" />;
 
-  const { meta, hints, solution: gateState, attempt } = task;
+  const { meta, hints, solution: gateState, attempt, reference } = task;
   const hintsLeft = hints.total - hints.shown.length;
   const hintReady = nextHintIn === null || nextHintIn <= 0;
   /** Peeked this sitting, or earned by passing — either way the server decided it was open.
    * `solution_shown` is what a reload reads back: a peek survives one, and still costs. */
-  const reference = solutionCode ?? task.reference;
-  const peeked = !!solutionCode || !!attempt?.solution_shown;
+  const peeked = !!attempt?.solution_shown;
   const flagged = task.lapses >= task.lapse_limit;
   /** The gate banner, under the control that raised it. The container is always in the tree
    * so screen readers have a live region to announce into when a message lands in it. */
