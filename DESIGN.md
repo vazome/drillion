@@ -43,19 +43,26 @@ emotional core: cards climbing boxes and returning on schedule.
 Answers: *what do I do now?*
 
 Data: `GET /api/catalogue` →
-- `today.review[]` — due reviews, most overdue first; `today.new[]` — up to 2 new picks;
+- `today.review[]` — due reviews, most overdue first, at most 12; `today.due_total` — how many
+  are really due, and `today.behind` — true once the backlog is past that cap, when `today.new[]`
+  is held empty. Both must be said out loud: "showing 12 of 100 due", "new picks paused while you
+  catch up". A cap the page hides reads as "done for today" with ninety cards waiting.
+  `today.new[]` — up to 2 new picks;
   `today.recent[]` — every task worked in the last `window` days, newest first, open attempts
   included and leading, and a task whose last act was abandoning it left out; never filtered
   against the other two, since a card worked on Friday and due again today is both things at
   once; `today.done_today` (count)
-- `stats` — `boxes` (5 counts, one per ladder box), `due`, `seen`, `total`, and `practised` of
+- `stats` — `boxes` (5 counts, one per ladder box), `due` (the whole backlog, not the capped
+  list), `lapse_limit` (the lapse count a task is flagged at), `seen`, `total`, and `practised` of
   `window`: distinct days worked in the last 7, a rolling count rather than a streak
 - `focus` — one string or null; it restricts *new* picks and is matched against a task's **tier,
   track and tags alike**. `tags[]`, `tiers[]`, `tracks[]` — the three vocabularies to filter by
 - `tasks[]` — per row: `slug`, `topic` (number), `title`, `difficulty`, `tier`, `track?`, `tags[]`,
   `prereqs[]` (numbers), `practices[]`, `source?`,
   `status` ∈ `new | due | open | done`, `box` (0–4, the ladder has five), `due` (date),
-  `seen` (count).
+  `seen` (count), `lapses` (count — at `stats.lapse_limit` the row is flagged as a task that
+  keeps beating you: "you have struggled with this four times; the hints or the prereqs may be
+  the problem, not you").
   **No `minutes`**: par time never leaves the server.
 
 Elements: Today panel (recent activity, then new picks, focus selector), search, filter chips (tier, track,
@@ -112,8 +119,9 @@ Results panel (below or beside the editor), states:
 - idle (never run) · running · **failed** (headline lines — the assertion/exception — plus a
   collapsible full pytest output; line numbers refer to the editor) ·
   **passed**: grade line `QUICK · 4m12s · 1 attempt · box 3 of 5` — elapsed time, never time
-  against par — the ladder visibly stepping up, the passing code read-only, a way to go to the
-  next Today item.
+  against par — the ladder visibly stepping, the passing code read-only, a way to go to the
+  next Today item. A `struggled` pass steps the card *down* a box, so the banner must be able
+  to show a fall as well as a climb, and carries `lapses` for the flag at `lapse_limit`.
 
 Other states: hint revealed (levels 1–3 stack up), solution revealed (marks the attempt: "this pass
 won't promote"), unsaved-draft dot (autosave every ~1 s; a silent syntax error shows as an amber
