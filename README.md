@@ -138,6 +138,9 @@ pnpm --dir web check 8765                    # renders all 171 specs against a r
 CI runs ruff, pytest and selfcheck on every push. The rest of the frontend — the vendored design
 system, and why there is no Tailwind and no router — is in [`web/README.md`](web/README.md).
 
+Contributing, including the full contract a new task is graded against, is in
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Vocabulary
 
 Every word the code, the API and the UI use is defined in [CONTEXT.md](CONTEXT.md), together with
@@ -294,6 +297,12 @@ defines `_reference`/`_gen`/`test_*` or names `_reference` is refused.
 
 Sanity check for a new task: `uv run drillion selfcheck` splices `_reference` into every file and
 runs the tests — it must be green before the task is trusted.
+
+## License
+
+MIT — see [LICENSE](LICENSE). 84 of the 171 tasks carry Markdown adapted from Exercism's Python
+track (also MIT); each names its origin in a per-file `source:` field and attribution footer, and
+[NOTICE](NOTICE) reproduces the copyright and permission notice that travels with them.
 
 ## Status
 
