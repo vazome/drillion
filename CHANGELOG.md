@@ -4,7 +4,7 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
-## 0.1.0 — unreleased
+## 0.1.0 — 2026-08-26
 
 The first numbered drillion. Everything below is the starting surface, not a change from
 anything earlier.
@@ -18,12 +18,14 @@ anything earlier.
   skipped.
 - `drillion --version` and `GET /api/health` report the installed version, and the page shows
   it in the header.
+- Bury a task to push it out of today's queue; it comes back tomorrow on its own.
+- A free-text note per task, kept in `progress.json` alongside the card.
 - A container image that runs the same app against a mounted content root.
 
 ### Releasing
 
-Bump `version` in `pyproject.toml`, move the heading above from `unreleased` to the date, then
-tag the release commit. CI refuses a tag whose name disagrees with the declared version.
+Bump `version` in `pyproject.toml`, add a dated heading above, then tag the release commit.
+CI refuses a tag whose name disagrees with the declared version.
 
 ```bash
 git tag -a v0.1.0 -m "drillion 0.1.0" && git push origin v0.1.0
