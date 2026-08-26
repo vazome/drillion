@@ -5,7 +5,6 @@ tier: core
 minutes: 25
 prereqs: [27]
 tags: [argparse]
-practices: [27, 35, 26]
 ---
 # argparse — mini-grep with argparse flags
 

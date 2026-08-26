@@ -5,7 +5,6 @@ tier: core
 minutes: 20
 prereqs: [28]
 tags: [llm]
-practices: [28, 40, 63]
 ---
 # dict traversal — dig tool calls out of a model response
 

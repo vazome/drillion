@@ -5,7 +5,6 @@ tier: core
 minutes: 25
 prereqs: [20]
 tags: [file-tailing]
-practices: [24, 27, 20]
 ---
 # file tailing — tail a growing log, alert with context
 

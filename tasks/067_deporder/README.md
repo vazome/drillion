@@ -5,7 +5,6 @@ tier: core
 minutes: 35
 prereqs: [19]
 tags: [topological-sort]
-practices: [17, 19, 21]
 ---
 # topological sort — start-up order, or the cycle that blocks it
 
