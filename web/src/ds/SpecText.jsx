@@ -38,7 +38,9 @@ export function SpecText({ text = "", hideTitle = true, slug, style }) {
     h2: ({ children }) => <h2 style={{ ...label, margin: "18px 0 6px" }}>{children}</h2>,
     h3: ({ children }) => <h3 style={{ font: "600 14px/1.4 var(--font-sans)", margin: "12px 0 4px" }}>{children}</h3>,
     h4: ({ children }) => <h4 style={{ font: "600 13px/1.4 var(--font-sans)", margin: "10px 0 4px", color: "var(--text-muted)" }}>{children}</h4>,
-    p: ({ children }) => <p style={{ margin: "0 0 10px", maxWidth: "62ch" }}>{children}</p>,
+    // className has to survive: the alert plugin marks its label `<p class="markdown-alert-title">`,
+    // and dropping the class left the label unstyled with the raw octicon showing through.
+    p: ({ children, className }) => <p className={className} style={className ? undefined : { margin: "0 0 10px", maxWidth: "62ch" }}>{children}</p>,
     ul: ({ children }) => <ul style={{ margin: "0 0 10px", paddingLeft: 20 }}>{children}</ul>,
     ol: ({ children }) => <ol style={{ margin: "0 0 10px", paddingLeft: 22 }}>{children}</ol>,
     li: ({ children }) => <li style={{ marginBottom: 3, maxWidth: "58ch" }}>{children}</li>,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Button, Card, EmptyState, Input, LadderMeter, NoticeBanner, Select, StatusBadge, TagChip } from "./ds/index.js";
 import { api, post, type Catalogue as Payload, type Row } from "./api";
 import { Stats } from "./Stats";
@@ -7,7 +7,7 @@ const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "va
 const FAINT = { fontSize: 12.5, color: "var(--text-faint)", whiteSpace: "nowrap" as const };
 const MONO = { fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)", fontVariantNumeric: "tabular-nums" as const };
 const STATUSES = ["new", "due", "open", "done"];   // api.py _status(): a seen, not-due card is "done"
-const OPEN_KEY = "drillion-catalogue-open";   // which tier groups the reader left open
+const DIFFICULTY = ["easy", "medium", "hard"];     // the order the word means, not the alphabet
 const DAY = 86400000;
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
@@ -39,6 +39,32 @@ const Path = ({ row }: { row: Row }) => (
 
 // the API numbers boxes 0-4; the meter fills 1-5, and an unseen card sits on no rung
 const rung = (row: Row) => (row.seen ? row.box + 1 : 0);
+
+type SortKey = "topic" | "title" | "path" | "difficulty" | "box" | "status";
+type Sort = { key: SortKey; dir: "asc" | "desc" };
+const DEFAULT_SORT: Sort = { key: "topic", dir: "asc" };
+
+/** What each column compares on. `difficulty` and `status` rank by the meaning of the word,
+ * so hard sorts past medium and the alphabet never gets a say. */
+const SORT_ON: Record<SortKey, (row: Row) => string | number> = {
+  topic: (r) => r.topic,
+  title: (r) => r.title.toLowerCase(),
+  path: (r) => `${r.tier}/${r.tags.join(" ")}`,
+  difficulty: (r) => DIFFICULTY.indexOf(r.difficulty),
+  box: rung,
+  status: (r) => STATUSES.indexOf(r.status),
+};
+
+/** Sorted rows. Every column but `#` has ties, and rows that reshuffle between renders read
+ * as a bug, so the task number breaks them — always ascending, whichever way the column goes. */
+export function sortRows(rows: Row[], { key, dir }: Sort): Row[] {
+  const on = SORT_ON[key], d = dir === "asc" ? 1 : -1;
+  return [...rows].sort((a, b) => {
+    const x = on(a), y = on(b);
+    const c = typeof x === "number" ? x - (y as number) : String(x).localeCompare(String(y));
+    return c ? c * d : a.topic - b.topic;
+  });
+}
 
 function useHover() {
   const [hover, setHover] = useState(false);
@@ -80,20 +106,38 @@ function ListRow({ row }: { row: Row }) {
   );
 }
 
-/** One tier as a band inside the list: its name and count until asked, then its rows. */
-function TierGroup({ tier, rows, open, onToggle, first }: { tier: string; rows: Row[]; open: boolean; onToggle: () => void; first: boolean }) {
-  const [hover, hoverProps] = useHover();
-  const panel = `tier-${tier}`;
+/** One tier as a band inside the list: a name, a count, and its rows. Not collapsible —
+ * the tier is already on every row as the first segment of the path. */
+function TierGroup({ tier, rows, first }: { tier: string; rows: Row[]; first: boolean }) {
   return (
     <>
-      <button type="button" aria-expanded={open} aria-controls={panel} onClick={onToggle} {...hoverProps} className="m-tint"
-        style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", height: 40, padding: "0 16px", background: hover ? "var(--surface-2)" : "transparent", border: "none", borderTop: first ? "none" : "1px solid var(--border-strong)", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 13.5, fontWeight: 600, color: "var(--text)", textAlign: "left" }}>
-        <span aria-hidden="true" style={{ width: 9, fontSize: 11, color: "var(--text-muted)", display: "inline-block", transform: open ? "rotate(90deg)" : "none", transition: "transform var(--dur-base) var(--ease-out)" }}>▸</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, height: 34, padding: "0 16px", background: "var(--surface-2)", borderTop: first ? "none" : "1px solid var(--border-strong)", fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>
         <span>{tier}</span>
         <span style={MONO}>({rows.length})</span>
-      </button>
-      {open ? <div id={panel} className="m-stagger">{rows.map((row) => <ListRow key={row.slug} row={row} />)}</div> : null}
+      </div>
+      <div className="m-stagger">{rows.map((row) => <ListRow key={row.slug} row={row} />)}</div>
     </>
+  );
+}
+
+/** A column header that sorts, mirroring ds/Table's: hover previews the arrow, the sorted
+ * column keeps it in the accent. The list is anchors rather than a `<table>`, so the state
+ * goes in the button's own name — `aria-sort` needs table semantics to mean anything. */
+function SortHead({ label, col, align, sort, onSort, style }: {
+  label: string; col: SortKey; align?: "right"; sort: Sort; onSort: (s: Sort) => void; style: CSSProperties;
+}) {
+  const [hover, hoverProps] = useHover();
+  const active = sort.key === col;
+  const next: Sort = { key: col, dir: active && sort.dir === "asc" ? "desc" : "asc" };
+  const arrow = active ? (sort.dir === "asc" ? "▲" : "▼") : (hover ? "▲" : "");
+  const way = (d: string) => (d === "asc" ? "ascending" : "descending");
+  return (
+    <button type="button" onClick={() => onSort(next)} {...hoverProps}
+      aria-label={active ? `${label}, sorted ${way(sort.dir)}. Sort ${way(next.dir)}` : `Sort by ${label} ${way(next.dir)}`}
+      style={{ ...style, display: "inline-flex", alignItems: "center", gap: 5, justifyContent: align === "right" ? "flex-end" : "flex-start", height: 32, padding: 0, background: "transparent", border: "none", font: "inherit", letterSpacing: "inherit", textTransform: "inherit", color: active || hover ? "var(--text)" : "var(--text-muted)", cursor: "pointer" }}>
+      <span>{label}</span>
+      <span aria-hidden="true" style={{ fontSize: 8, lineHeight: 1, width: 7, color: active ? "var(--accent)" : "var(--text-faint)" }}>{arrow}</span>
+    </button>
   );
 }
 
@@ -104,10 +148,7 @@ export function Catalogue() {
   const [status, setStatus] = useState("");
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
-  const [openTiers, setOpenTiers] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem(OPEN_KEY) || "{}"); } catch { return {}; }
-  });
-  useEffect(() => { localStorage.setItem(OPEN_KEY, JSON.stringify(openTiers)); }, [openTiers]);
+  const [sort, setSort] = useState<Sort>(DEFAULT_SORT);
 
   const load = useCallback(() => api<Payload>("/catalogue").then(setData).catch((e) => setError(e.message)), []);
   useEffect(() => { load(); }, [load]);
@@ -128,6 +169,7 @@ export function Catalogue() {
       (!focus || facets(e).includes(focus)) &&
       activeTags.every((t) => e.tags.includes(t)));
   }, [data, q, status, focus, activeTags]);
+  const sorted = useMemo(() => sortRows(rows, sort), [rows, sort]);
 
   if (error) return <EmptyState message={`Could not load the catalogue: ${error}`} />;
   if (!data) return <EmptyState message="Loading…" />;
@@ -136,6 +178,7 @@ export function Catalogue() {
   const pick = (slugs: string[]) => slugs.map((s) => by.get(s)).filter(Boolean) as Row[];
   const review = pick(today.review), fresh = pick(today.new);
   const filtered = !!(q || status || activeTags.length || focus);
+  const unsorted = sort.key === DEFAULT_SORT.key && sort.dir === DEFAULT_SORT.dir;
   const clear = () => { setQ(""); setStatus(""); setActiveTags([]); if (focus) setFocus(null); };
   // a focus may name a tag, and then that chip is the only thing that explains the filter
   const tagOn = (t: string) => activeTags.includes(t) || focus === t;
@@ -143,8 +186,6 @@ export function Catalogue() {
     if (focus === t) return setFocus(null);
     setActiveTags((a) => a.includes(t) ? a.filter((x) => x !== t) : [...a, t]);
   };
-  // an active chip must never be scrolled out of the chip well
-  const tags = [...data.tags].sort((a, b) => Number(tagOn(b)) - Number(tagOn(a)));
   const todayLine = [
     review.length ? plural(review.length, "review") : "nothing due",
     fresh.length ? `${fresh.length} new ${fresh.length === 1 ? "pick" : "picks"}` : null,
@@ -191,34 +232,31 @@ export function Catalogue() {
         {data.tracks.map((t) => <TagChip key={t} label={t} active={focus === t} onClick={() => setFocus(focus === t ? null : t)} />)}
         <div style={{ flex: 1 }} />
         <span style={FAINT}>{rows.length} of {stats.total} tasks{activeTags.length > 1 ? " · tags matched with AND" : ""}</span>
+        {unsorted ? null : <Button variant="secondary" onClick={() => setSort(DEFAULT_SORT)} style={{ padding: "6px 10px", fontSize: 13, fontWeight: 500, color: "var(--text-muted)" }}>↺ Reset sort</Button>}
         {filtered ? <Button variant="quiet" onClick={clear}>Clear</Button> : null}
       </div>
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", maxHeight: 92, overflowY: "auto" }}>
-        {tags.map((t) => <TagChip key={t} label={t} active={tagOn(t)} onClick={() => toggleTag(t)} />)}
+      {/* every tag, wrapped and whole: a scroller hid two thirds of the map and moved the
+        * chip you just clicked, and the map is the one place the vocabulary is visible. */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        {data.tags.map((t) => <TagChip key={t} label={t} active={tagOn(t)} onClick={() => toggleTag(t)} />)}
       </div>
 
       {/* one table: the tiers are bands inside it, not three cards */}
       <Card padding={0} style={{ overflow: "hidden" }}>
-        {rows.length === 0
+        {sorted.length === 0
           ? <EmptyState message="No task matches those filters. Loosen a tag or clear the search." actionLabel="Clear filters" onAction={clear} />
           : <>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 32, borderBottom: "1px solid var(--border-strong)", background: "var(--surface-2)", ...LABEL }}>
-                <span style={{ width: 30, textAlign: "right" }}>#</span>
-                <span style={{ flex: 1 }}>Task</span>
-                <span style={{ width: 230 }}>tier/tag</span>
-                <span style={{ width: 74 }}>Difficulty</span>
-                <span style={{ width: 52 }}>Box</span>
-                <span style={{ width: 74 }}>Status</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 32, borderBottom: "1px solid var(--border-strong)", background: "var(--surface)", ...LABEL }}>
+                <SortHead label="#" col="topic" align="right" sort={sort} onSort={setSort} style={{ width: 30 }} />
+                <SortHead label="Task" col="title" sort={sort} onSort={setSort} style={{ flex: 1 }} />
+                <SortHead label="tier/tag" col="path" sort={sort} onSort={setSort} style={{ width: 230 }} />
+                <SortHead label="Difficulty" col="difficulty" sort={sort} onSort={setSort} style={{ width: 74 }} />
+                <SortHead label="Box" col="box" sort={sort} onSort={setSort} style={{ width: 52 }} />
+                <SortHead label="Status" col="status" sort={sort} onSort={setSort} style={{ width: 74 }} />
               </div>
               {data.tiers.map((tier, i) => {
-                const group = rows.filter((e) => e.tier === tier);
-                // collapsed by default, except the focused tier — and except under a filter, where a
-                // collapsed group would hide the very rows the reader just asked for
-                const open = openTiers[tier] ?? (filtered || tier === focus);
-                return group.length
-                  ? <TierGroup key={tier} tier={tier} rows={group} open={open} first={i === 0}
-                      onToggle={() => setOpenTiers((o) => ({ ...o, [tier]: !open }))} />
-                  : null;
+                const group = sorted.filter((e) => e.tier === tier);
+                return group.length ? <TierGroup key={tier} tier={tier} rows={group} first={i === 0} /> : null;
               })}
             </>}
       </Card>
