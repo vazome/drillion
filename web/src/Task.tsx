@@ -1,13 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Card, Collapsible, ConflictBanner, EmptyState, LadderMeter, NoticeBanner, ResultBanner, SpecText, StatusBadge, TagChip, Timer } from "./ds/index.js";
-import { ApiError, api, post, type Task as TaskData, type RunResult } from "./api";
+import { ApiError, api, post, type Catalogue, type Task as TaskData, type RunResult } from "./api";
 import { Editor } from "./Editor";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
+const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };          // the faint line beside a section label
+const PLAIN = { fontWeight: 400, textTransform: "none" as const, letterSpacing: 0, ...ASIDE };
 const AUTOSAVE_MS = 800;
 const HEARTBEAT_MS = 60_000;
+const GATE_MS = 1400;                                                  // the hint gate says its piece, then leaves
 const draftKey = (slug: string) => `drillion-draft-${slug}`;
 const secs = (n: number) => n >= 60 ? `${Math.floor(n / 60)}m${String(n % 60).padStart(2, "0")}s` : `${n} s`;
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
+/** A refused action, shown beside the control that asked for it. */
+type Gate = { at: "hints" | "solution" | "editor"; message: string } | null;
 
 type Result =
   | { state: "idle" | "running" }
@@ -23,14 +30,16 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [result, setResult] = useState<Result>({ state: "idle" });
   const [conflict, setConflict] = useState<{ etag: string; code: string } | null>(null);
   const [draftOffer, setDraftOffer] = useState<string | null>(null);
-  const [gate, setGate] = useState<string | null>(null);
+  const [gate, setGate] = useState<Gate>(null);
   const [solutionCode, setSolutionCode] = useState<string | null>(null);
   const [active, setActive] = useState(0);
   const [nextHintIn, setNextHintIn] = useState<number | null>(null);
+  const [nextSlug, setNextSlug] = useState<string | null>(null);
 
   // Refs carry the live values into the async chain; state alone would capture a stale closure.
   const codeRef = useRef(""), etagRef = useRef(""), dirtyRef = useRef(false);
   const timer = useRef<number | undefined>(undefined);
+  const gateTimer = useRef<number | undefined>(undefined);
   const inflight = useRef<Promise<void> | null>(null);
   const hasAttempt = !!task?.attempt;
   const passed = result.state === "passed";
@@ -42,10 +51,17 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     if (!keepCode) { setCode(p.code); codeRef.current = p.code; setDirty(false); dirtyRef.current = false; }
   }, []);
 
+  /** A notice that says one thing and gets out of the way — the hint gate's whole UI. */
+  const flash = useCallback((message: string) => {
+    setGate({ at: "hints", message });
+    clearTimeout(gateTimer.current);
+    gateTimer.current = setTimeout(() => setGate(null), GATE_MS);
+  }, []);
+
   // ---- load, and offer a newer local draft over what the file holds
   useEffect(() => {
     let live = true;
-    setTask(null); setError(null); setResult({ state: "idle" }); setConflict(null); setSolutionCode(null); setGate(null);
+    setTask(null); setError(null); setResult({ state: "idle" }); setConflict(null); setSolutionCode(null); setGate(null); setNextSlug(null);
     api<TaskData>(`/task/${encodeURIComponent(slug)}`).then((p) => {
       if (!live) return;
       adopt(p);
@@ -73,8 +89,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       if (!(e instanceof ApiError)) throw e;
       if (e.status === 400) setSyntaxBad(true);                       // silent: an amber dot, no banner
       else if (e.status === 409 && e.detail?.etag) setConflict(e.detail);
-      else if (e.status === 409) setGate(e.detail?.error ?? e.message); // no open attempt
-      else setGate(e.message);
+      else if (e.status === 409) setGate({ at: "editor", message: e.detail?.error ?? e.message }); // no open attempt
+      else setGate({ at: "editor", message: e.message });
     }
   }, [slug]);
 
@@ -86,7 +102,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     timer.current = setTimeout(() => { inflight.current = flush(); }, AUTOSAVE_MS);
   };
 
-  useEffect(() => () => clearTimeout(timer.current), [slug]);
+  useEffect(() => () => { clearTimeout(timer.current); clearTimeout(gateTimer.current); }, [slug]);
 
   useEffect(() => {
     const warn = (e: BeforeUnloadEvent) => { if (dirtyRef.current) e.preventDefault(); };
@@ -131,6 +147,10 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
         localStorage.removeItem(draftKey(slug));
         setResult({ state: "passed", grade: r.grade!, box: r.box!, dueIn: r.due_in!, attempts: r.attempts, code: r.code! });
         setCode(r.code!);
+        // what to do next lives on the catalogue, and only matters once the card is cleared
+        api<Catalogue>("/catalogue")
+          .then((c) => setNextSlug([...c.today.review, ...c.today.new].find((s) => s !== slug) ?? null))
+          .catch(() => {});
       } else {
         setResult({ state: "failed", headline: r.headline.join("\n") || "The tests did not pass.", output: r.output });
         setTask((p) => p && p.attempt ? { ...p, attempt: { ...p.attempt, attempts: r.attempts } } : p);
@@ -153,8 +173,11 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       api<TaskData>(`/task/${encodeURIComponent(slug)}`).then((p) => setNextHintIn(p.hints.next_in)).catch(() => {});
     } catch (e) {
       const err = e as ApiError;
-      setGate(err.message);
-      if (err.status === 423 && err.detail?.wait_secs) setNextHintIn(err.detail.wait_secs);
+      const wait = err.status === 423 ? err.detail?.wait_secs : 0;
+      if (wait) {
+        setNextHintIn(wait);
+        flash(`Not yet — ${secs(wait)}. Keep working; hint ${(task?.hints.shown.length ?? 0) + 1} unlocks itself.`);
+      } else setGate({ at: "hints", message: err.message });
     }
   };
 
@@ -167,9 +190,9 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     } catch (e) {
       const err = e as ApiError;
       const d = err.detail ?? {};
-      setGate(d.need_attempts || d.need_secs
-        ? `${err.message} — ${d.need_attempts || 0} more attempt(s), ${secs(d.need_secs || 0)} more work.`
-        : err.message);
+      setGate({ at: "solution", message: d.need_attempts || d.need_secs
+        ? `${err.message} — ${plural(d.need_attempts || 0, "more attempt")}, ${secs(d.need_secs || 0)} more work.`
+        : err.message });
     }
   };
 
@@ -180,10 +203,10 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     try {
       const p = await post<TaskData>(`/task/${encodeURIComponent(slug)}/abandon`, { etag: etagRef.current });
       localStorage.removeItem(draftKey(slug));
-      adopt(p); setResult({ state: "idle" }); setSolutionCode(null); setGate(null);
+      adopt(p); setResult({ state: "idle" }); setSolutionCode(null); setGate(null); setNextSlug(null);
     } catch (e) {
       const err = e as ApiError;
-      if (err.status === 409 && err.detail?.etag) setConflict(err.detail); else setGate(err.message);
+      if (err.status === 409 && err.detail?.etag) setConflict(err.detail); else setGate({ at: "editor", message: err.message });
     }
   };
 
@@ -209,107 +232,154 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const { meta, hints, solution: gateState, attempt } = task;
   const hintsLeft = hints.total - hints.shown.length;
   const hintReady = nextHintIn === null || nextHintIn <= 0;
+  /** The gate banner, rendered only under the control that raised it. */
+  const notice = (at: Exclude<Gate, null>["at"]) => gate?.at === at
+    ? <div className="m-drop" style={{ marginTop: 10 }}><NoticeBanner message={gate.message} actions={[{ label: "Dismiss", onClick: () => setGate(null) }]} /></div>
+    : null;
+
+  // the run that produced this result, or the one being worked on now
+  const attemptNo = passed ? result.attempts : attempt ? attempt.attempts + 1 : 0;
 
   return (
-    <div style={{ display: "flex", gap: 20, alignItems: "flex-start", maxWidth: 1500, margin: "0 auto" }}>
-      {/* native `resize` beats a drag handle: one declaration, real pointer affordance */}
-      <div style={{ width: "42%", minWidth: 340, maxWidth: "70%", maxHeight: "calc(100vh - 104px)", overflow: "auto", resize: "horizontal" }}>
-        <Card label={`${meta.topic} · ${meta.title}`}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
-            <StatusBadge status={task.status} />
-            {meta.tags.map((t) => <TagChip key={t} label={t} small />)}
-            {meta.source ? <span style={{ fontSize: 12.5, color: "var(--text-faint)" }}>{meta.source}</span> : null}
-          </div>
-          <SpecText text={task.spec_md} slug={slug} />
-
-          <div style={{ ...LABEL, margin: "22px 0 8px" }}>
-            Hints <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>· {hints.total} levels, unlocked by time on task</span>
-          </div>
-          {hints.shown.map((text, i) => (
-            <div key={i} style={{ background: "var(--surface-2)", borderRadius: "var(--radius)", padding: "10px 12px", marginBottom: 8 }}>
-              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>Hint {i + 1}</div>
-              <SpecText text={text} slug={slug} style={{ fontSize: 14 }} />
-            </div>
-          ))}
-          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            <Button variant="quiet" onClick={hint} disabled={hintsLeft === 0 || !hintReady}>
-              {hintsLeft === 0 ? "No hints left" : hintReady ? `Show hint ${hints.shown.length + 1}` : `Hint ${hints.shown.length + 1} in ${secs(nextHintIn!)}`}
-            </Button>
-            <Button variant="quiet" onClick={solution} disabled={!!solutionCode}>
-              {gateState.unlocked || solutionCode ? "Show solution" : "Solution — locked"}
-            </Button>
-          </div>
-          {!gateState.unlocked && !solutionCode ? (
-            <div style={{ fontSize: 13, color: "var(--text-faint)", marginTop: 8 }}>
-              Needs {gateState.need_attempts} more attempt(s) and {secs(gateState.need_secs)} more work; taking it means this pass won’t promote.
-            </div>
-          ) : null}
-          {solutionCode ? (
-            <Collapsible label="Solution" defaultOpen style={{ marginTop: 10 }}><code>{solutionCode}</code></Collapsible>
-          ) : null}
-          {task.archive.length ? (
-            <Collapsible label={`Archive · ${task.archive.length} previous pass(es)`} mono={false} style={{ marginTop: 12 }}>
-              {task.archive.slice().reverse().map((a, i) => (
-                <div key={i} style={{ marginBottom: 8 }}>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13 }}>
-                    <span className="tabular" style={{ fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>{a.date}</span>
-                    <StatusBadge status={a.grade} />
-                  </div>
-                  {a.code ? <pre style={{ margin: "6px 0 0", fontSize: 12.5, whiteSpace: "pre-wrap", color: "var(--text-muted)" }}>{a.code}</pre> : null}
-                </div>
-              ))}
-            </Collapsible>
-          ) : null}
-        </Card>
+    <div style={{ maxWidth: 1500, margin: "0 auto" }}>
+      {/* Meta bar: who the task is, how it is going, and where it sits in the tag tree. */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
+        <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)" }}>{meta.topic}</span>
+        <h1 style={{ margin: 0, fontSize: "var(--fs-h)", fontWeight: 600 }}>{meta.title}</h1>
+        <StatusBadge status={task.status} />
+        <StatusBadge status={meta.difficulty} />
+        <div style={{ flex: 1 }} />
+        {/* D13: a tag reads as the path to it — `core/f-strings`. A track is its own chip. */}
+        {meta.track ? <TagChip label={meta.track} small /> : null}
+        {meta.tags.map((t) => <TagChip key={t} label={`${meta.tier}/${t}`} small />)}
+        {meta.source ? <span style={ASIDE}>{meta.source}</span> : null}
       </div>
 
-      <div style={{ flex: 1, minWidth: 420, display: "grid", gap: 12 }}>
-        {conflict ? <ConflictBanner detail="Your draft and the file on disk have diverged." onReload={takeDisk} onKeep={keepMine} /> : null}
-        {draftOffer ? (
-          <NoticeBanner message="A newer local draft exists for this task."
-            actions={[
-              { label: "Restore it", onClick: () => { edit(draftOffer); setDraftOffer(null); } },
-              { label: "Discard", onClick: () => { localStorage.removeItem(draftKey(slug)); setDraftOffer(null); } },
-            ]} />
-        ) : null}
-        {gate ? <NoticeBanner message={gate} actions={[{ label: "Dismiss", onClick: () => setGate(null) }]} /> : null}
-        {task.has_given ? <NoticeBanner message="This task ships given code above solve() — read it, but leave it alone." actions={[]} /> : null}
+      <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+        {/* native `resize` beats a drag handle: one declaration, real pointer affordance */}
+        <div style={{ width: "42%", minWidth: 340, maxWidth: "70%", maxHeight: "calc(100vh - 148px)", overflow: "auto", resize: "horizontal" }}>
+          <Card label={`Spec · ${slug}/README.md`}>
+            <SpecText text={task.spec_md} slug={slug} hideTitle />
 
-        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-          <Button kbdHint="Ctrl+Enter" onClick={run} disabled={result.state === "running" || passed}>
-            {result.state === "running" ? "Running…" : "Run tests"}
-          </Button>
-          <Timer seconds={active} paused={!hasAttempt} />
-          <span className="tabular" style={{ fontSize: 13, color: "var(--text-muted)" }}>
-            {attempt ? `attempt ${attempt.attempts + (passed ? 0 : 1)}` : "not started"}
-          </span>
-          {attempt ? <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--text-faint)" }}>seed {attempt.seed}</span> : null}
-          <div style={{ flex: 1 }} />
-          {dirty || syntaxBad ? (
-            <span style={{ fontSize: 12.5, color: syntaxBad ? "var(--warn)" : "var(--text-faint)" }}>
-              ● {syntaxBad ? "not saved — syntax" : "unsaved"}
-            </span>
-          ) : null}
-          {hasAttempt && !passed ? <Button variant="quiet" onClick={abandon} style={{ fontSize: 13 }}>Abandon</Button> : null}
+            <div style={{ marginTop: 22, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+              <div style={{ ...LABEL, marginBottom: 10 }}>
+                Hints <span style={PLAIN}>· {hints.shown.length} of {hints.total} shown, unlocked by time on task</span>
+              </div>
+              {hints.shown.map((text, i) => (
+                <div key={i} style={{ background: "var(--surface-2)", borderRadius: "var(--radius)", padding: "10px 12px", marginBottom: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>Hint {i + 1}</div>
+                  <SpecText text={text} slug={slug} style={{ fontSize: 14 }} />
+                </div>
+              ))}
+              {hintsLeft ? (
+                <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                  <Button variant="secondary" onClick={hint}>Show hint {hints.shown.length + 1}</Button>
+                  <span style={ASIDE}>{hintReady ? "ready" : `unlocks in ${secs(nextHintIn!)}`}</span>
+                </div>
+              ) : (
+                <div style={ASIDE}>All {hints.total} levels shown. Nothing else is gated except the solution.</div>
+              )}
+              {notice("hints")}
+            </div>
+
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+              <div style={{ ...LABEL, marginBottom: 10 }}>
+                Solution <span style={PLAIN}>· {solutionCode ? "revealed — this attempt is marked" : gateState.unlocked ? "unlocked" : `locked · needs ${plural(gateState.need_attempts, "more attempt")} and ${secs(gateState.need_secs)} more work`}</span>
+              </div>
+              {solutionCode ? (
+                <div style={{ display: "grid", gap: 8 }}>
+                  <NoticeBanner message="Solution shown — this pass won’t promote the card. It grades as struggled and stays in its box." actions={[]} />
+                  <SpecText text={"```python\n" + solutionCode + "\n```"} slug={slug} />
+                </div>
+              ) : (
+                <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                  <Button variant="secondary" onClick={solution}>{gateState.unlocked ? "Show solution" : "Unlock solution"}</Button>
+                  <span style={ASIDE}>taking it means this pass won’t promote</span>
+                </div>
+              )}
+              {notice("solution")}
+            </div>
+
+            {task.archive.length ? (
+              <Collapsible label={`Archive · ${plural(task.archive.length, "previous pass")}`} mono={false} style={{ marginTop: 12 }}>
+                {task.archive.slice().reverse().map((a, i) => (
+                  <div key={i} style={{ marginBottom: 8 }}>
+                    <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13 }}>
+                      <span className="tabular" style={{ fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>{a.date}</span>
+                      <StatusBadge status={a.grade} />
+                    </div>
+                    {a.code ? <pre style={{ margin: "6px 0 0", fontSize: 12.5, whiteSpace: "pre-wrap", color: "var(--text-muted)" }}>{a.code}</pre> : null}
+                  </div>
+                ))}
+              </Collapsible>
+            ) : null}
+          </Card>
         </div>
 
-        <Editor value={code} onChange={edit} onRun={run} readOnly={passed} dark={dark} height="calc(100vh - 320px)" />
+        <div style={{ flex: 1, minWidth: 420, display: "grid", gap: 12 }}>
+          {/* Anything the app noticed drops in above the work it is about. */}
+          {conflict ? <div className="m-drop"><ConflictBanner detail="Your draft and the file on disk have diverged." onReload={takeDisk} onKeep={keepMine} /></div> : null}
+          {draftOffer ? (
+            <div className="m-drop">
+              <NoticeBanner message="A newer local draft exists for this task."
+                actions={[
+                  { label: "Restore it", onClick: () => { edit(draftOffer); setDraftOffer(null); } },
+                  { label: "Discard", onClick: () => { localStorage.removeItem(draftKey(slug)); setDraftOffer(null); } },
+                ]} />
+            </div>
+          ) : null}
+          {gate?.at === "editor" ? <div className="m-drop"><NoticeBanner message={gate.message} actions={[{ label: "Dismiss", onClick: () => setGate(null) }]} /></div> : null}
+          {task.has_given ? <NoticeBanner message="This task ships given code above solve() — read it, but leave it alone." actions={[]} /> : null}
 
-        <ResultBanner
-          state={result.state}
-          headline={result.state === "failed" ? result.headline : undefined}
-          output={result.state === "failed" ? result.output : undefined}
-          gradeLine={passed ? `${result.grade.toUpperCase()} · ${secs(active)} · ${result.attempts} attempt(s) · box ${result.box + 1} of 5` : undefined}
-          backIn={passed ? `${result.dueIn} days` : undefined} />
-
-        {passed ? (
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <LadderMeter box={result.box + 1} />
-            <span style={{ fontSize: 13, color: "var(--text-muted)" }}>the card stepped up — code archived, stub restored for next time</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+            <Button kbdHint="Ctrl+Enter" onClick={run} disabled={result.state === "running" || passed}>
+              {result.state === "running" ? "Running…" : "Run tests"}
+            </Button>
+            <Timer seconds={active} paused={!hasAttempt || passed} />
+            <span className="tabular" style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              {attemptNo ? `attempt ${attemptNo}` : "not started"}
+            </span>
+            {attempt ? <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--text-faint)" }}>seed {attempt.seed}</span> : null}
             <div style={{ flex: 1 }} />
-            <Button onClick={() => { location.hash = "#/"; }}>Back to Today</Button>
+            {dirty || syntaxBad ? (
+              <span style={{ fontSize: 12.5, color: syntaxBad ? "var(--warn)" : "var(--text-faint)" }}>
+                ● {syntaxBad ? "not saved — syntax" : "unsaved"}
+              </span>
+            ) : null}
+            {hasAttempt && !passed ? <Button variant="quiet" onClick={abandon} style={{ fontSize: 13 }}>Abandon</Button> : null}
           </div>
-        ) : null}
+
+          <Editor value={code} onChange={edit} onRun={run} readOnly={passed} dark={dark} height="calc(100vh - 364px)" />
+
+          {/* The result card re-enters on every state change — keyed so `.m-rise` replays. */}
+          <div className="m-rise" key={result.state}>
+            <Card label={attemptNo ? `Result · attempt ${attemptNo}` : "Result"} padding={16}>
+              <ResultBanner
+                state={result.state}
+                headline={result.state === "failed" ? result.headline : undefined}
+                gradeLine={passed ? `${result.grade.toUpperCase()} · ${secs(active)} · ${plural(result.attempts, "attempt")} · box ${result.box + 1} of 5` : undefined}
+                backIn={passed ? plural(result.dueIn, "day") : undefined} />
+
+              {result.state === "failed" && result.output ? (
+                <Collapsible label="Full output" meta={`pytest · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
+                  {result.output}
+                </Collapsible>
+              ) : null}
+
+              {passed ? (
+                <div style={{ marginTop: 10, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                  <span className="m-step" style={{ display: "inline-flex" }}><LadderMeter box={result.box + 1} /></span>
+                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>the card stepped up — code archived, stub restored for next time</span>
+                  <div style={{ flex: 1 }} />
+                  <Button variant="quiet" onClick={() => { location.hash = "#/"; }}>Back to Today</Button>
+                  {nextSlug ? (
+                    <Button variant="secondary" onClick={() => { location.hash = `#/task/${encodeURIComponent(nextSlug)}`; }}>Next in Today →</Button>
+                  ) : null}
+                </div>
+              ) : null}
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
