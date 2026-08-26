@@ -128,7 +128,7 @@ export declare function Table(props: TableProps): El;
 
 /** Status / grade pill. Words carry the meaning; colour is never the only signal. */
 export interface StatusBadgeProps {
-  status?: "new" | "due" | "scheduled" | "open" | "done" | "easy" | "pass" | "struggled" | "failed" | "abandoned" | string;
+  status?: "new" | "due" | "scheduled" | "open" | "done" | "easy" | "medium" | "hard" | "quick" | "pass" | "struggled" | "failed" | "abandoned" | string;
   /** override label (e.g. "done 6 d") */
   children?: React.ReactNode;
   style?: Style;
@@ -182,7 +182,7 @@ export interface ResultBannerProps {
   headline?: string;
   /** failed: full pytest output behind a disclosure */
   output?: string;
-  /** passed: "EASY · 4m12s · 1 attempt · box 3 of 5" */
+  /** passed: "QUICK · 4m12s · 1 attempt · box 3 of 5" */
   gradeLine?: string;
   /** passed: "8 days" */
   backIn?: string;
