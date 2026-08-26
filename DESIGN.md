@@ -49,7 +49,8 @@ Data: `GET /api/catalogue` →
   track and tags alike**. `tags[]`, `tiers[]`, `tracks[]` — the three vocabularies to filter by
 - `tasks[]` — per row: `slug`, `topic` (number), `title`, `difficulty`, `tier`, `track?`, `tags[]`,
   `prereqs[]` (numbers), `practices[]`, `source?`,
-  `status` ∈ `new | due | open | done`, `box` (0–5), `due` (date), `seen` (count).
+  `status` ∈ `new | due | open | done`, `box` (0–4, the ladder has five), `due` (date),
+  `seen` (count).
   **No `minutes`**: par time never leaves the server.
 
 Elements: Today panel (reviews, then new picks, focus selector), search, filter chips (tier, track,
@@ -71,9 +72,10 @@ Data: `GET /api/task/{slug}` →
   then `## Why` (business context), `## You get`, `## You return`, `## Rules` with worked
   examples, `## Read first` (the links, with notes), and whatever else the task adds
   (`## Introduction`, `## Instructions` on Exercism tasks). Render: headings, lists, tables,
-  fenced code with language, GitHub alerts (`> [!NOTE]`, `[!TIP]`, `[!WARNING]`), ```mermaid
-  diagrams, images from `assets/` (`GET /api/task/{slug}/assets/{name}`), and `![…](assets/x.webm)`
-  as a muted looping video. No raw HTML. The spec pane scrolls; never truncate it.
+  fenced code with language, GitHub alerts (`> [!NOTE]`, `[!TIP]`, `[!WARNING]`) and images
+  from `assets/` (`GET /api/task/{slug}/assets/{name}`). No raw HTML. The spec pane scrolls;
+  never truncate it. Mermaid diagrams and `assets/*.webm` are **not** rendered: no task ships
+  either, and `web/src/ds/SpecText.jsx` says what to add back if one ever does.
 - `code` — the editor text (a stub, or the user's draft); `has_given` — true when the region
   contains given code above `solve()` that must not be edited (show a note)
 - `attempt` — null, or `{attempts, hints, active (seconds), seed, solution_shown}`
@@ -107,7 +109,8 @@ Data: `GET /api/progress` → `boxes[5]`, `due`, `seen`, `total`, `per_tag{tag: 
 `log[]` (last 30: `date, slug, grade, attempts, secs, new`).
 
 Elements: the full-size ladder (5 boxes with counts and next-return intervals), a per-tag coverage
-table, the recent log, days-left to the deadline.
+table, the recent log. Days-left to the deadline lives in the header, on every route — it comes
+off `/api/catalogue`, and this payload does not carry it.
 
 ## Vocabulary (use these words)
 
