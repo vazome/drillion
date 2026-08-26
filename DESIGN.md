@@ -44,9 +44,9 @@ Answers: *what do I do now?*
 
 Data: `GET /api/catalogue` →
 - `today.review[]` — due reviews, most overdue first; `today.new[]` — up to 2 new picks;
-  `today.recent[]` — every task worked in the last `window` days, newest first, and never
-  filtered against the other two: a card worked on Friday and due again today is both things
-  at once; `today.done_today` (count)
+  `today.recent[]` — every task worked in the last `window` days, newest first, open attempts
+  included and leading; never filtered against the other two, since a card worked on Friday and
+  due again today is both things at once; `today.done_today` (count)
 - `stats` — `boxes` (5 counts, one per ladder box), `due`, `seen`, `total`, and `practised` of
   `window`: distinct days worked in the last 7, a rolling count rather than a streak
 - `focus` — one string or null; it restricts *new* picks and is matched against a task's **tier,
