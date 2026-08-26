@@ -7,9 +7,9 @@ Python practice drills that come back before you forget them. Graded by pytest, 
 
 drillion is a local web app with 171 short Python tasks, each tagged with the concept it
 practises so you can go straight at what you want to get better at. Every task ships its own
-pytest test and generates fresh random data each time you open it, so you cannot pass it by
-remembering last week's answer. Pass one and it returns in 2, 4, 8, 16 then 28 days; fail and it
-costs you nothing but the attempt. There is no login, no account and no server but yours: the
+pytest test, and many draw fresh data each time you open them, so you cannot pass by remembering
+last week's answer. Pass one and it comes back in 2 days, then 4, 8, 16, and on up to 120; fail
+and it costs you nothing but the attempt. There is no login, no account and no server but yours: the
 tasks are folders of Markdown and Python on your disk, and your progress is one JSON file.
 
 ## Install
