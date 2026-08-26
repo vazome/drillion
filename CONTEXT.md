@@ -5,7 +5,7 @@ tasks, each graded on freshly generated data, each returning on a spaced-repetit
 
 These are the words the code, the API, the UI and the docs all use. Reach for one of these
 before minting a synonym. The rules for *choosing* a tier, difficulty, track or tag when
-authoring a task are in [README.md](README.md#vocabulary); this file only says what the
+authoring a task are in [authoring-tasks.md](docs/authoring-tasks.md); this file only says what the
 words mean.
 
 ## Language
@@ -87,12 +87,12 @@ the card is your relationship to it.
 _Avoid_: entry, record, progress item
 
 **Box**:
-One of five rungs on the **ladder**. Counted `0`–`4` in stored state and shown as 1–5.
+One of seven rungs on the **ladder**. Counted `0`–`6` in stored state and shown as 1–7.
 _Avoid_: level, stage, bucket, bin
 
 **Ladder**:
-The five fixed return intervals — 2, 4, 8, 16, 28 days — that a **card** climbs by passing
-and steps back down on a **lapse**.
+The seven fixed return intervals — 2, 4, 8, 16, 28, 60, 120 days — that a **card** climbs by
+passing and steps back down on a **lapse**.
 _Avoid_: schedule, algorithm, SRS, curve
 
 **Due**:

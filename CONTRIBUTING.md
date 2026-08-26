@@ -43,7 +43,7 @@ your temp directory — never the checkout, so your own `progress.json` and task
 touched. The last test in `web/e2e/screens.spec.ts` asserts exactly that. Nothing has to be
 running first, and a dev server on 8765 is left alone.
 
-See the root [README](README.md) for the full architecture and vocabulary, and
+See [CONTEXT.md](CONTEXT.md) for the vocabulary every part of drillion uses, and
 [`web/README.md`](web/README.md) for frontend-specific notes.
 
 ## Proposing a new task
@@ -56,9 +56,9 @@ block a maintainer needs to say yes before you write code.
 
 A task is a folder, `tasks/<NNN>_<name>/`, added by appending — never inserting — the next
 number after the highest one in the catalogue. Copy the shape of an existing task rather than
-starting from scratch. Full detail, including the vocabulary for `tier`, `difficulty`, `track`
-and `tags`, is in the README's [Vocabulary](README.md#vocabulary) and
-[The tasks](README.md#the-tasks) sections; here is the contract a submission is graded against.
+starting from scratch. Full detail, including how to choose `tier`, `difficulty`, `track` and
+`tags`, is in [docs/authoring-tasks.md](docs/authoring-tasks.md); here is the contract a
+submission is graded against.
 
 **`README.md`** — YAML frontmatter (`title`, `difficulty`, `tier`, `minutes` and `tags` are
 required; `prereqs`, `practices`, `track`, `source` are optional), then GitHub-flavoured
@@ -86,8 +86,9 @@ names `_reference`/`_gen`/`test_*`, is refused.
 its stub and runs the test — every task must go green this way before it is trusted, and the
 count it prints (`N/N`) is the thing to watch. A folder the catalogue cannot parse (missing
 frontmatter key, no machinery marker, a hint count that isn't 3) is silently skipped rather than
-reported, so if your new task doesn't show up in the catalogue, `selfcheck`'s count is the first
-thing to check.
+reported, so if your new task doesn't show up in the catalogue, run `uv run drillion doctor` — it
+names every rule the folder breaks, which `selfcheck` cannot, because it never sees a folder the
+catalogue dropped.
 
 If the task is adapted from another source (Exercism or elsewhere), say so honestly in a
 `source:` frontmatter field and a closing attribution line, and confirm the licence permits it —
