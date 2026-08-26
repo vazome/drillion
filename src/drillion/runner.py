@@ -29,8 +29,15 @@ def run_tests(path, seed):
     """Task code only ever runs here, in its own process."""
     cmd = [sys.executable, "-m", "pytest", str(path), "-x", "--timeout=10", *_PYTEST]
     try:
-        r = subprocess.run(cmd, env=_env(DRILLION_SEED=str(seed)), cwd=settings.root,
-                           capture_output=True, text=True, check=False, timeout=60)
+        r = subprocess.run(
+            cmd,
+            env=_env(DRILLION_SEED=str(seed)),
+            cwd=settings.root,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=60,
+        )
     except subprocess.TimeoutExpired:
         return False, "timed out after 60s — an endless loop, most likely"
     return r.returncode == 0, r.stdout
@@ -41,6 +48,7 @@ def summarise(out, marker_line):
 
     The region starts at line 1 of task.py, so the map is the identity — a frame
     is either the learner's or the grader's, and only the first gets a bare line."""
+
     def editor_line(m):
         n = int(m.group(1))
         return f"line {n}" if n < marker_line else m.group(0)
@@ -48,8 +56,11 @@ def summarise(out, marker_line):
     text = _TASK_LINE.sub(editor_line, out)
     lines = text.split("\n")
     head = [ln for ln in lines if ln.startswith("E   ")][:6]
-    return {"headline": head or [ln for ln in lines if ln.startswith(("FAILED", "ERROR"))][:6],
-            "output": text[-8192:]}
+    return {
+        "headline": head
+        or [ln for ln in lines if ln.startswith(("FAILED", "ERROR"))][:6],
+        "output": text[-8192:],
+    }
 
 
 def _reference_call(body):
@@ -61,7 +72,10 @@ def _reference_call(body):
     args += [f"{p.arg}={p.arg}" for p in a.kwonlyargs]
     args += [f"**{a.kwarg.arg}"] if a.kwarg else []
     stubbed = stub(body)
-    return stubbed[:stubbed.rindex("raise NotImplementedError")] + f"return _reference({', '.join(args)})"
+    return (
+        stubbed[: stubbed.rindex("raise NotImplementedError")]
+        + f"return _reference({', '.join(args)})"
+    )
 
 
 def selfcheck():
@@ -72,18 +86,27 @@ def selfcheck():
     try:
         for meta in all_tasks.values():
             src = meta["path"].read_text()
-            path = meta["dir"] / "_selfcheck.py"      # an explicit path is always collected
+            path = meta["dir"] / "_selfcheck.py"  # an explicit path is always collected
             path.write_text(splice(src, _reference_call(cut(src).body)))
             made.append(path)
-        r = subprocess.run([sys.executable, "-m", "pytest", *map(str, made),
-                            "--timeout=60", *_PYTEST],
-                           cwd=settings.root, env=_env(), capture_output=True, text=True,
-                           check=False)
+        r = subprocess.run(
+            [sys.executable, "-m", "pytest", *map(str, made), "--timeout=60", *_PYTEST],
+            cwd=settings.root,
+            env=_env(),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
     finally:
         for path in made:
             path.unlink(missing_ok=True)
-    failed = sorted({ln.split("_selfcheck.py")[0].rstrip("/\\").split("/")[-1]
-                     for ln in r.stdout.split("\n") if ln.startswith(("FAILED", "ERROR"))})
+    failed = sorted(
+        {
+            ln.split("_selfcheck.py")[0].rstrip("/\\").split("/")[-1]
+            for ln in r.stdout.split("\n")
+            if ln.startswith(("FAILED", "ERROR"))
+        }
+    )
     if r.returncode and not failed:
         print(r.stdout[-2000:].strip() or "pytest did not run")
         return 1

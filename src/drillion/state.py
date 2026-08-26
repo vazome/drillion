@@ -14,7 +14,7 @@ from .settings import settings
 
 
 def load():
-    path = settings.state_path                      # read at call time: tests move the root
+    path = settings.state_path  # read at call time: tests move the root
     st = json.loads(path.read_text()) if path.exists() else {}
     return {"focus": None, "cards": {}, "open": {}, "log": [], "archive": {}, **st}
 
@@ -23,7 +23,7 @@ def save(st):
     path = settings.state_path
     tmp = path.with_suffix(".tmp")
     tmp.write_text(json.dumps(st, indent=1))
-    os.replace(tmp, path)          # atomic: a crash mid-write can't eat months of progress
+    os.replace(tmp, path)  # atomic: a crash mid-write can't eat months of progress
 
 
 def today():
@@ -40,7 +40,7 @@ def card(st, slug):
 
 
 # ---------------------------------------------------------------- the transaction
-_LOCK = threading.Lock()     # read → validate → write → commit is one transaction
+_LOCK = threading.Lock()  # read → validate → write → commit is one transaction
 
 
 @contextmanager

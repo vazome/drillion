@@ -20,7 +20,9 @@ SRC = (settings.tasks_dir / "001_fstrings" / "task.py").read_text()
 
 def _solved(src=SRC, code="return ''"):
     """`src` with the region's `raise` replaced by real code."""
-    return region.splice(src, region.cut(src).body.replace("raise NotImplementedError", code))
+    return region.splice(
+        src, region.cut(src).body.replace("raise NotImplementedError", code)
+    )
 
 
 # ------------------------------------------------------------ region: all files
@@ -47,7 +49,7 @@ def test_the_region_holds_solve_and_the_tail_holds_the_machinery():
 
 
 def test_stub_is_identity_on_pristine_files():
-    drafts = set(state.load()["open"])           # an open attempt means the file holds live work
+    drafts = set(state.load()["open"])  # an open attempt means the file holds live work
     for f in FILES:
         if f.parent.name in drafts:
             continue
@@ -57,8 +59,11 @@ def test_stub_is_identity_on_pristine_files():
 
 # ------------------------------------------------------------ stub
 def test_stub_keeps_given_code_and_decorators():
-    for name, needle in (("034_env", "TRUTHY = {"), ("041_customexc", "class ConfigError"),
-                         ("084_fixtures", "@pytest.fixture")):
+    for name, needle in (
+        ("034_env", "TRUTHY = {"),
+        ("041_customexc", "class ConfigError"),
+        ("084_fixtures", "@pytest.fixture"),
+    ):
         body = region.cut((settings.tasks_dir / name / "task.py").read_text()).body
         stubbed = region.stub(body.replace("raise NotImplementedError", "return {}"))
         assert needle in stubbed and "return {}" not in stubbed, name
@@ -71,15 +76,17 @@ def test_stub_refuses_a_one_line_body():
 
 
 def test_has_given_spots_code_above_solve():
-    assert region.has_given(region.cut(
-        (settings.tasks_dir / "034_env" / "task.py").read_text()).body)
+    assert region.has_given(
+        region.cut((settings.tasks_dir / "034_env" / "task.py").read_text()).body
+    )
     assert not region.has_given(region.cut(SRC).body)
 
 
 # ------------------------------------------------------------ the write gate
 def test_validate_accepts_a_normal_edit():
-    new = region.validate(region.cut(SRC).body.replace("raise NotImplementedError",
-                                                       "return ''"), SRC)
+    new = region.validate(
+        region.cut(SRC).body.replace("raise NotImplementedError", "return ''"), SRC
+    )
     ast.parse(new)
     assert "def _reference(" in new and "return ''" in new
     assert new.split("\n")[region.bounds(new) - 1] == region.MARKER
@@ -119,7 +126,9 @@ def test_validate_rejects_bad_regions():
 
 def test_etag_tracks_only_the_learner_region():
     assert len(region.etag(SRC)) == 12
-    assert region.etag(SRC) == region.etag(SRC.replace("def _reference", "def _reference  "))
+    assert region.etag(SRC) == region.etag(
+        SRC.replace("def _reference", "def _reference  ")
+    )
     assert region.etag(SRC) != region.etag(_solved())
 
 
