@@ -56,7 +56,7 @@ from .region import (
     write_region,
 )
 from .runner import run_tests, summarise
-from .scheduler import LADDER, LAPSE_LIMIT, buried, due_today, pick, queue
+from .scheduler import LADDER, LAPSE_LIMIT, blocked, buried, due_today, pick, queue
 from .settings import settings
 from .state import card, reading, today, writing
 
@@ -268,6 +268,7 @@ def catalogue():
         all_tasks = tasks()
         q = queue(st, all_tasks)
         q["recent"] = _recent(st, all_tasks)
+        held = blocked(st, all_tasks)
         # `text` is the spec flattened for the search box (#14) — the same prose the
         # task page already shows, so nothing leaks. Deliberately outside `public()`'s
         # allowlist, because GET /api/task ships the real spec_md instead.
@@ -278,6 +279,7 @@ def catalogue():
                 "text": m["search_text"],
                 "status": _status(st, slug),
                 "buried": buried(st, slug),
+                "blocked": held.get(slug, []),
                 **{k: card(st, slug)[k] for k in ("box", "due", "seen", "lapses")},
             }
             for slug, m in all_tasks.items()

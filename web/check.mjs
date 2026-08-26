@@ -14,17 +14,16 @@ await build({
     contents: `
       import { renderToStaticMarkup } from "react-dom/server";
       import { SpecText } from "./src/ds/SpecText.jsx";
-      export { sortRows, blockedBy, noPicks } from "./src/Catalogue.tsx";
+      export { sortRows } from "./src/Catalogue.tsx";
       export { stepLine } from "./src/Task.tsx";
       export const render = (text, slug) => renderToStaticMarkup(<SpecText text={text} slug={slug} />);
-      export const html = (node) => renderToStaticMarkup(node);
     `,
     resolveDir: ".", loader: "jsx", sourcefile: "check-entry.jsx",
   },
   bundle: true, format: "esm", platform: "node", packages: "external", jsx: "automatic",   // only our JSX is bundled; node resolves the deps
   outfile: out.pathname, logLevel: "error",
 });
-const { render, html, sortRows, blockedBy, noPicks, stepLine } = await import(pathToFileURL(out.pathname).href + "?t=" + Date.now());
+const { render, sortRows, stepLine } = await import(pathToFileURL(out.pathname).href + "?t=" + Date.now());
 rmSync(out.pathname);
 
 // A `struggled` pass steps a card *down*, so the pass banner has to be able to say so.
@@ -43,48 +42,17 @@ if (order(spread, { key: "difficulty", dir: "asc" }) !== "2,3,1") throw new Erro
 if (order(spread, { key: "difficulty", dir: "desc" }) !== "1,3,2") throw new Error("difficulty desc must sort hard → easy");
 if (order([row(9, "easy"), row(4, "easy")], { key: "difficulty", dir: "desc" }) !== "4,9") throw new Error("ties must fall back to the task number, ascending");
 
-// A locked row must name what it is waiting for, and the Today card must name the one reason
-// New picks is empty rather than listing all of them (#11). Both re-run rules that live in
-// src/drillion/scheduler.py, so they are the pair most likely to drift away from the server.
-const ok = (label, cond) => { if (!cond) throw new Error(label); };
-const t = (topic, over = {}) => ({ ...row(topic, "easy"), slug: `${topic}`, prereqs: [], lapses: 0, ...over });
-const map = (rows) => new Map(rows.map((r) => [r.topic, r]));
-
-const box0 = t(1), box1 = t(2, { seen: 1, box: 1 });
-const gated = t(5, { prereqs: [1, 2] });
-ok("an unmet prereq must show", blockedBy(gated, map([box0, box1, gated]), null).length === 1);
-ok("box 1 clears a prereq; box 0 does not", blockedBy(gated, map([box0, box1, gated]), null)[0].topic === 1);
-ok("a prereq that is not in the catalogue is ignored", blockedBy(t(6, { prereqs: [99] }), map([]), null).length === 0);
-ok("a card already seen is never blocked", blockedBy(t(7, { seen: 1, prereqs: [1] }), map([box0]), null).length === 0);
-const out_of_focus = t(1, { tier: "advanced" });
-ok("under a focus, a prereq outside it is ignored",
-  blockedBy(t(8, { prereqs: [1] }), map([out_of_focus]), "core").length === 0);
-
-const day = (over = {}) => ({ review: [], new: [], recent: [], done_today: 0, due_total: 0, behind: false, ...over });
-const why = (rows, focus, today) =>
-  noPicks(rows, new Map(rows.map((r) => [r.slug, blockedBy(r, map(rows), focus)])), focus, today);
-// the order matters as much as the answers: the backlog holds everything, so it is named
-// before the cap, and the cap before a prereq that was never the reason today
-const CASES = [
-  ["behind", [t(1)], null, day({ behind: true, due_total: 40, review: Array(12) })],
-  ["cap", [t(1)], null, day({ done_today: 2 })],
-  // #1 is seen but still in box 0 — a first pass graded `struggled` clears no prereq
-  ["prereqs", [t(1, { seen: 1, box: 0 }), t(5, { prereqs: [1] })], null, day()],
-  ["focus", [t(1, { tier: "advanced" })], "core", day()],
-  ["done", [t(1, { seen: 1, box: 2 })], null, day()],
-];
-for (const [reason, rows, focus, today] of CASES) {
-  const got = why(rows, focus, today);
-  ok(`New picks must blame ${reason}, not ${got.why}`, got.why === reason);
-  const markup = html(got.message);
-  ok(`the ${reason} copy must render`, markup.length > 20 && !markup.includes("undefined"));
-}
-
 const cat = await (await fetch(`${base}/catalogue`)).json();
 const slugs = cat.tasks.map((e) => e.slug);
 
-// The payload seam the page reads: a capped review list next to the real backlog, the lapse
-// limit the rows are flagged against, and the spec text the search box matches on (#14).
+// The payload seam the page reads: a capped review list next to the real backlog, the reason
+// there is nothing new, what each locked row waits on, the lapse limit the rows are flagged
+// against, and the spec text the search box matches on (#14).
+const ok = (label, cond) => { if (!cond) throw new Error(label); };
+ok("today must name the one reason New picks is empty, and only then",
+  cat.today.new.length ? cat.today.no_new === null : !!cat.today.no_new?.why);
+ok("every row must carry the prereqs it is waiting on",
+  cat.tasks.every((e) => Array.isArray(e.blocked)));
 ok("today must carry the real backlog and the behind flag",
   typeof cat.today.due_total === "number" && typeof cat.today.behind === "boolean");
 ok("stats.due is the whole backlog, never the capped list's length", cat.stats.due === cat.today.due_total);

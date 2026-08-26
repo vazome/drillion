@@ -57,29 +57,39 @@ def _facets(meta):
     return {meta.get("tier"), meta.get("track"), *meta.get("tags", [])} - {None}
 
 
-def unseen(st, all_tasks):
-    """Unstarted tasks whose prereqs are cleared. Under a focus, prereqs outside
-    it are ignored — else a track stalls on a task it lacks. Focus is one string
-    matched against a task's tier, track and tags alike, so any of the three filters.
+def blocked(st, all_tasks):
+    """Per unstarted task, the prereqs it has not passed yet — the reason `unseen()` skips it.
 
-    A buried task drops out here as well as out of the reviews: bury means "not in today's
-    queue", and the new picks are half of that queue. The next unblocked task takes the slot."""
+    Box 1 is the bar: a first pass graded `struggled` clamps back to box 0 and clears
+    nothing. Under a focus, prereqs outside it are ignored — else a track stalls on a task
+    it lacks."""
     focus = st.get("focus")
     by_topic = {m["topic"]: s for s, m in all_tasks.items()}
-    ready = []
+    out = {}
     for slug, meta in all_tasks.items():
-        if (
-            card(st, slug)["seen"]
-            or buried(st, slug)
-            or (focus and focus not in _facets(meta))
-        ):
+        if card(st, slug)["seen"]:
             continue
         prereqs = [by_topic[p] for p in meta.get("prereqs", []) if p in by_topic]
         if focus:
             prereqs = [s for s in prereqs if focus in _facets(all_tasks[s])]
-        if all(card(st, s)["box"] >= 1 for s in prereqs):
-            ready.append(slug)
-    return ready
+        out[slug] = [s for s in prereqs if card(st, s)["box"] < 1]
+    return out
+
+
+def unseen(st, all_tasks):
+    """Unstarted tasks whose prereqs are cleared. Focus is one string matched against a
+    task's tier, track and tags alike, so any of the three filters.
+
+    A buried task drops out here as well as out of the reviews: bury means "not in today's
+    queue", and the new picks are half of that queue. The next unblocked task takes the slot."""
+    focus = st.get("focus")
+    return [
+        slug
+        for slug, prereqs in blocked(st, all_tasks).items()
+        if not prereqs
+        and not buried(st, slug)
+        and (not focus or focus in _facets(all_tasks[slug]))
+    ]
 
 
 def queue(st, all_tasks):
@@ -89,9 +99,9 @@ def queue(st, all_tasks):
     cap you are `behind`, and drillion offers nothing new until you are not — starting new
     material while already behind only makes the backlog worse.
 
-    `due_total` and `behind` ride along because a silent cap is worse than no cap: twelve rows
-    read as "done for today" when ninety cards are still waiting. The page must say both out
-    loud — "showing 12 of 100 due", "new picks paused while you catch up"."""
+    `due_total`, `behind` and `no_new` ride along because a silent cap is worse than no cap:
+    twelve rows read as "done for today" when ninety cards are still waiting. The page must
+    say all of it out loud — "showing 12 of 100 due", "new picks paused while you catch up"."""
     done_today = sum(1 for e in st["log"] if e["date"] == today() and e["new"])
     due = sorted(due_today(st, all_tasks), key=lambda s: card(st, s)["due"])
     behind = len(due) > REVIEWS_PER_DAY
@@ -99,13 +109,39 @@ def queue(st, all_tasks):
         (s for s in unseen(st, all_tasks) if s not in st["open"]),
         key=lambda s: all_tasks[s]["topic"],
     )
+    new = [] if behind else fresh[: max(0, NEW_PER_DAY - done_today)]
     return {
         "review": due[:REVIEWS_PER_DAY],
-        "new": [] if behind else fresh[: max(0, NEW_PER_DAY - done_today)],
+        "new": new,
         "done_today": done_today,
         "due_total": len(due),
         "behind": behind,
+        "no_new": None if new else _no_new(st, all_tasks, behind=behind),
     }
+
+
+def _no_new(st, all_tasks, *, behind):
+    """The one reason there is nothing new to offer, for the page to name rather than guess.
+
+    Ordered the way the rules bite: the backlog holds everything else, then today's cap, then
+    a prereq, and a focus only when nothing unstarted is left under it. `ready` counts what is
+    unlocked and waiting for tomorrow — a bury does not take a task off that count, because it
+    is still unlocked and it is back in the queue in the morning. `nearest` is the task closest
+    to opening: fewest unmet prereqs, lowest topic number breaking the tie."""
+    focus = st.get("focus")
+    if behind:
+        return {"why": "behind"}
+    held = {
+        slug: prereqs
+        for slug, prereqs in blocked(st, all_tasks).items()
+        if slug not in st["open"] and (not focus or focus in _facets(all_tasks[slug]))
+    }
+    if ready := [s for s in held if not held[s]]:
+        return {"why": "cap", "ready": len(ready)}
+    if waiting := {s: p for s, p in held.items() if p}:
+        nearest = min(waiting, key=lambda s: (len(waiting[s]), all_tasks[s]["topic"]))
+        return {"why": "prereqs", "nearest": nearest}
+    return {"why": "focus" if focus else "done"}
 
 
 def pick(st, all_tasks):

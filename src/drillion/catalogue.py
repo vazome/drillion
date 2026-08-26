@@ -15,7 +15,7 @@ from .region import Invalid, _solve, bounds, cut
 from .settings import settings
 
 REQUIRED = ("title", "difficulty", "tier", "minutes", "tags")
-BROWSER = ("topic", "title", "difficulty", "tier", "track", "tags", "prereqs", "source")
+BROWSER = ("topic", "title", "difficulty", "tier", "track", "tags", "source")
 # `minutes` is deliberately absent: par time is grade_of()'s input, not the learner's to see.
 HINT = re.compile(r"^### Hint \d+[ \t]*$", re.MULTILINE)
 # The four sections every one of the 171 tasks authors, and the only ones `search_text`
