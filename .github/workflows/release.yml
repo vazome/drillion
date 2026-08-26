@@ -63,6 +63,13 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Off, or this action pushes a second, unsigned provenance document of its
+          # own — BuildKit defaults to `mode=max` on a public repo — and wraps the
+          # image in an index to carry it, which is what shows up on the package page
+          # as a phantom `unknown/unknown` architecture. One signed attestation, the
+          # one the README tells people to verify, is the whole story. `sbom` needs no
+          # line: BuildKit adds an SBOM only when asked.
+          provenance: false
       # Binds the pushed digest to this run, so anyone can ask where the image came from:
       # `gh attestation verify oci://ghcr.io/vazome/drillion:0.1.0 -R vazome/drillion`.
       # `subject-name` carries no tag on purpose — the digest identifies the image.
