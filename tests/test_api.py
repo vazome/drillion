@@ -342,6 +342,34 @@ async def _the_reference_needs_the_peek_not_just_its_price(api, _path):
     assert reread["reference"] == took["code"]  # a reload does not un-take it
 
 
+async def _your_own_answer_is_an_answer(api, _path):
+    """The archive is the reference's second door, and it was unlocked.
+
+    `reference` has always waited for the deliberate peek. `archive[].code` read
+    `solution.unlocked` instead — true the moment three runs and ten minutes have been
+    *spent*, not asked for — so sitting on a review long enough handed back the code you
+    passed with last time. Every bit an answer, with no `solution_shown`, no `struggled`,
+    and never routed through /solution. One gate, both doors."""
+    await api.post(f"/api/task/{SLUG}/open")
+    st = state.load()
+    st["cards"][SLUG] = {"box": 2, "due": state.today(), "seen": 2, "lapses": 0}
+    st["archive"][SLUG] = [
+        {"date": "2026-01-01", "grade": "pass", "code": "return LAST_TIME"}
+    ]
+    st["open"][SLUG].update(attempts=3, active=600)  # the whole price, unspent
+    state.save(st)
+
+    task = (await api.get(f"/api/task/{SLUG}")).json()
+    assert task["solution"]["unlocked"] is True  # afforded...
+    assert "code" not in task["archive"][0]  # ...and still not handed over
+    assert "LAST_TIME" not in str(task)
+
+    await api.post(f"/api/task/{SLUG}/solution")  # asking is what opens it
+    reread = (await api.get(f"/api/task/{SLUG}")).json()
+    assert reread["archive"][0]["code"] == "return LAST_TIME"
+    assert state.load()["open"][SLUG]["solution_shown"] is True  # and it is marked
+
+
 async def _assets(api, _path):
     """Images and clips a README points at — a filename, never a path."""
     ok = await api.get(f"/api/task/{SLUG}/assets/shape.svg")
@@ -377,6 +405,10 @@ def test_a_slow_pass_steps_the_card_back_down():
 
 def test_the_reference_opens_on_the_peek_not_on_the_price():
     _api(_the_reference_needs_the_peek_not_just_its_price)
+
+
+def test_your_own_past_answer_is_gated_like_the_reference():
+    _api(_your_own_answer_is_an_answer)
 
 
 def test_the_api_serves_a_tasks_assets():
