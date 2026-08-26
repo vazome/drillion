@@ -31,7 +31,12 @@ def today():
 
 
 def card(st, slug):
-    return st["cards"].setdefault(slug, {"box": 0, "due": today(), "seen": 0})
+    """Your standing with one task, blanks filled in. `lapses` arrived after people had months
+    of progress.json on disk and `load()` only defaults top-level keys, so it is filled in here
+    per card: an older file reads back as a card with no lapses, and no migration step exists."""
+    c = st["cards"].setdefault(slug, {"box": 0, "due": today(), "seen": 0})
+    c.setdefault("lapses", 0)
+    return c
 
 
 # ---------------------------------------------------------------- the transaction

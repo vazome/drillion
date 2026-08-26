@@ -54,7 +54,7 @@ from .region import (
     write_region,
 )
 from .runner import run_tests, summarise
-from .scheduler import LADDER, due_today, queue
+from .scheduler import LADDER, LAPSE_LIMIT, due_today, queue
 from .settings import settings
 from .state import card, reading, today, writing
 
@@ -155,6 +155,8 @@ def _payload(st, slug, meta, src):
             "region_start": 1,
             "marker_line": bounds(src),
             "status": _status(st, slug),
+            "lapses": c["lapses"],
+            "lapse_limit": LAPSE_LIMIT,
             **att,
             "archive": [{"date": a["date"], "grade": a["grade"],
                          **({"code": a["code"]} if show_code else {})}
@@ -221,7 +223,7 @@ def catalogue():
         q = queue(st, all_tasks)
         q["recent"] = _recent(st, all_tasks)
         rows = [{"slug": slug, **public(m), "status": _status(st, slug),
-                 **{k: card(st, slug)[k] for k in ("box", "due", "seen")}}
+                 **{k: card(st, slug)[k] for k in ("box", "due", "seen", "lapses")}}
                 for slug, m in all_tasks.items()]
         boxes = _boxes(st, all_tasks)
         return {"focus": st["focus"],
@@ -231,7 +233,8 @@ def catalogue():
                 "today": q,
                 "stats": {"boxes": boxes, "due": q["due_total"], "seen": sum(boxes),
                           "total": len(all_tasks),
-                          "practised": _practised(st), "window": WINDOW},
+                          "practised": _practised(st), "window": WINDOW,
+                          "lapse_limit": LAPSE_LIMIT},
                 "tasks": rows}
 
 
@@ -306,7 +309,8 @@ def run_task(slug: str, edit: Edit):
             new_src = splice(new_src, stub(body))
             write_region(meta["path"], new_src)                     # back to the stub
             resp |= {"grade": grade, "box": box, "stepped": box != was,
-                     "due_in": gap, "code": code}
+                     "due_in": gap, "code": code,
+                     "lapses": card(st, slug)["lapses"]}   # the page reads lapse_limit off /task
         return resp | {"etag": etag(new_src)}
 
 
