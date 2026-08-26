@@ -151,15 +151,15 @@ def _payload(st, slug, meta, src):
     o = st["open"].get(slug)
     c = card(st, slug)
     att = attempt_view(o, meta["hints"])
-    # a due review must not be handed last time's answer; a locked attempt neither
-    show_code = c["seen"] > 0 and (
-        att["solution"]["unlocked"] if o else c["due"] > today()
-    )
-    # The reference reads the same rule from the other side: passing the task is what opens
-    # it, and the next sitting on that card starts clean again. While an attempt is open only
-    # the deliberate peek opens it — `unlocked` goes true as soon as the gate's price has been
-    # spent, and taking the answer is what marks the attempt, so affording it is not taking it.
-    show_ref = o["solution_shown"] if o else show_code
+    # One rule, both answers. Passing the task is what opens them, and the next sitting on
+    # that card starts clean again; while an attempt is open only the deliberate peek opens
+    # them, because taking the answer is what marks the attempt and costs the grade.
+    #
+    # `archive[].code` used to read `unlocked` instead, and `unlocked` goes true the moment
+    # the gate's *price* has been spent rather than when the learner asks. So sitting on a
+    # review long enough handed back your own previously accepted code — every bit as much
+    # an answer as the reference — unmarked, unpenalised, and never routed through /solution.
+    reveal = o["solution_shown"] if o else c["seen"] > 0 and c["due"] > today()
     return {
         "slug": slug,
         "meta": public(meta),
@@ -172,13 +172,13 @@ def _payload(st, slug, meta, src):
         "status": _status(st, slug),
         "lapses": c["lapses"],
         "lapse_limit": LAPSE_LIMIT,
-        "reference": solution_text(meta["path"]) if show_ref else None,
+        "reference": solution_text(meta["path"]) if reveal else None,
         **att,
         "archive": [
             {
                 "date": a["date"],
                 "grade": a["grade"],
-                **({"code": a["code"]} if show_code else {}),
+                **({"code": a["code"]} if reveal else {}),
             }
             for a in st["archive"].get(slug, [])
         ],
