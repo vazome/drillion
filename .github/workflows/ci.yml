@@ -48,6 +48,12 @@ jobs:
           restore-keys: pnpm-
       - run: pnpm install --frozen-lockfile
         working-directory: web
+      # oxlint is to the client what `ruff check` is to the Python: it fails the build.
+      # `pnpm lint` is bare `oxlint`, which reads web/.oxlintrc.json and covers src/,
+      # check.mjs and vite.config.ts alike — the rules and why each one is on are in
+      # that file. Before build, so a dead import is reported before a 400 kB bundle.
+      - run: pnpm lint
+        working-directory: web
       - run: pnpm build
         working-directory: web
 
