@@ -228,10 +228,6 @@ export function Catalogue() {
             ? recent.map((e) => <TodayRow key={e.slug} row={e} />)
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
                 message="Nothing yet this week. Whatever you open collects here, passed or not." />}
-          {review.length ? <>
-            <Band label="Reviews" aside={`${review.length} due`} />
-            {review.map((e) => <TodayRow key={e.slug} row={e} />)}
-          </> : null}
           {/* the sub-header carries the focus note, so it stays on screen on an empty day too */}
           <Band label="New picks" aside={focus ? `from ${focus}` : "any"} />
           {/* Three things empty this list — the daily cap, an unmet prereq and the focus — and
@@ -240,7 +236,7 @@ export function Catalogue() {
           {fresh.length
             ? fresh.map((e) => <TodayRow key={e.slug} row={e} />)
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
-                message={review.length ? "No new picks right now — today's cap, an unmet prereq, or the focus. Finish the reviews above, or rest."
+                message={review.length ? `No new picks right now — today's cap, an unmet prereq, or the focus. ${plural(review.length, "review")} still due below, or rest.`
                                        : "Nothing due, and no new pick unlocked — today's cap, an unmet prereq, or the focus. Pick anything below, or rest."} />}
         </div>
       </Card>
