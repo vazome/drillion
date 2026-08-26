@@ -191,6 +191,8 @@ export function Catalogue() {
     if (focus === t) return setFocus(null);
     setActiveTags((a) => a.includes(t) ? a.filter((x) => x !== t) : [...a, t]);
   };
+  const here = new Set(rows.flatMap((e) => e.tags).concat(activeTags));
+  const tagsHere = data.tags.filter((t) => here.has(t));
   const todayLine = [
     review.length ? plural(review.length, "review") : "nothing due",
     fresh.length ? `${fresh.length} new ${fresh.length === 1 ? "pick" : "picks"}` : null,
@@ -239,10 +241,11 @@ export function Catalogue() {
         <span style={FAINT}>{rows.length} of {stats.total} tasks{activeTags.length > 1 ? " · tags matched with AND" : ""}</span>
         {filtered ? <Button variant="quiet" onClick={clear}>Clear</Button> : null}
       </div>
-      {/* every tag, wrapped and whole: a scroller hid two thirds of the map and moved the
-        * chip you just clicked, and the map is the one place the vocabulary is visible. */}
+      {/* The map is the vocabulary of what is on screen, wrapped and whole — no scroller.
+        * A tag with nothing under the current filter is a dead click, so it drops out; the
+        * ones already on stay regardless, or a filter that matched nothing could not be undone. */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        {data.tags.map((t) => <TagChip key={t} label={t} active={tagOn(t)} onClick={() => toggleTag(t)} />)}
+        {tagsHere.map((t) => <TagChip key={t} label={t} active={tagOn(t)} onClick={() => toggleTag(t)} />)}
       </div>
 
       {/* one flat table: the tier is the first segment of every row's path, so a band
