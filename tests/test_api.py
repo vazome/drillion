@@ -9,7 +9,7 @@ from pathlib import Path
 import httpx
 
 from drillion import region, scheduler, state
-from drillion.api import MAX_BODY, WINDOW, _practised, app
+from drillion.api import MAX_BODY, WINDOW, _practised, _recent, app
 from drillion.settings import settings
 
 SLUG = "001_fstrings"
@@ -220,3 +220,20 @@ def test_the_practice_count_is_a_rolling_window_not_a_streak():
     st["archive"]["c"] = [{"date": day(WINDOW)}]                      # one day past the edge
     assert _practised(st) == 3
     assert _practised({"archive": {}}) == 0
+
+
+def test_recent_activity_is_the_week_most_recent_first():
+    """The way back into work already started: distinct slugs, newest first, capped by the
+    window rather than by a count. What is already in today's queue is not repeated."""
+    def day(n):
+        return (date.today() - timedelta(days=n)).isoformat()  # noqa: DTZ011
+
+    st = {"archive": {"001_a": [{"date": day(3)}, {"date": day(1)}],
+                      "002_b": [{"date": day(2)}],
+                      "003_c": [{"date": day(WINDOW)}],          # a day past the window
+                      "004_d": [{"date": day(0)}],
+                      "009_gone": [{"date": day(0)}]}}           # renamed away: no row for it
+    tasks = {"001_a": {}, "002_b": {}, "003_c": {}, "004_d": {}}
+    assert _recent(st, tasks) == ["004_d", "001_a", "002_b"]
+    assert _recent(st, tasks, exclude={"001_a"}) == ["004_d", "002_b"]
+    assert _recent({"archive": {}}, tasks) == []

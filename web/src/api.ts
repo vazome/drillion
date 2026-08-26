@@ -11,7 +11,7 @@ export interface Row {
 }
 export interface Catalogue {
   focus: string | null; tags: string[]; tiers: string[]; tracks: string[];
-  today: { review: string[]; new: string[]; done_today: number };
+  today: { review: string[]; new: string[]; recent: string[]; done_today: number };
   stats: { boxes: number[]; due: number; seen: number; total: number; practised: number; window: number };
   tasks: Row[];
 }
