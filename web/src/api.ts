@@ -31,9 +31,10 @@ export interface Task {
 }
 export interface RunResult {
   passed: boolean; attempts: number; headline: string[]; output: string; etag: string;
-  /** `box_before` is null when the card was never seen; it differs from `box` only
-   *  when the pass actually moved the card — a pass at the top box clamps. */
-  grade?: Grade; box?: number; box_before?: number | null; due_in?: number; code?: string;
+  /** `stepped` is the scheduler's answer to "did the card move?" — false for a
+   *  `struggled` pass, for a `quick` that clamps at the top box, and for a first
+   *  sighting that stayed in box 0. Never re-derive it from `box`. */
+  grade?: Grade; box?: number; stepped?: boolean; due_in?: number; code?: string;
 }
 
 export class ApiError extends Error {

@@ -6,6 +6,7 @@ import { Editor } from "./Editor";
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
 const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };          // the faint line beside a section label
 const PLAIN = { fontWeight: 400, textTransform: "none" as const, letterSpacing: 0, ...ASIDE };
+const BOXES = 5;      // ladder height; tests/test_scheduler.py holds it to scheduler.LADDER
 const AUTOSAVE_MS = 800;
 const HEARTBEAT_MS = 60_000;
 // The handoff's 1.4s was a prototype fading in a hint that had actually unlocked. A real
@@ -22,7 +23,7 @@ type Gate = { at: "hints" | "solution" | "editor"; message: string } | null;
 type Result =
   | { state: "idle" | "running" }
   | { state: "failed"; attempts: number; headline: string; output: string }
-  | { state: "passed"; grade: string; box: number; boxBefore: number | null; dueIn: number; attempts: number; code: string };
+  | { state: "passed"; grade: string; box: number; stepped: boolean; dueIn: number; attempts: number; code: string };
 
 export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [task, setTask] = useState<TaskData | null>(null);
@@ -151,7 +152,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       dirtyRef.current = false; setDirty(false); setSyntaxBad(false);
       if (r.passed) {
         localStorage.removeItem(draftKey(slug));
-        setResult({ state: "passed", grade: r.grade!, box: r.box!, boxBefore: r.box_before ?? null, dueIn: r.due_in!, attempts: r.attempts, code: r.code! });
+        setResult({ state: "passed", grade: r.grade!, box: r.box!, stepped: !!r.stepped, dueIn: r.due_in!, attempts: r.attempts, code: r.code! });
         setCode(r.code!);
         // what to do next lives on the catalogue, and only matters once the card is cleared
         api<Catalogue>("/catalogue")
@@ -252,10 +253,9 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
 
   const runNo = passed ? result.attempts : attempt ? attempt.attempts + 1 : 0;   // the run you are on
   const resultNo = "attempts" in result ? result.attempts : 0;                   // the run this result came from
-  // The server sends the box the card sat in before this pass. A `quick` at the top box
-  // clamps and moves nothing, so the grade alone cannot answer "did it step up?".
-  const stepped = passed && result.box !== result.boxBefore;
-  const atTop = passed && result.box === 4;
+  // Whether the card moved is the server's answer, not ours — see RunResult.stepped.
+  const stepped = passed && result.stepped;
+  const atTop = passed && result.box === BOXES - 1;
 
   return (
     <div style={{ maxWidth: 1500, margin: "0 auto" }}>
@@ -381,7 +381,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                 <ResultBanner
                   state={result.state}
                   headline={result.state === "failed" ? result.headline : undefined}
-                  gradeLine={passed ? `${result.grade.toUpperCase()} · ${secs(active)} · ${plural(result.attempts, "attempt")} · box ${result.box + 1} of 5` : undefined}
+                  gradeLine={passed ? `${result.grade.toUpperCase()} · ${secs(active)} · ${plural(result.attempts, "attempt")} · box ${result.box + 1} of ${BOXES}` : undefined}
                   backIn={passed ? plural(result.dueIn, "day") : undefined} />
               </div>
             </div>

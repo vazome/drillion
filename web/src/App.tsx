@@ -58,6 +58,10 @@ export function App() {
   const [dark, setDark] = useTheme();
   // The header's counts live on the catalogue payload, so the header fetches them itself:
   // routed off the catalogue — a deep link to #/progress or a task — it used to render blank.
+  // On #/ that is the load's second GET /api/catalogue, and it stays that way on purpose:
+  // Catalogue must keep its own fetch (it remounts per visit, which is what makes Today
+  // current after a pass, and it refetches after POST /api/focus). Sharing one fetch buys
+  // either a stale Today or a refetch on every route change — dearer than one local GET.
   const [head, setHead] = useState({ total: 0, daysLeft: 0 });
   useEffect(() => {
     api<CataloguePayload>("/catalogue")
