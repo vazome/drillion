@@ -56,7 +56,7 @@ Data: `GET /api/catalogue` →
   `seen` (count).
   **No `minutes`**: par time never leaves the server.
 
-Elements: Today panel (reviews, then new picks, then recent activity, focus selector), search, filter chips (tier, track,
+Elements: Today panel (recent activity, then reviews, then new picks, focus selector), search, filter chips (tier, track,
 tag), status filter, the task list (title · difficulty · the `tier/tag` path · status · a miniature
 ladder showing which box the card is in), a small stats strip (days practised, due today, cards per box).
 
@@ -69,8 +69,9 @@ back to the task number. The tag map shows every tag reachable under the current
 than scrolled — pick `advanced` and 76 chips become the 11 that are actually under it. A tag
 already switched on never drops out, or a filter that matched nothing could not be undone.
 
-Rows in the Today panel carry no status badge: the band they sit under already says what they
-are. The daily cap belongs to new picks alone — recent activity lists as many as the week holds,
+Every group in the Today panel sits under a band that names it, and the rows carry no status
+badge as a result. Recent activity leads: coming back mid-week, the way into what you were last
+doing beats the queue. The daily cap belongs to new picks alone — recent activity lists as many as the week holds,
 because it is the way back into work already started, not a ration of new material.
 
 Tier and tag render as one filesystem-style path, `core/f-strings`, with the tier segment muted —
