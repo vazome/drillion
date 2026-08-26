@@ -453,7 +453,7 @@ tries to infer one from the other in future should expect to be wrong four times
 - The plan asserted Daniel had settled whether the three HTTP tasks were `core` or `packages`. He
   had not. Resolved on evidence: they import nothing but `_lib` and stdlib `hmac`/`hashlib`, so
   `core`.
-- `prereqs:` was known to hold task numbers; `practices:` does too, 48 references across 16 tasks.
+- `prereqs:` was known to hold task numbers; `practices:` does too, 49 references across 16 tasks.
   A brief that said "leave `practices:` alone" would have left 49 numbers pointing at strangers.
 
 ### Commits

@@ -154,11 +154,14 @@ them in this order:
 |---|---|---|
 | `core` | the language and its standard library, and every coder needs it: syntax, data structures, files and text, errors, `itertools`, `pathlib` | 139 |
 | `advanced` | still the standard library, but you can work a long while without it: `asyncio`, concurrency, generators, decorators, closures, `functools` | 17 |
-| `packages` | running it needs something `pip` installs: `requests`, `responses`, `boto3`, `moto`, `pytest`, `fastapi`, `langchain` | 15 |
+| `packages` | solving it needs something `pip` installs: `requests`, `responses`, `boto3`, `moto`, `pytest`, `fastapi`, `langchain` | 15 |
 
 Tier answers "can I run this with stock Python?", so `packages` wins whenever a task is both — an
 `asyncio` task that stands up a FastAPI app to have something to await is `packages`, not
-`advanced`. Read the task's imports: anything outside the standard library makes it `packages`.
+`advanced`. The test is what **the solution** needs: a library the learner's own code imports, or
+that the task is plainly about. Imports below the machinery marker are the grader's and do not
+count — 14 tasks `import pytest` down there for `pytest.approx` alone and are `core`, while
+`084_fixtures` is `packages` because its `@pytest.fixture` is in the learner's region.
 
 **difficulty** — how hard the task is to get **right the first time**: `easy`, `medium` or `hard`.
 It is not how long the task takes. Thirty minutes of unsurprising typing is `easy`; six lines you
