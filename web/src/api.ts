@@ -10,6 +10,10 @@ export interface Row {
   status: Status; box: number; due: string; seen: number;
   /** Struggles on this card, never reset. At `stats.lapse_limit` the row says so. */
   lapses: number;
+  /** Put aside for today only — `POST /api/task/{slug}/bury`. Never a fifth `status`: the
+   *  card is still exactly what it was (`due`, usually), it is just not offered today, and
+   *  the bury lapses on its own tomorrow. Nothing about the schedule moves either way. */
+  buried: boolean;
   /** Catalogue rows only: the spec's Why / You get / You return / Rules, flattened and
    *  already lowercased for the search box. `GET /api/task` sends `spec_md` instead. */
   text?: string;
@@ -36,9 +40,9 @@ export interface Progress {
   log: { date: string; slug: string; grade: Grade; attempts: number; secs: number; new: boolean }[];
 }
 export interface Task {
-  slug: string; meta: Omit<Row, "slug" | "status" | "box" | "due" | "seen" | "lapses">;
+  slug: string; meta: Omit<Row, "slug" | "status" | "box" | "due" | "seen" | "lapses" | "buried">;
   spec_md: string; code: string; etag: string; has_given: boolean;
-  marker_line: number; status: Status;
+  marker_line: number; status: Status; buried: boolean;
   attempt: { attempts: number; hints: number; active: number; seed: number; solution_shown: boolean } | null;
   /** the task has cost this many lapses; at `lapse_limit` it is flagged as one that keeps
    *  beating you — a message about the task, never a punishment on the card */

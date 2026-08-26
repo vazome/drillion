@@ -34,11 +34,21 @@ LAPSE_LIMIT = 4
 GRADES = {"struggled": -1, "pass": +1, "quick": +2}
 
 
+def buried(st, slug):
+    """Is this card out of today's queue by hand? Bury is "not today", never "not ever": it
+    stores the single day it applies to, so tomorrow's date no longer matches and the bury is
+    gone without anything having to expire it. It touches no box, no due date and no count —
+    the card is still exactly as due as it was, it is simply not offered today."""
+    return card(st, slug)["buried"] == today()
+
+
 def due_today(st, all_tasks):
     return [
         s
         for s in all_tasks
-        if card(st, s)["seen"] > 0 and card(st, s)["due"] <= today()
+        if card(st, s)["seen"] > 0
+        and card(st, s)["due"] <= today()
+        and not buried(st, s)
     ]
 
 
@@ -50,12 +60,19 @@ def _facets(meta):
 def unseen(st, all_tasks):
     """Unstarted tasks whose prereqs are cleared. Under a focus, prereqs outside
     it are ignored — else a track stalls on a task it lacks. Focus is one string
-    matched against a task's tier, track and tags alike, so any of the three filters."""
+    matched against a task's tier, track and tags alike, so any of the three filters.
+
+    A buried task drops out here as well as out of the reviews: bury means "not in today's
+    queue", and the new picks are half of that queue. The next unblocked task takes the slot."""
     focus = st.get("focus")
     by_topic = {m["topic"]: s for s, m in all_tasks.items()}
     ready = []
     for slug, meta in all_tasks.items():
-        if card(st, slug)["seen"] or (focus and focus not in _facets(meta)):
+        if (
+            card(st, slug)["seen"]
+            or buried(st, slug)
+            or (focus and focus not in _facets(meta))
+        ):
             continue
         prereqs = [by_topic[p] for p in meta.get("prereqs", []) if p in by_topic]
         if focus:
