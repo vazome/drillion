@@ -77,8 +77,8 @@ function useHover() {
 const href = (row: Row) => `#/task/${encodeURIComponent(row.slug)}`;
 
 /** A sub-header inside the Today card: what the rows under it are, and one quiet word on why. */
-const Band = ({ label, aside }: { label: string; aside: string }) => (
-  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0 6px", borderTop: "1px solid var(--border)" }}>
+const Band = ({ label, aside, first = false }: { label: string; aside: string; first?: boolean }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: first ? "2px 0 6px" : "10px 0 6px", borderTop: first ? "none" : "1px solid var(--border)" }}>
     <span style={LABEL}>{label}</span>
     <span style={FAINT}>{aside}</span>
   </div>
@@ -86,11 +86,11 @@ const Band = ({ label, aside }: { label: string; aside: string }) => (
 
 /** A row of the Today card: when it is due, where it sits on the ladder, and one way in.
  * No status badge — the section it is under already says what it is. */
-function TodayRow({ row, first = false }: { row: Row; first?: boolean }) {
+function TodayRow({ row }: { row: Row }) {
   const [hover, hoverProps] = useHover();
   return (
     <a href={href(row)} className="m-tint" {...hoverProps}
-      style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "inherit", borderTop: first ? "none" : "1px solid var(--border)", background: hover ? "var(--surface-2)" : "transparent", margin: "0 -18px", padding: "9px 18px" }}>
+      style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "inherit", borderTop: "1px solid var(--border)", background: hover ? "var(--surface-2)" : "transparent", margin: "0 -18px", padding: "9px 18px" }}>
       <span style={{ ...FAINT, width: 110, color: "var(--text-muted)" }}>{dueText(row)}</span>
       <LadderMeter box={rung(row)} />
       <span style={{ ...MONO, width: 30, textAlign: "right" }}>{String(row.topic).padStart(3, "0")}</span>
@@ -220,9 +220,19 @@ export function Catalogue() {
 
       <Card padding="0 18px" style={{ overflow: "hidden" }}>
         <div className="m-stagger">
-          {review.map((e, i) => <TodayRow key={e.slug} row={e} first={i === 0} />)}
+          {/* Recent activity leads: coming back mid-week, the way into what you were last doing
+            * beats the queue. The daily cap is about new material, so it does not apply here —
+            * this lists as many as the week holds. */}
+          {recent.length ? <>
+            <Band label="Recent activity" aside={`last ${stats.window} days`} first />
+            {recent.map((e) => <TodayRow key={e.slug} row={e} />)}
+          </> : null}
+          {review.length ? <>
+            <Band label="Reviews" aside={`${review.length} due`} first={!recent.length} />
+            {review.map((e) => <TodayRow key={e.slug} row={e} />)}
+          </> : null}
           {/* the sub-header carries the focus note, so it stays on screen on an empty day too */}
-          <Band label="New picks" aside={focus ? `from ${focus}` : "any"} />
+          <Band label="New picks" aside={focus ? `from ${focus}` : "any"} first={!recent.length && !review.length} />
           {/* Three things empty this list — the daily cap, an unmet prereq and the focus — and
             * the payload cannot tell them apart, so the copy names all three rather than
             * blaming the cap for a day the prereqs closed off. */}
@@ -231,12 +241,6 @@ export function Catalogue() {
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
                 message={review.length ? "No new picks right now — today's cap, an unmet prereq, or the focus. Finish the reviews above, or rest."
                                        : "Nothing due, and no new pick unlocked — today's cap, an unmet prereq, or the focus. Pick anything below, or rest."} />}
-          {/* The daily cap is about what is new to learn, so it has no business here: this is
-            * the way back into work already started, and it lists as many as the week holds. */}
-          {recent.length ? <>
-            <Band label="Recent activity" aside={`last ${stats.window} days`} />
-            {recent.map((e) => <TodayRow key={e.slug} row={e} />)}
-          </> : null}
         </div>
       </Card>
 
