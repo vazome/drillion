@@ -4,6 +4,16 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.1.1 — 2026-08-26
+
+- The source distribution no longer carries `web/node_modules`. 0.1.0's sdist was 39 MB, of
+  which 113 MB uncompressed was somebody else's JavaScript, redistributed with none of its
+  licences. hatchling reads only the root `.gitignore`, so the `node_modules/` line in
+  `web/.gitignore` never reached it, and the build is clean until something runs
+  `pnpm install` first — which is what CI does and a local build does not. The wheel was
+  never affected. `pyproject.toml` now names those paths itself, and CI builds an sdist
+  with `node_modules` on disk and fails if any of them come back.
+
 ## 0.1.0 — 2026-08-26
 
 The first numbered drillion. Everything below is the starting surface, not a change from
