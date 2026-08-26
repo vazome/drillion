@@ -42,11 +42,11 @@ Data: `GET /api/catalogue` →
   `today.done_today` (count)
 - `stats` — `boxes` (5 counts, one per ladder box), `due`, `seen`, `total`, `days_left` to the deadline
 - `focus` — a tag or null (restricts *new* picks to a track), `tags[]` — all tags
-- `tasks[]` — per row: `topic` (number), `title`, `minutes` (par time), `tags[]`, `prereqs[]`,
+- `tasks[]` — per row: `topic` (number), `title`, `tags[]`, `prereqs[]`,
   `status` ∈ `new | due | scheduled | open | done`, `box` (0–5), `due` (date), `seen` (count)
 
 Elements: Today panel (reviews, then new picks, focus selector), search, tag chips (multi-select
-AND), status filter, the task list (topic · title · tags · minutes · status · a miniature ladder
+AND), status filter, the task list (topic · title · tags · status · a miniature ladder
 showing which box the card is in), a small stats strip (days left, due today, cards per box).
 
 ### 2. Task (`#/task/:slug`)
@@ -54,7 +54,7 @@ showing which box the card is in), a small stats strip (days left, due today, ca
 Answers: *what exactly is asked, and does my code pass?*
 
 Data: `GET /api/task/{slug}` →
-- `meta` — `topic`, `title`, `minutes`, `tags`, `prereqs`, `practices`, `source` (Exercism tasks)
+- `meta` — `topic`, `title`, `tags`, `prereqs`, `practices`, `source` (Exercism tasks)
 - `spec_md` — the task's guidance as **GitHub-flavoured Markdown**, ~25–120 lines: `# title`,
   then `## Why` (business context), `## You get`, `## You return`, `## Rules` with worked
   examples, `## Read first` (the links, with notes), and whatever else the task adds
@@ -71,14 +71,14 @@ Data: `GET /api/task/{slug}` →
 - `archive[]` — previous passes `{date, grade, code?}` (code shown only when allowed)
 
 Layout: two panes (spec left, editor right; resizable). Toolbar above/below the editor: **Run**
-(primary), timer (active time; turns amber past `minutes`, red past 2×), attempts count, seed,
+(primary), timer (active time), attempts count, seed,
 **Hint** (with countdown until the next level; disabled when exhausted), **Solution** (locked
 state shows what is still needed), **Abandon**, archive access.
 
 Results panel (below or beside the editor), states:
 - idle (never run) · running · **failed** (headline lines — the assertion/exception — plus a
   collapsible full pytest output; line numbers refer to the editor) ·
-  **passed**: grade line `EASY · 4m12s · 1 attempt · box 3/5 · back in 8 days`, the ladder
+  **passed**: grade line `QUICK · 4m12s · 1 attempt · box 3/5 · back in 8 days`, the ladder
   visibly stepping up, the passing code read-only, a way to go to the next Today item.
 
 Other states: hint revealed (levels 1–3 stack up), solution revealed (marks the attempt: "this pass
@@ -98,7 +98,7 @@ table, the recent log, days-left to the deadline.
 
 ## Grades and vocabulary (use these words)
 
-`EASY` (first try, under par) · `PASS` · `STRUGGLED` · `abandoned`. Boxes 1–5. "Due", "new",
+`QUICK` (first try, under par) · `PASS` · `STRUGGLED` · `abandoned`. Boxes 1–5. "Due", "new",
 "scheduled" (returns on a date), "open" (an attempt is in progress). Hints are "levels". The
 solution "unlocks". The deadline is shown as days left.
 

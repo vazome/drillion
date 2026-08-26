@@ -15,7 +15,8 @@ from .region import _solve, bounds, cut
 from .settings import settings
 
 REQUIRED = ("title", "minutes", "tags")
-BROWSER = ("topic", "title", "minutes", "tags", "prereqs", "practices", "source")
+BROWSER = ("topic", "title", "tags", "prereqs", "practices", "source")
+# `minutes` is deliberately absent: par time is grade_of()'s input, not the learner's to see.
 HINT = re.compile(r"^### Hint \d+[ \t]*$", re.MULTILINE)
 _cache = (None, None)   # (key, records) — rebinding a global is atomic, so a race just re-scans
 

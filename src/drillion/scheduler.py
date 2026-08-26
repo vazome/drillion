@@ -12,7 +12,7 @@ from .state import card, today
 LADDER = [2, 4, 8, 16, 28]           # days until the next sighting, per box
 INTERVIEW = date(2026, 11, 2)        # everything recycles before this
 NEW_PER_DAY = 2
-GRADES = {"fail": -2, "struggled": 0, "pass": +1, "easy": +2}
+GRADES = {"fail": -2, "struggled": 0, "pass": +1, "quick": +2}
 
 
 def due_today(st, all_tasks):
@@ -59,7 +59,7 @@ def grade_of(attempts, secs, par, solution_shown):
     if solution_shown:
         return "struggled"          # a peeked answer never promotes (Aleven: hint abuse)
     if attempts == 1 and secs < par * 60:
-        return "easy"
+        return "quick"
     if attempts <= 2 and secs < par * 60 * 2:
         return "pass"
     return "struggled"

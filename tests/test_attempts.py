@@ -47,9 +47,9 @@ def test_attempt_lifecycle():
     assert attempts.open_attempt(st, "001_a") is o                     # reopening keeps the timer
     o["attempts"], o["active"] = 1, 30
     grade, gap, box = attempts.record_pass(st, "001_a", all_tasks["001_a"], "def solve(x):\n    return x")
-    assert (grade, gap, box) == ("easy", 8, 2)
+    assert (grade, gap, box) == ("quick", 8, 2)
     assert st["open"] == {} and st["cards"]["001_a"]["seen"] == 1
-    assert st["log"][-1] == {"date": state.today(), "slug": "001_a", "grade": "easy",
+    assert st["log"][-1] == {"date": state.today(), "slug": "001_a", "grade": "quick",
                              "attempts": 1, "secs": 30, "new": True}
     assert st["archive"]["001_a"][0]["code"].startswith("def solve(")
     assert attempts.open_attempt(st, "001_a")["new"] is False           # a review, not a new pick

@@ -215,14 +215,14 @@ export interface ConflictBannerProps {
 }
 export declare function ConflictBanner(props: ConflictBannerProps): El;
 
-/** Renders a drill's spec_md — GitHub-flavoured Markdown: ## sections as accent labels,
+/** Renders a task's spec_md — GitHub-flavoured Markdown: ## sections as accent labels,
  * lists, tables, inline code and links, fenced Python with syntax colours, GitHub alerts. */
 export interface SpecTextProps {
-  /** the spec Markdown (drill README from # title to ## Hints) */
+  /** the spec Markdown (task README from # title to ## Hints) */
   text?: string;
   /** skip the leading # h1 (the card header already shows the title) */
   hideTitle?: boolean;
-  /** resolves relative assets/ links against /api/ex/{slug}/ */
+  /** resolves relative assets/ links against /api/task/{slug}/assets/ */
   slug?: string;
   style?: Style;
 }

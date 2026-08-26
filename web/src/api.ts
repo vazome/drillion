@@ -1,10 +1,10 @@
 // The JSON API in src/drillion/api.py. Every shape here is that file's response, nothing more.
 
 export type Status = "new" | "due" | "scheduled" | "open" | "done";
-export type Grade = "EASY" | "PASS" | "STRUGGLED" | "abandoned";
+export type Grade = "quick" | "pass" | "struggled" | "abandoned";
 
 export interface Row {
-  slug: string; topic: number; title: string; minutes: number;
+  slug: string; topic: number; title: string;
   tags: string[]; prereqs?: string[]; practices?: number[]; source?: string;
   status: Status; box: number; due: string; seen: number;
 }

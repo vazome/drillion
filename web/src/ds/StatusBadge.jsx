@@ -1,13 +1,13 @@
 import React from "react";
 const LOOKS = {
-  // statuses — where the drill sits in your workflow
+  // statuses — where the task sits in your workflow
   new: { color: "var(--text-muted)", background: "var(--surface-2)" },
   due: { color: "var(--accent)", background: "var(--accent-tint)" },
   scheduled: { color: "var(--text-muted)", background: "transparent", border: "1px solid var(--border)" },
   open: { color: "var(--warn)", background: "var(--warn-bg)" },
   done: { color: "var(--pass)", background: "var(--pass-bg)" },
 
-  // difficulty — the drill's own rating, independent of how you did on it
+  // difficulty — the task's own rating, independent of how you did on it
   easy: { color: "var(--pass)", background: "var(--pass-bg)" },
   medium: { color: "var(--warn)", background: "var(--warn-bg)" },
   hard: { color: "var(--fail)", background: "var(--fail-bg)" },

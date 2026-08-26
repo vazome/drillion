@@ -218,7 +218,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
             <StatusBadge status={task.status} />
             {meta.tags.map((t) => <TagChip key={t} label={t} small />)}
-            <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--text-muted)" }}>{meta.minutes} min par</span>
             {meta.source ? <span style={{ fontSize: 12.5, color: "var(--text-faint)" }}>{meta.source}</span> : null}
           </div>
           <SpecText text={task.spec_md} slug={slug} />
@@ -254,7 +253,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                 <div key={i} style={{ marginBottom: 8 }}>
                   <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13 }}>
                     <span className="tabular" style={{ fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>{a.date}</span>
-                    <StatusBadge status={a.grade.toLowerCase()} />
+                    <StatusBadge status={a.grade} />
                   </div>
                   {a.code ? <pre style={{ margin: "6px 0 0", fontSize: 12.5, whiteSpace: "pre-wrap", color: "var(--text-muted)" }}>{a.code}</pre> : null}
                 </div>
@@ -280,7 +279,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
           <Button kbdHint="Ctrl+Enter" onClick={run} disabled={result.state === "running" || passed}>
             {result.state === "running" ? "Running…" : "Run tests"}
           </Button>
-          <Timer seconds={active} parMinutes={meta.minutes} paused={!hasAttempt} />
+          <Timer seconds={active} paused={!hasAttempt} />
           <span className="tabular" style={{ fontSize: 13, color: "var(--text-muted)" }}>
             {attempt ? `attempt ${attempt.attempts + (passed ? 0 : 1)}` : "not started"}
           </span>
@@ -300,7 +299,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
           state={result.state}
           headline={result.state === "failed" ? result.headline : undefined}
           output={result.state === "failed" ? result.output : undefined}
-          gradeLine={passed ? `${result.grade} · ${secs(active)} · ${result.attempts} attempt(s) · box ${result.box + 1} of 5` : undefined}
+          gradeLine={passed ? `${result.grade.toUpperCase()} · ${secs(active)} · ${result.attempts} attempt(s) · box ${result.box + 1} of 5` : undefined}
           backIn={passed ? `${result.dueIn} days` : undefined} />
 
         {passed ? (

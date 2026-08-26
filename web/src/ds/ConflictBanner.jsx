@@ -12,7 +12,7 @@ function Action({ label, onClick, strong, disabled }) {
         : { padding: "5px 4px", border: "none", background: "transparent", color: disabled ? "var(--text-faint)" : "var(--accent)", textDecoration: (hover && !disabled) ? "underline" : "none" }) }}>{label}</button>
   );
 }
-export function ConflictBanner({ message = "This drill changed on disk.", detail, reloadLabel = "Reload from disk", keepLabel = "Keep mine", onReload, onKeep, disabled = false, style }) {
+export function ConflictBanner({ message = "This task changed on disk.", detail, reloadLabel = "Reload from disk", keepLabel = "Keep mine", onReload, onKeep, disabled = false, style }) {
   return (
     <div role="alert" style={{ background: "var(--warn-bg)", borderRadius: "var(--radius)", padding: "10px 12px 10px 14px", display: "flex", alignItems: "center", gap: "14px", ...style }}>
       <div style={{ flex: 1, display: "grid", gap: "2px", minWidth: 0 }}>
