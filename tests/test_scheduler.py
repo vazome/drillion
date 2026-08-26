@@ -1,8 +1,12 @@
 """Scheduler: grades, the Leitner ladder and today's queue."""
 
+import re
 from datetime import date, timedelta
+from pathlib import Path
 
 from drillion import scheduler, state
+
+ROOT = Path(__file__).resolve().parent.parent
 
 
 def _exs():
@@ -60,3 +64,13 @@ def test_queue_puts_the_most_overdue_review_first():
                     "003_c": {"box": 1, "due": "2020-01-01", "seen": 1}})
     assert scheduler.queue(st, _exs())["review"] == ["003_c", "001_a"]
     assert scheduler.pick(st, _exs()) == ("003_c", "review")
+
+
+def test_the_task_screen_mirrors_the_grade_deltas():
+    """`STEP` in web/src/Task.tsx decides whether the pass banner claims a promotion.
+    It is a hand copy of GRADES, so this fails the moment the two drift apart."""
+    line = re.search(r"^const STEP: Record<string, number> = \{(.+?)\};$",
+                     (ROOT / "web/src/Task.tsx").read_text(), re.MULTILINE)
+    assert line, "STEP went missing from Task.tsx"
+    web = dict(re.findall(r"(\w+): (-?\d+)", line[1]))
+    assert {k: int(v) for k, v in web.items()} == scheduler.GRADES
