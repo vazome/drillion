@@ -57,7 +57,7 @@ Data: `GET /api/catalogue` →
   `seen` (count).
   **No `minutes`**: par time never leaves the server.
 
-Elements: Today panel (recent activity, then reviews, then new picks, focus selector), search, filter chips (tier, track,
+Elements: Today panel (recent activity, then new picks, focus selector), search, filter chips (tier, track,
 tag), status filter, the task list (title · difficulty · the `tier/tag` path · status · a miniature
 ladder showing which box the card is in), a small stats strip (days practised, due today, cards per box).
 
