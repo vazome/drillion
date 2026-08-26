@@ -84,3 +84,16 @@ def test_the_web_ladder_matches_the_scheduler():
     # top-box copy both read it, so this is the only literal left to drift.
     found = re.search(r"const BOXES = (\d+)", (ROOT / "web/src/Task.tsx").read_text())
     assert found and int(found[1]) == len(scheduler.LADDER), "web/src/Task.tsx"
+
+
+def test_the_editor_opens_an_attempt_before_it_saves():
+    """The server rejects a PUT with 409 unless an attempt is open, and typing is the
+    first thing a learner does — so the autosave path, not just Run, has to open one.
+    It did not for the whole life of the frontend: `ensureOpen` was wired to Run, the
+    hint and the solution, and the 409 was caught and shown as a banner instead."""
+    body = re.search(r"const flush = useCallback\(async \(\) => \{(.*?)\n  \}, \[",
+                     (ROOT / "web/src/Task.tsx").read_text(), re.DOTALL)
+    assert body, "flush() went missing from web/src/Task.tsx"
+    assert "await ensureOpen()" in body[1], "flush() must open an attempt before it PUTs"
+    assert body[1].index("await ensureOpen()") < body[1].index("method: \"PUT\""), \
+        "flush() opens the attempt after the PUT it is meant to make legal"

@@ -46,11 +46,13 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const timer = useRef<number | undefined>(undefined);
   const gateTimer = useRef<number | undefined>(undefined);
   const inflight = useRef<Promise<void> | null>(null);
+  const attemptRef = useRef(false);          // is an attempt open? read from the async chain
+  const opening = useRef<Promise<void> | null>(null);
   const hasAttempt = !!task?.attempt;
   const passed = result.state === "passed";
 
   const adopt = useCallback((p: TaskData, keepCode = false) => {
-    setTask(p); etagRef.current = p.etag;
+    setTask(p); etagRef.current = p.etag; attemptRef.current = !!p.attempt;
     setActive(p.attempt?.active ?? 0);
     setNextHintIn(p.hints.next_in);
     if (!keepCode) { setCode(p.code); codeRef.current = p.code; setDirty(false); dirtyRef.current = false; }
@@ -66,7 +68,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   // ---- load, and offer a newer local draft over what the file holds
   useEffect(() => {
     let live = true;
-    setTask(null); setError(null); setResult({ state: "idle" }); setConflict(null); setSolutionCode(null); setGate(null); setNextSlug(null);
+    setTask(null); attemptRef.current = false; setError(null); setResult({ state: "idle" }); setConflict(null); setSolutionCode(null); setGate(null); setNextSlug(null);
     api<TaskData>(`/task/${encodeURIComponent(slug)}`).then((p) => {
       if (!live) return;
       adopt(p);
@@ -80,10 +82,23 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   }, [slug, adopt]);
 
   // ---- autosave: debounce, then one PUT at a time; the next Run awaits whatever is in flight
+  /** An attempt must exist before the server will accept an edit, a run or a hint.
+   * Concurrent callers share one POST — the debounced save and Run can arrive together. */
+  const ensureOpen = useCallback(async () => {
+    if (attemptRef.current) return;
+    if (!opening.current) {
+      opening.current = post<TaskData>(`/task/${encodeURIComponent(slug)}/open`)
+        .then((p) => { adopt(p, dirtyRef.current); })          // never clobber text already typed
+        .finally(() => { opening.current = null; });
+    }
+    await opening.current;
+  }, [slug, adopt]);
+
   const flush = useCallback(async () => {
     if (!dirtyRef.current || !etagRef.current) return;
     const sent = codeRef.current;
     try {
+      await ensureOpen();                  // typing is starting work; the PUT 409s without this
       const r = await api<{ etag: string }>(`/task/${encodeURIComponent(slug)}`, {
         method: "PUT", body: JSON.stringify({ code: sent, etag: etagRef.current }),
       });
@@ -99,7 +114,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       else if (e.status === 409) setGate({ at: "editor", message: e.detail?.error ?? e.message }); // no open attempt
       else setGate({ at: "editor", message: e.message });
     }
-  }, [slug]);
+  }, [slug, ensureOpen]);
 
   const edit = (next: string) => {
     setCode(next); codeRef.current = next;
@@ -135,12 +150,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   }, [hasAttempt, passed, slug]);
 
   // ---- actions
-  const ensureOpen = async () => {
-    if (hasAttempt) return;
-    const p = await post<TaskData>(`/task/${encodeURIComponent(slug)}/open`);
-    adopt(p, dirtyRef.current);            // never clobber text the learner already typed
-  };
-
   const run = async () => {
     clearTimeout(timer.current);           // Run cancels the pending debounce…
     setResult({ state: "running" });

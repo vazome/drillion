@@ -48,11 +48,11 @@ function useHover() {
 const href = (row: Row) => `#/task/${encodeURIComponent(row.slug)}`;
 
 /** A row of the Today card: what it is, when it was due, and one way in. */
-function TodayRow({ row }: { row: Row }) {
+function TodayRow({ row, first = false }: { row: Row; first?: boolean }) {
   const [hover, hoverProps] = useHover();
   return (
     <a href={href(row)} className="m-tint" {...hoverProps}
-      style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "inherit", borderTop: "1px solid var(--border)", background: hover ? "var(--surface-2)" : "transparent", margin: "0 -18px", padding: "9px 18px" }}>
+      style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "inherit", borderTop: first ? "none" : "1px solid var(--border)", background: hover ? "var(--surface-2)" : "transparent", margin: "0 -18px", padding: "9px 18px" }}>
       <StatusBadge status={row.status} />
       <span style={{ ...FAINT, width: 96, color: "var(--text-muted)" }}>{dueText(row)}</span>
       <LadderMeter box={rung(row)} />
@@ -80,32 +80,20 @@ function ListRow({ row }: { row: Row }) {
   );
 }
 
-/** One tier, collapsed to its name and count until asked. */
-function TierGroup({ tier, rows, open, onToggle }: { tier: string; rows: Row[]; open: boolean; onToggle: () => void }) {
+/** One tier as a band inside the list: its name and count until asked, then its rows. */
+function TierGroup({ tier, rows, open, onToggle, first }: { tier: string; rows: Row[]; open: boolean; onToggle: () => void; first: boolean }) {
   const [hover, hoverProps] = useHover();
   const panel = `tier-${tier}`;
   return (
-    <Card padding={0} style={{ overflow: "hidden" }}>
+    <>
       <button type="button" aria-expanded={open} aria-controls={panel} onClick={onToggle} {...hoverProps} className="m-tint"
-        style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", height: 40, padding: "0 16px", background: hover ? "var(--surface-2)" : "transparent", border: "none", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 13.5, fontWeight: 600, color: "var(--text)", textAlign: "left" }}>
+        style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", height: 40, padding: "0 16px", background: hover ? "var(--surface-2)" : "transparent", border: "none", borderTop: first ? "none" : "1px solid var(--border-strong)", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 13.5, fontWeight: 600, color: "var(--text)", textAlign: "left" }}>
         <span aria-hidden="true" style={{ width: 9, fontSize: 11, color: "var(--text-muted)", display: "inline-block", transform: open ? "rotate(90deg)" : "none", transition: "transform var(--dur-base) var(--ease-out)" }}>▸</span>
         <span>{tier}</span>
         <span style={MONO}>({rows.length})</span>
       </button>
-      {open ? (
-        <div id={panel} className="m-stagger">
-          <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 32, borderTop: "1px solid var(--border)", ...LABEL }}>
-            <span style={{ width: 30, textAlign: "right" }}>#</span>
-            <span style={{ flex: 1 }}>Task</span>
-            <span style={{ width: 230 }}>tier/tag</span>
-            <span style={{ width: 74 }}>Difficulty</span>
-            <span style={{ width: 52 }}>Box</span>
-            <span style={{ width: 74 }}>Status</span>
-          </div>
-          {rows.map((row) => <ListRow key={row.slug} row={row} />)}
-        </div>
-      ) : null}
-    </Card>
+      {open ? <div id={panel} className="m-stagger">{rows.map((row) => <ListRow key={row.slug} row={row} />)}</div> : null}
+    </>
   );
 }
 
@@ -174,9 +162,9 @@ export function Catalogue() {
 
       {notice ? <div className="m-drop"><NoticeBanner message={notice} actions={[{ label: "Dismiss", onClick: () => setNotice(null) }]} /></div> : null}
 
-      <Card padding="6px 18px">
+      <Card padding="0 18px" style={{ overflow: "hidden" }}>
         <div className="m-stagger">
-          {review.map((e) => <TodayRow key={e.slug} row={e} />)}
+          {review.map((e, i) => <TodayRow key={e.slug} row={e} first={i === 0} />)}
           {/* the sub-header carries the focus note, so it stays on screen on an empty day too */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0 6px", borderTop: "1px solid var(--border)" }}>
             <span style={LABEL}>New picks</span>
@@ -209,15 +197,31 @@ export function Catalogue() {
         {tags.map((t) => <TagChip key={t} label={t} active={tagOn(t)} onClick={() => toggleTag(t)} />)}
       </div>
 
-      {rows.length === 0
-        ? <div className="m-drop"><Card padding={0}><EmptyState message="No task matches those filters. Loosen a tag or clear the search." actionLabel="Clear filters" onAction={clear} /></Card></div>
-        : data.tiers.map((tier) => {
-            const group = rows.filter((e) => e.tier === tier);
-            // collapsed by default, except the focused tier — and except under a filter, where a
-            // collapsed group would hide the very rows the reader just asked for
-            const open = openTiers[tier] ?? (filtered || tier === focus);
-            return group.length ? <TierGroup key={tier} tier={tier} rows={group} open={open} onToggle={() => setOpenTiers((o) => ({ ...o, [tier]: !open }))} /> : null;
-          })}
+      {/* one table: the tiers are bands inside it, not three cards */}
+      <Card padding={0} style={{ overflow: "hidden" }}>
+        {rows.length === 0
+          ? <EmptyState message="No task matches those filters. Loosen a tag or clear the search." actionLabel="Clear filters" onAction={clear} />
+          : <>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 32, borderBottom: "1px solid var(--border-strong)", background: "var(--surface-2)", ...LABEL }}>
+                <span style={{ width: 30, textAlign: "right" }}>#</span>
+                <span style={{ flex: 1 }}>Task</span>
+                <span style={{ width: 230 }}>tier/tag</span>
+                <span style={{ width: 74 }}>Difficulty</span>
+                <span style={{ width: 52 }}>Box</span>
+                <span style={{ width: 74 }}>Status</span>
+              </div>
+              {data.tiers.map((tier, i) => {
+                const group = rows.filter((e) => e.tier === tier);
+                // collapsed by default, except the focused tier — and except under a filter, where a
+                // collapsed group would hide the very rows the reader just asked for
+                const open = openTiers[tier] ?? (filtered || tier === focus);
+                return group.length
+                  ? <TierGroup key={tier} tier={tier} rows={group} open={open} first={i === 0}
+                      onToggle={() => setOpenTiers((o) => ({ ...o, [tier]: !open }))} />
+                  : null;
+              })}
+            </>}
+      </Card>
     </div>
   );
 }
