@@ -138,6 +138,9 @@ pnpm --dir web check 8765                    # renders all 171 specs against a r
 CI runs ruff, pytest and selfcheck on every push. The rest of the frontend — the vendored design
 system, and why there is no Tailwind and no router — is in [`web/README.md`](web/README.md).
 
+Contributing, including the full contract a new task is graded against, is in
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Vocabulary
 
 Every word the code, the API and the UI use is defined in [CONTEXT.md](CONTEXT.md), together with
