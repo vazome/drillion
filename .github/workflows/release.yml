@@ -80,3 +80,54 @@ jobs:
           subject-name: ghcr.io/${{ github.repository }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
+  # Split from `pypi` on purpose. This job installs an npm dependency tree and runs a
+  # third-party build, and it must never hold the credential that can publish to PyPI —
+  # so the OIDC token lives in the next job, which only downloads and uploads.
+  dists:
+    needs: tag-matches-version
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      # The page ships inside the wheel, so web/dist has to exist before the build reads it.
+      # Same three steps as ci.yml's `check`, minus the pnpm store cache: this runs once a tag.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+        working-directory: web
+      - run: pnpm build
+        working-directory: web
+      # Bare `uv build` is sdist-then-wheel-from-that-sdist. The wheel we publish is
+      # therefore built out of the sdist we publish, which is the check worth having.
+      - run: uv build
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dists
+          path: dist/
+
+  # Publishing to PyPI is the one irreversible thing this repository can do: a version
+  # number can be yanked but never reused. The `pypi` environment is where the maintainer's
+  # approval gate hangs, and PyPI's trusted publisher is scoped to it — so the identity
+  # that mints the upload token is owner/repo + this filename + this environment name.
+  # Renaming any of the three silently stops releases until PyPI is updated to match.
+  pypi:
+    needs: dists
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: pypi
+      url: https://pypi.org/p/drillion
+    permissions:
+      id-token: write     # mints the OIDC token PyPI trades for a 15-minute upload token
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dists
+          path: dist/
+      # No username, no password, no secret: the absence is what selects trusted publishing.
+      # PEP 740 attestations are generated here too — Sigstore-signed against this same OIDC
+      # identity, on by default since v1.11.0, so there is nothing to switch on.
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
