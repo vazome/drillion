@@ -59,11 +59,7 @@ def test_a_good_task_has_nothing_said_about_it():
 
 
 def test_a_malformed_prereqs_is_reported_rather_than_crashed_on():
-    """doctor's whole job is to say why a folder is wrong, so it has to survive the wrong
-    thing long enough to print it. `prereqs: 3` — a scalar where a list belongs — was
-    reported by the folder pass and then reached the cycle check still an int, where
-    iterating it took the entire run down with a TypeError. The reason never reached the
-    screen, and the one tool that exists to explain a bad folder was the thing it broke."""
+    """`prereqs: 3` — a scalar where a list belongs — is reported, not crashed on."""
     scalar = README.replace("prereqs: []", "prereqs: 3")
     assert _reasons(**{"042_thing": {"README.md": scalar, "task.py": TASK}}) == {
         "042_thing": ["README.md: prereqs must be a list of task numbers"]
@@ -71,9 +67,7 @@ def test_a_malformed_prereqs_is_reported_rather_than_crashed_on():
 
 
 def test_every_reason_is_reported_not_just_the_first():
-    """The whole value of doctor is the reason string, and one folder can break several
-    rules at once. Stopping at the first would make it the silent `continue` with extra
-    steps: fix one thing, run again, learn about the next."""
+    """One folder can break several rules at once, and all of them come back."""
     both = README.replace("tags: [core]\n", "").replace("### Hint 3\nthree\n", "")
     reasons = _reasons(**{"172_asyncqueue": {"README.md": both, "task.py": TASK}})
     assert reasons["172_asyncqueue"] == [
@@ -83,8 +77,7 @@ def test_every_reason_is_reported_not_just_the_first():
 
 
 def test_each_skipping_rule_says_which_one_was_broken():
-    """One folder per rule the catalogue drops a task for. Each must come back named,
-    because a task that simply never appears in a menu of 171 is undebuggable."""
+    """One folder per rule the catalogue drops a task for; each must come back named."""
     reasons = _reasons(
         **{
             "043_nofrontmatter": {
@@ -125,8 +118,7 @@ def test_each_skipping_rule_says_which_one_was_broken():
 
 
 def test_the_value_rules_the_catalogue_never_checked():
-    """A task with `difficulty: simple` loads fine and then sorts, filters and grades
-    wrong. The catalogue only asks whether a key is filled in; doctor asks what it says."""
+    """The catalogue only asks whether a key is filled in; doctor asks what it says."""
     bad = (
         README.replace("difficulty: easy", "difficulty: simple")
         .replace("tier: core", "tier: basics")
@@ -147,9 +139,7 @@ def test_the_value_rules_the_catalogue_never_checked():
 
 
 def test_the_rules_that_need_the_whole_set():
-    """Gating, unlike everything else, is only wrong in company: a prereq that names a
-    missing task, a task that gates itself, or a loop leaves someone permanently locked
-    out with no way to see why from inside either folder."""
+    """Gating is only wrong in company: a missing prereq, a self-gate, or a loop."""
     loop = README.replace("prereqs: []", "prereqs: [43]")
     reasons = _reasons(
         **{
@@ -183,15 +173,12 @@ def test_a_duplicate_task_number_is_reported():
 
 
 def test_the_shipped_catalogue_is_clean():
-    """doctor gates contributions, so the 171 tasks already here must pass it — an
-    off-by-one in a rule shows up as the whole catalogue lighting up."""
+    """doctor gates contributions, so the tasks already here must pass it."""
     assert doctor.problems() == []
 
 
 def test_tooling_directories_are_not_broken_tasks():
-    """`tasks/__pycache__` appears the moment anything imports a task, so it is there for
-    anyone who has run the suite once. It is not an attempt at a task and doctor must not
-    report it — while a genuinely misnamed folder still has to be caught."""
+    """`tasks/__pycache__` is not an attempt at a task; a misnamed folder still is."""
     reasons = _reasons(
         **{
             "__pycache__": {"whatever.pyc": "x"},

@@ -30,8 +30,7 @@ def _seeding(fn):
 
 
 def test_an_empty_root_is_seeded_from_the_package():
-    """`uvx drillion` in a directory with no tasks/: the catalogue is empty until this
-    puts the packaged copy somewhere the learner can write to."""
+    """`uvx drillion` where there is no tasks/: the packaged copy lands somewhere writable."""
 
     def check(root, _template):
         cli.seed()
@@ -42,8 +41,7 @@ def test_an_empty_root_is_seeded_from_the_package():
 
 
 def test_seeding_never_overwrites_saved_code():
-    """The upgrade case, and the one that could destroy real work: a task file already
-    under root holds whatever the learner last saved into it."""
+    """The upgrade case: a task file under root holds whatever the learner last saved."""
 
     def check(root, _template):
         (root / "tasks" / "001_fstrings").mkdir(parents=True)
@@ -55,8 +53,7 @@ def test_seeding_never_overwrites_saved_code():
 
 
 def test_a_root_that_has_tasks_is_left_alone():
-    """Nothing is added either — not `_lib.py`, not a folder only the package has.
-    A root with tasks/ is a checkout or somebody's own copy, and seeding stays out."""
+    """Nothing is added either — not `_lib.py`, not a folder only the package has."""
 
     def check(root, _template):
         (root / "tasks" / "001_fstrings").mkdir(parents=True)
@@ -68,9 +65,8 @@ def test_a_root_that_has_tasks_is_left_alone():
 
 
 def test_a_checkout_seeds_nothing():
-    """Running from the repo must be byte-for-byte what it always was. There is no
-    template in a checkout — it exists only inside a built wheel — so seed() returns
-    before it can look at tasks/ at all."""
+    """A checkout has no template — it exists only inside a built wheel — so seed() returns
+    before it looks at tasks/ at all."""
     assert not (REPO / "src" / "drillion" / "_tasks").exists()
     if os.environ.get("DRILLION_ROOT"):
         return  # somebody pointed the root elsewhere: nothing to say about the checkout
@@ -78,9 +74,8 @@ def test_a_checkout_seeds_nothing():
 
 
 def test_an_install_keeps_progress_out_of_site_packages():
-    """With no checkout and no tasks/ in sight, the fallback root is a per-user directory
-    the learner can write to — never under the package, which is where the old fallback
-    pointed and where months of progress.json must never end up."""
+    """With no checkout and no tasks/ in sight, the fallback root is a writable per-user
+    directory, never one under the package."""
     home = _data_home()
     assert home.name == "drillion" and home.is_absolute()
     assert not home.is_relative_to(PKG)

@@ -22,9 +22,8 @@ PASSING = 'return "\\n".join(f"{name:<14}{value:>12,.2f}" for name, value in row
 
 
 def _api(flow, extra=()):
-    """Run `flow(api, path)` against a throwaway copy of one task — plus any `extra`
-    slugs a flow needs to see tasks relate to each other: the API tests write real
-    files, and Daniel's tasks/ and progress.json are not for that."""
+    """Run `flow(api, path)` against a throwaway copy of one task, plus any `extra` slugs
+    the flow needs: these tests write real files."""
     tmp, keep = Path(tempfile.mkdtemp(prefix="drillion_api_")), settings.root
     taskdir = tmp / "tasks"
     taskdir.mkdir()
@@ -60,7 +59,6 @@ async def _stub_to_pass(api, path):
     assert cat["tiers"] == ["core", "advanced", "packages"] and cat["tracks"] == []
     assert cat["tasks"][0]["tier"] == "core" and cat["tasks"][0]["difficulty"] == "easy"
     assert "minutes" not in cat["tasks"][0]  # par time is never the learner's
-    # the spec, flattened, so the search box can match what a task is about (#14)
     assert "finance" in cat["tasks"][0]["text"]  # a word in the Why, not in the title
     assert "## why" not in cat["tasks"][0]["text"]
 
@@ -126,8 +124,7 @@ async def _stub_to_pass(api, path):
 
     st = state.load()
     assert st["open"] == {} and [e["slug"] for e in st["log"]] == [SLUG]
-    # only the card that was graded: `card()` fills blanks in place, so anything that walks
-    # every task inside `writing()` writes a blank card for each of them
+    # only the card that was graded: `card()` fills blanks in place
     assert list(st["cards"]) == [SLUG]
     assert PASSING in st["archive"][SLUG][0]["code"]
 
@@ -253,12 +250,8 @@ async def _guards(api, path):
 
 
 async def _struggled_first_sighting(api, _path):
-    """The card the page kept claiming had stepped up.
-
-    Three attempts is `struggled`, a struggle now costs a box, and a never-seen card is
-    already in box 0 — the floor, so this pass moves nothing. The server says so; the page
-    only renders it.
-    """
+    """Three attempts is `struggled`, and a never-seen card is already at box 0 — the floor,
+    so the pass moves nothing."""
     task = (await api.post(f"/api/task/{SLUG}/open")).json()
     assert state.card(state.load(), SLUG) == {
         "box": 0,
@@ -293,13 +286,8 @@ async def _struggled_first_sighting(api, _path):
 
 
 async def _a_slow_pass_falls_a_box(api, _path):
-    """The other half of the same fix: a card that is *up* the ladder steps back down.
-
-    The page animated a climb and said "the card stepped up" for every move there was, so a
-    demotion read as a promotion. `from_box` is the direction, `stepped` is still the fact of
-    the move, and the reason says which of the grade's causes landed it — here the clock, on
-    a single run. Also the moment the lapse count reaches the limit, which the page flags.
-    """
+    """A card that is *up* the ladder steps back down: `from_box` is the direction, `stepped`
+    the fact of the move. Also the moment the lapse count reaches the limit."""
     task = (await api.post(f"/api/task/{SLUG}/open")).json()
     st = state.load()  # a card three boxes up, one lapse short of the flag
     st["cards"][SLUG] = {
@@ -331,13 +319,8 @@ async def _a_slow_pass_falls_a_box(api, _path):
 
 
 async def _the_reference_needs_the_peek_not_just_its_price(api, _path):
-    """Passing a task opens the reference. Affording it must not.
-
-    `solution.unlocked` goes true the moment three runs and ten minutes have been spent —
-    but taking the answer is what sets `solution_shown`, and that is what costs the
-    promotion. Shipping the reference in the payload one moment earlier would hand it over
-    for free, with the page left to decide whether to look. The server owns the gate.
-    """
+    """Passing a task opens the reference. Affording it must not: taking the answer is what
+    sets `solution_shown`, and that is what costs the promotion."""
     await api.post(f"/api/task/{SLUG}/open")
     st = state.load()
     st["cards"][SLUG] = {"box": 2, "due": state.today(), "seen": 2, "lapses": 0}
@@ -358,11 +341,8 @@ async def _the_reference_needs_the_peek_not_just_its_price(api, _path):
 
 
 async def _abandon_needs_an_attempt_like_every_other_route(api, path):
-    """Four acting routes go through `current()` and answer 409 with nothing open. Abandon
-    did not: it popped a key that might not be there and stubbed the file either way, so a
-    stray call rewrote whatever was in the editor and filed it under `abandoned`. Not
-    reachable from the page today, which is precisely why it would have outlived the next
-    change to that flow."""
+    """Abandon answers 409 with nothing open, like every other acting route, rather than
+    stubbing the file and filing the work as given up."""
     src = path.read_text()
     work = region.splice(
         src, region.cut(src).body.replace("raise NotImplementedError", PASSING)
@@ -377,13 +357,8 @@ async def _abandon_needs_an_attempt_like_every_other_route(api, path):
 
 
 async def _your_own_answer_is_an_answer(api, _path):
-    """The archive is the reference's second door, and it was unlocked.
-
-    `reference` has always waited for the deliberate peek. `archive[].code` read
-    `solution.unlocked` instead — true the moment three runs and ten minutes have been
-    *spent*, not asked for — so sitting on a review long enough handed back the code you
-    passed with last time. Every bit an answer, with no `solution_shown`, no `struggled`,
-    and never routed through /solution. One gate, both doors."""
+    """`archive[].code` is your own past answer, so it waits for the deliberate peek exactly
+    as `reference` does. One gate, both doors."""
     await api.post(f"/api/task/{SLUG}/open")
     st = state.load()
     st["cards"][SLUG] = {"box": 2, "due": state.today(), "seen": 2, "lapses": 0}
@@ -427,12 +402,8 @@ async def _health(api, _path):
 
 
 async def _bury(api, _path):
-    """Bury from the API's side: out of today, back by itself, and reversible before then.
-
-    The card is the point. Everything the ladder owns — box, due date, seen count, lapses —
-    has to read back byte-identical afterwards, because that is the entire argument for
-    shipping bury without suspend: a bury you forget about costs one day of not being asked.
-    """
+    """Bury from the API's side: out of today, back by itself, and reversible before then —
+    with box, due date, seen count and lapses all reading back identical."""
     st = state.load()
     st["cards"][SLUG] = {"box": 2, "due": "2020-01-01", "seen": 4, "lapses": 1}
     state.save(st)
@@ -462,12 +433,8 @@ async def _bury(api, _path):
 
 
 async def _note(api, _path):
-    """One note per task, edited in place — and it belongs to the task, not to the sitting.
-
-    That last part is the whole product call in #15. A `struggled` grade, a fresh attempt and
-    an abandon all have to leave the note exactly as it was; if any of them wiped it, the note
-    would really be an attempt log and it would be stored in the wrong place.
-    """
+    """One note per task, edited in place — and it belongs to the task, not to the sitting:
+    a `struggled` grade, a fresh attempt and an abandon all leave it exactly as it was."""
     assert (await api.get(f"/api/task/{SLUG}")).json()["note"] == ""
     assert state.load()["notes"] == {}
 
@@ -477,8 +444,7 @@ async def _note(api, _path):
     assert (await api.get(f"/api/task/{SLUG}")).json()["note"] == kept
     assert state.load()["notes"] == {SLUG: kept}
 
-    # a struggled pass: three attempts, and a struggle is the grade most likely to be read
-    # as "start over" — the card steps back, and the note still must not move
+    # a struggled pass: the card steps back, and the note still must not move
     task = (await api.post(f"/api/task/{SLUG}/open")).json()
     etag = task["etag"]
     for _ in range(2):
@@ -634,8 +600,7 @@ def test_an_empty_new_picks_band_carries_its_one_reason():
 
 
 def test_the_practice_count_is_a_rolling_window_not_a_streak():
-    """A day counts if anything was archived on it — a pass, or an attempt given up on.
-    Missing one costs exactly one point: there is no run to break and none to protect."""
+    """A day counts if anything was archived on it — a pass, or an attempt given up on."""
 
     def day(n):
         return (date.today() - timedelta(days=n)).isoformat()  # noqa: DTZ011
@@ -653,9 +618,8 @@ def test_the_practice_count_is_a_rolling_window_not_a_streak():
 
 
 def test_recent_activity_is_the_week_most_recent_first():
-    """The way back into work already started: distinct slugs, newest first, capped by the
-    window rather than by a count — and never filtered against today's queue, which once left
-    the whole section empty for a learner whose only recent work was also their only reviews."""
+    """Distinct slugs, newest first, capped by the window rather than by a count — and never
+    filtered against today's queue."""
 
     def day(n):
         return (date.today() - timedelta(days=n)).isoformat()  # noqa: DTZ011

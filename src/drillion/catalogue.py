@@ -1,10 +1,6 @@
 """The catalogue: one folder per task, read from disk and never executed.
 
-`<NNN>_<name>/README.md` is the guidance — YAML frontmatter and GitHub-flavoured
-Markdown — and `<NNN>_<name>/task.py` is the code. A half-written folder is skipped
-instead of breaking the menu, and nothing in `tasks/` is ever imported into this
-process: the answers stay on disk.
-"""
+`<NNN>_<name>/README.md` is the guidance and `<NNN>_<name>/task.py` is the code."""
 
 import ast
 import re
@@ -18,9 +14,8 @@ REQUIRED = ("title", "difficulty", "tier", "minutes", "tags")
 BROWSER = ("topic", "title", "difficulty", "tier", "track", "tags", "source")
 # `minutes` is deliberately absent: par time is grade_of()'s input, not the learner's to see.
 HINT = re.compile(r"^### Hint \d+[ \t]*$", re.MULTILINE)
-# The four sections every one of the 171 tasks authors, and the only ones `search_text`
-# keeps. `## Read first` is links, and `## Introduction` / `## Instructions` are the
-# imported Exercism prose — together they triple the text for words already said above.
+# the only sections `search_text` keeps: the rest is links and imported prose that
+# triples the text for words already said above
 SEARCHED = ("why", "you get", "you return", "rules")
 SECTION = re.compile(r"^## +(.+)$", re.MULTILINE)
 FENCE = re.compile(r"^```.*?^```", re.DOTALL | re.MULTILINE)
@@ -33,18 +28,13 @@ _cache = (
 
 
 def public(meta):
-    """The fields the browser may see. An allowlist, so a field added to the record
-    is private until someone puts it here — paths, hints and the spec never are."""
+    """The fields the browser may see. An allowlist: a new field is private until it is
+    listed here."""
     return {k: meta[k] for k in BROWSER if k in meta}
 
 
 def search_text(spec_md):
-    """What a task is about, flattened into one line the catalogue can substring-match.
-
-    The catalogue's search box only ever saw titles, so a learner had to already know a
-    task's name to find it. This ships the prose with the row instead: the four authored
-    sections, minus fenced code, whitespace squeezed out and lowercased, so the client
-    filter is `row.text.includes(needle)` with no per-keystroke work. ~2 KB a task."""
+    """What a task is about, flattened into one line the catalogue can substring-match."""
     parts = SECTION.split(spec_md)  # [before, head, body, head, body, ...]
     kept = [
         body
@@ -55,8 +45,7 @@ def search_text(spec_md):
 
 
 def _stamp(folder):
-    """Cheap identity for a task folder: its name and both files' mtimes. Two stats
-    beat re-reading and re-parsing the whole set on every request."""
+    """Cheap identity for a task folder: its name and both files' mtimes."""
     out = [folder.name]
     for name in ("README.md", "task.py"):
         try:
@@ -84,8 +73,7 @@ def guidance(md):
 
 def _read(folder):
     """(record | None, [reason]) for one folder: every rule a task must pass to reach the
-    menu, and the record when it passes them all. The record comes back whenever the
-    frontmatter parsed, so a caller can still read the values of a folder that is wrong."""
+    menu, and the record whenever the frontmatter parsed — wrong folder or not."""
     out = []
     if not (slug := SLUG.match(folder.name)):
         out.append(
@@ -149,8 +137,7 @@ def _read(folder):
 
 
 def _scanned():
-    """(the scan, the tasks it yielded), read once per state of tasks/ and cached against
-    the folders' mtimes, so an edited task still re-reads on the next call."""
+    """(the scan, the tasks it yielded), cached against the folders' mtimes."""
     global _cache
     folders = [
         f
@@ -167,14 +154,10 @@ def _scanned():
 def scan():
     """[(folder name, record | None, [reason])] — the one place a task is parsed.
 
-    Every folder a contributor authored, in name order, with every rule it breaks. A name
-    starting with `.` or `_` is tooling, not an attempt at a task."""
+    Every folder in name order, minus the `.` and `_` ones, which are tooling."""
     return _scanned()[0]
 
 
 def tasks():
-    """{slug: frontmatter + topic, path, dir, spec_md, hints} for the folders that pass.
-
-    Text only: a half-edited task is skipped instead of breaking the menu, and nothing in
-    tasks/ is ever imported into this process."""
+    """{slug: frontmatter + topic, path, dir, spec_md, hints} for the folders that pass."""
     return _scanned()[1]

@@ -1,11 +1,7 @@
 """The learner's region: cut a task file in two, splice it back, guard the write.
 
-Text and `ast` only: no settings, no state, and the one function that writes takes
-the path from its caller. A task file starts with the learner's code and ends with
-the grader's, separated by one marker line, so the rules that decide what lands on
-disk are testable without a server. The spec is not in here at all — it lives in the
-task's README.md — which is why a learner may write a docstring like any other code.
-"""
+A task file starts with the learner's code and ends with the grader's, separated by
+one marker line."""
 
 import ast
 import hashlib
@@ -36,7 +32,6 @@ def _solve(tree):
     return fns[-1]
 
 
-# ---------------------------------------------------------------- region + splice
 class Region(NamedTuple):
     """A file cut in two at the marker: only `body` belongs to the learner."""
 
@@ -66,8 +61,7 @@ def splice(src, body):
 
 def stub(body):
     """The region as the learner first met it: imports, given code, decorators, the
-    signature, `raise`. Passing rewrites the file to this, so a review can never show
-    last time's code."""
+    signature, `raise`. Passing rewrites the file to this."""
     fn = _solve(ast.parse(body))
     lines = body.split("\n")
     first = fn.body[0]

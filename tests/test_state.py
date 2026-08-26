@@ -24,9 +24,7 @@ def _root(fn):
 
 
 def test_a_fresh_clone_starts_with_an_empty_ladder():
-    """No progress.json is shipped, so the first thing a clone does is read a file that
-    is not there. That must be a blank slate and not a crash, and it must not write one
-    either: opening the menu is not practice."""
+    """Reading a progress.json that is not there is a blank slate, and writes nothing."""
 
     def check(_tmp):
         assert not settings.state_path.exists()
@@ -44,13 +42,8 @@ def test_a_fresh_clone_starts_with_an_empty_ladder():
 
 
 def test_an_existing_progress_file_upgrades_untouched():
-    """Untracking progress.json must cost an existing install nothing: the file stays
-    where it always was, load() reads every key back exactly as stored, and there is no
-    migration step between the two. This is the half of #4 that could destroy real work.
-
-    `stored` is deliberately a file from before `notes` existed (#15). A key that arrives later
-    is defaulted in `load()` and nothing else: the old file reads back whole, with the new key
-    blank beside it, and no migration ever runs over months of real progress."""
+    """An older progress.json reads back whole, with any newer key defaulted blank beside
+    it, and no migration step between the two."""
     stored = {
         "focus": "class-inheritance",
         "cards": {"008_sortkey": {"box": 3, "due": "2026-09-01", "seen": 4}},
@@ -83,8 +76,8 @@ def test_an_existing_progress_file_upgrades_untouched():
 
     def check(_tmp):
         settings.state_path.write_text(json.dumps(stored))
-        assert state.load() == {**stored, "notes": {}}  # nothing dropped, no move
-        with state.writing() as st:  # and a session on top keeps it all
+        assert state.load() == {**stored, "notes": {}}
+        with state.writing() as st:
             st["focus"] = None
         assert state.load() == {**stored, "focus": None, "notes": {}}
 
@@ -92,9 +85,7 @@ def test_an_existing_progress_file_upgrades_untouched():
 
 
 def test_the_repo_does_not_ship_anybody_s_progress():
-    """The only way a clone can arrive with someone else's cards is for progress.json to
-    be tracked again. It is ignored *and* untracked — being ignored alone would not stop
-    a file already in the index from travelling."""
+    """progress.json is ignored *and* untracked: a file already in the index still travels."""
     tracked = subprocess.run(
         ["git", "ls-files", "progress.json", "progress.json.bak"],
         cwd=REPO,

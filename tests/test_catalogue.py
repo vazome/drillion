@@ -167,26 +167,16 @@ def test_the_scan_is_cached_but_an_edited_task_is_re_read():
 
 
 def test_no_task_declares_practices():
-    """`practices` was a list of earlier tasks a task rehearses, authored on 16 of 171 and
-    read by nothing — not the scheduler, not the page. A field that 155 tasks lack cannot
-    be load-bearing, and read as a noun it invents a second unit of practice next to
-    **task**. It is gone; nothing may quietly start shipping it to the browser again (#6).
-    Rehearsal credit, if it is ever wanted, is a scheduler feature and needs the name
-    `rehearses`."""
+    """`practices` was authored on a handful of tasks and read by nothing. It is gone, and
+    nothing may quietly start shipping it to the browser again."""
     assert "practices" not in catalogue.BROWSER
     for slug, m in catalogue.tasks().items():
         assert "practices" not in m, slug
 
 
 def test_search_text_carries_the_prose_and_not_the_furniture():
-    """The catalogue's search box searched titles only, so a learner had to already know a
-    task's name to find it (#14). `search_text` is what the row carries instead: the four
-    sections every task authors, flattened to one lowercase line the client substring-matches.
-
-    Fenced code is dropped — every task's fences are full of `def`, `return` and `assert`,
-    which would match everything — and so are `## Read first` (links) and the imported
-    Exercism `## Introduction` / `## Instructions`, which together triple the payload for
-    words the four sections have already said."""
+    """The row carries the four authored sections, flattened to one lowercase line the client
+    substring-matches. Fenced code, links and the imported prose are dropped."""
     spec = (
         "# A task\n\n## Why\nA growing LOG file.\n\n"
         "```python\ndef solve(x):\n    return x\n```\n\n"

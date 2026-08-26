@@ -1,9 +1,4 @@
-"""Running the tests: task code only ever executes in a pytest subprocess.
-
-The server never imports a task, so a runaway loop or a stray `sys.exit` costs a
-subprocess, not the session. `summarise` turns pytest's output into the handful of
-lines the browser shows, in the editor's own line numbers.
-"""
+"""Running the tests: task code only ever executes in a pytest subprocess."""
 
 import ast
 import os
@@ -17,9 +12,8 @@ from .settings import settings
 
 _TASK_LINE = re.compile(r"[\w./\\-]*task\.py:(\d+)")
 # every task.py is called task.py, so pytest must name modules by path, not basename
-# `--color=no` because pytest does not decide colour by asking whether it is a tty: FORCE_COLOR
-# or PY_COLORS in the environment turns it on regardless, and a pnpm script sets FORCE_COLOR for
-# everything it spawns. The escapes then land in the learner's output panel as literal `[31mF[0m`.
+# `--color=no` because FORCE_COLOR or PY_COLORS in the environment turns colour on
+# regardless of the tty, and the escapes land in the learner's output panel
 _PYTEST = [
     "-q",
     "--no-header",
@@ -54,10 +48,7 @@ def run_tests(path, seed):
 
 
 def summarise(out, marker_line):
-    """pytest output for the browser: the assertion lines, in editor coordinates.
-
-    The region starts at line 1 of task.py, so the map is the identity — a frame
-    is either the learner's or the grader's, and only the first gets a bare line."""
+    """pytest output for the browser: the assertion lines, in editor coordinates."""
 
     def editor_line(m):
         n = int(m.group(1))
