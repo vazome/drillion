@@ -106,6 +106,15 @@ def _folder_problems(folder):
     return out, meta
 
 
+def _refs(meta, key):
+    """The task numbers under `key` that can actually be walked. `prereqs: 3` and
+    `prereqs: [a, 2]` are both already reported as bad frontmatter by the folder pass —
+    doctor's whole job is to say why a folder is wrong, so nothing downstream of that
+    report may crash on the same value before it reaches the screen."""
+    refs = meta.get(key)
+    return [n for n in refs if isinstance(n, int)] if isinstance(refs, list) else []
+
+
 def _set_problems(metas):
     """The rules no folder can check alone: task numbers are unique, every reference
     names a real task, nothing gates itself, and no chain of prereqs closes into a loop.
@@ -128,16 +137,13 @@ def _set_problems(metas):
     for name, meta in metas.items():
         mine = SLUG.match(name)
         for key in REFERENCES:
-            refs = meta.get(key)
-            for n in refs if isinstance(refs, list) else []:
-                if not isinstance(n, int):
-                    continue  # already reported as a bad list
+            for n in _refs(meta, key):
                 if mine and n == int(mine.group(1)):
                     out.append((name, f"{key} lists the task itself"))
                 elif n not in topics:
                     out.append((name, f"{key} names task {n}, which does not exist"))
     graph = {
-        t: [n for n in metas[name].get("prereqs") or [] if n in topics]
+        t: [n for n in _refs(metas[name], "prereqs") if n in topics]
         for t, name in topics.items()
     }
     try:

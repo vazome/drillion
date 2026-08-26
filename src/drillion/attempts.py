@@ -32,10 +32,15 @@ class NoAttempt(Exception):
 
 
 def touch(o):
-    """Active seconds only: a gap longer than two minutes was a break, not work."""
+    """Active seconds only: a gap longer than two minutes was a break, not work.
+
+    Clamped at both ends. A wall clock is not monotonic — a DST fall-back or an NTP
+    correction steps it backwards — and a negative tick runs the timer down: enough of
+    them and the solution gate becomes unpayable and a long sitting grades as `quick`."""
     now = datetime.now()
-    o["active"] += int(
-        min((now - datetime.fromisoformat(o["last"])).total_seconds(), 120)
+    o["active"] += max(
+        0,
+        int(min((now - datetime.fromisoformat(o["last"])).total_seconds(), 120)),
     )
     o["last"] = now.isoformat()
     return o["active"]
