@@ -1,10 +1,23 @@
 name: ci
 
-on: [push, pull_request]
+# push builds main; pull_request builds everything else. Listing both events bare
+# ran the whole job twice for every in-repo pull request.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read          # the job reads the checkout and nothing else
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 20   # the checks take a couple of minutes; this is a hang detector, not a budget
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
