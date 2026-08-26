@@ -1,11 +1,4 @@
 def solve(fn):
-    from typing import get_type_hints
-    modifications = get_type_hints(fn)
-    zone = modifications["zone"]
-    returnal = modifications["return"]
-
-    print(get_type_hints(fn))
-
     raise NotImplementedError
 
 
