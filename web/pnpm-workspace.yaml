@@ -1,1 +1,6 @@
 packages: []
+
+# pnpm 11 removed onlyBuiltDependencies and makes a blocked build an error
+# (strictDepBuilds), so esbuild's postinstall needs an explicit yes.
+allowBuilds:
+  esbuild: true

@@ -1,26 +1,90 @@
 name: ci
 
-on: [push, pull_request]
+# push builds main; pull_request builds everything else. Listing both events bare
+# ran the whole job twice for every in-repo pull request.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read          # the job reads the checkout and nothing else
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 20   # the checks take a couple of minutes; this is a hang detector, not a budget
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # setup-uv stopped publishing floating major tags at v8: the SHA is the only pin
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
-      - run: uv sync --frozen
+      # --locked asserts uv.lock matches pyproject.toml; --frozen skipped that check
+      - run: uv sync --locked
       - run: uv run ruff check .
+      - run: uv run ruff format --check .
       - run: uv run pytest tests -q
       - run: uv run drillion selfcheck
       # the page is real code now: `pnpm build` is `tsc -b && vite build`, so this is the
       # type check too. Node and pnpm come in the same way the Dockerfile's web stage gets them.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
       - run: corepack enable
+      # setup-node's own cache has only covered npm since v6, so the pnpm store gets
+      # its own. Ask pnpm where the store is rather than guessing at a path: pnpm 11
+      # moved it to a new store version.
+      - run: echo "PNPM_STORE=$(pnpm store path)" >> "$GITHUB_ENV"
+        working-directory: web
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.PNPM_STORE }}
+          key: pnpm-${{ hashFiles('web/pnpm-lock.yaml') }}
+          restore-keys: pnpm-
       - run: pnpm install --frozen-lockfile
         working-directory: web
       - run: pnpm build
         working-directory: web
+
+  # Non-negotiable #3 is `docker run` and a ready environment, so CI builds the
+  # image and boots it. Separate job: it runs beside `check` instead of after it.
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          load: true                     # into the local daemon; nothing is pushed
+          tags: drillion:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      # The checkout is the content root, the way compose.yaml mounts it. --user is the
+      # runner's own uid so the container may write into the checkout it was handed.
+      - name: start the image
+        run: >
+          docker run -d --name drillion
+          --user "$(id -u):$(id -g)"
+          -v "$PWD:/data"
+          -p 127.0.0.1:8765:8765
+          drillion:ci
+      - name: wait for healthy
+        run: |
+          for _ in $(seq 30); do
+            case "$(docker inspect -f '{{.State.Health.Status}}' drillion)" in
+              healthy) exit 0 ;;
+              unhealthy) break ;;
+            esac
+            sleep 2
+          done
+          echo "::error::the container never reported healthy"
+          docker logs drillion
+          exit 1
+      - run: docker exec drillion drillion selfcheck
