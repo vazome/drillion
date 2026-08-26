@@ -44,7 +44,8 @@ Answers: *what do I do now?*
 
 Data: `GET /api/catalogue` →
 - `today.review[]` — due reviews, most overdue first; `today.new[]` — up to 2 new picks;
-  `today.done_today` (count)
+  `today.recent[]` — every task worked in the last `window` days, newest first, minus whatever
+  is already in the two lists above; `today.done_today` (count)
 - `stats` — `boxes` (5 counts, one per ladder box), `due`, `seen`, `total`, and `practised` of
   `window`: distinct days worked in the last 7, a rolling count rather than a streak
 - `focus` — one string or null; it restricts *new* picks and is matched against a task's **tier,
@@ -55,7 +56,7 @@ Data: `GET /api/catalogue` →
   `seen` (count).
   **No `minutes`**: par time never leaves the server.
 
-Elements: Today panel (reviews, then new picks, focus selector), search, filter chips (tier, track,
+Elements: Today panel (reviews, then new picks, then recent activity, focus selector), search, filter chips (tier, track,
 tag), status filter, the task list (title · difficulty · the `tier/tag` path · status · a miniature
 ladder showing which box the card is in), a small stats strip (days practised, due today, cards per box).
 
@@ -67,6 +68,10 @@ restores it. `difficulty` and `status` sort by what the word means, not by the a
 back to the task number. The tag map shows every tag reachable under the current filter at once, wrapped rather
 than scrolled — pick `advanced` and 76 chips become the 11 that are actually under it. A tag
 already switched on never drops out, or a filter that matched nothing could not be undone.
+
+Rows in the Today panel carry no status badge: the band they sit under already says what they
+are. The daily cap belongs to new picks alone — recent activity lists as many as the week holds,
+because it is the way back into work already started, not a ration of new material.
 
 Tier and tag render as one filesystem-style path, `core/f-strings`, with the tier segment muted —
 one column, not two. Whatever `focus` a row is filtered by, the UI must be able to show it: a

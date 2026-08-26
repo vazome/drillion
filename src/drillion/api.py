@@ -171,6 +171,17 @@ def _practised(st):
     return len({r["date"] for runs in st["archive"].values() for r in runs if r["date"] >= cut})
 
 
+def _recent(st, all_tasks, exclude=()):
+    """Tasks worked in the last WINDOW days, most recent first — the way back into whatever
+    you were just doing. Distinct slugs and no cap: what makes it recent is the window, not a
+    count. Read from the archive for the same reason `_practised` is: it holds the days you
+    gave up on as well as the days you passed."""
+    cut = (date.fromisoformat(today()) - timedelta(days=WINDOW - 1)).isoformat()
+    last = {slug: runs[-1]["date"] for slug, runs in st["archive"].items()
+            if slug in all_tasks and slug not in exclude}      # a renamed task leaves a dead key
+    return sorted((s for s, d in last.items() if d >= cut), key=lambda s: last[s], reverse=True)
+
+
 def _boxes(st, all_tasks):
     boxes = [0] * len(LADDER)
     for slug in all_tasks:
@@ -193,6 +204,7 @@ def catalogue():
     with reading() as st:                        # card() only fills blanks; nothing commits
         all_tasks = tasks()
         q = queue(st, all_tasks)
+        q["recent"] = _recent(st, all_tasks, exclude={*q["review"], *q["new"]})
         rows = [{"slug": slug, **public(m), "status": _status(st, slug),
                  **{k: card(st, slug)[k] for k in ("box", "due", "seen")}}
                 for slug, m in all_tasks.items()]

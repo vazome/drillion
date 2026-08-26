@@ -76,14 +76,22 @@ function useHover() {
 
 const href = (row: Row) => `#/task/${encodeURIComponent(row.slug)}`;
 
-/** A row of the Today card: what it is, when it was due, and one way in. */
+/** A sub-header inside the Today card: what the rows under it are, and one quiet word on why. */
+const Band = ({ label, aside }: { label: string; aside: string }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0 6px", borderTop: "1px solid var(--border)" }}>
+    <span style={LABEL}>{label}</span>
+    <span style={FAINT}>{aside}</span>
+  </div>
+);
+
+/** A row of the Today card: when it is due, where it sits on the ladder, and one way in.
+ * No status badge — the section it is under already says what it is. */
 function TodayRow({ row, first = false }: { row: Row; first?: boolean }) {
   const [hover, hoverProps] = useHover();
   return (
     <a href={href(row)} className="m-tint" {...hoverProps}
       style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "inherit", borderTop: first ? "none" : "1px solid var(--border)", background: hover ? "var(--surface-2)" : "transparent", margin: "0 -18px", padding: "9px 18px" }}>
-      <StatusBadge status={row.status} />
-      <span style={{ ...FAINT, width: 96, color: "var(--text-muted)" }}>{dueText(row)}</span>
+      <span style={{ ...FAINT, width: 110, color: "var(--text-muted)" }}>{dueText(row)}</span>
       <LadderMeter box={rung(row)} />
       <span style={{ ...MONO, width: 30, textAlign: "right" }}>{String(row.topic).padStart(3, "0")}</span>
       <span style={{ fontSize: 14.5, fontWeight: 500, flex: 1 }}>{row.title}</span>
@@ -181,7 +189,7 @@ export function Catalogue() {
 
   const { today, stats } = data;
   const pick = (slugs: string[]) => slugs.map((s) => by.get(s)).filter(Boolean) as Row[];
-  const review = pick(today.review), fresh = pick(today.new);
+  const review = pick(today.review), fresh = pick(today.new), recent = pick(today.recent ?? []);   // a server still running last build sends no `recent`
   const filtered = !!(q || status || activeTags.length || focus);
   const unsorted = sort.key === DEFAULT_SORT.key && sort.dir === DEFAULT_SORT.dir;
   const clear = () => { setQ(""); setStatus(""); setActiveTags([]); if (focus) setFocus(null); };
@@ -214,10 +222,7 @@ export function Catalogue() {
         <div className="m-stagger">
           {review.map((e, i) => <TodayRow key={e.slug} row={e} first={i === 0} />)}
           {/* the sub-header carries the focus note, so it stays on screen on an empty day too */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0 6px", borderTop: "1px solid var(--border)" }}>
-            <span style={LABEL}>New picks</span>
-            <span style={FAINT}>{focus ? `from ${focus}` : "any"}</span>
-          </div>
+          <Band label="New picks" aside={focus ? `from ${focus}` : "any"} />
           {/* Three things empty this list — the daily cap, an unmet prereq and the focus — and
             * the payload cannot tell them apart, so the copy names all three rather than
             * blaming the cap for a day the prereqs closed off. */}
@@ -226,6 +231,12 @@ export function Catalogue() {
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
                 message={review.length ? "No new picks right now — today's cap, an unmet prereq, or the focus. Finish the reviews above, or rest."
                                        : "Nothing due, and no new pick unlocked — today's cap, an unmet prereq, or the focus. Pick anything below, or rest."} />}
+          {/* The daily cap is about what is new to learn, so it has no business here: this is
+            * the way back into work already started, and it lists as many as the week holds. */}
+          {recent.length ? <>
+            <Band label="Recent activity" aside={`last ${stats.window} days`} />
+            {recent.map((e) => <TodayRow key={e.slug} row={e} />)}
+          </> : null}
         </div>
       </Card>
 
