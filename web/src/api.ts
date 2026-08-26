@@ -47,7 +47,7 @@ export interface Task {
   /** the task has cost this many lapses; at `lapse_limit` it is flagged as one that keeps
    *  beating you — a message about the task, never a punishment on the card */
   lapses: number; lapse_limit: number;
-  /** the scheduler's intervals, one per box — the page never names its own. */
+  /** the scheduler's return intervals, one per box */
   ladder: number[];
   /** half an hour of active reading with nothing run and no hint taken. The server owns
    *  the threshold; the page renders the offer. */

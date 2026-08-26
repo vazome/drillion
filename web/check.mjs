@@ -28,7 +28,7 @@ const { render, html, sortRows, blockedBy, noPicks, stepLine } = await import(pa
 rmSync(out.pathname);
 
 // A `struggled` pass steps a card *down*, so the pass banner has to be able to say so.
-// (grade, box, from_box, stepped, boxes) — the box numbers are the scheduler's 0-6.
+// (grade, box, from_box, stepped, boxes)
 if (!stepLine("struggled", 2, 3, true, 7).includes("stepped back")) throw new Error("a demotion must not read as a climb");
 if (stepLine("pass", 3, 2, true, 7) !== "the card stepped up") throw new Error("a promotion must read as a climb");
 if (!stepLine("quick", 6, 6, false, 7).includes("top box")) throw new Error("a quick pass clamped at the top must say so");
