@@ -230,7 +230,7 @@ def test_recent_activity_is_the_week_most_recent_first():
         return (date.today() - timedelta(days=n)).isoformat()  # noqa: DTZ011
 
     st = {"open": {}, "archive": {
-        "001_a": [{"date": day(3)}, {"date": day(1)}],
+        "001_a": [{"date": day(3)}, {"date": day(1), "grade": "pass"}],
         "002_b": [{"date": day(2)}],
         "003_c": [{"date": day(WINDOW)}],                        # a day past the window
         "004_d": [{"date": day(0)}],
@@ -242,3 +242,13 @@ def test_recent_activity_is_the_week_most_recent_first():
     st["open"] = {"005_e": {"last": f"{day(0)}T09:30:00"}, "002_b": {"last": f"{day(0)}T09:31:00"}}
     assert _recent(st, tasks) == ["002_b", "005_e", "004_d", "001_a"]
     assert _recent({"open": {}, "archive": {}}, tasks) == []
+
+    # abandoning is the way out: it stops leading you back, until you open or pass it again
+    st["open"] = {}
+    st["archive"]["001_a"].append({"date": day(0), "grade": "abandoned"})
+    assert _recent(st, tasks) == ["004_d", "002_b"]
+    st["open"] = {"001_a": {"last": f"{day(0)}T09:30:00"}}
+    assert _recent(st, tasks)[0] == "001_a"
+    st["open"] = {}
+    st["archive"]["001_a"].append({"date": day(0), "grade": "pass"})
+    assert _recent(st, tasks)[0] == "001_a"
