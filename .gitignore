@@ -23,10 +23,15 @@ python-checklist.html
 ruff_plan.md
 ruff_report.txt
 
-# SDD review packages: regenerable from git
-.superpowers/**/review-*.diff
+# agent workspaces: plans, briefs, reports and review packages for one run.
+# Scratch by the skill's own design, and a new folder appears per run.
+.superpowers/
 _selfcheck.py
 
 # your practice history: yours, never shipped with a clone (#4)
 progress.json
 progress.json.bak
+
+# agent worktrees: real checkouts of other branches, so every repo-wide tool
+# (ruff, pytest, doctor) walks into them and reports another branch's files
+.claude/

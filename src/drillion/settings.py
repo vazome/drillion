@@ -9,7 +9,7 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
-PKG = Path(__file__).resolve().parent           # .../src/drillion
+PKG = Path(__file__).resolve().parent  # .../src/drillion
 
 
 def _default_root():
@@ -25,10 +25,15 @@ class Settings:
     """Content lives under `root`; the app itself ships next to this file."""
 
     root: Path = field(default_factory=_default_root)
-    host: str = field(default_factory=lambda: os.environ.get("DRILLION_HOST", "127.0.0.1"))
-    port: int = field(default_factory=lambda: int(os.environ.get("DRILLION_PORT", "8765")))
+    host: str = field(
+        default_factory=lambda: os.environ.get("DRILLION_HOST", "127.0.0.1")
+    )
+    port: int = field(
+        default_factory=lambda: int(os.environ.get("DRILLION_PORT", "8765"))
+    )
     open_browser: bool = field(
-        default_factory=lambda: os.environ.get("DRILLION_OPEN_BROWSER", "1") != "0")
+        default_factory=lambda: os.environ.get("DRILLION_OPEN_BROWSER", "1") != "0"
+    )
 
     @property
     def tasks_dir(self):
