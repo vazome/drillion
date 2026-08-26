@@ -32,13 +32,47 @@ def test_grade_of():
 def test_reschedule():
     c = {"box": 0, "due": "2000-01-01", "seen": 1}
     assert scheduler.reschedule(c, "quick") == 8 and c["box"] == 2      # +2 boxes, LADDER[2]
-    assert scheduler.reschedule(c, "struggled") == 8 and c["box"] == 2  # same box, same gap
-    assert scheduler.reschedule(c, "pass") == 16 and c["box"] == 3      # +1 box
-    assert c["due"] == (date.today() + timedelta(days=16)).isoformat()  # noqa: DTZ011
+    assert scheduler.reschedule(c, "struggled") == 4 and c["box"] == 1  # -1 box: a struggle costs
+    assert scheduler.reschedule(c, "pass") == 8 and c["box"] == 2       # +1 box
+    assert c["due"] == (date.today() + timedelta(days=8)).isoformat()   # noqa: DTZ011
     # the top box is the ceiling: a quick pass there moves nothing, which is why /run has to
     # tell the page the box the card came from rather than let it infer a step from the grade
     assert scheduler.reschedule(c, "quick") == 28 and c["box"] == 4
     assert scheduler.reschedule(c, "quick") == 28 and c["box"] == 4
+
+
+def test_a_struggle_walks_a_card_back_down_the_ladder():
+    """Leitner is adaptive only because failing demotes. `struggled` used to be worth +0, so a
+    task that fought you every single sitting held box 4 and its 28-day gap forever — the same
+    schedule as one you had aced four times, and the struggle cost you nothing but the sitting.
+    One box per struggle walks it back down over a few sittings, and box 0 is the floor."""
+    c = {"box": 4, "due": "2000-01-01", "seen": 9}
+    assert [scheduler.reschedule(c, "struggled") for _ in range(6)] == [16, 8, 4, 2, 2, 2]
+    assert c["box"] == 0
+
+
+def test_a_struggle_is_counted_as_well_as_demoted():
+    """The lapse signal was emitted and thrown away: `grade_of` returns `struggled` for a slow
+    pass, a three-run pass or a peeked one, and nothing counted it per card. One struggle is
+    ordinary; four is information about the task — wrong prereqs, above your level, an unclear
+    spec — and only a counter can tell those apart or say anything out loud. Nothing resets it:
+    a task that beat you four times is worth knowing about after you finally beat it."""
+    c = {"box": 4, "due": "2000-01-01", "seen": 9, "lapses": 0}
+    for _ in range(scheduler.LAPSE_LIMIT):
+        scheduler.reschedule(c, "struggled")
+    assert c["lapses"] == scheduler.LAPSE_LIMIT        # the count the page flags on
+    scheduler.reschedule(c, "pass")
+    scheduler.reschedule(c, "quick")
+    assert c["lapses"] == scheduler.LAPSE_LIMIT        # only a struggle is a lapse
+
+
+def test_a_card_written_before_lapses_existed_still_reads():
+    """`state.load()` merges defaults over the top-level keys only, so a new per-card field
+    cannot arrive that way. Months of progress.json already exist on disk and there is no
+    migration step, so `card()` fills the blank on the way out."""
+    old = _st(cards={"001_a": {"box": 3, "due": "2020-01-01", "seen": 7}})
+    assert state.card(old, "001_a")["lapses"] == 0
+    assert state.card(old, "002_b") == {"box": 0, "due": state.today(), "seen": 0, "lapses": 0}
 
 
 def test_unseen_respects_prereqs():
@@ -56,11 +90,35 @@ def test_focus_ignores_out_of_focus_prereqs():
 
 def test_queue_caps_new_picks_and_skips_open_attempts():
     q = scheduler.queue(_st(open={"001_a": {}}), _exs())
-    assert q == {"review": [], "new": ["003_c"], "done_today": 0}
+    assert q == {"review": [], "new": ["003_c"], "done_today": 0,
+                 "due_total": 0, "behind": False}
     done = [{"date": state.today(), "slug": "001_a", "grade": "pass", "attempts": 1, "secs": 9, "new": True},
             {"date": state.today(), "slug": "009_z", "grade": "pass", "attempts": 1, "secs": 9, "new": False}]
     q = scheduler.queue(_st(log=done), _exs())
     assert q["done_today"] == 1 and q["new"] == ["001_a"]            # one new pick left today
+
+
+def test_queue_caps_reviews_and_holds_new_picks_while_behind():
+    """Three weeks away used to hand you 100 review rows and offer two new picks on top of
+    them. Reviews are now capped the way new picks always were, and while the backlog is over
+    that cap nothing new is introduced — starting new material while behind only deepens the
+    hole. Both facts ride on the payload: a cap the page cannot see reads as "done for today"
+    with ninety cards still waiting, which is worse than no cap at all."""
+    cap = scheduler.REVIEWS_PER_DAY
+    all_tasks = {f"{i:03d}_x": {"topic": i, "minutes": 5, "prereqs": [], "tier": "core",
+                                "tags": []} for i in range(1, cap + 7)}
+    backlog = list(all_tasks)[:cap + 1]                  # one deeper than the cap: behind
+    st = _st(cards={s: {"box": 2, "due": f"2020-01-{i + 1:02d}", "seen": 1}
+                    for i, s in enumerate(backlog)})
+    q = scheduler.queue(st, all_tasks)
+    assert q["due_total"] == cap + 1 and len(q["review"]) == cap    # the rest waits its turn
+    assert q["review"] == backlog[:cap]                            # still most overdue first
+    assert q["behind"] is True and q["new"] == []                  # ...and nothing new today
+
+    st["cards"][backlog[-1]]["due"] = "2999-01-01"                 # one card back under the cap
+    q = scheduler.queue(st, all_tasks)
+    assert q["due_total"] == cap and len(q["review"]) == cap       # the whole backlog shows
+    assert q["behind"] is False and len(q["new"]) == scheduler.NEW_PER_DAY   # new picks return
 
 
 def test_queue_puts_the_most_overdue_review_first():
