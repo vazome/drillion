@@ -1,17 +1,11 @@
 services:
   drillion:
-    # The published image, not a local build: a version tag builds it in CI, so
-    # nobody needs the source to run the app. `docker compose pull` updates it.
     image: ghcr.io/vazome/drillion:latest
     ports:
-      - "127.0.0.1:8765:8765"          # loopback only: this is a laptop tool
+      - "127.0.0.1:8765:8765"
     volumes:
-      # /data is the content root: tasks/ and progress.json live there and survive
-      # `docker compose down`. A named volume rather than a bind mount, because the
-      # container runs as uid 1000 and a host directory Docker creates belongs to
-      # root — the named volume inherits the image's own ownership and just writes.
-      # A directory, never a single file: saving renames a .tmp over progress.json
-      # and a single-file bind mount refuses that rename (EBUSY).
+      # a named volume, not a bind mount: the container runs as uid 1000 and a host
+      # directory Docker creates belongs to root
       - drillion:/data
 
 volumes:

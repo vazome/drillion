@@ -1,5 +1,3 @@
-# Pinning actions by SHA is only safe with something to un-rot the pins. One
-# rollup pull request per ecosystem per week; a pull request per package is noise.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -18,7 +16,7 @@ updates:
       python:
         patterns: ["*"]
 
-  - package-ecosystem: npm            # reads web/pnpm-lock.yaml
+  - package-ecosystem: npm
     directory: /web
     schedule:
       interval: weekly

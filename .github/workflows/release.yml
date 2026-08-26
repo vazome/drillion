@@ -1,7 +1,5 @@
 name: release
 
-# A tag is a promise about a number. The version is a hand-bumped literal in
-# pyproject.toml, so this is the guard that keeps the two from drifting.
 on:
   push:
     tags: ["v*"]
@@ -24,17 +22,15 @@ jobs:
           fi
           echo "$GITHUB_REF_NAME matches the declared version"
 
-  # #5: the image people pull. `needs` is the whole point of the guard above —
-  # nothing reaches the registry under a version the source does not claim.
   image:
     needs: tag-matches-version
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: read        # read the checkout that is the build context
-      packages: write       # push the image to ghcr.io
-      id-token: write       # mint the OIDC token Sigstore signs the provenance with
-      attestations: write   # persist the attestation against this repository
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
@@ -43,19 +39,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # ghcr.io/<owner>/<repo>, so the image name follows the repository rather than
-      # being written down anywhere. pep440, not semver: the number this mirrors is
-      # pyproject.toml's, and Python spells a pre-release `0.2.0rc1`. Two tags come out
-      # of a release — `0.1.0` and, from the default `latest=auto` flavor, `latest` —
-      # and a pre-release gets only its own number. A moving `0.1` would say nothing
-      # `latest` does not, and the digest below is the immutable name.
       - id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ghcr.io/${{ github.repository }}
           tags: type=pep440,pattern={{version}}
-      # No cache and no second platform: this builds what ci.yml's `image` job already
-      # smoke-tested on the pull request, once, on the same linux/amd64 it tested on.
       - id: push
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
@@ -63,26 +51,15 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Off, or this action pushes a second, unsigned provenance document of its
-          # own — BuildKit defaults to `mode=max` on a public repo — and wraps the
-          # image in an index to carry it, which is what shows up on the package page
-          # as a phantom `unknown/unknown` architecture. One signed attestation, the
-          # one the README tells people to verify, is the whole story. `sbom` needs no
-          # line: BuildKit adds an SBOM only when asked.
+          # on, and BuildKit pushes a second unsigned provenance wrapped in an index, which
+          # shows on the package page as a phantom unknown/unknown architecture
           provenance: false
-      # Binds the pushed digest to this run, so anyone can ask where the image came from:
-      # `gh attestation verify oci://ghcr.io/vazome/drillion:0.1.0 -R vazome/drillion`.
-      # `subject-name` carries no tag on purpose — the digest identifies the image.
-      # attest-build-provenance is a wrapper over this action and says so in its own
-      # README; with no predicate or SBOM input, build provenance is what this generates.
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-name: ghcr.io/${{ github.repository }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
-  # Split from `pypi` on purpose. This job installs an npm dependency tree and runs a
-  # third-party build, and it must never hold the credential that can publish to PyPI —
-  # so the OIDC token lives in the next job, which only downloads and uploads.
+  # separate from `pypi`: this job runs a third-party npm build and must never hold the PyPI credential
   dists:
     needs: tag-matches-version
     runs-on: ubuntu-latest
@@ -90,8 +67,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
-      # The page ships inside the wheel, so web/dist has to exist before the build reads it.
-      # Same three steps as ci.yml's `check`, minus the pnpm store cache: this runs once a tag.
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
@@ -100,19 +75,14 @@ jobs:
         working-directory: web
       - run: pnpm build
         working-directory: web
-      # Bare `uv build` is sdist-then-wheel-from-that-sdist. The wheel we publish is
-      # therefore built out of the sdist we publish, which is the check worth having.
       - run: uv build
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: dists
           path: dist/
 
-  # Publishing to PyPI is the one irreversible thing this repository can do: a version
-  # number can be yanked but never reused. The `pypi` environment is where the maintainer's
-  # approval gate hangs, and PyPI's trusted publisher is scoped to it — so the identity
-  # that mints the upload token is owner/repo + this filename + this environment name.
-  # Renaming any of the three silently stops releases until PyPI is updated to match.
+  # PyPI's trusted publisher is scoped to owner/repo + this filename + the `pypi` environment;
+  # renaming any of the three stops releases until PyPI is updated to match
   pypi:
     needs: dists
     runs-on: ubuntu-latest
@@ -121,13 +91,10 @@ jobs:
       name: pypi
       url: https://pypi.org/p/drillion
     permissions:
-      id-token: write     # mints the OIDC token PyPI trades for a 15-minute upload token
+      id-token: write
     steps:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: dists
           path: dist/
-      # No username, no password, no secret: the absence is what selects trusted publishing.
-      # PEP 740 attestations are generated here too — Sigstore-signed against this same OIDC
-      # identity, on by default since v1.11.0, so there is nothing to switch on.
       - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2

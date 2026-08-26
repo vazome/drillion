@@ -1,14 +1,12 @@
 name: ci
 
-# push builds main; pull_request builds everything else. Listing both events bare
-# ran the whole job twice for every in-repo pull request.
 on:
   push:
     branches: [main]
   pull_request:
 
 permissions:
-  contents: read          # the job reads the checkout and nothing else
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -17,29 +15,23 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 20   # the checks take a couple of minutes; this is a hang detector, not a budget
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # setup-uv stopped publishing floating major tags at v8: the SHA is the only pin
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
-      # --locked asserts uv.lock matches pyproject.toml; --frozen skipped that check
       - run: uv sync --locked
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest tests -q
       - run: uv run drillion selfcheck
-      # the page is real code now: `pnpm build` is `tsc -b && vite build`, so this is the
-      # type check too. Node and pnpm come in the same way the Dockerfile's web stage gets them.
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
       - run: corepack enable
-      # setup-node's own cache has only covered npm since v6, so the pnpm store gets
-      # its own. Ask pnpm where the store is rather than guessing at a path: pnpm 11
-      # moved it to a new store version.
-      - run: echo "PNPM_STORE=$(pnpm store path)" >> "$GITHUB_ENV"
+      - name: locate the pnpm store
+        run: echo "PNPM_STORE=$(pnpm store path)" >> "$GITHUB_ENV"
         working-directory: web
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -48,19 +40,11 @@ jobs:
           restore-keys: pnpm-
       - run: pnpm install --frozen-lockfile
         working-directory: web
-      # oxlint is to the client what `ruff check` is to the Python: it fails the build.
-      # `pnpm lint` is bare `oxlint`, which reads web/.oxlintrc.json and covers src/,
-      # check.mjs and vite.config.ts alike — the rules and why each one is on are in
-      # that file. Before build, so a dead import is reported before a 400 kB bundle.
       - run: pnpm lint
         working-directory: web
       - run: pnpm build
         working-directory: web
-      # Build the sdist HERE, after `pnpm install` has put node_modules on disk, because
-      # that is the only state in which this can fail. hatchling ignores nested .gitignore
-      # files, so `web/node_modules` is invisible to it and only pyproject's own exclude
-      # list keeps it out — drillion 0.1.0 shipped 113 MB of it. A clean local build proves
-      # nothing; a build with node_modules present proves the exclude still works.
+      # after pnpm install, with node_modules on disk: the only state the sdist exclude list can fail in
       - run: uv build --sdist -o /tmp/sdist
       - name: the sdist carries the source, not the workspace
         run: |
@@ -84,18 +68,10 @@ jobs:
           PY
         working-directory: web
 
-  # #29: reviewing the client meant checking the branch out and starting a server, so the only
-  # person who could review it was whoever had it running. This drives the real client against
-  # the real API in a real browser and uploads what it saw. It is a review aid: nothing is
-  # diffed against a committed baseline and nothing fails on pixel drift.
   screens:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # Pinned browser, pinned OS. The image carries the exact Chromium that @playwright/test
-    # 1.62.0 drives, and Playwright refuses to run when the two disagree — so this tag and
-    # web/package.json's pin are one version, bumped together or not at all. `--user 1001` is
-    # the runner's own uid, so the PNGs come out readable by the upload step; `--ipc=host` is
-    # Playwright's own advice — the default 64 MB /dev/shm is what Chromium crashes on.
+    # this image tag and web/package.json's @playwright/test pin are one version, bumped together
     container:
       image: mcr.microsoft.com/playwright:v1.62.0-noble
       options: --user 1001 --ipc=host
@@ -111,16 +87,10 @@ jobs:
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
         working-directory: web
-      # `serve()` builds web/dist itself when it is stale, but doing that inside the server's
-      # start-up would race Playwright's readiness timeout. Build it first, deliberately.
       - run: pnpm build
         working-directory: web
-      # Starts the server itself, against a throwaway DRILLION_ROOT — see web/playwright.config.ts.
       - run: pnpm screens
         working-directory: web
-      # `!cancelled()`, not `success()`: when a later screen fails to load, the ones already
-      # captured are exactly what says why. Artifacts work on pull requests from forks, which
-      # is half of why this is a browser in CI rather than a hosted preview.
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:
@@ -129,11 +99,9 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
-          name: client-traces          # `pnpm exec playwright show-trace <zip>` opens one
+          name: client-traces
           path: web/test-results/
 
-  # Non-negotiable #3 is `docker run` and a ready environment, so CI builds the
-  # image and boots it. Separate job: it runs beside `check` instead of after it.
   image:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -143,12 +111,10 @@ jobs:
       - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
-          load: true                     # into the local daemon; nothing is pushed
+          load: true
           tags: drillion:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      # The checkout is the content root, the way compose.yaml mounts it. --user is the
-      # runner's own uid so the container may write into the checkout it was handed.
       - name: start the image
         run: >
           docker run -d --name drillion
@@ -169,9 +135,6 @@ jobs:
           docker logs drillion
           exit 1
       - run: docker exec drillion drillion selfcheck
-      # And the published shape: a volume, a port, nothing brought from the host. The mount
-      # above cannot catch an image that carries no tasks of its own, which is exactly what
-      # #38 was. The container seeds /data on its first start and serves from there.
       - name: start it again with nothing but a volume
         run: |
           docker rm -f drillion
