@@ -431,9 +431,15 @@ def solution_task(slug: str):
 
 @app.post("/api/task/{slug}/abandon")
 def abandon_task(slug: str, sent: Etag):
-    """Give up: keep the work in the archive, put the stub back, drop the timer."""
+    """Give up: keep the work in the archive, put the stub back, drop the timer.
+
+    `current()` first, like every other acting route. Without it this was the one route
+    that would rewrite a task file to its stub with no attempt open — `abandon()` pops a
+    key that may not be there and stubs the source either way — so a stray call cost the
+    learner whatever was in the editor and archived it as `abandoned`."""
     with writing() as st:
         meta = _task(slug)
+        current(st, slug)
         src = meta["path"].read_text()
         _check_etag(src, sent.etag)
         new_src = abandon(st, slug, src)

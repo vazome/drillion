@@ -342,6 +342,25 @@ async def _the_reference_needs_the_peek_not_just_its_price(api, _path):
     assert reread["reference"] == took["code"]  # a reload does not un-take it
 
 
+async def _abandon_needs_an_attempt_like_every_other_route(api, path):
+    """Four acting routes go through `current()` and answer 409 with nothing open. Abandon
+    did not: it popped a key that might not be there and stubbed the file either way, so a
+    stray call rewrote whatever was in the editor and filed it under `abandoned`. Not
+    reachable from the page today, which is precisely why it would have outlived the next
+    change to that flow."""
+    src = path.read_text()
+    work = region.splice(
+        src, region.cut(src).body.replace("raise NotImplementedError", PASSING)
+    )
+    path.write_text(work)  # real work on disk, and nothing open
+    etag = (await api.get(f"/api/task/{SLUG}")).json()["etag"]
+
+    res = await api.post(f"/api/task/{SLUG}/abandon", json={"etag": etag})
+    assert res.status_code == 409
+    assert path.read_text() == work  # the work is still there
+    assert state.load()["archive"].get(SLUG) is None  # and not filed as given up
+
+
 async def _your_own_answer_is_an_answer(api, _path):
     """The archive is the reference's second door, and it was unlocked.
 
@@ -405,6 +424,10 @@ def test_a_slow_pass_steps_the_card_back_down():
 
 def test_the_reference_opens_on_the_peek_not_on_the_price():
     _api(_the_reference_needs_the_peek_not_just_its_price)
+
+
+def test_abandoning_nothing_is_a_conflict_not_a_wipe():
+    _api(_abandon_needs_an_attempt_like_every_other_route)
 
 
 def test_your_own_past_answer_is_gated_like_the_reference():
