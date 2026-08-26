@@ -90,7 +90,7 @@ ask the user for guidance.
 
 Remind the user to:
 
-1. Review the PR title — keep it short (under 70 chars), in the imperative mood, and focused on user impact. Do not use Conventional Commits prefixes (`fix:`, `feat:`, `chore:`, …).
+1. Review the PR title — a conventional title with a scope, the same shape as the commits inside it: `fix(web): submission no longer causes crashes`. Short (under 70 chars), imperative, and about user impact rather than implementation.
 2. Add a brief description of the changes at the top of the body.
 3. Reference related issues when applicable.
 
