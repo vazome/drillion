@@ -41,6 +41,12 @@ dev = [
 [tool.ruff]
 extend-exclude = ["drafts"]          # scratch files, not part of the task set
 
+[tool.ruff.format]
+# Linted, never reshaped. A task file's learner region is the shape the exercise
+# teaches, and the Python inside our Markdown is written to be read, not to be
+# black-compatible. Both still go through `ruff check`.
+exclude = ["tasks/**", "*.md"]
+
 [tool.ruff.lint.per-file-ignores]
 "src/drillion/*" = ["DTZ"]  # local wall-clock dates are intended for scheduling
 "tasks/*/task.py" = ["E402", "F841"]  # the region is the learner's, and the
