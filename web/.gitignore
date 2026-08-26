@@ -1,5 +1,10 @@
 node_modules/
-dist/
+# the built page. Generated, so nothing inside it is committed — but the wheel
+# force-includes web/dist and hatchling refuses to build when a forced include is
+# missing, so the empty directory itself travels, by way of a .gitkeep (#38).
+!dist/
+dist/*
+!dist/.gitkeep
 *.tsbuildinfo
 .check.bundle.mjs
 

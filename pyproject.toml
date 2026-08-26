@@ -22,6 +22,10 @@ dependencies = [
     "uvicorn>=0.52.4",
 ]
 
+[project.urls]
+Homepage = "https://github.com/vazome/drillion"
+Issues = "https://github.com/vazome/drillion/issues"
+
 [project.scripts]
 drillion = "drillion.cli:main"
 
@@ -31,6 +35,25 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/drillion"]
+
+# The wheel has to carry the content or `uvx drillion` installs a CLI with an empty
+# catalogue and no page to serve (#38). `tasks/` goes in as a pristine template that
+# `cli.seed()` copies into a writable root on the first run — a task file is where the
+# learner's code is stored, so it can never be practised inside site-packages. Both
+# sources must exist at build time: hatchling errors on a forced include that is
+# missing, which is why web/dist/.gitkeep is committed.
+[tool.hatch.build.targets.wheel.force-include]
+"tasks" = "drillion/_tasks"
+"web/dist" = "drillion/_web"
+
+[tool.hatch.build.targets.sdist]
+# A bare `uv build` builds the sdist first and then the wheel *from it*, so anything the
+# sdist drops the wheel cannot force-include. web/dist is generated and git-ignored, and
+# `artifacts` is the one selector the VCS rules do not apply to.
+artifacts = ["web/dist/**"]
+# The sdist is the source, not the workspace: agent instructions and IDE settings are not
+# part of what anyone builds or reads on PyPI.
+exclude = ["/.idea", "/AGENTS.md", "/CLAUDE.md", "/DESIGN.md"]
 
 [dependency-groups]
 dev = [

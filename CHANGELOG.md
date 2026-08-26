@@ -20,7 +20,11 @@ anything earlier.
   it in the header.
 - Bury a task to push it out of today's queue; it comes back tomorrow on its own.
 - A free-text note per task, kept in `progress.json` alongside the card.
-- A container image that runs the same app against a mounted content root.
+- A container image that runs the same app against a mounted content root, and carries the
+  tasks itself when nothing is mounted over them.
+- The wheel ships the 171 tasks and the built page. An install with no checkout copies them
+  once into a per-user directory (`XDG_DATA_HOME` and its platform equivalents) and practises
+  there; a root that already has `tasks/` is used as it is and never written over.
 
 ### Releasing
 
