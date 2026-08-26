@@ -1,6 +1,6 @@
 """Runner: pytest output turned into editor coordinates."""
 
-from study import runner
+from drillion import runner
 
 CANNED = """\
 =================================== FAILURES ===================================

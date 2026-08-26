@@ -25,14 +25,14 @@ RUN uv sync --frozen --no-dev
 COPY web/ ./web/
 
 ENV PATH="/app/.venv/bin:$PATH" \
-    STUDY_ROOT=/data \
-    STUDY_HOST=0.0.0.0 \
-    STUDY_OPEN_BROWSER=0
+    DRILLION_ROOT=/data \
+    DRILLION_HOST=0.0.0.0 \
+    DRILLION_OPEN_BROWSER=0
 
-RUN useradd --create-home --uid 1000 study && mkdir -p /data && chown study /data
-USER study
+RUN useradd --create-home --uid 1000 drillion && mkdir -p /data && chown drillion /data
+USER drillion
 
 EXPOSE 8765
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/api/health')"
-CMD ["study"]
+CMD ["drillion"]

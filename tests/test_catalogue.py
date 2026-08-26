@@ -5,8 +5,8 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from study import catalogue, region
-from study.settings import settings
+from drillion import catalogue, region
+from drillion.settings import settings
 
 DIRS = sorted(p for p in settings.exercises_dir.iterdir() if (p / "drill.py").exists())
 
@@ -37,7 +37,7 @@ DRILL = ("def solve(x):\n    raise NotImplementedError\n\n\n"
 
 def _root(**folders):
     """A throwaway exercises/ root: {folder: {file: text}}."""
-    tmp = Path(tempfile.mkdtemp(prefix="study_cat_"))
+    tmp = Path(tempfile.mkdtemp(prefix="drillion_cat_"))
     for name, files in folders.items():
         (tmp / "exercises" / name).mkdir(parents=True)
         for fname, text in files.items():

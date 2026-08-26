@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from study import region, state
-from study.settings import settings
+from drillion import region, state
+from drillion.settings import settings
 
 FILES = sorted(settings.exercises_dir.glob("*/drill.py"))
 SRC = (settings.exercises_dir / "001_fstrings" / "drill.py").read_text()

@@ -7,9 +7,9 @@ from pathlib import Path
 
 import httpx
 
-from study import region, scheduler, state
-from study.api import MAX_BODY, app
-from study.settings import settings
+from drillion import region, scheduler, state
+from drillion.api import MAX_BODY, app
+from drillion.settings import settings
 
 SLUG = "001_fstrings"
 PASSING = 'return "\\n".join(f"{name:<14}{value:>12,.2f}" for name, value in rows)'
@@ -18,7 +18,7 @@ PASSING = 'return "\\n".join(f"{name:<14}{value:>12,.2f}" for name, value in row
 def _api(flow):
     """Run `flow(api, path)` against a throwaway copy of one drill: the API tests
     write real files, and Daniel's exercises/ and progress.json are not for that."""
-    tmp, keep = Path(tempfile.mkdtemp(prefix="study_api_")), settings.root
+    tmp, keep = Path(tempfile.mkdtemp(prefix="drillion_api_")), settings.root
     exdir = tmp / "exercises"
     exdir.mkdir()
     shutil.copytree(settings.exercises_dir / SLUG, exdir / SLUG)
