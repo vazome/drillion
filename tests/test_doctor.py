@@ -58,6 +58,18 @@ def test_a_good_task_has_nothing_said_about_it():
     assert _reasons(**{"042_thing": {"README.md": README, "task.py": TASK}}) == {}
 
 
+def test_a_malformed_prereqs_is_reported_rather_than_crashed_on():
+    """doctor's whole job is to say why a folder is wrong, so it has to survive the wrong
+    thing long enough to print it. `prereqs: 3` — a scalar where a list belongs — was
+    reported by the folder pass and then reached the cycle check still an int, where
+    iterating it took the entire run down with a TypeError. The reason never reached the
+    screen, and the one tool that exists to explain a bad folder was the thing it broke."""
+    scalar = README.replace("prereqs: []", "prereqs: 3")
+    assert _reasons(**{"042_thing": {"README.md": scalar, "task.py": TASK}}) == {
+        "042_thing": ["README.md: prereqs must be a list of task numbers"]
+    }
+
+
 def test_every_reason_is_reported_not_just_the_first():
     """The whole value of doctor is the reason string, and one folder can break several
     rules at once. Stopping at the first would make it the silent `continue` with extra

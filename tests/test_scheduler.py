@@ -64,7 +64,8 @@ def test_reschedule():
     # the top box is the ceiling: a quick pass there moves nothing, which is why /run has to
     # tell the page the box the card came from rather than let it infer a step from the grade
     assert scheduler.reschedule(c, "quick") == 28 and c["box"] == 4
-    assert scheduler.reschedule(c, "quick") == 28 and c["box"] == 4
+    assert scheduler.reschedule(c, "quick") == 120 and c["box"] == 6
+    assert scheduler.reschedule(c, "quick") == 120 and c["box"] == 6
 
 
 def test_a_struggle_walks_a_card_back_down_the_ladder():
@@ -274,10 +275,29 @@ def test_the_web_ladder_matches_the_scheduler():
         found = re.search(pattern, (ROOT / rel).read_text())
         assert found, f"the ladder intervals went missing from {rel}"
         assert [int(n) for n in re.findall(r"\d+", found[1])] == scheduler.LADDER, rel
-    # and Task.tsx names the height once — the pass banner's "box 3 of 5" and its
+    # and Task.tsx names the height once — the pass banner's "box 3 of 7" and its
     # top-box copy both read it, so this is the only literal left to drift.
     found = re.search(r"const BOXES = (\d+)", (ROOT / "web/src/Task.tsx").read_text())
     assert found and int(found[1]) == len(scheduler.LADDER), "web/src/Task.tsx"
+
+
+def test_the_ladder_sheds_review_load_at_the_top():
+    """The whole point of the rungs past 28 days (#2). The ladder only ever climbs, so the top
+    interval alone decides the steady state: at a 28-day ceiling every card you had mastered
+    still came back monthly, and a finished 171-task catalogue settled at roughly six reviews a
+    day, forever, before a single new pick — the "20-40 minutes a day, kept up over months"
+    promise in README.md quietly broken by its own success. Shed there and nowhere else: a card
+    you keep getting right is still `done`, and `status` still has exactly four members."""
+    assert scheduler.LADDER == sorted(scheduler.LADDER), (
+        "a rung must never return sooner than the one below"
+    )
+    assert scheduler.LADDER[-1] >= 90, "the top rung has to be a season, not a month"
+
+    c = {"box": len(scheduler.LADDER) - 1, "due": "2000-01-01", "seen": 9}
+    assert (
+        scheduler.reschedule(c, "quick") == scheduler.LADDER[-1]
+    )  # clamps rather than wraps
+    assert c["box"] == len(scheduler.LADDER) - 1
 
 
 def test_the_editor_opens_an_attempt_before_it_saves():
@@ -303,8 +323,7 @@ def test_the_page_starts_the_clock_by_itself():
     """The attempt is the timer, so it starts when the task page settles — not when Run
     is first pressed, which billed the reading as free. Only Task.tsx knows the delay."""
     src = (ROOT / "web/src/Task.tsx").read_text()
-    found = re.search(r"const ATTEMPT_MS = (\d+)", src)
-    assert found and int(found[1]) == 5000, "the page should open its attempt after 5s"
+    assert re.search(r"const ATTEMPT_MS = \d+", src), "the page names no delay at all"
     assert re.search(r"setTimeout\(.*ensureOpen\(\).*ATTEMPT_MS\)", src), (
         "nothing arms ATTEMPT_MS — the clock is back to starting on Run"
     )

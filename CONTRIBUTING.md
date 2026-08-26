@@ -17,8 +17,31 @@ API still serves and only `/` 404s. To work on the frontend itself:
 ```bash
 pnpm --dir web install                       # once
 pnpm --dir web dev                           # Vite on 5173, proxying /api to the server on 8765
+pnpm --dir web lint                          # lint — CI fails if this fails, same as ruff
 pnpm --dir web check 8765                    # renders all 171 task specs against a running server
 ```
+
+## Seeing the client without running it
+
+Every pull request gets a **`client-screenshots`** artifact: the catalogue, a task, that task
+after its tests have been run — failed and passed — and the progress page, captured from the
+real client talking to the real API. Download it from the run's summary page and look. It is a
+review aid, not a visual regression test: nothing is compared against a committed baseline, so
+a UI change shows up as a different picture and never as a red build. When a run does fail, a
+`client-traces` artifact comes with it; `pnpm --dir web exec playwright show-trace <zip>` replays
+it step by step.
+
+To produce the same PNGs locally:
+
+```bash
+pnpm --dir web exec playwright install chromium   # once, ~120 MB
+pnpm --dir web screens                            # → web/screenshots/, both git-ignored
+```
+
+It starts and stops the server itself on port 8766, against a throwaway copy of `tasks/` in
+your temp directory — never the checkout, so your own `progress.json` and task files cannot be
+touched. The last test in `web/e2e/screens.spec.ts` asserts exactly that. Nothing has to be
+running first, and a dev server on 8765 is left alone.
 
 See the root [README](README.md) for the full architecture and vocabulary, and
 [`web/README.md`](web/README.md) for frontend-specific notes.
@@ -70,9 +93,35 @@ If the task is adapted from another source (Exercism or elsewhere), say so hones
 `source:` frontmatter field and a closing attribution line, and confirm the licence permits it —
 see [NOTICE](NOTICE) for how the 84 Exercism-derived tasks already do this.
 
+## Versioning
+
+drillion is on `0.x`, which means anything may change. `1.0` will be a claim that the
+`progress.json` schema has settled, not a badge.
+
+The version is declared in **exactly one place**, `version` in `pyproject.toml`, and bumped by
+hand. `drillion --version`, `GET /api/health` and the page's header all read it back from the
+installed package metadata, so nothing in the source repeats the number. It is deliberately not
+derived from git tags: the container build context carries the source but no git history, so a
+VCS-derived version would build as a development placeholder inside the image.
+
+Semantic versioning, defined against drillion's real public surface — the CLI, the HTTP API,
+the `progress.json` schema, and the task-folder format:
+
+- **MAJOR** — an existing `progress.json` stops loading or needs migrating, existing task
+  folders stop being valid, or a CLI/HTTP contract breaks. A learner's saved progress is the
+  thing they cannot afford to lose, so it is the thing MAJOR is about.
+- **MINOR** — new features, new payload fields, new tasks. Task content is content; adding
+  drills is not a breaking change.
+- **PATCH** — fixes, no new surface.
+
+Releasing: bump `pyproject.toml`, add the entry to [CHANGELOG.md](CHANGELOG.md), tag the commit
+`v<version>`. CI fails a tag whose name disagrees with the declared version.
+
 ## Code style
 
 - `ruff` must pass (`uv run ruff check .`); it runs in CI.
+- The client's linter must pass (`pnpm --dir web lint`); it runs in CI beside `ruff`. The
+  rules are in `web/.oxlintrc.json`, each with the mistake it is there to catch.
 - Conventional commit titles, plain language: `fix(web): submission no longer causes crashes`.
 - Comments describe how a thing is used, not a line-by-line narration.
 

@@ -48,8 +48,62 @@ jobs:
           restore-keys: pnpm-
       - run: pnpm install --frozen-lockfile
         working-directory: web
+      # oxlint is to the client what `ruff check` is to the Python: it fails the build.
+      # `pnpm lint` is bare `oxlint`, which reads web/.oxlintrc.json and covers src/,
+      # check.mjs and vite.config.ts alike — the rules and why each one is on are in
+      # that file. Before build, so a dead import is reported before a 400 kB bundle.
+      - run: pnpm lint
+        working-directory: web
       - run: pnpm build
         working-directory: web
+
+  # #29: reviewing the client meant checking the branch out and starting a server, so the only
+  # person who could review it was whoever had it running. This drives the real client against
+  # the real API in a real browser and uploads what it saw. It is a review aid: nothing is
+  # diffed against a committed baseline and nothing fails on pixel drift.
+  screens:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Pinned browser, pinned OS. The image carries the exact Chromium that @playwright/test
+    # 1.62.0 drives, and Playwright refuses to run when the two disagree — so this tag and
+    # web/package.json's pin are one version, bumped together or not at all. `--user 1001` is
+    # the runner's own uid, so the PNGs come out readable by the upload step; `--ipc=host` is
+    # Playwright's own advice — the default 64 MB /dev/shm is what Chromium crashes on.
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.0-noble
+      options: --user 1001 --ipc=host
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+        working-directory: web
+      # `serve()` builds web/dist itself when it is stale, but doing that inside the server's
+      # start-up would race Playwright's readiness timeout. Build it first, deliberately.
+      - run: pnpm build
+        working-directory: web
+      # Starts the server itself, against a throwaway DRILLION_ROOT — see web/playwright.config.ts.
+      - run: pnpm screens
+        working-directory: web
+      # `!cancelled()`, not `success()`: when a later screen fails to load, the ones already
+      # captured are exactly what says why. Artifacts work on pull requests from forks, which
+      # is half of why this is a browser in CI rather than a hosted preview.
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: client-screenshots
+          path: web/screenshots/
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: client-traces          # `pnpm exec playwright show-trace <zip>` opens one
+          path: web/test-results/
 
   # Non-negotiable #3 is `docker run` and a ready environment, so CI builds the
   # image and boots it. Separate job: it runs beside `check` instead of after it.

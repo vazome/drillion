@@ -44,6 +44,16 @@ def test_touch_caps_a_long_gap():
     assert attempts.touch(o) == 120  # no time has passed since
 
 
+def test_touch_never_runs_the_timer_backwards():
+    """`active` is the currency the solution gate is paid in and half of what `grade_of()`
+    reads, and it came off a wall clock capped at two minutes above and nothing below. A
+    clock is not monotonic — a DST fall-back or an NTP correction steps it back — and a
+    negative tick spends the timer instead of winding it. Far enough back and the gate can
+    never be paid at all, and a long sitting grades as `quick`."""
+    o = {"active": 500, "last": (datetime.now() + timedelta(minutes=5)).isoformat()}  # noqa: DTZ005
+    assert attempts.touch(o) == 500  # a step back is worth nothing, never less
+
+
 def test_attempt_lifecycle():
     st, all_tasks = _st(), _exs()
     o = attempts.open_attempt(st, "001_a")

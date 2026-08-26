@@ -1,0 +1,51 @@
+// The client's linter. `tsc -b` says the types line up; this says the rest of it does.
+// Comments are part of the config format, and they are the point: every group below is here
+// because it caught something in this tree, or because the shape of this tree makes the
+// mistake it catches a likely one. Nothing is on because a template turned it on.
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+
+  // `plugins` REPLACES oxlint's default list, so every one we want is named.
+  // - react       exhaustive-deps above all. Task.tsx runs five effects and keeps ten refs
+  //               precisely to dodge stale closures — a dependency dropped from one of
+  //               those arrays is this app's most expensive available bug, and it shows up
+  //               as an autosave that writes yesterday's code, not as an error. jsx-key
+  //               covers the mapped rows on all three screens.
+  // - unicorn     no-invalid-remove-event-listener: App.tsx and Task.tsx each pair
+  //               addEventListener with removeEventListener in an effect's cleanup, and
+  //               handing remove a fresh arrow leaks a listener per route change without
+  //               ever erroring. no-invalid-fetch-options covers api.ts's hand-built init.
+  // - typescript  no-non-null-asserted-optional-chain. Task.tsx is full of both `!` and `?.`
+  //               (`r.grade!`, `task?.hints`, `empty!.message`); `a?.b!` is the one that lies.
+  // - oxc         const-comparisons, double-comparisons, bad-object-literal-comparison —
+  //               comparator bugs, and this page hand-writes comparators (sortRows, sortTags).
+  // Left off deliberately: jsx-a11y found nothing over `web/src` but a preference for
+  // `<output>` over the live regions Task.tsx mounts on purpose, and import/promise/jsdoc
+  // found nothing at all. A group with no evidence does not get to fail the build.
+  "plugins": ["react", "unicorn", "typescript", "oxc"],
+
+  // `correctness` only: "outright wrong or useless". It is what caught the dead
+  // `readFileSync` import in check.mjs — dead because tsconfig's `include` is `["src"]`,
+  // so the type check has never once looked at that file. The louder categories
+  // (`style`, `pedantic`) are formatting opinions, and formatting is out of scope.
+  "categories": { "correctness": "error" },
+
+  "rules": {
+    // Named in the issue. `null: ignore` keeps `row.id != null` in ds/Table.jsx, which is
+    // the deliberate "neither null nor undefined" idiom, not a typo for `!==`.
+    "eqeqeq": ["error", "always", { "null": "ignore" }],
+    // Caught `html` in check.mjs shadowing the render helper of the same name: the inner
+    // one is a string, so calling the outer through it would have thrown at runtime.
+    "no-shadow": "error",
+    // oxlint files this under `pedantic`; it is not. Task.tsx returns early twice before its
+    // JSX (`if (error)`, `if (!task)`), so the next hook added to that component is one
+    // paste away from sitting below a conditional return and silently reordering.
+    "react/rules-of-hooks": "error",
+    // The one correctness rule this codebase argues with. It flags Task.tsx's load effect,
+    // which clears every piece of per-task state the moment `slug` changes. The rule is not
+    // wrong — the React-shaped answer is `<Task key={slug} …/>` and no reset at all — but
+    // that remounts the component, which is a behaviour change and its own issue, not
+    // something a linter should force in passing.
+    "react/set-state-in-effect": "off"
+  }
+}

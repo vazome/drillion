@@ -1,0 +1,25 @@
+name: release
+
+# A tag is a promise about a number. The version is a hand-bumped literal in
+# pyproject.toml, so this is the guard that keeps the two from drifting.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  tag-matches-version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: the tag must be v<the version in pyproject.toml>
+        run: |
+          declared=$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)
+          if [ "${GITHUB_REF_NAME#v}" != "$declared" ]; then
+            echo "::error::tag $GITHUB_REF_NAME disagrees with pyproject.toml version $declared"
+            exit 1
+          fi
+          echo "$GITHUB_REF_NAME matches the declared version"
