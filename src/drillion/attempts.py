@@ -1,9 +1,7 @@
 """The attempt: one timer per task, from the first open until the pass.
 
-Time is *active* seconds — every touch adds the gap since the last one, capped at
-two minutes, so a coffee break is not study. Grades, hints and the solution gate
-all price themselves in that currency.
-"""
+Time is *active* seconds: every touch adds the gap since the last one, capped at two
+minutes, and grades, hints and the solution gate all price themselves in that currency."""
 
 import random
 from datetime import datetime
@@ -19,8 +17,7 @@ NUDGE_SECS = 1800  # active seconds of reading before a hint is offered
 
 class Gated(Exception):
     """A hint (or the solution) that has not been earned yet. `owed` carries what is
-    still to be spent: nothing for an exhausted hint list, attempts and seconds for
-    the answer. Callers report it; they never re-derive it."""
+    still to be spent, so no caller re-derives the gate."""
 
     def __init__(self, wait_secs=0, **owed):
         super().__init__(f"wait {wait_secs}s")
@@ -34,9 +31,8 @@ class NoAttempt(Exception):
 def touch(o):
     """Active seconds only: a gap longer than two minutes was a break, not work.
 
-    Clamped at both ends. A wall clock is not monotonic — a DST fall-back or an NTP
-    correction steps it backwards — and a negative tick runs the timer down: enough of
-    them and the solution gate becomes unpayable and a long sitting grades as `quick`."""
+    Clamped at both ends: a wall clock is not monotonic, and a negative tick would run
+    the timer down."""
     now = datetime.now()
     o["active"] += max(
         0,
@@ -56,8 +52,7 @@ def current(st, slug):
 
 
 def open_attempt(st, slug):
-    """The attempt is the timer: it lives from the first open until the pass.
-    The file is already a stub, so nothing is written here."""
+    """The attempt is the timer: it lives from the first open until the pass."""
     o = st["open"].get(slug)
     if o:
         touch(o)
@@ -79,10 +74,8 @@ def open_attempt(st, slug):
 def grade_reason(o, par, grade):
     """Why `grade_of` landed where it did — the cause, never the number.
 
-    Par is the grader's input and never reaches the browser, so the reason names what
-    counted (the runs, the time, the peek) and no threshold to race. The rubric stays
-    defined once: each factor is probed by asking `grade_of` what it would have graded
-    on that factor alone, rather than restating its branches here."""
+    Par never reaches the browser, so each factor is probed by asking `grade_of` what it
+    would have graded on that factor alone."""
     if o["solution_shown"]:
         return "the solution was shown"
     if grade == "quick":
@@ -100,9 +93,7 @@ def grade_reason(o, par, grade):
 def nudge_due(o):
     """Half an hour of active reading with nothing run and no hint taken: offer one.
 
-    The gate opens hints silently, which is no use to the learner who is not looking at
-    the panel — you cannot brute-force something nobody has told you about. Taking a hint
-    or running the tests answers it, so the nudge clears itself once it has been acted on."""
+    Taking a hint or running the tests answers it, so the nudge clears itself."""
     return (
         bool(o) and not o["attempts"] and not o["hints"] and o["active"] >= NUDGE_SECS
     )
@@ -193,8 +184,7 @@ def solution_text(path):
 def attempt_view(o, hints):
     """What the page may know about an attempt: the timer, the hints, the gate.
 
-    `o` is None when nothing is open. Every number here answers exactly as the
-    matching action would, because both read `_gate` and HINT_GAP from this module."""
+    `o` is None when nothing is open."""
     unlocked, need_attempts, need_secs = _gate(o)
     shown = o["hints"] if o else 0
     next_in = None

@@ -1,8 +1,4 @@
-"""Region: the marker split, the stub and the write gate.
-
-Plain functions, no fixtures. The expensive ones sweep every task: splice and
-stub must be exactly reversible or a save would corrupt a task.
-"""
+"""Region: the marker split, the stub and the write gate."""
 
 import ast
 import shutil
@@ -25,7 +21,6 @@ def _solved(src=SRC, code="return ''"):
     )
 
 
-# ------------------------------------------------------------ region: all files
 def test_the_marker_opens_the_machinery_of_every_task():
     assert len(FILES) >= 104
     for f in FILES:
@@ -57,7 +52,6 @@ def test_stub_is_identity_on_pristine_files():
         assert region.stub(body) == body, f.parent.name
 
 
-# ------------------------------------------------------------ stub
 def test_stub_keeps_given_code_and_decorators():
     for name, needle in (
         ("034_env", "TRUTHY = {"),
@@ -82,7 +76,6 @@ def test_has_given_spots_code_above_solve():
     assert not region.has_given(region.cut(SRC).body)
 
 
-# ------------------------------------------------------------ the write gate
 def test_validate_accepts_a_normal_edit():
     new = region.validate(
         region.cut(SRC).body.replace("raise NotImplementedError", "return ''"), SRC

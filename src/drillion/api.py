@@ -1,17 +1,8 @@
 """JSON API over the task core, and the built page that drives it.
 
-Every route is a plain `def`. Each one that touches progress.json opens a
-`state.writing()` (or `state.reading()`) block, which holds the lock and is the
-only place the file is committed; an `async def` blocking on that lock would
-freeze the whole server while a 60 s pytest run held it, and FastAPI runs sync
-handlers in a threadpool, where blocking is what threads are for.
-
-Nothing here re-implements a rule: `region` owns validation and the splice,
-`scheduler` and `attempts` own grading, and the task files are read as text
-and run as a subprocess — the server never imports them. The browser only ever
-sees the region above the marker, so `_reference`, `_gen` and the tests cannot
-leak into it, and the guidance it renders comes from the task's README.md.
-"""
+Every route is a plain `def` that touches progress.json inside a `state.writing()` or
+`state.reading()` block: an `async def` blocking on that lock would freeze the whole
+server, while FastAPI runs sync handlers in a threadpool."""
 
 import logging
 import shutil
@@ -88,7 +79,6 @@ class Note(BaseModel):
     text: str
 
 
-# ---------------------------------------------------------------- errors
 @app.exception_handler(Invalid)
 async def _rejected(_request, exc):
     """A refused edit is the learner's problem, not a crash: 400 with coordinates."""
@@ -108,11 +98,8 @@ async def _error(_request, exc):
     return JSONResponse(body, exc.status_code, headers=exc.headers)
 
 
-# ---------------------------------------------------------------- middleware
 @app.middleware("http")
 async def _limit_body(request, call_next):
-    # ponytail: a chunked body carries no length and slips past; the only client
-    # is our own page, and uvicorn already caps headers.
     length = request.headers.get("content-length", "")
     if length.isdigit() and int(length) > MAX_BODY:
         return JSONResponse({"error": "that is more code than any task needs"}, 413)
@@ -123,7 +110,6 @@ async def _limit_body(request, call_next):
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"])
 
 
-# ---------------------------------------------------------------- helpers
 def _task(slug):
     """The catalogue entry for `slug` — a slug never becomes a path any other way."""
     all_tasks = tasks()
@@ -160,9 +146,8 @@ def _payload(st, slug, meta, src):
     o = st["open"].get(slug)
     c = card(st, slug)
     att = attempt_view(o, meta["hints"])
-    # One rule, both answers. Passing the task is what opens them, and the next sitting on
-    # that card starts clean again; while an attempt is open only the deliberate peek opens
-    # them, because taking the answer is what marks the attempt and costs the grade.
+    # one rule, both answers: passing opens them, and while an attempt is open only the
+    # deliberate peek does
     reveal = o["solution_shown"] if o else c["seen"] > 0 and c["due"] > today()
     return {
         "slug": slug,
@@ -178,8 +163,6 @@ def _payload(st, slug, meta, src):
         "lapses": c["lapses"],
         "lapse_limit": LAPSE_LIMIT,
         "ladder": LADDER,
-        # the learner's own words about this task — about the task and never about one
-        # sitting, so a grade, a re-attempt and an abandon all leave it exactly as it was
         "note": st["notes"].get(slug, ""),
         "reference": solution_text(meta["path"]) if reveal else None,
         **att,
@@ -195,11 +178,8 @@ def _payload(st, slug, meta, src):
 
 
 def _practised(st):
-    """Days worked in the last WINDOW, counted from the archive — which holds a row
-    for every pass and every abandoned attempt that got anywhere, so a hard day you
-    gave up on still counts. A rolling window, never a streak: one missed day costs one point and
-    repairs itself, and nothing here rewards filling all seven (Lally 2010: a single
-    missed occasion does not derail a forming habit)."""
+    """Days worked in the last WINDOW, counted from the archive, so a day you gave up on
+    still counts. A rolling window, never a streak."""
     cut = (date.fromisoformat(today()) - timedelta(days=WINDOW - 1)).isoformat()
     return len(
         {r["date"] for runs in st["archive"].values() for r in runs if r["date"] >= cut}
@@ -207,22 +187,10 @@ def _practised(st):
 
 
 def _recent(st, all_tasks):
-    """Tasks worked in the last WINDOW days, most recent first — the way back into whatever
-    you were just doing. Distinct slugs and no cap: what makes it recent is the window, not a
-    count. Read from the archive for the same reason `_practised` is: it holds the days you
-    gave up on as well as the days you passed.
+    """Tasks worked in the last WINDOW days, most recent first — distinct slugs, no cap.
 
-    An attempt still open counts, and counts first: nothing reaches the archive until a pass or
-    an abandon, so a task you are in the middle of right now is exactly the work this list exists
-    to lead you back to. Its `last` touch is a full timestamp, so today's work orders within the
-    day; an archived run only knows its date, and sorts as the start of that day.
-
-    Giving up is the way out. A slug whose latest run is `abandoned` drops off — abandoning is
-    the explicit "put this back", and a list that keeps offering it has no exit. Opening it again
-    brings it back, and so does a later pass. (`_practised` still counts the day: you showed up.)
-
-    Nothing is held back for being in today's queue. A card worked on Friday and due again
-    today is both things at once, and the queue is not the authority on what you were doing."""
+    An open attempt counts and sorts first; a slug whose latest run is `abandoned` drops off
+    until it is opened or passed again."""
     cut = (date.fromisoformat(today()) - timedelta(days=WINDOW - 1)).isoformat()
     last = {
         slug: runs[-1]["date"]
@@ -249,7 +217,6 @@ def _boxes(st, all_tasks):
     return boxes
 
 
-# ---------------------------------------------------------------- read-only routes
 @app.get("/api/health")
 def health():
     """Is the app up and pointed at the tasks? No lock, no state, no writes —
@@ -269,9 +236,8 @@ def catalogue():
         q = queue(st, all_tasks)
         q["recent"] = _recent(st, all_tasks)
         held = blocked(st, all_tasks)
-        # `text` is the spec flattened for the search box (#14) — the same prose the
-        # task page already shows, so nothing leaks. Deliberately outside `public()`'s
-        # allowlist, because GET /api/task ships the real spec_md instead.
+        # `text` is the spec flattened for the search box, deliberately outside
+        # `public()`'s allowlist
         rows = [
             {
                 "slug": slug,
@@ -338,12 +304,11 @@ def get_task(slug: str):
         return _payload(st, slug, meta, meta["path"].read_text())
 
 
-# ---------------------------------------------------------------- the attempt
 @app.post("/api/task/{slug}/open")
 def open_task(slug: str):
     with writing() as st:
         meta = _task(slug)
-        open_attempt(st, slug)  # the file is already a stub: nothing is written
+        open_attempt(st, slug)
         return _payload(st, slug, meta, meta["path"].read_text())
 
 
@@ -380,18 +345,14 @@ def run_task(slug: str, edit: Edit):
         }
         log.info("%s passed=%s attempts=%s", slug, passed, o["attempts"])
         if passed:
-            # Whether the card actually moved is the scheduler's fact, not the page's to
-            # infer: `struggled` and a `quick` at the top box both clamp, and an unseen
-            # card already sits in box 0. The page renders this; it does not recompute it.
             was = card(st, slug)["box"]
             grade, gap, box, reason = record_pass(
                 st, slug, meta, code
             )  # drops the attempt
             log.info("%s %s box=%s due in %sd (%s)", slug, grade, box, gap, reason)
             new_src = splice(new_src, stub(body))
-            write_region(meta["path"], new_src)  # back to the stub
-            # `from_box` is where the card stood before the grade landed: `struggled` steps a
-            # card *down*, so the page needs the direction as well as the fact of a move.
+            write_region(meta["path"], new_src)
+            # `from_box` is the direction: `struggled` steps a card *down*
             resp |= {
                 "grade": grade,
                 "box": box,
@@ -404,14 +365,14 @@ def run_task(slug: str, edit: Edit):
                 "lapses": card(st, slug)["lapses"],
                 # over a copy: `pick` reads every card, and `card()` fills blanks in place
                 "next": pick({**st, "cards": dict(st["cards"])}, tasks())[0],
-            }  # the page reads lapse_limit off /task
+            }
         return resp | {"etag": etag(new_src)}
 
 
 @app.post("/api/task/{slug}/touch")
 def touch_task(slug: str):
-    with writing() as st:  # no catalogue lookup: this runs every 60 s and
-        o = current(st, slug)  # only an opened — known — slug is open
+    with writing() as st:  # no catalogue lookup: only a known slug can be open
+        o = current(st, slug)
         return {"active": o["active"], "nudge": nudge_due(o)}
 
 
@@ -455,10 +416,8 @@ def solution_task(slug: str):
 def abandon_task(slug: str, sent: Etag):
     """Give up: keep the work in the archive, put the stub back, drop the timer.
 
-    `current()` first, like every other acting route. Without it this was the one route
-    that would rewrite a task file to its stub with no attempt open — `abandon()` pops a
-    key that may not be there and stubs the source either way — so a stray call cost the
-    learner whatever was in the editor and archived it as `abandoned`."""
+    `current()` first, like every other acting route: `abandon()` stubs the source whether
+    or not an attempt was open."""
     with writing() as st:
         meta = _task(slug)
         current(st, slug)
@@ -472,9 +431,8 @@ def abandon_task(slug: str, sent: Etag):
 
 @app.post("/api/task/{slug}/bury")
 def bury_task(slug: str, want: Bury):
-    """Not today. The card keeps its box, its due date, its seen count and its lapses — this
-    only takes it out of today's queue, and the stored day stops matching tomorrow, which is
-    what un-buries it. `{"buried": false}` is the same door, taken early."""
+    """Not today: the card keeps its box, its due date, its seen count and its lapses.
+    Tomorrow un-buries it, and `{"buried": false}` is the same door, taken early."""
     with writing() as st:
         _task(slug)  # a slug that is not a task is a 404, not a card in progress.json
         card(st, slug)["buried"] = today() if want.buried else ""
@@ -486,17 +444,15 @@ def bury_task(slug: str, want: Bury):
 def note_task(slug: str, note: Note):
     """What you want to remember about this task, in your words: one note, edited in place.
 
-    The note belongs to the task and not to the attempt, so nothing the scheduler does touches
-    it — a `struggled` grade, a fresh attempt and an abandon all leave it as it was. It needs no
-    open attempt either: writing a note is not practice, and a note is worth most on a card you
-    passed a month ago. Emptying the box is how you delete it."""
+    It belongs to the task and not to the attempt, and needs no open attempt. Emptying the
+    box is how you delete it."""
     with writing() as st:
         _task(slug)  # a slug that is not a task is a 404, not a key in progress.json
         text = note.text.strip()
         if text:
             st["notes"][slug] = text
         else:
-            st["notes"].pop(slug, None)  # an emptied note leaves nothing behind
+            st["notes"].pop(slug, None)
         return {"note": text}
 
 
@@ -526,11 +482,8 @@ def _open_browser(url):
 
 
 def build_web():
-    """Build web/dist when it is missing or older than its sources.
-
-    web/dist is generated, so it is git-ignored: a fresh clone has none, and `drillion`
-    is supposed to just work. Without pnpm the API still serves; only `/` is missing.
-    """
+    """Build web/dist when it is missing or older than its sources. Without pnpm the API
+    still serves; only `/` is missing."""
     web = settings.web_dist.parent
     if not (web / "package.json").is_file():
         return
@@ -558,7 +511,7 @@ def build_web():
 
 def serve():
     build_web()
-    # The page itself, mounted after every /api route so an unmatched /api/... 404s as JSON.
+    # mounted after every /api route, so an unmatched /api/... 404s as JSON
     if settings.web_dist.is_dir():
         app.mount("/", StaticFiles(directory=settings.web_dist, html=True), name="web")
     url = f"http://{settings.host}:{settings.port}/"

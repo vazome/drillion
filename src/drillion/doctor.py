@@ -1,12 +1,4 @@
-"""Why a task folder was skipped, said out loud.
-
-`catalogue.tasks()` drops a folder it cannot read and says nothing, which is right for the
-menu mid-session and a dead end for whoever is writing the task. `catalogue.scan()` carries
-every reason it dropped one; `doctor` prints them all — never stopping at the first — and
-adds the rules the catalogue never had to check: how `difficulty` and `tier` are spelled,
-that `minutes` is a real par time, that tags are kebab-case, and that no reference names a
-task that is not there. The reason string is the whole point.
-"""
+"""Why a task folder was skipped, said out loud: every reason, never just the first."""
 
 import graphlib
 import re
@@ -20,8 +12,7 @@ REFERENCES = ("prereqs",)  # optional frontmatter lists of task numbers
 
 
 def _value_rules(meta):
-    """The rules the catalogue never had to check: what a filled-in field actually says.
-    A task with `difficulty: simple` loads fine and then sorts, filters and grades wrong."""
+    """The rules the catalogue never had to check: what a filled-in field actually says."""
     out = []
     if (
         difficulty := meta.get("difficulty")
@@ -56,10 +47,8 @@ def _value_rules(meta):
 
 
 def _refs(meta, key):
-    """The task numbers under `key` that can actually be walked. `prereqs: 3` and
-    `prereqs: [a, 2]` are both already reported as bad frontmatter by `_value_rules` —
-    doctor's whole job is to say why a folder is wrong, so nothing downstream of that
-    report may crash on the same value before it reaches the screen."""
+    """The task numbers under `key` that can actually be walked: a bad value is already
+    reported by `_value_rules`, and nothing downstream of that report may crash on it."""
     refs = meta.get(key)
     return [n for n in refs if isinstance(n, int)] if isinstance(refs, list) else []
 
@@ -67,10 +56,7 @@ def _refs(meta, key):
 def _set_problems(metas):
     """The rules no folder can check alone: task numbers are unique, every reference
     names a real task, nothing gates itself, and no chain of prereqs closes into a loop.
-
-    The loop check is also the reachability check — a task whose prereqs all exist and
-    never cycle can always be reached by working through them. Only the first cycle is
-    named; the next run finds the next one."""
+    Only the first cycle is named; the next run finds the next one."""
     out, topics = [], {}
     for name in metas:
         if m := SLUG.match(name):
@@ -110,11 +96,7 @@ def _set_problems(metas):
 
 
 def problems():
-    """[(folder name, reason)] for everything wrong under tasks/, folder by folder.
-
-    Nothing here stops at the first failure: a contributor should learn all of it in one
-    run. The catalogue's own reasons come first, then the value rules, then the rules that
-    need the whole set."""
+    """[(folder name, reason)] for everything wrong under tasks/, folder by folder."""
     out, metas = [], {}
     for name, record, why in scan():
         metas[name] = record or {}

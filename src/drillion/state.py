@@ -1,8 +1,6 @@
 """progress.json: every card, every open attempt, every pass you have ever made.
 
-One file under `settings.root`, read and written whole. Writes are atomic, so a
-crash mid-save cannot eat months of work.
-"""
+One file under `settings.root`, read and written whole."""
 
 import json
 import os
@@ -16,8 +14,6 @@ from .settings import settings
 def load():
     path = settings.state_path  # read at call time: tests move the root
     st = json.loads(path.read_text()) if path.exists() else {}
-    # `notes` arrived after people had progress.json on disk; defaulted here, so an older
-    # file reads back with no notes and needs no migration.
     return {
         "focus": None,
         "cards": {},
@@ -41,27 +37,19 @@ def today():
 
 
 def card(st, slug):
-    """Your standing with one task, blanks filled in. `lapses` and `buried` arrived after people
-    had months of progress.json on disk and `load()` only defaults top-level keys, so they are
-    filled in here per card: an older file reads back with both blank, and no migration exists.
-
-    `buried` is the one day the card is out of today's queue, or "" — see `scheduler.buried()`."""
+    """Your standing with one task, blanks filled in — `load()` only defaults top-level keys."""
     c = st["cards"].setdefault(slug, {"box": 0, "due": today(), "seen": 0})
     c.setdefault("lapses", 0)
     c.setdefault("buried", "")
     return c
 
 
-# ---------------------------------------------------------------- the transaction
-_LOCK = threading.Lock()  # read → validate → write → commit is one transaction
+_LOCK = threading.Lock()
 
 
 @contextmanager
 def writing():
-    """A change to progress.json: one lock, one load, one commit on a clean exit.
-
-    Every route that changes anything goes through here, so the file has exactly one
-    writer and one write point. An exception inside the block leaves it as it was."""
+    """A change to progress.json: one lock, one load, one commit on a clean exit."""
     with _LOCK:
         st = load()
         yield st
@@ -70,7 +58,6 @@ def writing():
 
 @contextmanager
 def reading():
-    """A GET: the same lock and load, with no way to commit. `card()` fills blanks in
-    the dict it hands out, and under this manager those blanks are always discarded."""
+    """A GET: the same lock and load, with no way to commit."""
     with _LOCK:
         yield load()

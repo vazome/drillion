@@ -1,16 +1,4 @@
-"""The ways in: serve the tasks in a browser, or check the whole set still works.
-
-    drillion             open the web UI
-    drillion selfcheck   solve every task with its own _reference
-    drillion doctor      say why a task folder would be skipped
-    drillion --version   the installed version, the same one /api/health reports
-
-Every command starts by seeding an empty root from the tasks the wheel carries, so an
-install with no checkout anywhere near it still has something to practise.
-
-This is the only module that imports the web layer, and it does so lazily: a
-selfcheck must not need a server to run.
-"""
+"""The ways in: serve the tasks in a browser, or check the whole set still works."""
 
 import argparse
 import logging
@@ -25,19 +13,8 @@ log = logging.getLogger(__name__)
 def seed():
     """Fill an empty root from the tasks baked into the wheel, once.
 
-    The tasks are not read-only content: `region.write_region()` rewrites task.py on every
-    save and `runner.selfcheck()` writes into every task folder, so they cannot be practised
-    where pip put them. The wheel carries a pristine template instead and the first run copies
-    it somewhere writable — `settings.root`, which installed means a per-user data directory
-    and in a container means the mounted volume.
-
-    A root that already has `tasks/` is left completely alone: that is a checkout, or a
-    learner's own copy with their code saved inside the task files, and an upgrade that wrote
-    over it would eat their work. A checkout has no template at all, so this is a no-op there
-    twice over.
-    """
-    # ponytail: tasks added by a later drillion never reach an already-seeded root.
-    # Fill in only the missing folders if that starts to matter.
+    A root that already has `tasks/` is left alone: it is a checkout, or a learner's own
+    copy with their code saved inside the task files."""
     if settings.tasks_dir.is_dir() or not TASKS_TEMPLATE.is_dir():
         return
     log.info(

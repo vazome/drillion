@@ -50,11 +50,7 @@ def test_touch_caps_a_long_gap():
 
 
 def test_touch_never_runs_the_timer_backwards():
-    """`active` is the currency the solution gate is paid in and half of what `grade_of()`
-    reads, and it came off a wall clock capped at two minutes above and nothing below. A
-    clock is not monotonic — a DST fall-back or an NTP correction steps it back — and a
-    negative tick spends the timer instead of winding it. Far enough back and the gate can
-    never be paid at all, and a long sitting grades as `quick`."""
+    """A wall clock is not monotonic, and a negative tick must never spend the timer."""
     o = {"active": 500, "last": (datetime.now() + timedelta(minutes=5)).isoformat()}  # noqa: DTZ005
     assert attempts.touch(o) == 500  # a step back is worth nothing, never less
 
@@ -85,9 +81,7 @@ def test_attempt_lifecycle():
 
 
 def test_a_grade_names_the_cause_that_landed_it():
-    """The verdict was real and the rubric was withheld: you were told `struggled` and could
-    not tell whether it was the runs, the clock or the peek. Par itself still never leaves
-    the server, so the reason names causes and no number to race."""
+    """A verdict names its cause — the runs, the clock or the peek — never par's number."""
 
     def why(attempts_, secs, shown=False):
         o = {"attempts": attempts_, "active": secs, "solution_shown": shown}
@@ -109,8 +103,7 @@ def test_a_grade_names_the_cause_that_landed_it():
 
 
 def test_the_nudge_offers_a_hint_after_half_an_hour_of_reading():
-    """The hint gate opens silently, which is no use to the learner who is not looking at the
-    panel. Half an hour of active work with nothing run and no hint taken is that learner."""
+    """Half an hour of active work with nothing run and no hint taken earns an offer."""
     st = _st()
     o = attempts.open_attempt(st, "001_a")
     assert attempts.nudge_due(o) is False and attempts.nudge_due(None) is False

@@ -61,18 +61,14 @@ def test_reschedule():
     )  # -1 box: a struggle costs
     assert scheduler.reschedule(c, "pass") == 8 and c["box"] == 2  # +1 box
     assert c["due"] == (date.today() + timedelta(days=8)).isoformat()  # noqa: DTZ011
-    # the top box is the ceiling: a quick pass there moves nothing, which is why /run has to
-    # tell the page the box the card came from rather than let it infer a step from the grade
+    # the top box is the ceiling: a quick pass there moves nothing
     assert scheduler.reschedule(c, "quick") == 28 and c["box"] == 4
     assert scheduler.reschedule(c, "quick") == 120 and c["box"] == 6
     assert scheduler.reschedule(c, "quick") == 120 and c["box"] == 6
 
 
 def test_a_struggle_walks_a_card_back_down_the_ladder():
-    """Leitner is adaptive only because failing demotes. `struggled` used to be worth +0, so a
-    task that fought you every single sitting held box 4 and its 28-day gap forever — the same
-    schedule as one you had aced four times, and the struggle cost you nothing but the sitting.
-    One box per struggle walks it back down over a few sittings, and box 0 is the floor."""
+    """One box per struggle walks a card back down over a few sittings, and box 0 is the floor."""
     c = {"box": 4, "due": "2000-01-01", "seen": 9}
     assert [scheduler.reschedule(c, "struggled") for _ in range(6)] == [
         16,
@@ -86,11 +82,8 @@ def test_a_struggle_walks_a_card_back_down_the_ladder():
 
 
 def test_a_struggle_is_counted_as_well_as_demoted():
-    """The lapse signal was emitted and thrown away: `grade_of` returns `struggled` for a slow
-    pass, a three-run pass or a peeked one, and nothing counted it per card. One struggle is
-    ordinary; four is information about the task — wrong prereqs, above your level, an unclear
-    spec — and only a counter can tell those apart or say anything out loud. Nothing resets it:
-    a task that beat you four times is worth knowing about after you finally beat it."""
+    """One struggle is ordinary; `LAPSE_LIMIT` of them is information about the task. Nothing
+    resets the count."""
     c = {"box": 4, "due": "2000-01-01", "seen": 9, "lapses": 0}
     for _ in range(scheduler.LAPSE_LIMIT):
         scheduler.reschedule(c, "struggled")
@@ -101,10 +94,8 @@ def test_a_struggle_is_counted_as_well_as_demoted():
 
 
 def test_a_card_written_before_the_newest_fields_existed_still_reads():
-    """`state.load()` merges defaults over the top-level keys only, so a new per-card field
-    cannot arrive that way. Months of progress.json already exist on disk and there is no
-    migration step, so `card()` fills the blanks on the way out — `lapses` first, `buried`
-    after it, and whatever comes next by the same route."""
+    """`load()` defaults top-level keys only, so `card()` fills the per-card blanks on the
+    way out."""
     old = _st(cards={"001_a": {"box": 3, "due": "2020-01-01", "seen": 7}})
     assert state.card(old, "001_a")["lapses"] == 0
     assert state.card(old, "001_a")["buried"] == ""  # never buried, not buried today
@@ -119,10 +110,7 @@ def test_a_card_written_before_the_newest_fields_existed_still_reads():
 
 
 def test_a_buried_card_leaves_todays_queue_and_comes_back_tomorrow():
-    """Bury is "not today", and it is the whole of what it does. The card stays due — it is
-    simply not offered — and because the stored day is the day it applies to, tomorrow's date
-    no longer matches it and nothing has to expire anything. A new pick goes the same way: the
-    new picks are half of today's queue, and the next unblocked task takes the freed slot."""
+    """Bury is "not today": the card stays due, both bands drop it, and tomorrow it is back."""
     yesterday = (date.today() - timedelta(days=1)).isoformat()  # noqa: DTZ011
     cards = {
         "001_a": {"box": 2, "due": "2020-01-01", "seen": 3},  # due for review
@@ -153,9 +141,8 @@ def test_a_buried_card_leaves_todays_queue_and_comes_back_tomorrow():
 
 
 def test_burying_a_card_changes_nothing_about_its_schedule():
-    """The safe half of #12 is safe only because it cannot lose anything: no box, no due date,
-    no seen count and no lapse count moves, so a bury that is forgotten costs exactly one day
-    of not being asked. If this ever fails, bury has become suspend by accident."""
+    """A bury moves no box, no due date, no seen count and no lapse count: forgetting one
+    costs exactly one day of not being asked."""
     was = {"box": 3, "due": "2020-01-01", "seen": 5, "lapses": 2}
     st = _st(cards={"001_a": dict(was)})
     state.card(st, "001_a")["buried"] = state.today()
@@ -183,10 +170,7 @@ def test_focus_ignores_out_of_focus_prereqs():
 
 
 def test_an_empty_day_names_the_one_reason_and_a_bury_is_not_one():
-    """`no_new` is the page's only source for "why is New picks empty", so it has to name the
-    rule that actually bit. A bury is the trap: it takes a task out of today's queue without
-    unlocking anything, so a day whose only unstarted work is buried is a day at its cap, not
-    a finished catalogue."""
+    """`no_new` names the rule that actually bit, and a bury unlocks nothing."""
     st = _st(focus="core")  # 002_b waits on 001_a; 003_c is out of focus
     assert scheduler.queue(st, _exs())["no_new"] is None  # 001_a is on offer
 
@@ -241,11 +225,8 @@ def test_queue_caps_new_picks_and_skips_open_attempts():
 
 
 def test_queue_caps_reviews_and_holds_new_picks_while_behind():
-    """Three weeks away used to hand you 100 review rows and offer two new picks on top of
-    them. Reviews are now capped the way new picks always were, and while the backlog is over
-    that cap nothing new is introduced — starting new material while behind only deepens the
-    hole. Both facts ride on the payload: a cap the page cannot see reads as "done for today"
-    with ninety cards still waiting, which is worse than no cap at all."""
+    """Reviews are capped, nothing new is offered while behind, and both facts ride on the
+    payload — a cap the page cannot see reads as "done for today"."""
     cap = scheduler.REVIEWS_PER_DAY
     all_tasks = {
         f"{i:03d}_x": {
@@ -291,12 +272,7 @@ def test_queue_puts_the_most_overdue_review_first():
 
 
 def test_the_ladder_sheds_review_load_at_the_top():
-    """The whole point of the rungs past 28 days (#2). The ladder only ever climbs, so the top
-    interval alone decides the steady state: at a 28-day ceiling every card you had mastered
-    still came back monthly, and a finished 171-task catalogue settled at roughly six reviews a
-    day, forever, before a single new pick — the "20-40 minutes a day, kept up over months"
-    promise in README.md quietly broken by its own success. Shed there and nowhere else: a card
-    you keep getting right is still `done`, and `status` still has exactly four members."""
+    """The rungs past 28 days: the top interval alone decides the steady review load."""
     assert scheduler.LADDER == sorted(scheduler.LADDER), (
         "a rung must never return sooner than the one below"
     )
@@ -310,10 +286,8 @@ def test_the_ladder_sheds_review_load_at_the_top():
 
 
 def test_the_editor_opens_an_attempt_before_it_saves():
-    """The server rejects a PUT with 409 unless an attempt is open, and typing is the
-    first thing a learner does — so the autosave path, not just Run, has to open one.
-    It did not for the whole life of the frontend: `ensureOpen` was wired to Run, the
-    hint and the solution, and the 409 was caught and shown as a banner instead."""
+    """The server 409s a PUT unless an attempt is open, so the autosave path — not just Run —
+    has to open one."""
     body = re.search(
         r"const flush = useCallback\(async \(\) => \{(.*?)\n  \}, \[",
         (ROOT / "web/src/Task.tsx").read_text(),
@@ -329,8 +303,8 @@ def test_the_editor_opens_an_attempt_before_it_saves():
 
 
 def test_the_page_starts_the_clock_by_itself():
-    """The attempt is the timer, so it starts when the task page settles — not when Run
-    is first pressed, which billed the reading as free. Only Task.tsx knows the delay."""
+    """The attempt is the timer, so it starts when the task page settles, not on the first
+    Run. Only Task.tsx knows the delay."""
     src = (ROOT / "web/src/Task.tsx").read_text()
     assert re.search(r"const ATTEMPT_MS = \d+", src), "the page names no delay at all"
     assert re.search(r"setTimeout\(.*ensureOpen\(\).*ATTEMPT_MS\)", src), (
