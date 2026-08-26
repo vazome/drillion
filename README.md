@@ -16,6 +16,7 @@ task's `README.md`, rendered as Markdown.
 ```bash
 uv run drillion              # start the server on http://127.0.0.1:8765 and open the browser
 uv run drillion selfcheck    # prove every task passes with its own reference solution
+uv run drillion doctor       # say why a task folder would be skipped, exit non-zero if any would
 docker compose up            # the same app in a container (tasks and progress mounted from ./)
 ```
 
@@ -39,8 +40,11 @@ is missing or older than anything in `web/src/`, or than `web/package.json`, `we
 5. **Pass** → computed grade → card moves on the ladder → your code is archived into
    `progress.json` → the file is reset to the stub, so the next review starts blank.
 
-State lives in `progress.json` (cards, open attempts, log, archived solutions) and is committed
-with the repo on purpose: it is your work.
+State lives in `progress.json` (cards, open attempts, log, archived solutions). It is untracked
+and listed in `.gitignore`, so a fresh clone starts with an empty ladder, not the maintainer's own
+progress. If you cloned before this changed and already have real practice in your file, pulling
+past this change may show a modify/delete conflict on `progress.json` — keep your file. It is the
+only copy of your practice history and nothing in drillion rebuilds it.
 
 ## Why it's built this way
 
@@ -122,9 +126,15 @@ uv sync                                      # dependencies (runtime + dev)
 uv run pytest tests -q                       # the app's tests
 uv run ruff check .                          # lint
 uv run drillion selfcheck                    # every task green with its reference
+uv run drillion doctor                       # every reason a task folder would be skipped
 uv run pytest tasks/018_counter              # one task by hand (NotImplementedError on a stub)
 DRILLION_SEED=42 uv run pytest tasks/018_counter   # same task, fixed data
 ```
+
+`selfcheck` and `doctor` check different things. `selfcheck` proves the tasks the catalogue already
+accepted still solve with their own reference. `doctor` looks at folders `selfcheck` never sees —
+the ones the catalogue silently dropped — and reports every rule each one breaks, not just the
+first, then exits non-zero if it found anything.
 
 And the frontend:
 
@@ -220,8 +230,8 @@ One folder per task, `tasks/<NNN>_<name>/`; copy the shape of an existing one.
 
 `<NNN>` is a contiguous incremental id, `001`–`171`, so the next task you add is `172`. It is an
 identity and nothing else: it encodes no difficulty, no section and no provenance — `tier`,
-`difficulty` and `source:` carry those. Append, never insert: `prereqs:` and `practices:` point at
-these numbers, so renumbering means rewriting other people's frontmatter.
+`difficulty` and `source:` carry those. Append, never insert: `prereqs:` points at these numbers,
+so renumbering means rewriting other people's frontmatter.
 
 **`README.md`** — YAML frontmatter, then GitHub-flavoured Markdown:
 
@@ -234,7 +244,6 @@ track: rsample                         # optional, omit it unless the task is pa
 minutes: 12                           # par time — the grader's input, never shown to the learner
 prereqs: [18]                         # task numbers that gate it; [] when nothing does
 tags: [counter, sorted]               # Python concepts, lowercase kebab-case
-practices: [19, 22]                   # optional — task numbers this one rehearses
 source: exercism/python practice/two-fer (MIT, adapted)   # optional
 ---
 # Counter — top N by frequency
@@ -246,8 +255,9 @@ source: exercism/python practice/two-fer (MIT, adapted)   # optional
 Write the keys in that order. `title`, `difficulty`, `tier`, `minutes` and `tags` are required.
 
 A folder the catalogue cannot read is **skipped**, not reported: a half-written task must never
-break the menu for the other 170. That makes a mistake look like a task that simply is not there,
-so check this list first when your new task does not appear —
+break the menu for the other 170. That makes a mistake look like a task that simply is not there.
+Run `uv run drillion doctor` when a new task does not appear — it reports every rule the folder
+breaks, not just the first. The rules it checks —
 
 - a required key missing, empty, or misspelt (`tags: []` counts as missing);
 - frontmatter that is not a closed `---` block, or is not valid YAML;
@@ -255,10 +265,10 @@ so check this list first when your new task does not appear —
   learner's region, or that does not parse;
 - a hint count that is not **exactly 3** — `### Hint 1`, `### Hint 2`, `### Hint 3` under `## Hints`.
 
-`uv run drillion selfcheck` counts what it found: if it says `170/170` after you added a task, the
-task is one of the above. `prereqs:` and `practices:` are lists of task
-**numbers**, not slugs. No real task carries all nine keys — the block above shows the order, not a
-typical task.
+`uv run drillion selfcheck` counts what it found, but only among tasks the catalogue already
+accepted: if it says `170/170` after you added a task, `doctor` is where to look. `prereqs:` is a
+list of task **numbers**, not slugs. No real task carries all eight keys — the block above shows
+the order, not a typical task.
 
 The title leads with the concept, never with a puzzle name: Exercism's `bob` is
 `conditionals — classify a message into one of five replies`, and the puzzle name survives in the
