@@ -5,7 +5,6 @@ tier: packages
 minutes: 25
 prereqs: [57]
 tags: [cloud, boto3]
-practices: [8, 26, 57]
 ---
 # boto3 — find unattached EBS volumes
 

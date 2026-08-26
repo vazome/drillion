@@ -5,7 +5,6 @@ tier: core
 minutes: 30
 prereqs: [18, 26]
 tags: [log-analysis]
-practices: [18, 21, 26, 32]
 ---
 # log analysis — nginx log -> top IPs, status mix, p95
 

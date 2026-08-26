@@ -5,7 +5,6 @@ tier: packages
 minutes: 25
 prereqs: [57]
 tags: [cloud, boto3]
-practices: [28, 40, 57]
 ---
 # boto3 — audit S3 buckets for public access
 

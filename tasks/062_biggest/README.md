@@ -5,7 +5,6 @@ tier: core
 minutes: 25
 prereqs: [25]
 tags: [pathlib]
-practices: [25, 8, 38]
 ---
 # pathlib — N largest files under a directory tree
 

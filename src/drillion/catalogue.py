@@ -15,8 +15,7 @@ from .region import _solve, bounds, cut
 from .settings import settings
 
 REQUIRED = ("title", "difficulty", "tier", "minutes", "tags")
-BROWSER = ("topic", "title", "difficulty", "tier", "track", "tags", "prereqs",
-           "practices", "source")
+BROWSER = ("topic", "title", "difficulty", "tier", "track", "tags", "prereqs", "source")
 # `minutes` is deliberately absent: par time is grade_of()'s input, not the learner's to see.
 HINT = re.compile(r"^### Hint \d+[ \t]*$", re.MULTILINE)
 _cache = (None, None)   # (key, records) — rebinding a global is atomic, so a race just re-scans
@@ -80,7 +79,7 @@ def tasks():
                 raise ValueError("a task needs a title, difficulty, tier, minutes, tags and 3 hints")
         except Exception:  # noqa: BLE001, S112 — a half-written folder must not break the menu
             continue
-        out[folder.name] = {"prereqs": [], "practices": [], **meta, "topic": topic,
+        out[folder.name] = {"prereqs": [], **meta, "topic": topic,
                             "path": folder / "task.py", "dir": folder, "hints": hints,
                             "spec_md": spec_md}
     _cache = (key, out)
