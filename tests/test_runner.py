@@ -54,3 +54,16 @@ def test_a_reference_call_replaces_a_written_body_not_just_the_raise():
     assert runner._reference_call(with_setup) == (
         "def solve(rows):\n    return _reference(rows)"
     )
+
+
+def test_the_output_panel_never_shows_terminal_escapes(tmp_path, monkeypatch):
+    """pytest does not decide colour by asking whether it is a tty — `FORCE_COLOR` or
+    `PY_COLORS` in the environment turns it on regardless, and a pnpm script sets `FORCE_COLOR`
+    for everything it spawns. The escapes then reach the page as literal `[31mF[0m` all through
+    the failure output, which is the one place a learner actually has to read."""
+    monkeypatch.setenv("FORCE_COLOR", "1")
+    task = tmp_path / "task.py"
+    task.write_text("def test_solve():\n    assert 1 == 2\n")
+    passed, out = runner.run_tests(task, seed=1)
+    assert passed is False
+    assert "\x1b[" not in out, "terminal escapes reached the output panel"
