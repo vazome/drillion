@@ -8,6 +8,7 @@ from pathlib import Path
 
 import httpx
 
+import drillion
 from drillion import region, scheduler, state
 from drillion.api import MAX_BODY, WINDOW, _practised, _recent, app
 from drillion.settings import settings
@@ -356,7 +357,12 @@ async def _assets(api, _path):
 async def _health(api, _path):
     """The container health check: up, pointed at the tasks, and cheap."""
     health = (await api.get("/api/health")).json()
-    assert health == {"status": "ok", "tasks": 1, "root": str(settings.root)}
+    assert health == {
+        "status": "ok",
+        "version": drillion.__version__,
+        "tasks": 1,
+        "root": str(settings.root),
+    }
 
 
 def test_the_api_carries_a_task_from_stub_to_pass():

@@ -29,6 +29,7 @@ from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from . import __version__
 from .attempts import (
     Gated,
     NoAttempt,
@@ -245,7 +246,12 @@ def _boxes(st, all_tasks):
 def health():
     """Is the app up and pointed at the tasks? No lock, no state, no writes —
     a container health check must never queue behind a 60 s pytest run."""
-    return {"status": "ok", "tasks": len(tasks()), "root": str(settings.root)}
+    return {
+        "status": "ok",
+        "version": __version__,
+        "tasks": len(tasks()),
+        "root": str(settings.root),
+    }
 
 
 @app.get("/api/catalogue")
