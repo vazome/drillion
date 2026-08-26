@@ -12,7 +12,7 @@ export type TagRow = { id: string; tag: string; seen: number; total: number; sha
 
 /** `share` is kept a number and rendered with the %, so 10% sorts above 9%. */
 const TAG_COLS = [
-  { key: "tag", label: "Tag", sortable: true },
+  { key: "tag", label: "Tag", sortable: true, render: (r: TagRow) => <span title={r.tag}>{r.tag}</span> },
   { key: "seen", label: "Seen", align: "right" as const, mono: true, width: "70px", sortable: true },
   { key: "total", label: "Total", align: "right" as const, mono: true, width: "78px", sortable: true, muted: true },
   { key: "share", label: "Share", align: "right" as const, mono: true, width: "80px", sortable: true, render: (r: TagRow) => `${r.share}%` },
@@ -67,7 +67,6 @@ export function Progress() {
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(360px, 420px) minmax(0, 1fr)", gap: 18, alignItems: "start" }}>
         <Card label="Coverage by tag" padding={16}>
-          {/* 70-odd tags: scroll the body, same as the log, so the two cards stay level. */}
           <div style={{ maxHeight: 520, overflow: "auto" }}>
             <Table style={{ tableLayout: "fixed" }} columns={TAG_COLS} rows={tagRows} sortKey={sort.key} sortDir={sort.dir}
               onSort={(key, d) => setSort({ key: key as TagKey, dir: d })}
