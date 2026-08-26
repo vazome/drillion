@@ -1,7 +1,7 @@
 ---
 title: mocking — patch where it is used, then read the calls
 difficulty: medium
-tier: packages
+tier: core
 track: rsample
 minutes: 20
 prereqs: []

@@ -407,7 +407,7 @@ par time taken off the learner's screen. The three UI screens were rebuilt on to
 | D3 | tier | required `tier: core \| advanced \| packages`. core = stdlib everyone needs; advanced = still stdlib, but you can work a while without it; packages = needs a `pip install`. |
 | D4 | difficulty | required `difficulty: easy \| medium \| hard`, **authored per task, never derived from minutes**. |
 | D5 | track | optional `track:`, orthogonal to tier, like `source:`. |
-| D6 | tags | concepts only, lowercase-kebab. Retired: `exercism`→`source:`, `core`/`data-structures`→`tier:`, `whole-task`→`difficulty:`, `rsample`→`track:`, `basics`→`functions`. |
+| D6 | tags | concepts only, lowercase-kebab, 1–3 per task. Retired: `exercism`→`source:`, `core`/`data-structures`→`tier:`, `whole-task`→`difficulty:`, `rsample`→`track:`, `basics`→`functions`. |
 | D7 | focus | the header Select goes; the active filter chip in the catalogue is sticky via `POST /api/focus` and steers new picks. One control, visible effect. |
 | D8 | scroll | catalogue rows grouped by tier, collapsed, with counts. |
 | D9 | grade | `easy`→`quick`; difficulty took the word. Grades: `quick · pass · struggled · abandoned`. |
@@ -447,13 +447,14 @@ tries to infer one from the other in future should expect to be wrong four times
 - D6 said `whole-task` → `difficulty: hard`. It is not a clean mapping: re-graded from content, the
   14 old `whole-task` tasks landed 1 easy / 10 medium / 3 hard. `whole-task` marked *size*, and size
   is not difficulty — which is the same lesson as D19.
-- D6 named four retired tags; there were six. `basics` → `functions`, and `set` was folded into
-  `sets`.
+- D6 named four retired tags; there were six. The sixth is `basics` → `functions`. (The ledger
+  for that phase also records `set` being folded into `sets`; that was a merge inside the *proposed*
+  vocabulary on the review sheet, not a tag that ever existed in the corpus.)
 - The plan asserted Daniel had settled whether the three HTTP tasks were `core` or `packages`. He
   had not. Resolved on evidence: they import nothing but `_lib` and stdlib `hmac`/`hashlib`, so
   `core`.
 - `prereqs:` was known to hold task numbers; `practices:` does too, 48 references across 16 tasks.
-  A brief that said "leave `practices:` alone" would have left 48 numbers pointing at strangers.
+  A brief that said "leave `practices:` alone" would have left 49 numbers pointing at strangers.
 
 ### Commits
 
@@ -474,3 +475,17 @@ Gates held at every step: `uv run drillion selfcheck` 171/171, `uv run pytest te
 - The catalogue's filter must never hold a value it cannot display. It did once, and Daniel's live
   `focus: "class-inheritance"` would have rendered his catalogue as "0 of 171" with nothing on
   screen to explain why.
+
+### Correction, 2026-08-26 (docs fix round)
+
+D3's tier rule turned out not to hold on six tasks, because the Phase 0 classifier tested the
+`advanced` tag set before the package tag set, and treated the *topic* tags `testing` and `llm` as
+evidence of a package. Daniel ruled that D3 stands as written and tier answers "can I run this with
+stock Python?", so `packages` beats `advanced` whenever a task is both. Fixed in the data, not the
+prose: `077_parallel_llm`, `084_fixtures`, `085_asgi_test` (langchain / pytest / fastapi+httpx)
+advanced → packages; `054_mock`, `056_whattotest`, `079_message_dig` (stdlib only) packages → core.
+Tier is now **core 139 / advanced 17 / packages 15**.
+
+Also corrected here: `scheduled` was documented as a task status in DESIGN.md and offered in the
+catalogue's status filter, but `api.py:_status()` returns only `open`, `new`, `due` and `done` —
+a seen, not-due card is `done`. The filter option could never match a row.

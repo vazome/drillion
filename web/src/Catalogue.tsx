@@ -6,7 +6,7 @@ import { Stats } from "./Stats";
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)", whiteSpace: "nowrap" as const };
 const FAINT = { fontSize: 12.5, color: "var(--text-faint)", whiteSpace: "nowrap" as const };
 const MONO = { fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)", fontVariantNumeric: "tabular-nums" as const };
-const STATUSES = ["new", "due", "scheduled", "open", "done"];
+const STATUSES = ["new", "due", "open", "done"];   // api.py _status(): a seen, not-due card is "done"
 const OPEN_KEY = "drillion-catalogue-open";   // which tier groups the reader left open
 const DAY = 86400000;
 

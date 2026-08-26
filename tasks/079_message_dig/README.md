@@ -1,7 +1,7 @@
 ---
 title: dict traversal — dig tool calls out of a model response
 difficulty: medium
-tier: packages
+tier: core
 minutes: 20
 prereqs: [28]
 tags: [llm]

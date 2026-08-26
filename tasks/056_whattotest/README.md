@@ -1,7 +1,7 @@
 ---
 title: testing — what to actually test in an ops script
 difficulty: easy
-tier: packages
+tier: core
 track: rsample
 minutes: 8
 prereqs: []
