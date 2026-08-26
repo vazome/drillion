@@ -84,6 +84,10 @@ class Bury(BaseModel):
     buried: bool = True
 
 
+class Note(BaseModel):
+    text: str
+
+
 # ---------------------------------------------------------------- errors
 @app.exception_handler(Invalid)
 async def _rejected(_request, exc):
@@ -179,6 +183,9 @@ def _payload(st, slug, meta, src):
         "buried": buried(st, slug),
         "lapses": c["lapses"],
         "lapse_limit": LAPSE_LIMIT,
+        # the learner's own words about this task — about the task and never about one
+        # sitting, so a grade, a re-attempt and an abandon all leave it exactly as it was
+        "note": st["notes"].get(slug, ""),
         "reference": solution_text(meta["path"]) if reveal else None,
         **att,
         "archive": [
@@ -471,6 +478,24 @@ def bury_task(slug: str, want: Bury):
         card(st, slug)["buried"] = today() if want.buried else ""
         log.info("%s %s", slug, "buried" if want.buried else "unburied")
         return {"buried": buried(st, slug)}
+
+
+@app.put("/api/task/{slug}/note")
+def note_task(slug: str, note: Note):
+    """What you want to remember about this task, in your words: one note, edited in place.
+
+    The note belongs to the task and not to the attempt, so nothing the scheduler does touches
+    it — a `struggled` grade, a fresh attempt and an abandon all leave it as it was. It needs no
+    open attempt either: writing a note is not practice, and a note is worth most on a card you
+    passed a month ago. Emptying the box is how you delete it."""
+    with writing() as st:
+        _task(slug)  # a slug that is not a task is a 404, not a key in progress.json
+        text = note.text.strip()
+        if text:
+            st["notes"][slug] = text
+        else:
+            st["notes"].pop(slug, None)  # an emptied note leaves nothing behind
+        return {"note": text}
 
 
 @app.get("/api/task/{slug}/assets/{name}")

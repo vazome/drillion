@@ -19,7 +19,7 @@ const secs = (n: number) => n >= 60 ? `${Math.floor(n / 60)}m${String(n % 60).pa
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 /** A refused action, shown beside the control that asked for it. */
-type Gate = { at: "hints" | "solution" | "editor"; message: string } | null;
+type Gate = { at: "hints" | "solution" | "editor" | "note"; message: string } | null;
 
 type Result =
   | { state: "idle" | "running" }
@@ -54,10 +54,14 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [busy, setBusy] = useState(false);          // a hint spent twice cannot be un-spent
   const [nudge, setNudge] = useState(false);        // the server's offer of a hint, not ours
   const [nudgeOff, setNudgeOff] = useState(false);  // ...waved away for this sitting
+  const [note, setNote] = useState("");
+  const [noteDirty, setNoteDirty] = useState(false);
 
   // Refs carry the live values into the async chain; state alone would capture a stale closure.
   const codeRef = useRef(""), etagRef = useRef(""), dirtyRef = useRef(false);
+  const noteRef = useRef(""), noteDirtyRef = useRef(false);
   const timer = useRef<number | undefined>(undefined);
+  const noteTimer = useRef<number | undefined>(undefined);
   const gateTimer = useRef<number | undefined>(undefined);
   const inflight = useRef<Promise<void> | null>(null);
   const attemptRef = useRef(false);          // is an attempt open? read from the async chain
@@ -71,6 +75,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     setActive(p.attempt?.active ?? 0);
     setNextHintIn(p.hints.next_in);
     setNudge(p.nudge);
+    // a note half typed when the attempt opens itself must not be replaced by the server's
+    if (!noteDirtyRef.current) { setNote(p.note); noteRef.current = p.note; }
     if (!keepCode) { setCode(p.code); codeRef.current = p.code; setDirty(false); dirtyRef.current = false; }
   }, []);
 
@@ -85,6 +91,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   useEffect(() => {
     let live = true;
     setTask(null); attemptRef.current = false; dropped.current = false; setError(null); setResult({ state: "idle" }); setConflict(null); setSolutionCode(null); setGate(null); setNextSlug(null); setNudgeOff(false);
+    setNote(""); noteRef.current = ""; noteDirtyRef.current = false; setNoteDirty(false);   // the last task's note is not this one's
     api<TaskData>(`/task/${encodeURIComponent(slug)}`).then((p) => {
       if (!live) return;
       adopt(p);
@@ -132,6 +139,25 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     }
   }, [slug, ensureOpen]);
 
+  /** The note's save, the same shape as the editor's: debounce, then one PUT, and every
+   * failure becomes something the learner can see — a note that vanished quietly is worse
+   * than no note. There is no etag and no attempt to open: one note, last write wins. */
+  const saveNote = useCallback(async (text: string) => {
+    try {
+      await api(`/task/${encodeURIComponent(slug)}/note`, { method: "PUT", body: JSON.stringify({ text }) });
+      if (noteRef.current === text) { noteDirtyRef.current = false; setNoteDirty(false); }
+    } catch (e) {
+      setGate({ at: "note", message: `note not saved — ${(e as Error).message}` });
+    }
+  }, [slug]);
+
+  const editNote = (next: string) => {
+    setNote(next); noteRef.current = next;
+    noteDirtyRef.current = true; setNoteDirty(true);
+    clearTimeout(noteTimer.current);
+    noteTimer.current = setTimeout(() => saveNote(next), AUTOSAVE_MS);
+  };
+
   // ---- the clock starts on arrival, not on the first Run. Reading the task is the
   // work, so a page that has sat open for five seconds opens its attempt itself; the
   // delay is there so a mis-click bounced straight back out never starts one.
@@ -149,10 +175,13 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     timer.current = setTimeout(() => { inflight.current = flush(); }, AUTOSAVE_MS);
   };
 
-  useEffect(() => () => { clearTimeout(timer.current); clearTimeout(gateTimer.current); }, [slug]);
+  useEffect(() => () => {
+    clearTimeout(timer.current); clearTimeout(gateTimer.current); clearTimeout(noteTimer.current);
+    if (noteDirtyRef.current) saveNote(noteRef.current);   // leaving mid-debounce must not eat it
+  }, [slug, saveNote]);
 
   useEffect(() => {
-    const warn = (e: BeforeUnloadEvent) => { if (dirtyRef.current) e.preventDefault(); };
+    const warn = (e: BeforeUnloadEvent) => { if (dirtyRef.current || noteDirtyRef.current) e.preventDefault(); };
     addEventListener("beforeunload", warn);
     return () => removeEventListener("beforeunload", warn);
   }, []);
@@ -384,6 +413,26 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                 </div>
               )}
               {notice("solution")}
+            </div>
+
+            {/* #15: the one thing on this page the learner wrote. It sits under the spec and
+              * above the archive because that is the order you read them in — what the task
+              * asks, what you told yourself about it, what you did last time. Always open:
+              * a note you have to click to see is a note you never re-read. */}
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+              <div style={{ ...LABEL, marginBottom: 10 }}>
+                Note <span style={PLAIN}>· {noteDirty ? "unsaved" : "yours, kept with the task"}</span>
+              </div>
+              {/* No such thing as a multi-line field in ds/ yet — plainest element, DS tokens,
+                * and the browser's own focus ring rather than an invented one. */}
+              <textarea value={note} onChange={(e) => editNote(e.target.value)} rows={3}
+                aria-label={`Your note on ${meta.title}`}
+                placeholder="What caught you out? Write it down while you still remember."
+                style={{ width: "100%", boxSizing: "border-box", resize: "vertical", display: "block",
+                  fontFamily: "var(--font-sans)", fontSize: 14, lineHeight: 1.55, padding: "8px 12px",
+                  borderRadius: "var(--radius)", border: "1px solid var(--border-strong)",
+                  background: "var(--surface-2)", color: "var(--text)" }} />
+              {notice("note")}
             </div>
 
             {task.archive.length ? (
