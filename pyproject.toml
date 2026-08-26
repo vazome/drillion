@@ -1,12 +1,12 @@
 [project]
 name = "drillion"
 version = "0.1.0"
-description = "Spaced-repetition Python drills: pytest-graded exercises on a Leitner ladder, in a browser"
+description = "Spaced-repetition Python practice: pytest-graded tasks on a Leitner ladder, in a browser"
 readme = "README.md"
 requires-python = ">=3.13"
-# runtime, not dev: the app serves the API (fastapi/uvicorn), reads each drill's
+# runtime, not dev: the app serves the API (fastapi/uvicorn), reads each task's
 # README frontmatter (pyyaml), grades in a pytest subprocess (pytest,
-# pytest-timeout), and the drills themselves import the rest.
+# pytest-timeout), and the tasks themselves import the rest.
 dependencies = [
     "boto3>=1.43.69",
     "fastapi>=0.141.1",
@@ -39,16 +39,16 @@ dev = [
 ]
 
 [tool.ruff]
-extend-exclude = ["drafts"]          # scratch files, not part of the drill set
+extend-exclude = ["drafts"]          # scratch files, not part of the task set
 
 [tool.ruff.lint.per-file-ignores]
 "src/drillion/*" = ["DTZ"]  # local wall-clock dates are intended for scheduling
-"exercises/*/drill.py" = ["E402", "F841"]  # the region is the learner's, and the
+"tasks/*/task.py" = ["E402", "F841"]  # the region is the learner's, and the
 # machinery imports below the marker are deliberately not at the top of the file
 
 [tool.pytest.ini_options]
-python_files = ["drill.py", "test_*.py"]
-testpaths = ["tests", "exercises"]
-pythonpath = ["exercises"]           # every drill does `from _lib import rng`
-# every drill file is called drill.py, so modules are named by path, not by basename
+python_files = ["task.py", "test_*.py"]
+testpaths = ["tests", "tasks"]
+pythonpath = ["tasks"]               # every task does `from _lib import rng`
+# every task file is called task.py, so modules are named by path, not by basename
 addopts = "--import-mode=importlib"

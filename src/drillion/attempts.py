@@ -1,4 +1,4 @@
-"""The attempt: one timer per exercise, from the first open until the pass.
+"""The attempt: one timer per task, from the first open until the pass.
 
 Time is *active* seconds — every touch adds the gap since the last one, capped at
 two minutes, so a coffee break is not study. Grades, hints and the solution gate
@@ -27,7 +27,7 @@ class Gated(Exception):
 
 
 class NoAttempt(Exception):
-    """An action that needs an open attempt, on an exercise that has none."""
+    """An action that needs an open attempt, on a task that has none."""
 
 
 def touch(o):

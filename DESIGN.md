@@ -8,14 +8,14 @@ exploration exists at `.superpowers/sdd/scalable-napping-treehouse/design-brief.
 
 ## Product in one paragraph
 
-A single-user, local web app for practising Python. A catalogue of ~100–180 short exercises
-("drills"), each with a spec, a code editor, and a test that grades the code on fresh random data.
+A single-user, local web app for practising Python. A catalogue of ~100–180 short tasks, each
+with a spec, a code editor, and a test that grades the code on fresh random data.
 A spaced-repetition scheduler decides what comes back when (5-box ladder: 2/4/8/16/28 days). Hints
 unlock with time; the solution unlocks after real effort. Sessions are 20–40 minutes a day, on a
 laptop browser, until a fixed deadline (an interview date). The user is one person who is learning
 Python for DevOps interviews — not a classroom, not a marketplace.
 
-The feel to aim for: a focused workbench like HackerRank/Exercism's exercise page, but calmer and
+The feel to aim for: a focused workbench like HackerRank/Exercism's problem page, but calmer and
 more personal — it should be **engaging to come back to daily**. Progress on the ladder is the
 emotional core: cards climbing boxes and returning on schedule.
 
@@ -42,25 +42,25 @@ Data: `GET /api/catalogue` →
   `today.done_today` (count)
 - `stats` — `boxes` (5 counts, one per ladder box), `due`, `seen`, `total`, `days_left` to the deadline
 - `focus` — a tag or null (restricts *new* picks to a track), `tags[]` — all tags
-- `exercises[]` — per row: `topic` (number), `title`, `minutes` (par time), `tags[]`, `prereqs[]`,
+- `tasks[]` — per row: `topic` (number), `title`, `minutes` (par time), `tags[]`, `prereqs[]`,
   `status` ∈ `new | due | scheduled | open | done`, `box` (0–5), `due` (date), `seen` (count)
 
 Elements: Today panel (reviews, then new picks, focus selector), search, tag chips (multi-select
-AND), status filter, the exercise list (topic · title · tags · minutes · status · a miniature ladder
+AND), status filter, the task list (topic · title · tags · minutes · status · a miniature ladder
 showing which box the card is in), a small stats strip (days left, due today, cards per box).
 
-### 2. Exercise (`#/ex/:slug`)
+### 2. Task (`#/task/:slug`)
 
 Answers: *what exactly is asked, and does my code pass?*
 
-Data: `GET /api/ex/{slug}` →
-- `meta` — `topic`, `title`, `minutes`, `tags`, `prereqs`, `practices`, `source` (Exercism drills)
-- `spec_md` — the drill's guidance as **GitHub-flavoured Markdown**, ~25–120 lines: `# title`,
+Data: `GET /api/task/{slug}` →
+- `meta` — `topic`, `title`, `minutes`, `tags`, `prereqs`, `practices`, `source` (Exercism tasks)
+- `spec_md` — the task's guidance as **GitHub-flavoured Markdown**, ~25–120 lines: `# title`,
   then `## Why` (business context), `## You get`, `## You return`, `## Rules` with worked
-  examples, `## Read first` (the links, with notes), and whatever else the drill adds
-  (`## Introduction`, `## Instructions` on Exercism drills). Render: headings, lists, tables,
+  examples, `## Read first` (the links, with notes), and whatever else the task adds
+  (`## Introduction`, `## Instructions` on Exercism tasks). Render: headings, lists, tables,
   fenced code with language, GitHub alerts (`> [!NOTE]`, `[!TIP]`, `[!WARNING]`), ```mermaid
-  diagrams, images from `assets/` (`GET /api/ex/{slug}/assets/{name}`), and `![…](assets/x.webm)`
+  diagrams, images from `assets/` (`GET /api/task/{slug}/assets/{name}`), and `![…](assets/x.webm)`
   as a muted looping video. No raw HTML. The spec pane scrolls; never truncate it.
 - `code` — the editor text (a stub, or the user's draft); `has_given` — true when the region
   contains given code above `solve()` that must not be edited (show a note)
@@ -105,4 +105,4 @@ solution "unlocks". The deadline is shown as days left.
 ## Out of scope
 
 Accounts, sharing, leaderboards, mobile, marketing pages, onboarding flows, an admin/authoring UI
-(exercises are authored as files).
+(tasks are authored as files).

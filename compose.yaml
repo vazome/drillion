@@ -4,7 +4,7 @@ services:
     ports:
       - "127.0.0.1:8765:8765"          # loopback only: this is a laptop tool
     volumes:
-      # the whole checkout is the content root: exercises/ and progress.json live
+      # the whole checkout is the content root: tasks/ and progress.json live
       # here, and saving renames a .tmp over progress.json — a single-file bind
       # mount would refuse that rename (EBUSY), a directory mount does not
       - ./:/data

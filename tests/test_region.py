@@ -1,7 +1,7 @@
 """Region: the marker split, the stub and the write gate.
 
-Plain functions, no fixtures. The expensive ones sweep every drill: splice and
-stub must be exactly reversible or a save would corrupt a drill.
+Plain functions, no fixtures. The expensive ones sweep every task: splice and
+stub must be exactly reversible or a save would corrupt a task.
 """
 
 import ast
@@ -14,8 +14,8 @@ import pytest
 from drillion import region, state
 from drillion.settings import settings
 
-FILES = sorted(settings.exercises_dir.glob("*/drill.py"))
-SRC = (settings.exercises_dir / "001_fstrings" / "drill.py").read_text()
+FILES = sorted(settings.tasks_dir.glob("*/task.py"))
+SRC = (settings.tasks_dir / "001_fstrings" / "task.py").read_text()
 
 
 def _solved(src=SRC, code="return ''"):
@@ -24,7 +24,7 @@ def _solved(src=SRC, code="return ''"):
 
 
 # ------------------------------------------------------------ region: all files
-def test_the_marker_opens_the_machinery_of_every_drill():
+def test_the_marker_opens_the_machinery_of_every_task():
     assert len(FILES) >= 104
     for f in FILES:
         src = f.read_text()
@@ -59,7 +59,7 @@ def test_stub_is_identity_on_pristine_files():
 def test_stub_keeps_given_code_and_decorators():
     for name, needle in (("036_env", "TRUTHY = {"), ("044_customexc", "class ConfigError"),
                          ("098_fixtures", "@pytest.fixture")):
-        body = region.cut((settings.exercises_dir / name / "drill.py").read_text()).body
+        body = region.cut((settings.tasks_dir / name / "task.py").read_text()).body
         stubbed = region.stub(body.replace("raise NotImplementedError", "return {}"))
         assert needle in stubbed and "return {}" not in stubbed, name
         assert stubbed.endswith("    raise NotImplementedError"), name
@@ -72,7 +72,7 @@ def test_stub_refuses_a_one_line_body():
 
 def test_has_given_spots_code_above_solve():
     assert region.has_given(region.cut(
-        (settings.exercises_dir / "036_env" / "drill.py").read_text()).body)
+        (settings.tasks_dir / "036_env" / "task.py").read_text()).body)
     assert not region.has_given(region.cut(SRC).body)
 
 
@@ -126,7 +126,7 @@ def test_etag_tracks_only_the_learner_region():
 def test_write_region_is_atomic():
     tmp = Path(tempfile.mkdtemp())
     try:
-        path = tmp / "drill.py"
+        path = tmp / "task.py"
         path.write_text(SRC)
         region.write_region(path, _solved())
         assert "return ''" in path.read_text()

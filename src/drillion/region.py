@@ -1,10 +1,10 @@
-"""The learner's region: cut a drill file in two, splice it back, guard the write.
+"""The learner's region: cut a task file in two, splice it back, guard the write.
 
 Text and `ast` only: no settings, no state, and the one function that writes takes
-the path from its caller. A drill file starts with the learner's code and ends with
+the path from its caller. A task file starts with the learner's code and ends with
 the grader's, separated by one marker line, so the rules that decide what lands on
 disk are testable without a server. The spec is not in here at all — it lives in the
-drill's README.md — which is why a learner may write a docstring like any other code.
+task's README.md — which is why a learner may write a docstring like any other code.
 """
 
 import ast
@@ -46,7 +46,7 @@ def bounds(src):
     for n, line in enumerate(src.split("\n"), 1):
         if line.startswith(_MARKER_HEAD):
             return n
-    raise Invalid("a drill needs the machinery marker")
+    raise Invalid("a task needs the machinery marker")
 
 
 def cut(src):
@@ -119,7 +119,7 @@ def validate(edited, disk_src):
 
 
 def write_region(path, new_src):
-    """Atomic write: a crash mid-save cannot leave half a drill on disk."""
+    """Atomic write: a crash mid-save cannot leave half a task on disk."""
     tmp = path.with_suffix(".tmp")
     tmp.write_text(new_src)
     os.replace(tmp, path)
