@@ -1,4 +1,4 @@
-# Claude Design — prompts for the study UI
+# Claude Design — prompts for the drillion UI
 
 Written against Anthropic's help-center guidance (support.claude.com "Get started with Claude
 Design", 2026-08): a prompt should state **Goal, Layout, Content, Audience**; attach context (link
@@ -6,157 +6,149 @@ the GitHub repo, screenshots); **start simple, then layer** (layout → interact
 **mention responsiveness early**; **ask for 2–3 variations**; give specific feedback ("8px", "use
 the Card component"), and reference components by name once a system exists.
 
-Setup before prompt 1: create a project, **link the GitHub repo `vazome/study` (branch `main`)**,
-attach no design system (we want fresh directions), and paste `DESIGN.md` if the repo link does not
-surface it. Do not import the old `design-brief.md` unless you want that direction.
+The design system already exists: it was built with an earlier set of prompts, now deleted. The
+system itself is the record of them, and re-running them would start over. Everything below is
+written for a system that is already attached.
 
 ---
 
-## Prompt 0 — create the design system (do this first)
+# Project prompts — design system attached
 
-Where: Claude Design → your organization → design system → **Remix** chat (or a new project whose
-deliverable is the UI kit, then publish it). Link the GitHub repo `vazome/study` (branch `main`) as
-context. There are no brand assets: the system is authored from this brief, and the sample screen
-at the end is the "real example" the docs say to include. Two steps: explore, then lock.
+**Setup.** New project in Claude Design (a *project*, not a design system) → attach the existing
+design system → link the GitHub repo **`vazome/drillion`**, branch `main`.
 
-### 0a — explore
+**The product is called drillion**, lowercase always. The repo has been renamed — package,
+console script, env vars, `DESIGN.md` and `README.md` all say drillion now. The **design system
+has not**: it is still titled "Study Design System", its `readme.md` opens "Design system for
+**study**", and — the one that shows up on screen — its brand guidelines define the wordmark as
+`"study"`. Run Prompt 0R below before Prompt A, or every screen the project draws puts the wrong
+word in its header.
 
-> **Goal.** Create the design system for "study", a local single-user web app for daily Python
-> practice: coding exercises with a spec, a code editor, test results, hints, and a spaced-
-> repetition ladder (5 boxes, cards return in 2/4/8/16/28 days). Read `DESIGN.md` in the linked
-> repo for the screens, data and states the system must support.
+**Two rules for every prompt in this project.** Never restate a colour, a font, a radius or a
+spacing value — if the output drifts, that is a bug in the system and gets fixed by remixing the
+system, not by patching the prompt. Always name components: "use `Card` with an eyebrow",
+"`StatusBadge`, not a new pill".
+
+**Known gaps.** The system has 12 components; these screens need shapes it does not define —
+a dense sortable **table** (catalogue rows, per-tag coverage), a **collapsible** (full pytest
+output), a **select** (status filter, focus), a **toggle** (theme), a **dialog** or reuse of
+`NoticeBanner` (file changed on disk), an **empty state** ("nothing due"). The project will
+invent these and they will drift from the system. Either accept that and fold the good ones back
+in later, or add them to the system first with a Remix prompt before starting the project.
+
+## Prompt 0R — remix the existing system (do this before Prompt A)
+
+Do **not** re-run Prompt 0; the system exists. This is a Remix of it, and it is short.
+
+> Two changes to this design system.
 >
-> **Audience.** One engineer using it 20–40 minutes a day on a laptop for ~10 weeks. It must feel
-> calm, focused and worth returning to — a personal workbench, not a SaaS dashboard and not a
-> marketing site.
+> **1. The product is called drillion, not "study".** Lowercase always — "drillion", never
+> "Drillion", exactly the way "study" was written. Rename the system to "drillion design system".
+> In `readme.md`, replace every "study" with "drillion" and change the source link to
+> `https://github.com/vazome/drillion`. In the brand guidelines, the wordmark is **"drillion"**
+> set in IBM Plex Sans semibold, lowercase — same treatment, new word. Nothing else about the
+> visual language changes.
 >
-> **Character.** Three words to design to: *quiet, precise, encouraging.* Reference feel:
-> Linear's restraint, Exercism's warmth, a good printed runbook's clarity. Anti-references:
-> terminal/hacker (black + green/neon), gamified candy, glassmorphism, gradients as decoration.
+> The components themselves carry no namespace — they are plain ES modules. The global
+> `window.StudyDesignSystem_e20cf4` is defined in the compiled `_ds_bundle.js` and destructured by
+> one line in each preview card (`core.card.html`, `feedback.card.html`, `spec.card.html`,
+> `status.card.html`). Whichever way the rename takes it, the bundle and those four lines must
+> agree — if the global becomes `DrillionDesignSystem_e20cf4`, update the cards to match; if it
+> stays as it is, leave the cards alone. A half-renamed global breaks every preview.
 >
-> **Requirements.** Light AND dark themes from day one, dark being a calm deep tone, never pure
-> black. Exactly one accent colour; semantic colours for pass / fail / warning that stay
-> distinguishable from the accent and from each other in both themes. Two type families: a UI
-> sans (variable weight, good at 13–15px) and a monospace for code and for the hand-aligned spec
-> text (the spec must render in true monospace; it is never re-flowed). WCAG AA contrast on every
-> text/background pair in both themes. 4px spacing base, 8px rhythm, small radii (4–8px), hairline
-> borders over shadows.
+> **2. Add the six components the screens need and the system does not have.** Build each in the
+> existing language — current tokens, current spacing, light and dark, with default / hover /
+> focus-visible / disabled states, and a preview card alongside the others:
 >
-> **Deliverable for this step.** Three candidate directions on one canvas, each shown as a
-> component sheet — palette (light + dark swatches with contrast ratios), type scale, primary /
-> secondary / quiet buttons, a status badge set (new · due · scheduled · open · done), a tag chip,
-> a card, one table row, and a 40px-tall preview of a code editor surface with a few syntax
-> colours. One sentence per direction. Do not build screens yet.
+> - **Table** — dense rows, hairline separators, sortable header, tabular-nums for numeric
+>   columns. Used for the catalogue list (topic · title · tags · minutes · status · a 16px
+>   `LadderMeter`) and the per-tag coverage table on Progress.
+> - **Collapsible** — a ▸ disclosure row that opens to monospace output. Used for the full pytest
+>   output under a failure headline; collapsed by default.
+> - **Select** — 36px, matching `Input`. Used for the status filter (new · due · scheduled · open
+>   · done) and the focus selector.
+> - **Toggle** — the light/dark switch, sitting in the header.
+> - **Conflict dialog** — "This drill changed on disk." with **Reload from disk** and **Keep
+>   mine**. Build it as a `NoticeBanner` variant if that reads better than a modal; say which you
+>   chose and why.
+> - **EmptyState** — a line of copy plus an optional quiet action. First use: "Nothing due. Pick
+>   anything below, or rest — that's training too."
+>
+> Keep the existing 12 components untouched. Republish when done.
 
-### 0b — lock and build the system
+## Prompt A — the Exercise screen, failed state
 
-> Go with direction **N** [+ merges]. Build the complete design system and publish it.
+> **Goal.** Design the Exercise screen (`#/ex/:slug`) of **Drillion** using the attached design system.
+> This is the screen the user spends 20–40 minutes a day inside, so it comes first. Read
+> `DESIGN.md` in the linked repo, section "2. Exercise", for the exact data, layout and states.
 >
-> **Tokens** (name them so they map onto shadcn/ui + Tailwind v4 CSS variables, with values for
-> `:root` and `.dark`): background, foreground, card, card-foreground, muted, muted-foreground,
-> border, input, ring, primary/primary-foreground (the accent), secondary, destructive, plus
-> semantic `success`, `warning`, `info`, and editor tokens: editor-background, editor-gutter,
-> editor-line-highlight, editor-selection, editor-caret. Font stacks, type scale (11/12/13/14/16/
-> 20/24/32), line heights, weights, spacing scale, radius scale, focus ring.
+> **Audience.** One engineer, laptop browser, 1440×900. Desktop-first; ≥1280px must work, mobile
+> is out of scope.
 >
-> **Components**, each with all variants and states (default, hover, focus-visible, active,
-> disabled, loading where relevant), light and dark: Button (primary, secondary, quiet/ghost,
-> destructive; sm/md; with icon), Badge/status pill (new, due, scheduled, open, done, and grades
-> EASY / PASS / STRUGGLED / abandoned), Tag chip (selectable, multi-select AND filter), Input +
-> search field, Select, Toggle (theme switch), Tooltip, Dialog (used for a "file changed on disk:
-> reload / overwrite" conflict), Banner/inline alert (info, warning, error), Tabs, Table
-> (dense rows, sortable header), Card, Progress/stat tile, Countdown label ("next hint in 42 s"),
-> Timer display (normal → amber past par → red past 2×), Kbd hint (`⌘⏎`), Collapsible (for the
-> full test output), Empty state, Skeleton.
+> **Layout.** Two resizable panes. Left: the spec, rendered from GitHub-flavoured Markdown —
+> headings, lists, fenced Python, a pipe table, a `> [!WARNING]` alert. It scrolls and is never
+> truncated. Right: the code editor with a toolbar — **Run** as the only filled button, the
+> active-time timer, attempts count, seed, **Hint** with its countdown, **Solution** in its locked
+> state, **Abandon**. Results panel below the editor.
 >
-> **Patterns** specific to this app: the **Ladder** — five slots showing which box a card is in
-> and when it returns; three sizes (16px inline for table rows, 28px in a pass banner where it
-> animates one step up, full-size on a progress page); the **two-pane workbench** (resizable split,
-> spec left / editor right, toolbar + results); the **spec block** (monospace, section labels
-> `WHY` / `YOU GET` / `YOU RETURN` / `─── exact rules ───` given a subtle emphasis, nothing else
-> restyled); the **results panel** in idle / running / failed (headline lines + collapsible full
-> output) / passed (grade line + ladder step) states.
+> **Content.** Use a real drill from the repo: `exercises/303_bob/README.md` for the spec and
+> `exercises/303_bob/drill.py` for the editor contents. Show the **failed** state: two assertion
+> headline lines plus a collapsed "full output" row.
 >
-> **Editor theme**: a CodeMirror-style theme for light and dark — background, gutter, active line,
-> selection, caret, matching bracket, and syntax colours for keyword, string, number, comment,
-> function name, variable, operator, type/class. Keep it low-contrast between tokens: it's a
-> writing surface, not a rainbow.
+> **On-system.** Build from the attached components — `Card`, `Button` (primary/secondary/quiet),
+> `StatusBadge`, `TagChip`, `Timer`, `LadderMeter`, `SpecText`, `ResultBanner`, `Kbd` for `⌘⏎`.
+> Do not introduce new colours, fonts or spacing. Where you need a shape the system lacks
+> (collapsible, table), build it from the existing tokens and tell me you did.
 >
-> **Real example**: finish with the Exercise screen at 1440×900 in the failed state, built only
-> from the components above, using the real spec from `exercises/ex_019_counter.py` (the `solve`
-> docstring) — light and dark side by side. Then switch **Published** on.
+> **Deliverable.** One screen, light mode, at 1440×900. Then two variations of the **toolbar and
+> results arrangement only** — same visual language, different ergonomics.
 
-Validate (docs' step 3): open a fresh test project and prompt "Design the catalogue + Today screen
-from DESIGN.md" — it should come out on-system without restating any colours or fonts. If it
-drifts, Remix the system with the specific fix ("badge text is 11px — make it 12px", "dark card
-surface is too close to the background — raise it one step").
+## Prompt B — the other two screens
 
----
-
-## Prompt 1 — three directions for the core screen
-
-> **Goal.** Design the web UI for "study": a local, single-user app for daily Python practice.
-> A catalogue of ~150 short coding exercises, each with a spec, a code editor, and a test that
-> grades the code on fresh random data. A spaced-repetition scheduler (5-box Leitner ladder:
-> cards return in 2/4/8/16/28 days) decides what comes back when. Hints unlock with time; the
-> solution unlocks after real effort. The repo is linked; read `DESIGN.md` first — it lists the
-> three screens, the exact data each screen receives from the API, every state, and the vocabulary.
+> Take arrangement **N**. Now design **Catalogue + Today** (`#/`) and **Progress** (`#/progress`)
+> in the same language, per `DESIGN.md` sections 1 and 3.
 >
-> **Audience.** One person (me): a DevOps engineer learning Python for interviews, 20–40 minutes a
-> day on a laptop browser, for ~10 weeks until a fixed date. Not a classroom, not a marketplace.
-> It must feel worth coming back to daily; progress on the ladder is the emotional core.
+> Catalogue: the Today panel (due reviews first, then up to two new picks, a focus selector),
+> search, multi-select tag chips (AND), a status filter across `new · due · scheduled · open ·
+> done`, the exercise list — topic · title · tags · minutes · status · a 16px `LadderMeter` per
+> row — and the stats strip (days left, due today, cards per box). Use real rows from the repo's
+> `exercises/`: real topic numbers, titles and tags, not lorem.
 >
-> **Layout.** Desktop-first, 1440×900. Start with the **Exercise screen** only: two resizable
-> panes — spec on the left (plain, hand-aligned monospace text with `WHY / YOU GET / YOU RETURN /
-> exact rules` sections and 2–3 "read first" links), code editor on the right with a toolbar
-> (Run as the primary action, an active-time timer that turns amber past par and red past 2×,
-> attempts count, Hint with a countdown, Solution locked/unlocked, Abandon) and a results panel
-> below the editor.
+> Progress: the full-size `Ladder` with counts and return intervals, the per-tag coverage table,
+> the last 30 log lines.
 >
-> **Content.** Use real content from the repo: exercise `ex_303_bob` (spec text in
-> `exercises/ex_303_bob.py`, the `solve` docstring) with a failed test result showing two assertion
-> lines, and a second frame of the same screen in the **passed** state with the grade line
-> `PASS · 6m40s · 2 attempts · box 2/5 · back in 4 days` and the ladder visibly stepping up.
+> Include the empty Today state: "Nothing due. Pick anything below, or rest — that's training
+> too." Keep 1440×900, light mode.
+
+## Prompt C — the remaining states, then dark
+
+> Add the Exercise-screen states from `DESIGN.md` that are still missing: hint levels 1–3 revealed
+> and stacked; solution revealed with the note that this pass will not promote; the gated message
+> ("not yet — 42 s"); the unsaved-draft amber dot; the conflict banner (file changed on disk —
+> reload / keep mine); the draft-restore offer; and the **passed** state with the grade line
+> `EASY · 4m12s · 1 attempt · box 3 of 5 · back in 8 days`, the ladder stepping one cell, and the
+> passing code read-only.
 >
-> **Constraints.** Light AND dark mode both required later — for now design light, but choose a
-> palette that has an obvious calm-dark counterpart. Absolutely no hacker/terminal aesthetic: no
-> black-with-green, no neon, no "matrix". One accent colour. The editor gets its own themed
-> surface. WCAG AA contrast. Real buttons, visible focus. Implementation is React + Tailwind v4 +
-> shadcn/ui with CodeMirror 6, so prefer shapes shadcn components can produce.
->
-> **Deliverable.** Three distinct directions side by side (e.g. "workbench", "index cards on a
-> desk", "editorial/notebook"), each: the Exercise screen in the failed state, one sentence on the
-> idea, the palette and type choices. Do not design the other screens yet.
+> Then produce **dark mode** for all three screens using the system's `.dark` tokens — including
+> the editor surface and its syntax colours. Show the Exercise screen light and dark side by side.
 
-## Prompt 2 — pick one, extend to the other screens
+## Prompt D — handoff to Claude Code
 
-> Go with direction **N** [+ any specific merges: "take the ladder treatment from direction M"].
-> Now design the **Catalogue + Today** screen and the **Progress** screen in the same language,
-> using the data in `DESIGN.md`: Today panel (due reviews first, then 2 new picks, a focus
-> selector), search, multi-select tag chips, status filter, the exercise list with a miniature
-> ladder per row, and a stats strip (days left, due today, cards per box). Progress: the full-size
-> ladder with counts and return intervals, a per-tag coverage table, the last 30 log entries.
-> Use real rows from the repo's `exercises/` (topic numbers, titles, tags). Keep 1440×900.
+> For each screen, list the components used and the props each one needs, and name anything you
+> built that is not in the design system. Export the screens so they can be read from the repo.
 
-## Prompt 3 — states and dark mode
+Then, in Claude Code: `/design-sync` to pull the system down, and build `web/` against it — Vite +
+React 19 + TypeScript, Tailwind v4 with the system's tokens as CSS variables, CodeMirror 6 via
+`@uiw/react-codemirror`, TanStack Query, hash routes. `task-6-brief.md` is **stale** — it specifies
+vanilla JS with no build step and must be rewritten before anyone works from it.
 
-> Add the remaining Exercise-screen states from `DESIGN.md`: hint levels 1–3 revealed (they stack),
-> solution unlocked (with the note that this pass will not promote), gated message ("not yet —
-> 42 s"), unsaved-draft dot, the conflict banner (file changed on disk: reload / overwrite), and
-> the draft-restore offer. Then produce the **dark mode** of all three screens: calm dark surfaces
-> (not black), same accent, editor theme with syntax colours for keyword / string / number /
-> comment / function / variable, AA contrast. Show light and dark of the Exercise screen side by
-> side.
+## Checking the system holds
 
-## Prompt 4 — tokens and handoff
-
-> Export the design system for implementation with shadcn/ui + Tailwind v4: CSS variables for
-> `:root` and `.dark` (background, card, muted, border, primary/accent, success, warning,
-> destructive, ring, and the editor surface + gutter + selection + caret), font stacks and the
-> type scale, spacing/radius, and the CodeMirror syntax colours for both modes. Name the
-> components used per screen (Button variants, Badge for tags/status, Card, Table, Tabs,
-> Tooltip, Dialog for the conflict banner, Toggle for the theme). Publish the design system so
-> Claude Code can pull it with `/design-sync`.
+Open a throwaway project, attach the system, and prompt "design the catalogue + Today screen from
+DESIGN.md". It should come out on-system without you restating a single colour or font. If it
+drifts, fix the **system** with a Remix naming the specific defect — "badge text is 11px, make it
+12px", "the dark card surface is too close to the background, raise it one step" — never by
+patching the project prompt.
 
 ## Feedback vocabulary that works
 "Tighten the toolbar to one row; Run stays the only filled button." · "The ladder must read at
