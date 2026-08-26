@@ -31,11 +31,11 @@ export interface Catalogue {
     due_total: number; behind: boolean;
   };
   /** `due` is the whole backlog, not `review.length` — the two differ once `behind`. */
-  stats: { boxes: number[]; due: number; seen: number; total: number; practised: number; window: number; lapse_limit: number };
+  stats: { boxes: number[]; ladder: number[]; due: number; seen: number; total: number; practised: number; window: number; lapse_limit: number };
   tasks: Row[];
 }
 export interface Progress {
-  boxes: number[]; due: number; seen: number; total: number; practised: number; window: number;
+  boxes: number[]; ladder: number[]; due: number; seen: number; total: number; practised: number; window: number;
   per_tag: Record<string, { seen: number; total: number }>;
   log: { date: string; slug: string; grade: Grade; attempts: number; secs: number; new: boolean }[];
 }
@@ -47,6 +47,8 @@ export interface Task {
   /** the task has cost this many lapses; at `lapse_limit` it is flagged as one that keeps
    *  beating you — a message about the task, never a punishment on the card */
   lapses: number; lapse_limit: number;
+  /** the scheduler's return intervals, one per box */
+  ladder: number[];
   /** half an hour of active reading with nothing run and no hint taken. The server owns
    *  the threshold; the page renders the offer. */
   nudge: boolean;

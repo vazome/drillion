@@ -52,12 +52,12 @@ export function Progress() {
 
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", display: "grid", gap: 18 }}>
-      <Stats boxes={data.boxes} due={data.due} seen={data.seen} total={data.total} practised={data.practised} outOf={data.window} />
+      <Stats boxes={data.boxes} ladder={data.ladder} due={data.due} seen={data.seen} total={data.total} practised={data.practised} outOf={data.window} />
 
       <Card label="The ladder">
-        <Ladder boxes={data.boxes} />
+        <Ladder boxes={data.boxes} intervals={data.ladder} />
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 12 }}>
-          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>A quick pass climbs two boxes, a pass one, and a struggle costs one — box 7 is the ceiling. Each box returns on its own interval.</span>
+          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>A quick pass climbs two boxes, a pass one, and a struggle costs one — box {data.ladder.length} is the ceiling. Each box returns on its own interval.</span>
           <div style={{ flex: 1 }} />
           <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--text-faint)" }}>
             {data.seen} cards on the ladder · {data.total - data.seen} untouched

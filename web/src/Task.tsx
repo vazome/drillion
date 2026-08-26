@@ -6,7 +6,6 @@ import { Editor } from "./Editor";
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
 const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };          // the faint line beside a section label
 const PLAIN = { fontWeight: 400, textTransform: "none" as const, letterSpacing: 0, ...ASIDE };
-const BOXES = 7;      // ladder height; tests/test_scheduler.py holds it to scheduler.LADDER
 const AUTOSAVE_MS = 800;
 const ATTEMPT_MS = 5000;    // reading the task is work: the clock starts once the page settles
 const HEARTBEAT_MS = 60_000;
@@ -35,11 +34,12 @@ type Result =
 
 /** The pass banner's one line about the card. A `struggled` pass steps a card *down* the
  *  ladder, so a move has a direction: `stepped` is the server's answer to whether the card
- *  moved at all, and the new box against the one it came from says which way. Exported so
- *  web/check.mjs can hold the copy to every case. */
-export function stepLine(grade: string, box: number, fromBox: number, stepped: boolean) {
+ *  moved at all, and the new box against the one it came from says which way. `boxes` is
+ *  the ladder's height, from the server. Exported so web/check.mjs can hold the copy to
+ *  every case. */
+export function stepLine(grade: string, box: number, fromBox: number, stepped: boolean, boxes: number) {
   if (stepped) return box < fromBox ? "the card stepped back a box — it comes back sooner" : "the card stepped up";
-  if (box === BOXES - 1) return "the card is already in the top box and stays there";
+  if (box === boxes - 1) return "the card is already in the top box and stays there";
   if (box === 0) return "the card is already in the first box and stays there";
   return `${grade} keeps the card where it is`;
 }
@@ -511,7 +511,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                 <ResultBanner
                   state={result.state}
                   headline={result.state === "failed" ? result.headline : undefined}
-                  gradeLine={passed ? `${result.grade.toUpperCase()} · ${secs(active)} · ${plural(result.attempts, "attempt")} · box ${result.box + 1} of ${BOXES}` : undefined}
+                  gradeLine={passed ? `${result.grade.toUpperCase()} · ${secs(active)} · ${plural(result.attempts, "attempt")} · box ${result.box + 1} of ${task.ladder.length}` : undefined}
                   backIn={passed ? plural(result.dueIn, "day") : undefined} />
               </div>
             </div>
@@ -530,9 +530,9 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             {passed ? (
               <div style={{ marginTop: 10, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
                 {/* the climb animation would read as a promotion on a card that just fell */}
-                <span className={result.stepped ? (fell ? "m-fade" : "m-step") : undefined} style={{ display: "inline-flex" }}><LadderMeter box={result.box + 1} /></span>
+                <span className={result.stepped ? (fell ? "m-fade" : "m-step") : undefined} style={{ display: "inline-flex" }}><LadderMeter box={result.box + 1} intervals={task.ladder} /></span>
                 <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                  {stepLine(result.grade, result.box, result.fromBox, result.stepped)} — code archived, stub restored for next time
+                  {stepLine(result.grade, result.box, result.fromBox, result.stepped, task.ladder.length)} — code archived, stub restored for next time
                 </span>
                 <div style={{ flex: 1 }} />
                 <Button variant="quiet" onClick={() => { location.hash = "#/"; }}>Back to Today</Button>

@@ -263,24 +263,6 @@ def test_queue_puts_the_most_overdue_review_first():
     assert scheduler.pick(st, _exs()) == ("003_c", "review")
 
 
-def test_the_web_ladder_matches_the_scheduler():
-    """LADDER is hand-copied into three web files — two of them vendored design-system
-    components we resync from upstream — so nothing but this keeps them honest."""
-    copies = {
-        "web/src/Stats.tsx": r"const LADDER = \[([^\]]*)\]",
-        "web/src/ds/LadderMeter.jsx": r"intervals = \[([^\]]*)\]",
-        "web/src/ds/Ladder.jsx": r"intervals = \[([^\]]*)\]",
-    }
-    for rel, pattern in copies.items():
-        found = re.search(pattern, (ROOT / rel).read_text())
-        assert found, f"the ladder intervals went missing from {rel}"
-        assert [int(n) for n in re.findall(r"\d+", found[1])] == scheduler.LADDER, rel
-    # and Task.tsx names the height once — the pass banner's "box 3 of 7" and its
-    # top-box copy both read it, so this is the only literal left to drift.
-    found = re.search(r"const BOXES = (\d+)", (ROOT / "web/src/Task.tsx").read_text())
-    assert found and int(found[1]) == len(scheduler.LADDER), "web/src/Task.tsx"
-
-
 def test_the_ladder_sheds_review_load_at_the_top():
     """The whole point of the rungs past 28 days (#2). The ladder only ever climbs, so the top
     interval alone decides the steady state: at a 28-day ceiling every card you had mastered

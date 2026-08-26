@@ -28,12 +28,12 @@ const { render, html, sortRows, blockedBy, noPicks, stepLine } = await import(pa
 rmSync(out.pathname);
 
 // A `struggled` pass steps a card *down*, so the pass banner has to be able to say so.
-// (grade, box, from_box, stepped) — the box numbers are the scheduler's 0-6.
-if (!stepLine("struggled", 2, 3, true).includes("stepped back")) throw new Error("a demotion must not read as a climb");
-if (stepLine("pass", 3, 2, true) !== "the card stepped up") throw new Error("a promotion must read as a climb");
-if (!stepLine("quick", 6, 6, false).includes("top box")) throw new Error("a quick pass clamped at the top must say so");
-if (!stepLine("struggled", 0, 0, false).includes("first box")) throw new Error("a struggle on the floor must say so");
-if (!stepLine("pass", 2, 2, false).includes("keeps the card where it is")) throw new Error("a pass that moved nothing must say so");
+// (grade, box, from_box, stepped, boxes)
+if (!stepLine("struggled", 2, 3, true, 7).includes("stepped back")) throw new Error("a demotion must not read as a climb");
+if (stepLine("pass", 3, 2, true, 7) !== "the card stepped up") throw new Error("a promotion must read as a climb");
+if (!stepLine("quick", 6, 6, false, 7).includes("top box")) throw new Error("a quick pass clamped at the top must say so");
+if (!stepLine("struggled", 0, 0, false, 7).includes("first box")) throw new Error("a struggle on the floor must say so");
+if (!stepLine("pass", 2, 2, false, 7).includes("keeps the card where it is")) throw new Error("a pass that moved nothing must say so");
 
 // The catalogue sorts on meaning, not on the alphabet, and ties fall back to the task number.
 const row = (topic, difficulty) => ({ topic, difficulty, title: "t", tier: "core", tags: [], seen: 0, box: 0, status: "new" });
