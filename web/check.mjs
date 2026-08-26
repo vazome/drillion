@@ -1,6 +1,6 @@
-// One check: the catalogue's sort order, then every task's spec rendered through SpecText
-// with an assert that nothing leaks or throws.
-// Needs a running server:  DRILLION_PORT=8816 uv run drillion &   then  node check.mjs [port]
+// The catalogue's sort order, the payload seam the page reads, and every task's spec
+// rendered through SpecText. Needs a running server:
+//   DRILLION_PORT=8816 uv run drillion &   then   node check.mjs 8816
 import { build } from "esbuild";
 import { rmSync } from "node:fs";
 import { pathToFileURL } from "node:url";
@@ -26,15 +26,13 @@ await build({
 const { render, sortRows, stepLine } = await import(pathToFileURL(out.pathname).href + "?t=" + Date.now());
 rmSync(out.pathname);
 
-// A `struggled` pass steps a card *down*, so the pass banner has to be able to say so.
-// (grade, box, from_box, stepped, boxes)
+// stepLine(grade, box, from_box, stepped, boxes)
 if (!stepLine("struggled", 2, 3, true, 7).includes("stepped back")) throw new Error("a demotion must not read as a climb");
 if (stepLine("pass", 3, 2, true, 7) !== "the card stepped up") throw new Error("a promotion must read as a climb");
 if (!stepLine("quick", 6, 6, false, 7).includes("top box")) throw new Error("a quick pass clamped at the top must say so");
 if (!stepLine("struggled", 0, 0, false, 7).includes("first box")) throw new Error("a struggle on the floor must say so");
 if (!stepLine("pass", 2, 2, false, 7).includes("keeps the card where it is")) throw new Error("a pass that moved nothing must say so");
 
-// The catalogue sorts on meaning, not on the alphabet, and ties fall back to the task number.
 const row = (topic, difficulty) => ({ topic, difficulty, title: "t", tier: "core", tags: [], seen: 0, box: 0, status: "new" });
 const order = (rows, sort) => sortRows(rows, sort).map((r) => r.topic).join(",");
 const spread = [row(3, "medium"), row(1, "hard"), row(2, "easy")];
@@ -45,9 +43,6 @@ if (order([row(9, "easy"), row(4, "easy")], { key: "difficulty", dir: "desc" }) 
 const cat = await (await fetch(`${base}/catalogue`)).json();
 const slugs = cat.tasks.map((e) => e.slug);
 
-// The payload seam the page reads: a capped review list next to the real backlog, the reason
-// there is nothing new, what each locked row waits on, the lapse limit the rows are flagged
-// against, and the spec text the search box matches on (#14).
 const ok = (label, cond) => { if (!cond) throw new Error(label); };
 ok("today must name the one reason New picks is empty, and only then",
   cat.today.new.length ? cat.today.no_new === null : !!cat.today.no_new?.why);
@@ -72,19 +67,15 @@ for (const slug of slugs) {
   try { markup = render(task.spec_md, slug); }
   catch (e) { problems.push(`${slug}: threw ${e.message}`); continue; }
 
-  // an unparsed GitHub alert marker means the alert plugin stopped firing
   for (const kind of ["NOTE", "TIP", "WARNING", "IMPORTANT", "CAUTION"]) {
     if (markup.includes(`[!${kind}]`)) problems.push(`${slug}: literal [!${kind}] in output`);
   }
-  // …and a callout whose label lost its class renders unstyled, with the raw octicon showing
   const alerts = (task.spec_md.match(/^> \[!\w+\]/gm) || []).length;
   const titled = (markup.match(/class="markdown-alert-title"/g) || []).length;
   if (alerts !== titled) problems.push(`${slug}: ${alerts} callouts, ${titled} styled labels`);
-  // every `## Heading` in the source must come out as an <h2>
   const heads = [...task.spec_md.matchAll(/^## (.+)$/gm)].map((m) => m[1].trim());
   const rendered = (markup.match(/<h2[^>]*>/g) || []).length;
   if (heads.length !== rendered) problems.push(`${slug}: ${heads.length} '## ' headings, ${rendered} <h2>`);
-  // ordered lists must not degrade into paragraphs (the old regex parser's failure)
   if (/^\d+\. /m.test(task.spec_md) && !markup.includes("<ol")) problems.push(`${slug}: ordered list did not render as <ol>`);
   if (/^\s*[-*] /m.test(task.spec_md) && !markup.includes("<ul")) problems.push(`${slug}: bullet list did not render as <ul>`);
   if (markup.includes("undefined")) problems.push(`${slug}: 'undefined' leaked into the markup`);

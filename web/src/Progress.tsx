@@ -28,8 +28,7 @@ const LOG_COLS = [
 ];
 type LogRow = Payload["log"][number];
 
-/** Sort the coverage rows: numbers compare numerically (10% above 9%), and ties keep the
- *  API's order because Array.sort is stable. Exported so a check can drive it directly. */
+/** Sort the coverage rows; ties keep the API's order because Array.sort is stable. */
 export function sortTags(rows: TagRow[], key: TagKey, dir: "asc" | "desc"): TagRow[] {
   const d = dir === "asc" ? 1 : -1;
   return [...rows].sort((a, b) => (key === "tag" ? a.tag.localeCompare(b.tag) : a[key] - b[key]) * d);

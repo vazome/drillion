@@ -1,10 +1,6 @@
-/** What the client looks like on this branch, as PNGs a reviewer can open.
- *
- * This is a review aid, not a visual regression test: nothing is diffed against a committed
- * baseline and nothing fails on pixel drift (issue #29). It fails when the app cannot be
- * driven at all — a catalogue that never loads, a Run that never returns a verdict — which
- * is the other half of what a screenshot is worth.
- */
+/** What the client looks like on this branch, as PNGs a reviewer can open. A review aid,
+ *  not a visual regression test: nothing is diffed, and it fails only when the app cannot
+ *  be driven at all. */
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
@@ -12,22 +8,17 @@ import { repoRoot, scratchRoot } from "../playwright.config";
 
 const SHOTS = join(import.meta.dirname, "..", "screenshots");
 const SLUG = "001_fstrings";
-/** 001's own `_reference`, written as the learner would: enough to make the grader say pass,
- *  which is the only way to photograph the pass state. If 001 ever changes shape this test
- *  fails loudly rather than quietly capturing a failure and calling it a pass. */
+/** 001's own `_reference`: the only way to photograph the pass state. */
 const SOLUTION = [
   "def solve(rows):",
   '    return "\\n".join(f"{name:<14}{value:>12,.2f}" for name, value in rows)',
 ].join("\n");
 
-/** When the throwaway root was built, which is the instant before the server was started:
- *  any file newer than this was written by the run. Read off the copy rather than from a
- *  clock, because a failed test restarts its worker and a `Date.now()` in this module would
- *  then be re-read *after* the writes it is supposed to predate. */
+/** When the throwaway root was built: anything newer was written by this run. Read off the
+ *  copy, not a clock — a restarted worker would re-read a `Date.now()` too late. */
 const runStart = statSync(join(scratchRoot, "tasks")).mtimeMs;
 
-/** fullPage everywhere: a result banner or a long spec runs past 900px, and the part that
- *  scrolled off is usually the part worth reviewing. */
+/** fullPage everywhere: the part that scrolled off is usually the part worth reviewing. */
 const shot = (page: Page, name: string) =>
   page.screenshot({ path: join(SHOTS, `${name}.png`), fullPage: true, animations: "disabled" });
 
@@ -41,8 +32,7 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await expect(run).toBeVisible();
   await shot(page, "2-task");
 
-  // Grading is the product, so both verdicts get photographed. The stub raises
-  // NotImplementedError, so the first run is a real failure with real pytest output.
+  // both verdicts get photographed; the stub raises NotImplementedError, so run 1 really fails
   await run.click();
   await expect(page.getByText("Result · attempt 1")).toBeVisible();
   await page.getByText("Full output").click(); // the pytest output is the point of the shot
@@ -63,8 +53,7 @@ test("captures the screens a reviewer needs", async ({ page }) => {
 });
 
 test("the run cannot have touched the repository's own state", () => {
-  // Acceptance criterion 4. The server was handed DRILLION_ROOT; this is the assertion that
-  // it was actually obeyed, and it is deliberately about the checkout, not about the copy.
+  // the server was handed DRILLION_ROOT; this asserts the checkout itself was left alone
   const untouched = (path: string) =>
     !existsSync(path) || statSync(path).mtimeMs < runStart;
 
@@ -73,9 +62,7 @@ test("the run cannot have touched the repository's own state", () => {
   for (const name of ["progress.json", "progress.json.bak"])
     expect(untouched(join(repoRoot, name)), `${name} was written`).toBe(true);
 
-  // ...and the same writes landed in the scratch root, so the checks above are not vacuous:
-  // passing a task rewrites its file twice (the learner's code, then the stub again) and
-  // schedules the card.
+  // ...and the same writes landed in the scratch root, so the checks above are not vacuous
   expect(statSync(join(scratchRoot, "tasks", SLUG, "task.py")).mtimeMs).toBeGreaterThan(runStart);
   expect(readFileSync(join(scratchRoot, "progress.json"), "utf8")).toContain(SLUG);
 });

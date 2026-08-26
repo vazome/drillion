@@ -4,14 +4,12 @@ import { ApiError, api, post, type Task as TaskData, type RunResult } from "./ap
 import { Editor } from "./Editor";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
-const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };          // the faint line beside a section label
+const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };
 const PLAIN = { fontWeight: 400, textTransform: "none" as const, letterSpacing: 0, ...ASIDE };
 const AUTOSAVE_MS = 800;
 const ATTEMPT_MS = 5000;    // reading the task is work: the clock starts once the page settles
 const HEARTBEAT_MS = 60_000;
-// The handoff's 1.4s was a prototype fading in a hint that had actually unlocked. A real
-// gate has to be read — and `role="status"` speaks a sentence in roughly two seconds, so a
-// node pulled at 1.4s can be yanked mid-utterance. Four seconds clears both.
+// long enough for `role="status"` to finish speaking the message before the node goes
 const GATE_MS = 4000;
 const draftKey = (slug: string) => `drillion-draft-${slug}`;
 const secs = (n: number) => n >= 60 ? `${Math.floor(n / 60)}m${String(n % 60).padStart(2, "0")}s` : `${n}s`;
@@ -20,8 +18,7 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 /** A refused action, shown beside the control that asked for it. */
 type Gate = { at: "hints" | "solution" | "editor" | "note"; message: string } | null;
 
-/** The optimistic lock's 409, or null for any other failure: `_check_etag` is the only thing
- *  that raises it, and it always sends the disk version's etag and body together. */
+/** The optimistic lock's 409, or null for any other failure. */
 const conflictOf = ({ status, detail }: ApiError) =>
   status === 409 && detail?.etag !== undefined && detail.code !== undefined
     ? { etag: detail.etag, code: detail.code }
@@ -32,11 +29,8 @@ type Result =
   | { state: "failed"; attempts: number; headline: string; output: string }
   | { state: "passed"; grade: string; box: number; stepped: boolean; fromBox: number; reason: string; dueIn: number; attempts: number; code: string };
 
-/** The pass banner's one line about the card. A `struggled` pass steps a card *down* the
- *  ladder, so a move has a direction: `stepped` is the server's answer to whether the card
- *  moved at all, and the new box against the one it came from says which way. `boxes` is
- *  the ladder's height, from the server. Exported so web/check.mjs can hold the copy to
- *  every case. */
+/** The pass banner's one line about the card: `stepped` is the server's answer to whether
+ *  the card moved, and `box` against `fromBox` says which way. */
 export function stepLine(grade: string, box: number, fromBox: number, stepped: boolean, boxes: number) {
   if (stepped) return box < fromBox ? "the card stepped back a box — it comes back sooner" : "the card stepped up";
   if (box === boxes - 1) return "the card is already in the top box and stays there";
@@ -59,7 +53,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [nextSlug, setNextSlug] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);          // a hint spent twice cannot be un-spent
   const [nudge, setNudge] = useState(false);        // the server's offer of a hint, not ours
-  const [nudgeOff, setNudgeOff] = useState(false);  // ...waved away for this sitting
+  const [nudgeOff, setNudgeOff] = useState(false);
   const [note, setNote] = useState("");
   const [noteDirty, setNoteDirty] = useState(false);
 
@@ -70,7 +64,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const noteTimer = useRef<number | undefined>(undefined);
   const gateTimer = useRef<number | undefined>(undefined);
   const inflight = useRef<Promise<void> | null>(null);
-  const attemptRef = useRef(false);          // is an attempt open? read from the async chain
+  const attemptRef = useRef(false);
   const opening = useRef<Promise<void> | null>(null);
   const dropped = useRef(false);             // discarded here: do not re-open the attempt behind them
   const hasAttempt = !!task?.attempt;
@@ -93,11 +87,11 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     gateTimer.current = setTimeout(() => setGate(null), GATE_MS);
   }, []);
 
-  // ---- load, and offer a newer local draft over what the file holds
+  // load, and offer a newer local draft over what the file holds
   useEffect(() => {
     let live = true;
     setTask(null); attemptRef.current = false; dropped.current = false; setError(null); setResult({ state: "idle" }); setConflict(null); setGate(null); setNextSlug(null); setNudgeOff(false);
-    setNote(""); noteRef.current = ""; noteDirtyRef.current = false; setNoteDirty(false);   // the last task's note is not this one's
+    setNote(""); noteRef.current = ""; noteDirtyRef.current = false; setNoteDirty(false);
     api<TaskData>(`/task/${encodeURIComponent(slug)}`).then((p) => {
       if (!live) return;
       adopt(p);
@@ -110,7 +104,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     return () => { live = false; };
   }, [slug, adopt]);
 
-  // ---- autosave: debounce, then one PUT at a time; the next Run awaits whatever is in flight
   /** An attempt must exist before the server will accept an edit, a run or a hint.
    * Concurrent callers share one POST — the debounced save and Run can arrive together. */
   const ensureOpen = useCallback(async () => {
@@ -135,8 +128,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       setSyntaxBad(false);
       if (codeRef.current === sent) { dirtyRef.current = false; setDirty(false); }
     } catch (e) {
-      // Never rethrow: `edit()` fires this unawaited and `run()` awaits it, so a rejection here
-      // used to sink Run without a word. Every failure becomes something the learner can see.
+      // never rethrow: `edit()` fires this unawaited and `run()` awaits it
       if (!(e instanceof ApiError)) { setGate({ at: "editor", message: `could not save — ${(e as Error).message}` }); return; }
       const clash = conflictOf(e);
       if (e.status === 400) setSyntaxBad(true);                       // silent: an amber dot, no banner
@@ -146,9 +138,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     }
   }, [slug, ensureOpen]);
 
-  /** The note's save, the same shape as the editor's: debounce, then one PUT, and every
-   * failure becomes something the learner can see — a note that vanished quietly is worse
-   * than no note. There is no etag and no attempt to open: one note, last write wins. */
+  /** The note's save: debounce, then one PUT. No etag and no attempt to open — one note,
+   * last write wins. */
   const saveNote = useCallback(async (text: string) => {
     try {
       await api(`/task/${encodeURIComponent(slug)}/note`, { method: "PUT", body: JSON.stringify({ text }) });
@@ -165,9 +156,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     noteTimer.current = setTimeout(() => saveNote(next), AUTOSAVE_MS);
   };
 
-  // ---- the clock starts on arrival, not on the first Run. Reading the task is the
-  // work, so a page that has sat open for five seconds opens its attempt itself; the
-  // delay is there so a mis-click bounced straight back out never starts one.
+  // the page opens its own attempt once it has sat open; the delay skips a mis-click
   useEffect(() => {
     if (!task || hasAttempt || passed || dropped.current) return;
     const t = setTimeout(() => { ensureOpen().catch(() => {}); }, ATTEMPT_MS);
@@ -193,7 +182,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     return () => removeEventListener("beforeunload", warn);
   }, []);
 
-  // ---- the clock: local ticks between heartbeats, server truth on every touch
+  // local ticks between heartbeats, server truth on every touch
   useEffect(() => {
     if (!hasAttempt || passed) return;
     const tick = setInterval(() => {
@@ -210,12 +199,11 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     return () => { clearInterval(tick); clearInterval(beat); };
   }, [hasAttempt, passed, slug]);
 
-  // ---- actions
   const run = async () => {
-    clearTimeout(timer.current);           // Run cancels the pending debounce…
+    clearTimeout(timer.current);
     setResult({ state: "running" });
     try {
-      await inflight.current;              // …and rides the etag that PUT just returned
+      await inflight.current;              // ride the etag the pending PUT returns
       await ensureOpen();
       const r = await post<RunResult>(`/task/${encodeURIComponent(slug)}/run`, { code: codeRef.current, etag: etagRef.current });
       etagRef.current = r.etag;
@@ -225,7 +213,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
         localStorage.removeItem(draftKey(slug));
         setResult({ state: "passed", grade: r.grade, box: r.box, stepped: r.stepped, fromBox: r.from_box, reason: r.reason, dueIn: r.due_in, attempts: r.attempts, code: r.code });
         setCode(r.code);
-        // the pass is what opens the reference, and what may have just hit the lapse limit
         setTask((p) => p && ({ ...p, reference: r.reference, lapses: r.lapses }));
         setNextSlug(r.next);
       } else {
@@ -290,9 +277,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     }
   };
 
-  /** Not today. The card is untouched — box, due date and counts all stay — it just leaves
-   * today's queue, and tomorrow puts it back with nothing to remember. The catalogue's Buried
-   * band is the other end of this control, for the day you change your mind before then. */
+  /** Not today: the card keeps its box, due date and counts, and tomorrow puts it back.
+   * The catalogue's Buried band is the other end of this control. */
   const bury = async () => {
     if (!task) return;
     try {
@@ -325,12 +311,11 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const { meta, hints, solution: gateState, attempt, reference } = task;
   const hintsLeft = hints.total - hints.shown.length;
   const hintReady = nextHintIn === null || nextHintIn <= 0;
-  /** Peeked this sitting, or earned by passing — either way the server decided it was open.
-   * `solution_shown` is what a reload reads back: a peek survives one, and still costs. */
+  /** Peeked this sitting or earned by passing; `solution_shown` survives a reload, and still costs. */
   const peeked = !!attempt?.solution_shown;
   const flagged = task.lapses >= task.lapse_limit;
-  /** The gate banner, under the control that raised it. The container is always in the tree
-   * so screen readers have a live region to announce into when a message lands in it. */
+  /** The gate banner, under the control that raised it. The container stays in the tree so
+   * screen readers have a live region to announce into. */
   const notice = (at: Exclude<Gate, null>["at"]) => (
     <div role="status" style={{ marginTop: gate?.at === at ? 10 : 0 }}>
       {gate?.at === at ? <div className="m-drop"><NoticeBanner message={gate.message} actions={[{ label: "Dismiss", onClick: () => setGate(null) }]} /></div> : null}
@@ -339,19 +324,16 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
 
   const runNo = passed ? result.attempts : attempt ? attempt.attempts + 1 : 0;   // the run you are on
   const resultNo = "attempts" in result ? result.attempts : 0;                   // the run this result came from
-  // Whether the card moved is the server's answer, not ours — see RunResult.stepped.
   const fell = passed && result.stepped && result.box < result.fromBox;
 
   return (
     <div style={{ maxWidth: 1500, margin: "0 auto" }}>
-      {/* Meta bar: who the task is, how it is going, and where it sits in the tag tree. */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
         <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)" }}>{meta.topic}</span>
         <h1 style={{ margin: 0, fontSize: "var(--fs-h)", fontWeight: 600 }}>{meta.title}</h1>
         <StatusBadge status={task.status} />
         <StatusBadge status={meta.difficulty} />
         <div style={{ flex: 1 }} />
-        {/* D13: tier and tags read as one path, exactly as the catalogue rows render it. */}
         {meta.track ? <TagChip label={meta.track} small /> : null}
         <span title={`${meta.tier}/${meta.tags.join(" ")}`} style={{ fontFamily: "var(--font-mono)", fontSize: 12.5 }}>
           <span style={{ color: "var(--text-faint)" }}>{meta.tier}/</span>
@@ -361,7 +343,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       </div>
 
       <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
-        {/* native `resize` beats a drag handle: one declaration, real pointer affordance */}
         <div style={{ width: "42%", minWidth: 340, maxWidth: "70%", maxHeight: "calc(100vh - 148px)", overflow: "auto", resize: "horizontal" }}>
           <Card label={`Spec · ${slug}/README.md`}>
             <SpecText text={task.spec_md} slug={slug} hideTitle />
@@ -370,8 +351,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               <div style={{ ...LABEL, marginBottom: 10 }}>
                 Hints <span style={PLAIN}>· {hints.shown.length} of {hints.total} shown, unlocked by time on task</span>
               </div>
-              {/* At the lapse limit the task is what keeps losing, not the learner — and the
-                * hints right below are half of what the flag is pointing at. */}
               {flagged ? (
                 <div style={{ ...ASIDE, color: "var(--text-muted)", marginBottom: 10 }}>
                   You have struggled with this {plural(task.lapses, "time")}. The hints below, or the
@@ -415,16 +394,11 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               {notice("solution")}
             </div>
 
-            {/* #15: the one thing on this page the learner wrote. It sits under the spec and
-              * above the archive because that is the order you read them in — what the task
-              * asks, what you told yourself about it, what you did last time. Always open:
-              * a note you have to click to see is a note you never re-read. */}
             <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
               <div style={{ ...LABEL, marginBottom: 10 }}>
                 Note <span style={PLAIN}>· {noteDirty ? "unsaved" : "yours, kept with the task"}</span>
               </div>
-              {/* No such thing as a multi-line field in ds/ yet — plainest element, DS tokens,
-                * and the browser's own focus ring rather than an invented one. */}
+              {/* ds/ has no multi-line field: plain element, DS tokens, the browser's focus ring */}
               <textarea value={note} onChange={(e) => editNote(e.target.value)} rows={3}
                 aria-label={`Your note on ${meta.title}`}
                 placeholder="What caught you out? Write it down while you still remember."
@@ -452,7 +426,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
         </div>
 
         <div style={{ flex: 1, minWidth: 420, display: "grid", gap: 12 }}>
-          {/* Anything the app noticed drops in above the work it is about. */}
           {conflict ? <div className="m-drop"><ConflictBanner detail="Your draft and the file on disk have diverged." onReload={takeDisk} onKeep={keepMine} /></div> : null}
           {draftOffer ? (
             <div className="m-drop">
@@ -464,8 +437,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             </div>
           ) : null}
           {notice("editor")}
-          {/* Half an hour of reading with nothing run: an offer, never a scold. Taking the hint
-            * or running the tests clears it at the server; "Not now" hides it for this sitting. */}
           {nudge && !nudgeOff && !passed ? (
             <div className="m-drop">
               <NoticeBanner message="Half an hour on this and nothing run yet — a hint is not cheating. You cannot work out something nobody has told you about."
@@ -490,8 +461,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               </span>
             ) : null}
             {hasAttempt && !passed ? <Button variant="quiet" onClick={abandon} style={{ fontSize: 13 }}>Abandon</Button> : null}
-            {/* Beside Abandon, because they are the two ways of not finishing this today, and
-              * they cost different things: abandoning drops the attempt, burying drops nothing. */}
             {passed ? null : (
               <Button variant="quiet" onClick={bury} style={{ fontSize: 13 }}>
                 {task.buried ? "Unbury" : "Bury for today"}
@@ -502,10 +471,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
           <Editor value={code} onChange={edit} onRun={run} readOnly={passed} dark={dark} height="calc(100vh - 364px)" />
 
           <Card label={resultNo ? `Result · attempt ${resultNo}` : "Result"} padding={16}>
-            {/* The live region stays mounted and only the banner inside it is keyed, so each
-              * result is *inserted* into a region that already exists — the shape `notice()`
-              * uses. Keying the card itself made the region arrive with its text already in
-              * place, which no screen reader announces. `.m-rise` still replays. */}
+            {/* the region stays mounted and only the banner inside it is keyed: a live region
+              * that arrives with its text already in place is never announced */}
             <div role="status">
               <div className="m-rise" key={result.state}>
                 <ResultBanner
@@ -522,7 +489,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               </Collapsible>
             ) : null}
 
-            {/* #13: the verdict came with no rubric. The cause, post-pass, never par's number. */}
             {passed && result.reason ? (
               <div style={{ ...ASIDE, marginTop: 8 }}>Why {result.grade}: {result.reason}.</div>
             ) : null}
