@@ -14,7 +14,8 @@ def seed():
     """Fill an empty root from the tasks baked into the wheel, once.
 
     A root that already has `tasks/` is left alone: it is a checkout, or a learner's own
-    copy with their code saved inside the task files."""
+    copy with their code saved inside the task files. Tasks added by a later drillion never
+    reach a root that was already seeded."""
     if settings.tasks_dir.is_dir() or not TASKS_TEMPLATE.is_dir():
         return
     log.info(

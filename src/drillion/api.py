@@ -100,6 +100,7 @@ async def _error(_request, exc):
 
 @app.middleware("http")
 async def _limit_body(request, call_next):
+    """Refuse an oversized body by its declared length; a chunked body is not measured here."""
     length = request.headers.get("content-length", "")
     if length.isdigit() and int(length) > MAX_BODY:
         return JSONResponse({"error": "that is more code than any task needs"}, 413)
@@ -337,7 +338,7 @@ def run_task(slug: str, edit: Edit):
         write_region(meta["path"], new_src)
         passed, out = run_tests(meta["path"], o["seed"])
         o["attempts"] += 1  # pytest ran; that is what an attempt is
-        code = body = cut(new_src).body
+        body = cut(new_src).body
         resp = {
             "passed": passed,
             "attempts": o["attempts"],
@@ -347,7 +348,7 @@ def run_task(slug: str, edit: Edit):
         if passed:
             was = card(st, slug)["box"]
             grade, gap, box, reason = record_pass(
-                st, slug, meta, code
+                st, slug, meta, body
             )  # drops the attempt
             log.info("%s %s box=%s due in %sd (%s)", slug, grade, box, gap, reason)
             new_src = splice(new_src, stub(body))
@@ -360,7 +361,7 @@ def run_task(slug: str, edit: Edit):
                 "from_box": was,
                 "reason": reason,
                 "due_in": gap,
-                "code": code,
+                "code": body,
                 "reference": solution_text(meta["path"]),  # passing is what opens it
                 "lapses": card(st, slug)["lapses"],
                 # over a copy: `pick` reads every card, and `card()` fills blanks in place

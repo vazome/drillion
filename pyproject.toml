@@ -67,9 +67,11 @@ dev = [
 extend-exclude = ["drafts"]
 
 [tool.ruff.format]
+# a learner region's shape is the exercise; never reformat the task files
 exclude = ["tasks/**", "*.md"]
 
 [tool.ruff.lint.per-file-ignores]
+# scheduling runs on local wall-clock dates on purpose; a tz-aware fix shifts every due date
 "src/drillion/*" = ["DTZ"]
 "tasks/*/task.py" = ["E402", "F841"]
 

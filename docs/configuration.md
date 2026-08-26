@@ -58,7 +58,7 @@ single-file bind mount refuses that rename.
 ## Security posture
 
 The server binds to loopback, accepts only `127.0.0.1`/`localhost` host headers, rejects bodies
-over 256 KB, and runs task code only inside a pytest subprocess with a timeout. It is a laptop
+that declare more than 256 KB, and runs task code only inside a pytest subprocess with a timeout. It is a laptop
 tool; do not put it on a public address.
 
 ## Verifying a release
