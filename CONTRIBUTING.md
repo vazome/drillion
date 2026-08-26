@@ -17,6 +17,7 @@ API still serves and only `/` 404s. To work on the frontend itself:
 ```bash
 pnpm --dir web install                       # once
 pnpm --dir web dev                           # Vite on 5173, proxying /api to the server on 8765
+pnpm --dir web lint                          # lint — CI fails if this fails, same as ruff
 pnpm --dir web check 8765                    # renders all 171 task specs against a running server
 ```
 
@@ -73,6 +74,8 @@ see [NOTICE](NOTICE) for how the 84 Exercism-derived tasks already do this.
 ## Code style
 
 - `ruff` must pass (`uv run ruff check .`); it runs in CI.
+- The client's linter must pass (`pnpm --dir web lint`); it runs in CI beside `ruff`. The
+  rules are in `web/.oxlintrc.json`, each with the mistake it is there to catch.
 - Conventional commit titles, plain language: `fix(web): submission no longer causes crashes`.
 - Comments describe how a thing is used, not a line-by-line narration.
 
