@@ -5,7 +5,7 @@ tasks, each graded on freshly generated data, each returning on a spaced-repetit
 
 These are the words the code, the API, the UI and the docs all use. Reach for one of these
 before minting a synonym. The rules for *choosing* a tier, difficulty, track or tag when
-authoring a task are in [README.md](README.md#vocabulary); this file only says what the
+authoring a task are in [authoring-tasks.md](docs/authoring-tasks.md); this file only says what the
 words mean.
 
 ## Language

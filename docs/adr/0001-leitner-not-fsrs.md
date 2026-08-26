@@ -15,8 +15,8 @@ it in 2 → 4 → 8 → 16 → 28 days, and that list is the whole scheduler.
    trace; there is no trace here to decay.
 2. **It needs self-reported grades.** FSRS is driven by Again/Hard/Good/Easy. drillion computes
    the **grade** from runs, active seconds and whether the solution was taken — deliberately, and
-   for a reason recorded in `README.md`: self-rating is how people finish a curriculum and still
-   cannot code.
+   for a reason recorded in `docs/how-it-works.md`: self-rating is how people finish a
+   curriculum and still cannot code.
 3. **It cannot be fitted here.** FSRS's parameters want a corpus of review history. One user, 171
    cards, a season of practice — the weights would stay at their defaults forever.
 4. **Those defaults are wrong for this.** With stock settings a task passed three times returns in

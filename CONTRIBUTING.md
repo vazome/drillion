@@ -43,7 +43,7 @@ your temp directory — never the checkout, so your own `progress.json` and task
 touched. The last test in `web/e2e/screens.spec.ts` asserts exactly that. Nothing has to be
 running first, and a dev server on 8765 is left alone.
 
-See the root [README](README.md) for the full architecture and vocabulary, and
+See [CONTEXT.md](CONTEXT.md) for the vocabulary every part of drillion uses, and
 [`web/README.md`](web/README.md) for frontend-specific notes.
 
 ## Proposing a new task
@@ -56,9 +56,9 @@ block a maintainer needs to say yes before you write code.
 
 A task is a folder, `tasks/<NNN>_<name>/`, added by appending — never inserting — the next
 number after the highest one in the catalogue. Copy the shape of an existing task rather than
-starting from scratch. Full detail, including the vocabulary for `tier`, `difficulty`, `track`
-and `tags`, is in the README's [Vocabulary](README.md#vocabulary) and
-[The tasks](README.md#the-tasks) sections; here is the contract a submission is graded against.
+starting from scratch. Full detail, including how to choose `tier`, `difficulty`, `track` and
+`tags`, is in [docs/authoring-tasks.md](docs/authoring-tasks.md); here is the contract a
+submission is graded against.
 
 **`README.md`** — YAML frontmatter (`title`, `difficulty`, `tier`, `minutes` and `tags` are
 required; `prereqs`, `practices`, `track`, `source` are optional), then GitHub-flavoured
