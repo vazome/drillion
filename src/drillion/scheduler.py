@@ -12,7 +12,12 @@ from .state import card, today
 
 LADDER = [2, 4, 8, 16, 28]           # days until the next sighting, per box
 NEW_PER_DAY = 2
-GRADES = {"struggled": 0, "pass": +1, "quick": +2}   # every grade grade_of() can return
+# every grade grade_of() can return. A struggle costs a box: without a negative step the
+# ladder is not adaptive at all — a task that fights you every sitting would hold box 4 and its
+# 28-day gap forever, on the same schedule as one you have aced. -1 rather than back to box 0:
+# `struggled` is the grade for anything slow, anything over two runs and anything peeked, so it
+# is common, and a repeated struggle still walks the card all the way down over a few sittings.
+GRADES = {"struggled": -1, "pass": +1, "quick": +2}
 
 
 def due_today(st, all_tasks):
