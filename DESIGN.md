@@ -58,7 +58,7 @@ Data: `GET /api/catalogue` →
 - `focus` — one string or null; it restricts *new* picks and is matched against a task's **tier,
   track and tags alike**. `tags[]`, `tiers[]`, `tracks[]` — the three vocabularies to filter by
 - `tasks[]` — per row: `slug`, `topic` (number), `title`, `difficulty`, `tier`, `track?`, `tags[]`,
-  `prereqs[]` (numbers), `practices[]`, `source?`,
+  `prereqs[]` (numbers), `source?`,
   `status` ∈ `new | due | open | done`, `box` (0–4, the ladder has five), `due` (date),
   `seen` (count), `lapses` (count — at `stats.lapse_limit` the row is flagged as a task that
   keeps beating you: "you have struggled with this four times; the hints or the prereqs may be
@@ -92,7 +92,7 @@ filter the screen cannot display is a screen that says "0 of 171" with no way to
 Answers: *what exactly is asked, and does my code pass?*
 
 Data: `GET /api/task/{slug}` →
-- `meta` — `topic`, `title`, `difficulty`, `tier`, `track?`, `tags`, `prereqs`, `practices`,
+- `meta` — `topic`, `title`, `difficulty`, `tier`, `track?`, `tags`, `prereqs`,
   `source` (Exercism tasks). No `minutes` — see the vocabulary below.
 - `spec_md` — the task's guidance as **GitHub-flavoured Markdown**, ~25–120 lines: `# title`,
   then `## Why` (business context), `## You get`, `## You return`, `## Rules` with worked
