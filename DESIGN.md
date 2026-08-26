@@ -64,7 +64,9 @@ path, so a band header repeated the word and added a count, and a list that hide
 itself is not a catalogue. Every column header sorts, ascending then descending; `#` ascending is
 the default, and the reset control (`↺`, past Status, greyed when there is nothing to undo)
 restores it. `difficulty` and `status` sort by what the word means, not by the alphabet; ties fall
-back to the task number. The tag map shows every tag at once, wrapped rather than scrolled.
+back to the task number. The tag map shows every tag reachable under the current filter at once, wrapped rather
+than scrolled — pick `advanced` and 76 chips become the 11 that are actually under it. A tag
+already switched on never drops out, or a filter that matched nothing could not be undone.
 
 Tier and tag render as one filesystem-style path, `core/f-strings`, with the tier segment muted —
 one column, not two. Whatever `focus` a row is filtered by, the UI must be able to show it: a
