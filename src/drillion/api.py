@@ -60,7 +60,7 @@ from .state import card, reading, today, writing
 
 log = logging.getLogger(__name__)
 MAX_BODY = 256 * 1024
-WINDOW = 7        # days in the consistency window; the page reads it off the payload
+WINDOW = 7  # days in the consistency window; the page reads it off the payload
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -125,8 +125,14 @@ def _task(slug):
 def _check_etag(src, sent):
     """Optimistic lock: the editor may only write what it last read."""
     if sent != etag(src):
-        raise HTTPException(409, {"error": "the file changed on disk",
-                                  "etag": etag(src), "code": cut(src).body})
+        raise HTTPException(
+            409,
+            {
+                "error": "the file changed on disk",
+                "etag": etag(src),
+                "code": cut(src).body,
+            },
+        )
 
 
 def _status(st, slug):
@@ -145,22 +151,31 @@ def _payload(st, slug, meta, src):
     c = card(st, slug)
     att = attempt_view(o, meta["hints"])
     # a due review must not be handed last time's answer; a locked attempt neither
-    show_code = c["seen"] > 0 and (att["solution"]["unlocked"] if o else c["due"] > today())
-    return {"slug": slug,
-            "meta": public(meta),
-            "spec_md": meta["spec_md"],
-            "code": body,
-            "etag": etag(src),
-            "has_given": has_given(body),
-            "region_start": 1,
-            "marker_line": bounds(src),
-            "status": _status(st, slug),
-            "lapses": c["lapses"],
-            "lapse_limit": LAPSE_LIMIT,
-            **att,
-            "archive": [{"date": a["date"], "grade": a["grade"],
-                         **({"code": a["code"]} if show_code else {})}
-                        for a in st["archive"].get(slug, [])]}
+    show_code = c["seen"] > 0 and (
+        att["solution"]["unlocked"] if o else c["due"] > today()
+    )
+    return {
+        "slug": slug,
+        "meta": public(meta),
+        "spec_md": meta["spec_md"],
+        "code": body,
+        "etag": etag(src),
+        "has_given": has_given(body),
+        "region_start": 1,
+        "marker_line": bounds(src),
+        "status": _status(st, slug),
+        "lapses": c["lapses"],
+        "lapse_limit": LAPSE_LIMIT,
+        **att,
+        "archive": [
+            {
+                "date": a["date"],
+                "grade": a["grade"],
+                **({"code": a["code"]} if show_code else {}),
+            }
+            for a in st["archive"].get(slug, [])
+        ],
+    }
 
 
 def _practised(st):
@@ -170,7 +185,9 @@ def _practised(st):
     repairs itself, and nothing here rewards filling all seven (Lally 2010: a single
     missed occasion does not derail a forming habit)."""
     cut = (date.fromisoformat(today()) - timedelta(days=WINDOW - 1)).isoformat()
-    return len({r["date"] for runs in st["archive"].values() for r in runs if r["date"] >= cut})
+    return len(
+        {r["date"] for runs in st["archive"].values() for r in runs if r["date"] >= cut}
+    )
 
 
 def _recent(st, all_tasks):
@@ -191,12 +208,20 @@ def _recent(st, all_tasks):
     Nothing is held back for being in today's queue. A card worked on Friday and due again
     today is both things at once, and the queue is not the authority on what you were doing."""
     cut = (date.fromisoformat(today()) - timedelta(days=WINDOW - 1)).isoformat()
-    last = {slug: runs[-1]["date"] for slug, runs in st["archive"].items()
-            if runs[-1].get("grade") != "abandoned"}
+    last = {
+        slug: runs[-1]["date"]
+        for slug, runs in st["archive"].items()
+        if runs[-1].get("grade") != "abandoned"
+    }
     for slug, o in st["open"].items():
         last[slug] = max(last.get(slug, ""), o["last"])
-    return sorted((s for s, d in last.items() if s in all_tasks and d >= cut),   # a rename leaves a dead key
-                  key=lambda s: last[s], reverse=True)
+    return sorted(
+        (
+            s for s, d in last.items() if s in all_tasks and d >= cut
+        ),  # a rename leaves a dead key
+        key=lambda s: last[s],
+        reverse=True,
+    )
 
 
 def _boxes(st, all_tasks):
@@ -218,24 +243,39 @@ def health():
 
 @app.get("/api/catalogue")
 def catalogue():
-    with reading() as st:                        # card() only fills blanks; nothing commits
+    with reading() as st:  # card() only fills blanks; nothing commits
         all_tasks = tasks()
         q = queue(st, all_tasks)
         q["recent"] = _recent(st, all_tasks)
-        rows = [{"slug": slug, **public(m), "status": _status(st, slug),
-                 **{k: card(st, slug)[k] for k in ("box", "due", "seen", "lapses")}}
-                for slug, m in all_tasks.items()]
+        rows = [
+            {
+                "slug": slug,
+                **public(m),
+                "status": _status(st, slug),
+                **{k: card(st, slug)[k] for k in ("box", "due", "seen", "lapses")},
+            }
+            for slug, m in all_tasks.items()
+        ]
         boxes = _boxes(st, all_tasks)
-        return {"focus": st["focus"],
-                "tags": sorted({t for m in all_tasks.values() for t in m["tags"]}),
-                "tiers": ["core", "advanced", "packages"],       # fixed order: easiest first
-                "tracks": sorted({m["track"] for m in all_tasks.values() if m.get("track")}),
-                "today": q,
-                "stats": {"boxes": boxes, "due": q["due_total"], "seen": sum(boxes),
-                          "total": len(all_tasks),
-                          "practised": _practised(st), "window": WINDOW,
-                          "lapse_limit": LAPSE_LIMIT},
-                "tasks": rows}
+        return {
+            "focus": st["focus"],
+            "tags": sorted({t for m in all_tasks.values() for t in m["tags"]}),
+            "tiers": ["core", "advanced", "packages"],  # fixed order: easiest first
+            "tracks": sorted(
+                {m["track"] for m in all_tasks.values() if m.get("track")}
+            ),
+            "today": q,
+            "stats": {
+                "boxes": boxes,
+                "due": q["due_total"],
+                "seen": sum(boxes),
+                "total": len(all_tasks),
+                "practised": _practised(st),
+                "window": WINDOW,
+                "lapse_limit": LAPSE_LIMIT,
+            },
+            "tasks": rows,
+        }
 
 
 @app.get("/api/progress")
@@ -249,9 +289,16 @@ def progress():
                 t = per_tag.setdefault(tag, {"seen": 0, "total": 0})
                 t["total"], t["seen"] = t["total"] + 1, t["seen"] + seen
         boxes = _boxes(st, all_tasks)
-        return {"boxes": boxes, "due": len(due_today(st, all_tasks)), "seen": sum(boxes),
-                "total": len(all_tasks), "practised": _practised(st), "window": WINDOW,
-                "log": st["log"][-30:], "per_tag": per_tag}
+        return {
+            "boxes": boxes,
+            "due": len(due_today(st, all_tasks)),
+            "seen": sum(boxes),
+            "total": len(all_tasks),
+            "practised": _practised(st),
+            "window": WINDOW,
+            "log": st["log"][-30:],
+            "per_tag": per_tag,
+        }
 
 
 @app.get("/api/task/{slug}")
@@ -266,15 +313,15 @@ def get_task(slug: str):
 def open_task(slug: str):
     with writing() as st:
         meta = _task(slug)
-        open_attempt(st, slug)                   # the file is already a stub: nothing is written
+        open_attempt(st, slug)  # the file is already a stub: nothing is written
         return _payload(st, slug, meta, meta["path"].read_text())
 
 
 @app.put("/api/task/{slug}")
 def save_task(slug: str, edit: Edit):
-    with reading() as st:                        # autosave: the file only, no timer, no commit
+    with reading() as st:  # autosave: the file only, no timer, no commit
         meta = _task(slug)
-        if slug not in st["open"]:               # a closed task is a stub; keep it one
+        if slug not in st["open"]:  # a closed task is a stub; keep it one
             raise NoAttempt(slug)
         src = meta["path"].read_text()
         _check_etag(src, edit.etag)
@@ -294,30 +341,40 @@ def run_task(slug: str, edit: Edit):
         new_src = validate(edit.code, src)
         write_region(meta["path"], new_src)
         passed, out = run_tests(meta["path"], o["seed"])
-        o["attempts"] += 1                       # pytest ran; that is what an attempt is
+        o["attempts"] += 1  # pytest ran; that is what an attempt is
         code = body = cut(new_src).body
-        resp = {"passed": passed, "attempts": o["attempts"],
-                **summarise(out, bounds(new_src))}
+        resp = {
+            "passed": passed,
+            "attempts": o["attempts"],
+            **summarise(out, bounds(new_src)),
+        }
         log.info("%s passed=%s attempts=%s", slug, passed, o["attempts"])
         if passed:
             # Whether the card actually moved is the scheduler's fact, not the page's to
             # infer: `struggled` and a `quick` at the top box both clamp, and an unseen
             # card already sits in box 0. The page renders this; it does not recompute it.
             was = card(st, slug)["box"]
-            grade, gap, box = record_pass(st, slug, meta, code)     # drops the attempt
+            grade, gap, box = record_pass(st, slug, meta, code)  # drops the attempt
             log.info("%s %s box=%s due in %sd", slug, grade, box, gap)
             new_src = splice(new_src, stub(body))
-            write_region(meta["path"], new_src)                     # back to the stub
-            resp |= {"grade": grade, "box": box, "stepped": box != was,
-                     "due_in": gap, "code": code,
-                     "lapses": card(st, slug)["lapses"]}   # the page reads lapse_limit off /task
+            write_region(meta["path"], new_src)  # back to the stub
+            resp |= {
+                "grade": grade,
+                "box": box,
+                "stepped": box != was,
+                "due_in": gap,
+                "code": code,
+                "lapses": card(st, slug)["lapses"],
+            }  # the page reads lapse_limit off /task
         return resp | {"etag": etag(new_src)}
 
 
 @app.post("/api/task/{slug}/touch")
 def touch_task(slug: str):
-    with writing() as st:                        # no catalogue lookup: this runs every 60 s and
-        return {"active": current(st, slug)["active"]}   # only an opened — known — slug is open
+    with writing() as st:  # no catalogue lookup: this runs every 60 s and
+        return {
+            "active": current(st, slug)["active"]
+        }  # only an opened — known — slug is open
 
 
 @app.post("/api/task/{slug}/hint")
@@ -328,10 +385,16 @@ def hint_task(slug: str):
         try:
             level, text = next_hint(st, slug, meta["hints"])
         except Gated as gate:
-            raise HTTPException(423, {
-                "error": "not yet — sit with it a little longer" if gate.wait_secs
-                         else "no hints left — the solution is the next step",
-                "wait_secs": gate.wait_secs, "exhausted": not gate.wait_secs}) from None
+            raise HTTPException(
+                423,
+                {
+                    "error": "not yet — sit with it a little longer"
+                    if gate.wait_secs
+                    else "no hints left — the solution is the next step",
+                    "wait_secs": gate.wait_secs,
+                    "exhausted": not gate.wait_secs,
+                },
+            ) from None
         return {"level": level, "total": len(meta["hints"]), "text": text}
 
 
@@ -343,9 +406,10 @@ def solution_task(slug: str):
         try:
             unlock_solution(st, slug)
         except Gated as gate:
-            raise HTTPException(423, {"error": "the answer opens after real effort",
-                                      **gate.owed}) from None
-        return {"code": solution_text(meta["path"])}   # the gate is right above
+            raise HTTPException(
+                423, {"error": "the answer opens after real effort", **gate.owed}
+            ) from None
+        return {"code": solution_text(meta["path"])}  # the gate is right above
 
 
 @app.post("/api/task/{slug}/abandon")
@@ -393,13 +457,15 @@ class _Web(StaticFiles):
 
 # The page itself, last: an unmatched /api/... must 404 as JSON, not as a missing file.
 # Mounted rather than resolved at import, so `serve()` may build web/dist after this module loads.
-app.mount("/", _Web(directory=settings.web_dist, html=True, check_dir=False), name="web")
+app.mount(
+    "/", _Web(directory=settings.web_dist, html=True, check_dir=False), name="web"
+)
 
 
 def _open_browser(url):
     version = Path("/proc/version")
     if version.exists() and "microsoft" in version.read_text().lower():
-        subprocess.Popen(["explorer.exe", url])   # WSL: exit code 1 even when it worked
+        subprocess.Popen(["explorer.exe", url])  # WSL: exit code 1 even when it worked
     else:
         webbrowser.open(url)
 
@@ -413,14 +479,20 @@ def build_web():
     web = settings.web_dist.parent
     if not (web / "package.json").is_file():
         return
-    watched = [web / "package.json", web / "index.html", web / "vite.config.ts",
-               *(web / "src").rglob("*")]
+    watched = [
+        web / "package.json",
+        web / "index.html",
+        web / "vite.config.ts",
+        *(web / "src").rglob("*"),
+    ]
     newest = max((p.stat().st_mtime for p in watched if p.is_file()), default=0)
     built = settings.web_dist / "index.html"
     if built.is_file() and built.stat().st_mtime >= newest:
         return
     if shutil.which("pnpm") is None:
-        log.warning("web/dist is stale and pnpm is not installed — the API runs, / will 404")
+        log.warning(
+            "web/dist is stale and pnpm is not installed — the API runs, / will 404"
+        )
         return
     log.info("building web/dist (first run, or the frontend changed)")
     for cmd in (["pnpm", "install", "--frozen-lockfile"], ["pnpm", "build"]):
@@ -432,7 +504,7 @@ def build_web():
 def serve():
     build_web()
     url = f"http://{settings.host}:{settings.port}/"
-    print(f"drillion → {url}   (ctrl-c to stop)", flush=True)   # piped output too
-    if settings.open_browser and settings.host == "127.0.0.1":   # not from a container
+    print(f"drillion → {url}   (ctrl-c to stop)", flush=True)  # piped output too
+    if settings.open_browser and settings.host == "127.0.0.1":  # not from a container
         threading.Timer(0.7, _open_browser, [url]).start()
     uvicorn.run(app, host=settings.host, port=settings.port, log_level="info")

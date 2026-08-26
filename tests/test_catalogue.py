@@ -32,9 +32,11 @@ two
 ### Hint 3
 three
 """
-TASK = ("def solve(x):\n    raise NotImplementedError\n\n\n"
-         f"{region.MARKER}\nfrom _lib import rng  # noqa: E402\n\n\n"
-         "def _reference(x):\n    return x\n\n\ndef test_solve():\n    assert rng()\n")
+TASK = (
+    "def solve(x):\n    raise NotImplementedError\n\n\n"
+    f"{region.MARKER}\nfrom _lib import rng  # noqa: E402\n\n\n"
+    "def _reference(x):\n    return x\n\n\ndef test_solve():\n    assert rng()\n"
+)
 
 
 def _root(**folders):
@@ -55,8 +57,8 @@ def test_every_task_folder_is_read():
     assert m["path"] == settings.tasks_dir / "001_fstrings" / "task.py"
     assert m["dir"].name == "001_fstrings" and isinstance(m["tags"], list)
     assert m["spec_md"].startswith("# ") and "## Why" in m["spec_md"]
-    assert "## Hints" not in m["spec_md"]                    # hints are never in the spec
-    assert set(catalogue.public(m)) <= set(catalogue.BROWSER)        # no paths, hints or spec
+    assert "## Hints" not in m["spec_md"]  # hints are never in the spec
+    assert set(catalogue.public(m)) <= set(catalogue.BROWSER)  # no paths, hints or spec
     assert "hints" not in catalogue.public(m) and "path" not in catalogue.public(m)
 
 
@@ -76,7 +78,7 @@ def test_topic_comes_from_the_folder_name():
         settings.root = tmp
         all_tasks = catalogue.tasks()
         assert list(all_tasks) == ["042_thing"]
-        assert all_tasks["042_thing"]["topic"] == 42            # not in the frontmatter
+        assert all_tasks["042_thing"]["topic"] == 42  # not in the frontmatter
         assert all_tasks["042_thing"]["prereqs"] == [1]
         assert all_tasks["042_thing"]["hints"] == ["one", "two", "three"]
     finally:
@@ -86,20 +88,37 @@ def test_topic_comes_from_the_folder_name():
 
 def test_a_broken_folder_is_skipped_instead_of_breaking_the_menu():
     keep = settings.root
-    tmp = _root(**{
-        "042_thing": {"README.md": README, "task.py": TASK},
-        "043_nofrontmatter": {"README.md": README.split("---\n")[2], "task.py": TASK},
-        "044_notitle": {"README.md": README.replace("title: A test task\n", ""),
-                        "task.py": TASK},
-        "045_twohints": {"README.md": README.replace("### Hint 3\nthree\n", ""),
-                         "task.py": TASK},
-        "046_nomarker": {"README.md": README,
-                         "task.py": "def solve(x):\n    raise NotImplementedError\n"},
-        "047_nosolve": {"README.md": README, "task.py": TASK.replace("def solve", "def nope")},
-        "048_noreadme": {"task.py": TASK},
-        "049_notier": {"README.md": README.replace("tier: core\n", ""), "task.py": TASK},
-        "notanumber": {"README.md": README, "task.py": TASK},
-    })
+    tmp = _root(
+        **{
+            "042_thing": {"README.md": README, "task.py": TASK},
+            "043_nofrontmatter": {
+                "README.md": README.split("---\n")[2],
+                "task.py": TASK,
+            },
+            "044_notitle": {
+                "README.md": README.replace("title: A test task\n", ""),
+                "task.py": TASK,
+            },
+            "045_twohints": {
+                "README.md": README.replace("### Hint 3\nthree\n", ""),
+                "task.py": TASK,
+            },
+            "046_nomarker": {
+                "README.md": README,
+                "task.py": "def solve(x):\n    raise NotImplementedError\n",
+            },
+            "047_nosolve": {
+                "README.md": README,
+                "task.py": TASK.replace("def solve", "def nope"),
+            },
+            "048_noreadme": {"task.py": TASK},
+            "049_notier": {
+                "README.md": README.replace("tier: core\n", ""),
+                "task.py": TASK,
+            },
+            "notanumber": {"README.md": README, "task.py": TASK},
+        }
+    )
     try:
         settings.root = tmp
         assert list(catalogue.tasks()) == ["042_thing"]
@@ -109,17 +128,20 @@ def test_a_broken_folder_is_skipped_instead_of_breaking_the_menu():
 
 
 def test_the_scan_is_cached_but_an_edited_task_is_re_read():
-    tmp, keep = _root(**{"001_a": {"README.md": README, "task.py": TASK}}), settings.root
+    tmp, keep = (
+        _root(**{"001_a": {"README.md": README, "task.py": TASK}}),
+        settings.root,
+    )
     try:
         settings.root = tmp
         first = catalogue.tasks()
-        assert catalogue.tasks() is first                     # same folders, same mtimes
+        assert catalogue.tasks() is first  # same folders, same mtimes
         task = tmp / "tasks" / "001_a" / "task.py"
         task.write_text(TASK.replace("def solve(x):", "def solve(x, y):"))
-        os.utime(task, (0, 0))                                   # a same-nanosecond edit is still an edit
+        os.utime(task, (0, 0))  # a same-nanosecond edit is still an edit
         assert catalogue.tasks() is not first
         (tmp / "tasks" / "002_b").mkdir()
-        assert catalogue.tasks() is not first                 # a new folder counts too
+        assert catalogue.tasks() is not first  # a new folder counts too
     finally:
         settings.root = keep
         shutil.rmtree(tmp)

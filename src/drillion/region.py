@@ -26,8 +26,11 @@ class Invalid(Exception):
 
 def _solve(tree):
     """The learner's function: the last top-level def named solve."""
-    fns = [n for n in tree.body
-           if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == "solve"]
+    fns = [
+        n
+        for n in tree.body
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == "solve"
+    ]
     if not fns:
         raise Invalid("the region must define solve()")
     return fns[-1]
@@ -53,7 +56,7 @@ def cut(src):
     """Split a file at the marker. Blank lines around the region are dropped."""
     lines = src.split("\n")
     at = bounds(src)
-    return Region("\n".join(lines[:at - 1]).strip("\n"), "\n".join(lines[at - 1:]))
+    return Region("\n".join(lines[: at - 1]).strip("\n"), "\n".join(lines[at - 1 :]))
 
 
 def splice(src, body):
@@ -68,16 +71,18 @@ def stub(body):
     fn = _solve(ast.parse(body))
     lines = body.split("\n")
     first = fn.body[0]
-    pre = lines[first.lineno - 1][:first.col_offset]
-    if pre.strip():                 # `def solve(x): return x` — no room for a stub body
-        raise Invalid("put solve()'s body on its own line", first.lineno, first.col_offset + 1)
-    return "\n".join(lines[:first.lineno - 1] + [pre + "raise NotImplementedError"])
+    pre = lines[first.lineno - 1][: first.col_offset]
+    if pre.strip():  # `def solve(x): return x` — no room for a stub body
+        raise Invalid(
+            "put solve()'s body on its own line", first.lineno, first.col_offset + 1
+        )
+    return "\n".join(lines[: first.lineno - 1] + [pre + "raise NotImplementedError"])
 
 
 def has_given(body):
     """True when the region has code above solve() that the learner must keep."""
     tree = ast.parse(body)
-    above = tree.body[:tree.body.index(_solve(tree))]
+    above = tree.body[: tree.body.index(_solve(tree))]
     return any(not isinstance(n, (ast.Import, ast.ImportFrom)) for n in above)
 
 
@@ -96,20 +101,29 @@ def validate(edited, disk_src):
         tree = ast.parse(edited)
     except SyntaxError as err:
         raise Invalid(err.msg, err.lineno, err.offset) from None
-    solves = [n for n in tree.body
-              if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == "solve"]
+    solves = [
+        n
+        for n in tree.body
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == "solve"
+    ]
     if len(solves) != 1:
         raise Invalid("the region must define solve() exactly once")
     for node in tree.body:
-        for name in [getattr(node, "name", "")] + [t.id for t in getattr(node, "targets", [])
-                                                   if isinstance(t, ast.Name)]:
+        for name in [getattr(node, "name", "")] + [
+            t.id for t in getattr(node, "targets", []) if isinstance(t, ast.Name)
+        ]:
             if name in ("_reference", "_gen") or name.startswith("test_"):
-                raise Invalid(f"{name} belongs to the machinery below the marker", node.lineno)
+                raise Invalid(
+                    f"{name} belongs to the machinery below the marker", node.lineno
+                )
     for node in ast.walk(tree):
         if isinstance(node, ast.Name) and node.id == "_reference":
-            raise Invalid("_reference is the answer — write your own",
-                          node.lineno, node.col_offset + 1)
-    stub(edited)                    # a pass rewrites the file to the stub: it must be possible
+            raise Invalid(
+                "_reference is the answer — write your own",
+                node.lineno,
+                node.col_offset + 1,
+            )
+    stub(edited)  # a pass rewrites the file to the stub: it must be possible
     new_src = splice(disk_src, edited)
     try:
         ast.parse(new_src)
