@@ -16,7 +16,17 @@ from .settings import settings
 def load():
     path = settings.state_path  # read at call time: tests move the root
     st = json.loads(path.read_text()) if path.exists() else {}
-    return {"focus": None, "cards": {}, "open": {}, "log": [], "archive": {}, **st}
+    # `notes` arrived after people had progress.json on disk; defaulted here, so an older
+    # file reads back with no notes and needs no migration.
+    return {
+        "focus": None,
+        "cards": {},
+        "open": {},
+        "log": [],
+        "archive": {},
+        "notes": {},
+        **st,
+    }
 
 
 def save(st):

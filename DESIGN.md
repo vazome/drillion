@@ -118,6 +118,17 @@ Data: `GET /api/task/{slug}` →
   way as the spec
 - `solution` — `{unlocked, need_attempts, need_secs}`
 - `archive[]` — previous passes `{date, grade, code?}` (code shown only when allowed)
+- `note` — the learner's own words about this task, `""` when there is none
+
+A **note** is the one thing on the task page the learner wrote. One per task, edited in place,
+autosaved the way the editor is (`PUT /api/task/{slug}/note`); no history, no per-attempt
+threading, no Markdown. It belongs to the **task** and not to the attempt — a `struggled` grade,
+a fresh attempt and an abandon all leave it exactly as it was — so it sits in the spec pane under
+the solution and above the archive, in the order you read them: what the task asks, what you told
+yourself about it, what you did last time. It is always open rather than behind a disclosure: a
+note you have to click to see is a note you never re-read. Emptying the box deletes it, which is
+the only way out it needs. Nothing reads notes outside the task they belong to — there is no
+evidence yet that anyone wants to.
 
 Layout: two panes (spec left, editor right; resizable). Toolbar above/below the editor: **Run**
 (primary), timer (active time), attempts count, seed,
