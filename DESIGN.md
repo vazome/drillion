@@ -62,7 +62,7 @@ Data: `GET /api/catalogue` →
   `status` ∈ `new | due | open | done`, `box` (0–4, the ladder has five), `due` (date),
   `seen` (count), `lapses` (count — at `stats.lapse_limit` the row is flagged as a task that
   keeps beating you: "you have struggled with this four times; the hints or the prereqs may be
-  the problem, not you").
+  the problem, not you"), `buried` (boolean — put aside for today only).
   **No `minutes`**: par time never leaves the server.
 
 Elements: Today panel (recent activity, then new picks, focus selector), search, filter chips (tier, track,
@@ -77,6 +77,15 @@ restores it. `difficulty` and `status` sort by what the word means, not by the a
 back to the task number. The tag map shows every tag reachable under the current filter at once, wrapped rather
 than scrolled — pick `advanced` and 76 chips become the 11 that are actually under it. A tag
 already switched on never drops out, or a filter that matched nothing could not be undone.
+
+A **buried** card is out of today's queue and nothing else: it keeps its box, its due date and
+its counts, and the bury ends by itself tomorrow. Because it can lose nothing, it needs no
+confirmation — but it does need the two reverse states. The Today panel's rows each carry a quiet
+`Bury`, and a **Buried** band appears under them on any day something is buried, listing what is
+put aside with `Unbury` on each row; the band is absent on a day with nothing in it. In the task
+list a buried row is annotated in the same muted way the lapse flag is — `buried today` — and
+keeps the status it actually has. The task page carries the same control beside `Abandon`: they
+are the two ways of not finishing a task today, and only one of them costs the attempt.
 
 Every group in the Today panel sits under a band that names it, and the rows carry no status
 badge as a result. Recent activity leads and is always present, empty line and all: coming back mid-week, the way
@@ -152,7 +161,10 @@ attempt timer counts up and changes no colour at any threshold. Nothing on any s
 learner how long they were supposed to take.
 
 **`status` has exactly four members** — `new` · `due` · `open` · `done`. `_status()` in `api.py`
-has no fifth branch, so a filter offering a fifth matches nothing.
+has no fifth branch, so a filter offering a fifth matches nothing. **Bury** deliberately does not
+widen this: a buried card is still exactly `due`, and `buried` rides alongside as its own boolean.
+Anything that genuinely is a fifth state — suspend, which no timer ever ends — has to reopen this
+rule on purpose rather than widen it quietly.
 
 Boxes render 1–5 although state stores them 0–4. Hints are "levels". The solution "unlocks".
 Showing up is counted as days practised.

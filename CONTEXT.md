@@ -113,6 +113,14 @@ _Avoid_: fail, miss, leech
 What a task is to you right now: `new`, `due`, `open`, `done`. Exactly four.
 _Avoid_: state, phase; and inventing a fifth
 
+**Bury**:
+Putting one **card** out of today's queue by hand — a **review** or a **new pick** alike. It
+touches nothing the ladder owns: the box, the **due** date, the **seen** count and the **lapses**
+are all exactly as they were, so a bury costs one day of not being asked and can lose nothing.
+It ends by itself tomorrow, and it is never a fifth **status** — a buried card is still `due`.
+_Avoid_: skip, snooze, hide, postpone; and above all **suspend**, which is a different feature
+(indefinite, ended only by hand) that drillion does not have yet
+
 **Review**:
 A **due** card, offered back to you. Capped per day: past the cap the rest of the backlog
 waits, and today's panel says how many it is holding.

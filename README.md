@@ -29,6 +29,9 @@ is missing or older than anything in `web/src/`, or than `web/package.json`, `we
 
 1. **Today** shows due reviews first (most overdue first), then up to 2 new tasks whose
    prerequisites you have passed. The whole catalogue is open too — the queue is a suggestion.
+   Not in the mood for one of them? **Bury** it and it is gone for the day and back tomorrow,
+   in the same box and on the same due date. Nothing is lost by forgetting you did it, and the
+   Buried band in Today undoes it early.
 2. Opening a task starts an **attempt** (fresh seed, active-seconds timer that pauses when the
    tab is hidden). The left pane renders the task's `README.md`: Why / You get / You return /
    Rules / Read first, with code blocks, tables, diagrams and images. The right pane is the editor

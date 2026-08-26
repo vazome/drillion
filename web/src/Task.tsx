@@ -260,6 +260,19 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     }
   };
 
+  /** Not today. The card is untouched — box, due date and counts all stay — it just leaves
+   * today's queue, and tomorrow puts it back with nothing to remember. The catalogue's Buried
+   * band is the other end of this control, for the day you change your mind before then. */
+  const bury = async () => {
+    if (!task) return;
+    try {
+      const r = await post<{ buried: boolean }>(`/task/${encodeURIComponent(slug)}/bury`, { buried: !task.buried });
+      setTask({ ...task, buried: r.buried });
+    } catch (e) {
+      setGate({ at: "editor", message: (e as ApiError).message });
+    }
+  };
+
   const takeDisk = () => {
     if (!conflict) return;
     etagRef.current = conflict.etag;
@@ -428,6 +441,13 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               </span>
             ) : null}
             {hasAttempt && !passed ? <Button variant="quiet" onClick={abandon} style={{ fontSize: 13 }}>Abandon</Button> : null}
+            {/* Beside Abandon, because they are the two ways of not finishing this today, and
+              * they cost different things: abandoning drops the attempt, burying drops nothing. */}
+            {passed ? null : (
+              <Button variant="quiet" onClick={bury} style={{ fontSize: 13 }}>
+                {task.buried ? "Unbury" : "Bury for today"}
+              </Button>
+            )}
           </div>
 
           <Editor value={code} onChange={edit} onRun={run} readOnly={passed} dark={dark} height="calc(100vh - 364px)" />
