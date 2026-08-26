@@ -2,6 +2,9 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    // Vite's ambient types: what a .css or ?raw import is. main.tsx imports a
+    // stylesheet for its side effect, and TypeScript 7 raises TS2882 without this.
+    "types": ["vite/client"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
