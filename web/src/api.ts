@@ -12,11 +12,11 @@ export interface Row {
 export interface Catalogue {
   focus: string | null; tags: string[]; tiers: string[]; tracks: string[];
   today: { review: string[]; new: string[]; done_today: number };
-  stats: { boxes: number[]; due: number; seen: number; total: number; days_left: number };
+  stats: { boxes: number[]; due: number; seen: number; total: number; practised: number; window: number };
   tasks: Row[];
 }
 export interface Progress {
-  boxes: number[]; due: number; seen: number; total: number;
+  boxes: number[]; due: number; seen: number; total: number; practised: number; window: number;
   per_tag: Record<string, { seen: number; total: number }>;
   log: { date: string; slug: string; grade: Grade; attempts: number; secs: number; new: boolean }[];
 }

@@ -18,7 +18,7 @@ import shutil
 import subprocess
 import threading
 import webbrowser
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import uvicorn
@@ -54,12 +54,13 @@ from .region import (
     write_region,
 )
 from .runner import run_tests, summarise
-from .scheduler import INTERVIEW, LADDER, due_today, queue
+from .scheduler import LADDER, due_today, queue
 from .settings import settings
 from .state import card, reading, today, writing
 
 log = logging.getLogger(__name__)
 MAX_BODY = 256 * 1024
+WINDOW = 7        # days in the consistency window; the page reads it off the payload
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -160,6 +161,16 @@ def _payload(st, slug, meta, src):
                         for a in st["archive"].get(slug, [])]}
 
 
+def _practised(st):
+    """Days worked in the last WINDOW, counted from the archive — which holds a row
+    for every pass and every abandoned attempt that got anywhere, so a hard day you
+    gave up on still counts. A rolling window, never a streak: one missed day costs one point and
+    repairs itself, and nothing here rewards filling all seven (Lally 2010: a single
+    missed occasion does not derail a forming habit)."""
+    cut = (date.fromisoformat(today()) - timedelta(days=WINDOW - 1)).isoformat()
+    return len({r["date"] for runs in st["archive"].values() for r in runs if r["date"] >= cut})
+
+
 def _boxes(st, all_tasks):
     boxes = [0] * len(LADDER)
     for slug in all_tasks:
@@ -186,14 +197,14 @@ def catalogue():
                  **{k: card(st, slug)[k] for k in ("box", "due", "seen")}}
                 for slug, m in all_tasks.items()]
         boxes = _boxes(st, all_tasks)
-        left = (INTERVIEW - date.fromisoformat(today())).days
         return {"focus": st["focus"],
                 "tags": sorted({t for m in all_tasks.values() for t in m["tags"]}),
                 "tiers": ["core", "advanced", "packages"],       # fixed order: easiest first
                 "tracks": sorted({m["track"] for m in all_tasks.values() if m.get("track")}),
                 "today": q,
                 "stats": {"boxes": boxes, "due": len(q["review"]), "seen": sum(boxes),
-                          "total": len(all_tasks), "days_left": left},
+                          "total": len(all_tasks),
+                          "practised": _practised(st), "window": WINDOW},
                 "tasks": rows}
 
 
@@ -209,7 +220,8 @@ def progress():
                 t["total"], t["seen"] = t["total"] + 1, t["seen"] + seen
         boxes = _boxes(st, all_tasks)
         return {"boxes": boxes, "due": len(due_today(st, all_tasks)), "seen": sum(boxes),
-                "total": len(all_tasks), "log": st["log"][-30:], "per_tag": per_tag}
+                "total": len(all_tasks), "practised": _practised(st), "window": WINDOW,
+                "log": st["log"][-30:], "per_tag": per_tag}
 
 
 @app.get("/api/task/{slug}")

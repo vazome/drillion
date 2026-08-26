@@ -3,12 +3,13 @@
 import asyncio
 import shutil
 import tempfile
+from datetime import date, timedelta
 from pathlib import Path
 
 import httpx
 
 from drillion import region, scheduler, state
-from drillion.api import MAX_BODY, app
+from drillion.api import MAX_BODY, WINDOW, _practised, app
 from drillion.settings import settings
 
 SLUG = "001_fstrings"
@@ -205,3 +206,17 @@ def test_the_api_serves_a_tasks_assets():
 
 def test_the_api_reports_its_health():
     _api(_health)
+
+
+def test_the_practice_count_is_a_rolling_window_not_a_streak():
+    """A day counts if anything was archived on it — a pass, or an attempt given up on.
+    Missing one costs exactly one point: there is no run to break and none to protect."""
+    def day(n):
+        return (date.today() - timedelta(days=n)).isoformat()  # noqa: DTZ011
+
+    st = {"archive": {"a": [{"date": day(0)}, {"date": day(0)}],       # twice in a day is one day
+                      "b": [{"date": day(2)}, {"date": day(WINDOW - 1)}]}}
+    assert _practised(st) == 3
+    st["archive"]["c"] = [{"date": day(WINDOW)}]                      # one day past the edge
+    assert _practised(st) == 3
+    assert _practised({"archive": {}}) == 0

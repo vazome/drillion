@@ -8,6 +8,7 @@ const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };          // the fa
 const PLAIN = { fontWeight: 400, textTransform: "none" as const, letterSpacing: 0, ...ASIDE };
 const BOXES = 5;      // ladder height; tests/test_scheduler.py holds it to scheduler.LADDER
 const AUTOSAVE_MS = 800;
+const ATTEMPT_MS = 5000;    // reading the task is work: the clock starts once the page settles
 const HEARTBEAT_MS = 60_000;
 // The handoff's 1.4s was a prototype fading in a hint that had actually unlocked. A real
 // gate has to be read — and `role="status"` speaks a sentence in roughly two seconds, so a
@@ -48,6 +49,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const inflight = useRef<Promise<void> | null>(null);
   const attemptRef = useRef(false);          // is an attempt open? read from the async chain
   const opening = useRef<Promise<void> | null>(null);
+  const dropped = useRef(false);             // discarded here: do not re-open the attempt behind them
   const hasAttempt = !!task?.attempt;
   const passed = result.state === "passed";
 
@@ -68,7 +70,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   // ---- load, and offer a newer local draft over what the file holds
   useEffect(() => {
     let live = true;
-    setTask(null); attemptRef.current = false; setError(null); setResult({ state: "idle" }); setConflict(null); setSolutionCode(null); setGate(null); setNextSlug(null);
+    setTask(null); attemptRef.current = false; dropped.current = false; setError(null); setResult({ state: "idle" }); setConflict(null); setSolutionCode(null); setGate(null); setNextSlug(null);
     api<TaskData>(`/task/${encodeURIComponent(slug)}`).then((p) => {
       if (!live) return;
       adopt(p);
@@ -115,6 +117,15 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       else setGate({ at: "editor", message: e.message });
     }
   }, [slug, ensureOpen]);
+
+  // ---- the clock starts on arrival, not on the first Run. Reading the task is the
+  // work, so a page that has sat open for five seconds opens its attempt itself; the
+  // delay is there so a mis-click bounced straight back out never starts one.
+  useEffect(() => {
+    if (!task || hasAttempt || passed || dropped.current) return;
+    const t = setTimeout(() => { ensureOpen().catch(() => {}); }, ATTEMPT_MS);
+    return () => clearTimeout(t);
+  }, [task, hasAttempt, passed, ensureOpen]);
 
   const edit = (next: string) => {
     setCode(next); codeRef.current = next;
@@ -223,6 +234,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     try {
       const p = await post<TaskData>(`/task/${encodeURIComponent(slug)}/abandon`, { etag: etagRef.current });
       localStorage.removeItem(draftKey(slug));
+      dropped.current = true;
       adopt(p); setResult({ state: "idle" }); setSolutionCode(null); setGate(null); setNextSlug(null);
     } catch (e) {
       const err = e as ApiError;

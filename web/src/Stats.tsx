@@ -10,15 +10,19 @@ const Cell = ({ value, label }: { value: ReactNode; label: string }) => (
 );
 const Rule = () => <div style={{ width: 1, background: "var(--border)" }} />;
 
-/** The ladder in one strip: what is left, what is due, where the cards sit.
- * Shared by the catalogue and the progress screen; `daysLeft` and `ladderHref`
- * are the catalogue's extras and drop out when they are not passed. */
-export function Stats({ boxes, due, seen, total, daysLeft, ladderHref }: {
-  boxes: number[]; due: number; seen: number; total: number; daysLeft?: number; ladderHref?: string;
+/** The ladder in one strip: how often you show up, what is due, where the cards sit.
+ * Shared by the catalogue and the progress screen; `practised` and `ladderHref`
+ * drop out of the strip when they are not passed. */
+export function Stats({ boxes, due, seen, total, practised, outOf, ladderHref }: {
+  boxes: number[]; due: number; seen: number; total: number;
+  practised?: number; outOf?: number; ladderHref?: string;   // `outOf`, not `window`: that name is the global
 }) {
   return (
     <Card padding="12px 18px" style={{ display: "flex", alignItems: "stretch", gap: 22 }}>
-      {daysLeft === undefined ? null : <><Cell value={daysLeft} label="days left" /><Rule /></>}
+      {/* Consistency, not a countdown: a rolling window that a missed day dents by one and
+          never breaks. Deliberately uncoloured — the moment it is rewarded it becomes a score. */}
+      {practised === undefined ? null : <><Cell label="days practised"
+        value={<>{practised} <span style={{ fontSize: 14, color: "var(--text-faint)" }}>of {outOf}</span></>} /><Rule /></>}
       <div><div style={{ ...NUM, color: "var(--accent)" }}>{due}</div><div style={LABEL}>due today</div></div>
       <Rule />
       <Cell value={<>{seen} <span style={{ fontSize: 14, color: "var(--text-faint)" }}>/ {total}</span></>} label="cards seen" />

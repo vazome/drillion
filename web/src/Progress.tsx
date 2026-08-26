@@ -52,7 +52,7 @@ export function Progress() {
 
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", display: "grid", gap: 18 }}>
-      <Stats boxes={data.boxes} due={data.due} seen={data.seen} total={data.total} />
+      <Stats boxes={data.boxes} due={data.due} seen={data.seen} total={data.total} practised={data.practised} outOf={data.window} />
 
       <Card label="The ladder">
         <Ladder boxes={data.boxes} />

@@ -153,7 +153,7 @@ export function Catalogue() {
 
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", display: "grid", gap: 18 }}>
-      <Stats boxes={stats.boxes} due={stats.due} seen={stats.seen} total={stats.total} daysLeft={stats.days_left} ladderHref="#/progress" />
+      <Stats boxes={stats.boxes} due={stats.due} seen={stats.seen} total={stats.total} practised={stats.practised} outOf={stats.window} ladderHref="#/progress" />
 
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <span style={LABEL}>Today</span>
