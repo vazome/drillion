@@ -5,7 +5,6 @@ tier: core
 minutes: 35
 prereqs: []
 tags: [rate-limiting]
-practices: [13, 43, 44]
 ---
 # rate limiting — token-bucket rate limiter with a fake clock
 

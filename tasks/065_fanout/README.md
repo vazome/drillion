@@ -5,7 +5,6 @@ tier: core
 minutes: 30
 prereqs: [30]
 tags: [threadpoolexecutor]
-practices: [30, 51, 40]
 ---
 # ThreadPoolExecutor — CSV rows fanned out over a thread pool
 

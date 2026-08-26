@@ -5,7 +5,6 @@ tier: core
 minutes: 30
 prereqs: [43]
 tags: [retry-loops]
-practices: [43, 42, 37]
 ---
 # retry loops — poll until healthy, back off, exit code
 

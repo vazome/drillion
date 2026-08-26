@@ -5,7 +5,6 @@ tier: core
 minutes: 30
 prereqs: [18]
 tags: [strings, counter]
-practices: [26, 18, 21]
 ---
 # phone screens — palindrome, anagram, top-N words
 

@@ -22,7 +22,7 @@ SLUG = re.compile(r"^(\d{3})_[a-z0-9_]+$")
 TAG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 DIFFICULTIES = ("easy", "medium", "hard")
 TIERS = ("core", "advanced", "packages")
-REFERENCES = ("prereqs", "practices")   # optional frontmatter lists of task numbers
+REFERENCES = ("prereqs",)          # optional frontmatter lists of task numbers
 
 
 def _folder_problems(folder):

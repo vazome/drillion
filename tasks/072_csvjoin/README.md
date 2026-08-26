@@ -5,7 +5,6 @@ tier: core
 minutes: 30
 prereqs: [30]
 tags: [csv]
-practices: [30, 17, 19]
 ---
 # csv — inner-join two CSVs on a shared key
 

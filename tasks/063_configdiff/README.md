@@ -5,7 +5,6 @@ tier: core
 minutes: 30
 prereqs: [17]
 tags: [recursion]
-practices: [28, 17, 23]
 ---
 # recursion — recursive diff of two nested configs
 
