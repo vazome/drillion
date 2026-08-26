@@ -17,7 +17,17 @@ from .settings import settings
 
 _TASK_LINE = re.compile(r"[\w./\\-]*task\.py:(\d+)")
 # every task.py is called task.py, so pytest must name modules by path, not basename
-_PYTEST = ["-q", "--no-header", "-p", "no:cacheprovider", "--import-mode=importlib"]
+# `--color=no` because pytest does not decide colour by asking whether it is a tty: FORCE_COLOR
+# or PY_COLORS in the environment turns it on regardless, and a pnpm script sets FORCE_COLOR for
+# everything it spawns. The escapes then land in the learner's output panel as literal `[31mF[0m`.
+_PYTEST = [
+    "-q",
+    "--no-header",
+    "--color=no",
+    "-p",
+    "no:cacheprovider",
+    "--import-mode=importlib",
+]
 
 
 def _env(**extra):
