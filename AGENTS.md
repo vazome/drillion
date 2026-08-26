@@ -1,24 +1,24 @@
-# Drillion
+# drillion
 
-Drillion is an Open Source platform to learn Python programming language through practice excersises.
+drillion is an Open Source platform to learn Python programming language through practice excersises.
 
 It draws inpsiration from Exercism and Hackerank, but implements its own pragmatic approch.
 
-## What so special about Drillion?
+## What so special about drillion?
 
-Drillion can be used by any number of users. It came to from the frustration around language learning platforms, all of the graphical unncesesaries, social rankings and over the top gamification. These are the points we consider non-negotiable.
+drillion can be used by any number of users. It came to from the frustration around language learning platforms, all of the graphical unncesesaries, social rankings and over the top gamification. These are the points we consider non-negotiable.
 
 1. Always open source
-This is not "raise money", learn python in 30 days, "here is a voucher" platform. Everybody can freely use Drillion and contribute.
+This is not "raise money", learn python in 30 days, "here is a voucher" platform. Everybody can freely use drillion and contribute.
 
 2. Categorical pragmatism
-People use drillion for only one single purpose - to get better at Python. Drillion aids them, by clearly tagging pracises with respective topics names, people can easly search across topics and tasks. Transparency is key to understanding.
+People use drillion for only one single purpose - to get better at Python. drillion aids them, by clearly tagging pracises with respective topics names, people can easly search across topics and tasks. Transparency is key to understanding.
 
 3. Local ready
-The architecture of Drillion allows to either clone the repo and self-deploy or docker run, so the client become available with ready environment. There is no login or registration. Convenience is important factor to consistent learning. We must make sure that it stays this way. Upgrades should not be a concern, learning progress must be kept regardless of distribution line.
+The architecture of drillion allows to either clone the repo and self-deploy or docker run, so the client become available with ready environment. There is no login or registration. Convenience is important factor to consistent learning. We must make sure that it stays this way. Upgrades should not be a concern, learning progress must be kept regardless of distribution line.
 
 4. UX/UI that corresponds
-UX: the system design must reflect the spaced repetition learning (FSRS). It's not 1 task - 1 topic. Topics must span across multiple tasks, topics must merge to ensure consistent learning of new concepts and preserving previosly learned material. Another example if takes user more than 30 minutes on the task without submission, Drillion must pop notify them of taking a hint, you can't bruteforce something you are unaware of.
+UX: the system design must reflect the spaced repetition learning (FSRS). It's not 1 task - 1 topic. Topics must span across multiple tasks, topics must merge to ensure consistent learning of new concepts and preserving previosly learned material. Another example if takes user more than 30 minutes on the task without submission, drillion must pop notify them of taking a hint, you can't bruteforce something you are unaware of.
 UI: When new UI component needs to be drawn for the client, you request it from the developer. Then you will be provided with it, so you can integrate it. Drawing UI is not your concern.  
 
 ## A note from the Developer
@@ -31,11 +31,11 @@ Consider this document proper default, there are not a hard rules, it's the valu
 
 ## Brief glossary
 
-**you** means the agent reading this file and changing Drillion.
-**we, us, and maintainers** mean vazome and other open-source developers building Drillion. These are who you are talking to now.
-**user or people** means the person using Drillion to direct coding agents.
+**you** means the agent reading this file and changing drillion.
+**we, us, and maintainers** mean vazome and other open-source developers building drillion. These are who you are talking to now.
+**user or people** means the person using drillion to direct coding agents.
 **client** means the web.
-**environment** means one running Drillion and the machine, filesystem, and state it has.
+**environment** means one running drillion and the machine, filesystem, and state it has.
 **project** means an environment-local workspace record rooted at a directory.
 
 ## Hit every surface
@@ -127,7 +127,7 @@ participating in that same PR/issue discussion.
 
 ### Issue tracker
 
-Issues live in GitHub Issues on `vazome/study`, driven with the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues live in GitHub Issues on `vazome/drillion`, driven with the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

@@ -1,4 +1,4 @@
-# study — spaced-repetition Python drills with a local web UI
+# drillion — spaced-repetition Python drills with a local web UI
 
 A single-user practice tool: a catalogue of small, tagged Python exercises, each graded by its own
 pytest test against a reference solution on **fresh random data every sitting**, scheduled by a
@@ -14,8 +14,8 @@ drill's `README.md`, rendered as Markdown.
 ## Quick start
 
 ```bash
-uv run study                 # start the server on http://127.0.0.1:8765 and open the browser
-uv run study selfcheck       # prove every drill passes with its own reference solution
+uv run drillion              # start the server on http://127.0.0.1:8765 and open the browser
+uv run drillion selfcheck    # prove every drill passes with its own reference solution
 docker compose up            # the same app in a container (drills and progress mounted from ./)
 ```
 
@@ -74,9 +74,9 @@ and wrong.
 ## Layout
 
 ```
-src/study/            the application package (`study` console script)
+src/drillion/         the application package (`drillion` console script)
   cli.py              serve (default) | selfcheck; logging
-  settings.py         STUDY_ROOT / STUDY_HOST / STUDY_PORT / STUDY_OPEN_BROWSER
+  settings.py         DRILLION_ROOT / DRILLION_HOST / DRILLION_PORT / DRILLION_OPEN_BROWSER
   state.py            progress.json load/save (atomic)
   catalogue.py        exercises(): each drill's README.md frontmatter, spec and hints
   region.py           the learner's region: cut/splice/stub/validate/etag, atomic file writes
@@ -99,11 +99,11 @@ Dockerfile, compose.yaml, .github/workflows/ci.yml
 
 | variable | default | meaning |
 |---|---|---|
-| `STUDY_ROOT` | cwd if it has `exercises/`, else the repo | where `exercises/` and `progress.json` live |
-| `STUDY_HOST` | `127.0.0.1` | bind address (`0.0.0.0` inside Docker) |
-| `STUDY_PORT` | `8765` | port |
-| `STUDY_OPEN_BROWSER` | `1` | open the browser on start (`0` in Docker) |
-| `STUDY_SEED` | — | pin the data seed when running a drill by hand |
+| `DRILLION_ROOT` | cwd if it has `exercises/`, else the repo | where `exercises/` and `progress.json` live |
+| `DRILLION_HOST` | `127.0.0.1` | bind address (`0.0.0.0` inside Docker) |
+| `DRILLION_PORT` | `8765` | port |
+| `DRILLION_OPEN_BROWSER` | `1` | open the browser on start (`0` in Docker) |
+| `DRILLION_SEED` | — | pin the data seed when running a drill by hand |
 
 The server binds to loopback, accepts only `127.0.0.1`/`localhost` host headers, rejects bodies
 over 256 KB, and runs exercise code only inside a pytest subprocess with a timeout.
@@ -114,9 +114,9 @@ over 256 KB, and runs exercise code only inside a pytest subprocess with a timeo
 uv sync                                      # dependencies (runtime + dev)
 uv run pytest tests -q                       # the app's tests
 uv run ruff check .                          # lint
-uv run study selfcheck                       # every drill green with its reference
+uv run drillion selfcheck                    # every drill green with its reference
 uv run pytest exercises/019_counter          # one drill by hand (NotImplementedError on a stub)
-STUDY_SEED=42 uv run pytest exercises/019_counter   # same drill, fixed data
+DRILLION_SEED=42 uv run pytest exercises/019_counter   # same drill, fixed data
 ```
 
 CI runs the same three checks on every push. The frontend dev loop (`pnpm --dir web dev` with a
@@ -189,7 +189,7 @@ defines `_reference`/`_gen`/`test_*` or names `_reference` is refused.
 `focus` in `progress.json` is a single tag that restricts which *new* exercises are offered;
 reviews and the open catalogue ignore it.
 
-Sanity check for a new drill: `uv run study selfcheck` splices `_reference` into every file and
+Sanity check for a new drill: `uv run drillion selfcheck` splices `_reference` into every file and
 runs the tests — it must be green before the drill is trusted.
 
 ## Status
