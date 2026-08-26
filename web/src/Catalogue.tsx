@@ -5,19 +5,19 @@ import { api, type Catalogue as Payload, type Row } from "./api";
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
 const STATUSES = ["all", "new", "due", "open", "done", "scheduled"] as const;
 
-function Line({ ex, today }: { ex: Row; today?: boolean }) {
+function Line({ task, today }: { task: Row; today?: boolean }) {
   const [hover, setHover] = useState(false);
   return (
-    <a href={`#/ex/${encodeURIComponent(ex.slug)}`}
+    <a href={`#/task/${encodeURIComponent(task.slug)}`}
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: today ? 46 : 44, color: "var(--text)", background: hover ? "var(--surface-2)" : "transparent", borderTop: today ? "none" : "1px solid var(--border)", textDecoration: "none" }}>
-      <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)", width: 30, textAlign: "right" }}>{ex.topic}</span>
-      <span style={{ fontSize: today ? 14.5 : 15, fontWeight: today ? 500 : 400, flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ex.title}</span>
-      {ex.tags.slice(0, 3).map((t) => <TagChip key={t} label={t} small />)}
-      <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--text-muted)", width: 40, textAlign: "right" }}>{ex.minutes} m</span>
+      <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)", width: 30, textAlign: "right" }}>{task.topic}</span>
+      <span style={{ fontSize: today ? 14.5 : 15, fontWeight: today ? 500 : 400, flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{task.title}</span>
+      {task.tags.slice(0, 3).map((t) => <TagChip key={t} label={t} small />)}
+      <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--text-muted)", width: 40, textAlign: "right" }}>{task.minutes} m</span>
       {/* the API numbers boxes 0-4; the meter fills 1-5, and an unseen card sits on no rung */}
-      <LadderMeter box={ex.seen ? ex.box + 1 : 0} />
-      <span style={{ width: 92, display: "flex", justifyContent: "flex-end" }}><StatusBadge status={ex.status} /></span>
+      <LadderMeter box={task.seen ? task.box + 1 : 0} />
+      <span style={{ width: 92, display: "flex", justifyContent: "flex-end" }}><StatusBadge status={task.status} /></span>
     </a>
   );
 }
@@ -36,10 +36,10 @@ export function Catalogue({ onHead, focus }: { onHead: (h: { focus: string | nul
     }).catch((e) => setError(e.message));
   }, [onHead]);
 
-  const by = useMemo(() => new Map((data?.exercises ?? []).map((e) => [e.slug, e])), [data]);
+  const by = useMemo(() => new Map((data?.tasks ?? []).map((e) => [e.slug, e])), [data]);
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return (data?.exercises ?? []).filter((e) =>
+    return (data?.tasks ?? []).filter((e) =>
       (!needle || e.title.toLowerCase().includes(needle) || e.slug.includes(needle) || String(e.topic) === needle) &&
       activeTags.every((t) => e.tags.includes(t)) &&
       (status === "all" || e.status === status));
@@ -66,14 +66,14 @@ export function Catalogue({ onHead, focus }: { onHead: (h: { focus: string | nul
         {review.length + fresh.length === 0
           ? <EmptyState message="Nothing due. Pick anything below, or rest — that's training too." />
           : <>
-              {review.map((e) => <Line key={e.slug} ex={e} today />)}
+              {review.map((e) => <Line key={e.slug} task={e} today />)}
               {review.length && fresh.length ? <div style={{ borderTop: "1px solid var(--border)", margin: "4px 0" }} /> : null}
-              {fresh.map((e) => <Line key={e.slug} ex={e} today />)}
+              {fresh.map((e) => <Line key={e.slug} task={e} today />)}
             </>}
       </Card>
 
       <div style={{ display: "flex", gap: 20, alignItems: "baseline", marginTop: 6 }}>
-        <span style={LABEL}>All drills</span>
+        <span style={LABEL}>All tasks</span>
         <span className="tabular" style={{ fontSize: 13, color: "var(--text-faint)" }}>{rows.length} shown</span>
       </div>
       <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
@@ -87,7 +87,7 @@ export function Catalogue({ onHead, focus }: { onHead: (h: { focus: string | nul
       <Card padding={0} style={{ overflow: "hidden" }}>
         {rows.length === 0
           ? <EmptyState message="Nothing matches. Clear a filter or two." actionLabel="Clear filters" onAction={() => { setQ(""); setActiveTags([]); setStatus("all"); }} />
-          : rows.map((e) => <Line key={e.slug} ex={e} />)}
+          : rows.map((e) => <Line key={e.slug} task={e} />)}
       </Card>
     </div>
   );

@@ -1,4 +1,4 @@
-"""Where the drills live and where the server listens — read from the environment.
+"""Where the tasks live and where the server listens — read from the environment.
 
 One dataclass, one module-level instance. Every module asks `settings` for a path
 at call time rather than freezing one at import, so a test can point `root` at a
@@ -13,11 +13,11 @@ PKG = Path(__file__).resolve().parent           # .../src/drillion
 
 
 def _default_root():
-    """Whatever holds `exercises/`: the working directory, else the repo itself."""
+    """Whatever holds `tasks/`: the working directory, else the repo itself."""
     if env := os.environ.get("DRILLION_ROOT"):
         return Path(env)
     cwd = Path.cwd()
-    return cwd if (cwd / "exercises").is_dir() else PKG.parent.parent
+    return cwd if (cwd / "tasks").is_dir() else PKG.parent.parent
 
 
 @dataclass
@@ -31,8 +31,8 @@ class Settings:
         default_factory=lambda: os.environ.get("DRILLION_OPEN_BROWSER", "1") != "0")
 
     @property
-    def exercises_dir(self):
-        return self.root / "exercises"
+    def tasks_dir(self):
+        return self.root / "tasks"
 
     @property
     def state_path(self):

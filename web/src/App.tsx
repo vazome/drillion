@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Select, Toggle } from "./ds/index.js";
 import { post } from "./api";
 import { Catalogue } from "./Catalogue";
-import { Exercise } from "./Exercise";
+import { Task } from "./Task";
 import { Progress } from "./Progress";
 
 /** Hash routing, whole implementation. Three routes do not need a router. */
@@ -43,7 +43,7 @@ function Header({ route, dark, setDark, focus, tags, total, daysLeft, onFocus }:
     <header style={{ height: 56, display: "flex", alignItems: "center", gap: 20, padding: "0 24px", borderBottom: "1px solid var(--border)", background: "var(--bg)", boxSizing: "border-box", position: "sticky", top: 0, zIndex: 10 }}>
       <a href="#/" style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
         <span style={{ fontSize: 17, fontWeight: 600, color: "var(--text)" }}>drillion</span>
-        {total ? <span style={{ fontSize: 13, color: "var(--text-faint)" }}>{total} drills</span> : null}
+        {total ? <span style={{ fontSize: 13, color: "var(--text-faint)" }}>{total} tasks</span> : null}
       </a>
       <div style={{ flex: 1 }} />
       <label style={{ fontSize: 13, color: "var(--text-muted)", display: "flex", gap: 6, alignItems: "center" }}>
@@ -69,12 +69,12 @@ export function App() {
     post("/focus", { tag: tag || null }).catch(() => {});
   };
 
-  const slug = route.startsWith("/ex/") ? decodeURIComponent(route.slice(4)) : null;
+  const slug = route.startsWith("/task/") ? decodeURIComponent(route.slice(6)) : null;
   return (
     <>
       <Header route={route} dark={dark} setDark={setDark} onFocus={setFocus} {...head} />
       <main style={{ padding: "24px" }}>
-        {slug ? <Exercise slug={slug} dark={dark} />
+        {slug ? <Task slug={slug} dark={dark} />
           : route === "/progress" ? <Progress />
           : <Catalogue onHead={onHead} focus={head.focus} />}
       </main>

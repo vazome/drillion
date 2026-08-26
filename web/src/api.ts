@@ -12,14 +12,14 @@ export interface Catalogue {
   focus: string | null; tags: string[];
   today: { review: string[]; new: string[]; done_today: number };
   stats: { boxes: number[]; due: number; seen: number; total: number; days_left: number };
-  exercises: Row[];
+  tasks: Row[];
 }
 export interface Progress {
   boxes: number[]; due: number; seen: number; total: number;
   per_tag: Record<string, { seen: number; total: number }>;
   log: { date: string; slug: string; grade: Grade; attempts: number; secs: number; new: boolean }[];
 }
-export interface Exercise {
+export interface Task {
   slug: string; meta: Omit<Row, "slug" | "status" | "box" | "due" | "seen">;
   spec_md: string; code: string; etag: string; has_given: boolean;
   marker_line: number; status: Status;

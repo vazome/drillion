@@ -1,6 +1,6 @@
 # drillion
 
-drillion is an Open Source platform to learn Python programming language through practice excersises.
+drillion is an Open Source platform to learn Python programming language through practice tasks.
 
 It draws inpsiration from Exercism and Hackerank, but implements its own pragmatic approch.
 

@@ -11,7 +11,7 @@ authored in Claude Design and vendored here under `src/ds/`.
 | `src/ds/SpecText.jsx` | the one exception: the design's regex Markdown parser was replaced with `react-markdown` + `remark-gfm`. Same styling, real parser (see the comment in the file). |
 | `src/api.ts` | every response shape from `src/drillion/api.py`, and the one `fetch` wrapper |
 | `src/App.tsx` | hash router, theme, header |
-| `src/Catalogue.tsx`, `src/Exercise.tsx`, `src/Progress.tsx` | the three screens |
+| `src/Catalogue.tsx`, `src/Task.tsx`, `src/Progress.tsx` | the three screens |
 | `src/Editor.tsx` | CodeMirror 6, themed from the design tokens in both modes |
 
 ## Dev loop
@@ -27,7 +27,7 @@ git-ignored: `serve()` builds it when it is missing or older than `src/`, so a f
 ## Check
 
 ```bash
-pnpm --dir web check 8765       # renders all 171 drill specs through SpecText
+pnpm --dir web check 8765       # renders all 171 task specs through SpecText
 ```
 
 Asserts no GitHub-alert marker leaks as literal text, every `## ` heading becomes an `<h2>`, and

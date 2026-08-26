@@ -1,22 +1,22 @@
-# drillion — spaced-repetition Python drills with a local web UI
+# drillion — spaced-repetition Python tasks with a local web UI
 
-A single-user practice tool: a catalogue of small, tagged Python exercises, each graded by its own
+A single-user practice tool: a catalogue of small, tagged Python tasks, each graded by its own
 pytest test against a reference solution on **fresh random data every sitting**, scheduled by a
 5-box Leitner ladder, with gated hints and a gated solution. You open it in a browser, write
 `solve()` in the editor, press Run, and the app grades, schedules and archives the attempt.
 
 Design brief for the UI: [DESIGN.md](DESIGN.md).
 
-The drill files on disk are the source of truth; the app edits only the learner's region of each
-`drill.py` — everything above its machinery marker — and the guidance beside the editor is the
-drill's `README.md`, rendered as Markdown.
+The task files on disk are the source of truth; the app edits only the learner's region of each
+`task.py` — everything above its machinery marker — and the guidance beside the editor is the
+task's `README.md`, rendered as Markdown.
 
 ## Quick start
 
 ```bash
 uv run drillion              # start the server on http://127.0.0.1:8765 and open the browser
-uv run drillion selfcheck    # prove every drill passes with its own reference solution
-docker compose up            # the same app in a container (drills and progress mounted from ./)
+uv run drillion selfcheck    # prove every task passes with its own reference solution
+docker compose up            # the same app in a container (tasks and progress mounted from ./)
 ```
 
 Requirements: Python 3.13 and [uv](https://docs.astral.sh/uv/). Docker is optional. The web
@@ -26,8 +26,8 @@ frontend (React + Vite) is being built; until `web/dist` exists the server expos
 
 1. **Today** shows due reviews first (most overdue first), then up to 2 new topics whose
    prerequisites you have passed. The whole catalogue is open too — the queue is a suggestion.
-2. Opening an exercise starts an **attempt** (fresh seed, active-seconds timer that pauses when the
-   tab is hidden). The left pane renders the drill's `README.md`: Why / You get / You return /
+2. Opening a task starts an **attempt** (fresh seed, active-seconds timer that pauses when the
+   tab is hidden). The left pane renders the task's `README.md`: Why / You get / You return /
    Rules / Read first, with code blocks, tables, diagrams and images. The right pane is the editor
    with the stub.
 3. **Run** saves your region into the file and runs that file's pytest test with the attempt's
@@ -42,12 +42,12 @@ with the repo on purpose: it is your work.
 
 ## Why it's built this way
 
-**Fresh data every sitting.** Each exercise ships a generator, so when a topic comes back in 8 days
+**Fresh data every sitting.** Each task ships a generator, so when a topic comes back in 8 days
 the IPs, names and numbers are different. You can't recall the answer because that exact answer
 never existed. This is the one feature that stops spaced repetition from degrading into memorising
 files.
 
-**A 5-box ladder, not a fancy algorithm.** Pass an exercise and it returns in 2 → 4 → 8 → 16 → 28
+**A 5-box ladder, not a fancy algorithm.** Pass a task and it returns in 2 → 4 → 8 → 16 → 28
 days. Fail and it drops two boxes instead of resetting, because a lapse here costs 30 minutes, not
 5 seconds. Nothing is ever scheduled past a week before the target date.
 
@@ -78,17 +78,17 @@ src/drillion/         the application package (`drillion` console script)
   cli.py              serve (default) | selfcheck; logging
   settings.py         DRILLION_ROOT / DRILLION_HOST / DRILLION_PORT / DRILLION_OPEN_BROWSER
   state.py            progress.json load/save (atomic)
-  catalogue.py        exercises(): each drill's README.md frontmatter, spec and hints
+  catalogue.py        tasks(): each task's README.md frontmatter, spec and hints
   region.py           the learner's region: cut/splice/stub/validate/etag, atomic file writes
   scheduler.py        ladder, due/new queue, grading, rescheduling
   attempts.py         open/run/pass/abandon/hint/solution lifecycle, active-seconds timer
   runner.py           pytest subprocess, failure summariser, selfcheck
   api.py              FastAPI JSON API + static frontend, serve()
 tests/                unit + ASGI tests (plain pytest, no fixtures)
-exercises/            one folder per drill and _lib.py (seeded Random)
+tasks/                one folder per task and _lib.py (seeded Random)
   <NNN>_<name>/
     README.md         frontmatter (title, minutes, prereqs, tags, …) + Markdown guidance
-    drill.py          the learner's region, the machinery marker, the machinery
+    task.py           the learner's region, the machinery marker, the machinery
     assets/           optional images, diagrams and clips the README points at
 web/                  the frontend (React + Vite), served from web/dist
 progress.json         your cards, attempts, log and archived solutions
@@ -99,14 +99,14 @@ Dockerfile, compose.yaml, .github/workflows/ci.yml
 
 | variable | default | meaning |
 |---|---|---|
-| `DRILLION_ROOT` | cwd if it has `exercises/`, else the repo | where `exercises/` and `progress.json` live |
+| `DRILLION_ROOT` | cwd if it has `tasks/`, else the repo | where `tasks/` and `progress.json` live |
 | `DRILLION_HOST` | `127.0.0.1` | bind address (`0.0.0.0` inside Docker) |
 | `DRILLION_PORT` | `8765` | port |
 | `DRILLION_OPEN_BROWSER` | `1` | open the browser on start (`0` in Docker) |
-| `DRILLION_SEED` | — | pin the data seed when running a drill by hand |
+| `DRILLION_SEED` | — | pin the data seed when running a task by hand |
 
 The server binds to loopback, accepts only `127.0.0.1`/`localhost` host headers, rejects bodies
-over 256 KB, and runs exercise code only inside a pytest subprocess with a timeout.
+over 256 KB, and runs task code only inside a pytest subprocess with a timeout.
 
 ## Development
 
@@ -114,17 +114,17 @@ over 256 KB, and runs exercise code only inside a pytest subprocess with a timeo
 uv sync                                      # dependencies (runtime + dev)
 uv run pytest tests -q                       # the app's tests
 uv run ruff check .                          # lint
-uv run drillion selfcheck                    # every drill green with its reference
-uv run pytest exercises/019_counter          # one drill by hand (NotImplementedError on a stub)
-DRILLION_SEED=42 uv run pytest exercises/019_counter   # same drill, fixed data
+uv run drillion selfcheck                    # every task green with its reference
+uv run pytest tasks/019_counter          # one task by hand (NotImplementedError on a stub)
+DRILLION_SEED=42 uv run pytest tasks/019_counter   # same task, fixed data
 ```
 
 CI runs the same three checks on every push. The frontend dev loop (`pnpm --dir web dev` with a
 proxy to the API) is documented in `web/` once it lands.
 
-## The exercises
+## The tasks
 
-One folder per drill, `exercises/<topic>_<name>/`; copy the shape of an existing one.
+One folder per task, `tasks/<topic>_<name>/`; copy the shape of an existing one.
 
 **`README.md`** — YAML frontmatter, then GitHub-flavoured Markdown:
 
@@ -134,7 +134,7 @@ title: Counter — top N by frequency
 minutes: 12
 prereqs: [18]            # topic numbers that gate it; optional, default []
 tags: [data-structures]
-practices: [19, 22]      # optional, whole-task drills
+practices: [19, 22]      # optional, earlier topics this one rehearses
 source: exercism/python practice/two-fer (MIT, adapted)   # optional
 ---
 # Counter — top N by frequency
@@ -148,10 +148,10 @@ from `# title` up to `## Hints`; extra sections (`## Introduction`, `## Instruct
 anywhere before it. Exactly 3 hints, escalating, the last one worked on different data — the server
 never sends one the learner has not unlocked. Headings, lists, tables, fenced code, GitHub alerts
 (`> [!NOTE]`), Mermaid diagrams, images and muted looping clips from `assets/` all render. For a
-drill adapted from Exercism the README carries **Exercism's Markdown verbatim** — never trimmed to
+task adapted from Exercism the README carries **Exercism's Markdown verbatim** — never trimmed to
 make room for ours — plus frontmatter `source:` and a closing attribution line.
 
-**`drill.py`** — code only, no docstring spec, no META, no HINTS:
+**`task.py`** — code only, no docstring spec, no META, no HINTS:
 
 ```python
 from collections import Counter        # the learner's imports, given code and solve()
@@ -181,19 +181,19 @@ defines `_reference`/`_gen`/`test_*` or names `_reference` is refused.
   `concurrency` (54–56, 94–97) · `testing` (57–61, 98–99) · `packaging` (62–67) · `cloud` (68–72) ·
   `whole-task` (73–80, 82–86, 100–101) · `llm` (88–93)
 - *Library*, from the file's imports: `boto3` · `requests` · `langchain` · `fastapi` · `asyncio`
-- *Track*: `rsample` (drills built around a RAG take-home, with a **Take-home** callout under
-  Read first); `exercism` (drills adapted from
+- *Track*: `rsample` (tasks built around a RAG take-home, with a **Take-home** callout under
+  Read first); `exercism` (tasks adapted from
   [exercism/python](https://github.com/exercism/python), MIT — each carries a frontmatter
   `source:` and the Exercism concept slugs as tags; topics 200+)
 
-`focus` in `progress.json` is a single tag that restricts which *new* exercises are offered;
+`focus` in `progress.json` is a single tag that restricts which *new* tasks are offered;
 reviews and the open catalogue ignore it.
 
-Sanity check for a new drill: `uv run drillion selfcheck` splices `_reference` into every file and
-runs the tests — it must be green before the drill is trusted.
+Sanity check for a new task: `uv run drillion selfcheck` splices `_reference` into every file and
+runs the tests — it must be green before the task is trusted.
 
 ## Status
 
-Backend, API, the folder-per-drill Markdown format and 104 drills are done and tested. In progress:
-the React frontend (light + dark), the content pass over the Exercism-derived drills, container
+Backend, API, the folder-per-task Markdown format and 104 tasks are done and tested. In progress:
+the React frontend (light + dark), the content pass over the Exercism-derived tasks, container
 smoke test.

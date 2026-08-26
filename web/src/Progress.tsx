@@ -4,7 +4,7 @@ import { api, type Progress as Payload } from "./api";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
 
-/** The per-tag coverage bar: one cell per drill, filled for the ones started. */
+/** The per-tag coverage bar: one cell per task, filled for the ones started. */
 function Bar({ seen, total }: { seen: number; total: number }) {
   return (
     <div style={{ display: "flex", gap: 2, flexWrap: "wrap", maxWidth: 340 }}>
@@ -53,7 +53,7 @@ export function Progress() {
           : [...data.log].reverse().map((row, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, padding: "9px 0", borderBottom: i < data.log.length - 1 ? "1px solid var(--border)" : "none" }}>
                 <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)" }}>{row.date}</span>
-                <a href={`#/ex/${encodeURIComponent(row.slug)}`} style={{ fontFamily: "var(--font-mono)", fontSize: 13.5, flex: 1, color: "var(--text)" }}>{row.slug}</a>
+                <a href={`#/task/${encodeURIComponent(row.slug)}`} style={{ fontFamily: "var(--font-mono)", fontSize: 13.5, flex: 1, color: "var(--text)" }}>{row.slug}</a>
                 <StatusBadge status={row.grade.toLowerCase()} />
                 <span className="tabular" style={{ fontSize: 13, color: "var(--text-muted)" }}>{row.attempts} attempts</span>
                 <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-muted)", width: 64, textAlign: "right" }}>{mmss(row.secs)}</span>

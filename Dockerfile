@@ -1,4 +1,4 @@
-# The drills in a container: same app, exercises/ and progress.json mounted from
+# The tasks in a container: same app, tasks/ and progress.json mounted from
 # the host so your work survives the image.
 
 FROM node:24-slim AS web

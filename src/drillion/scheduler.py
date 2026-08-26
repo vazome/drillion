@@ -15,40 +15,40 @@ NEW_PER_DAY = 2
 GRADES = {"fail": -2, "struggled": 0, "pass": +1, "easy": +2}
 
 
-def due_today(st, exs):
-    return [s for s in exs if card(st, s)["seen"] > 0 and card(st, s)["due"] <= today()]
+def due_today(st, all_tasks):
+    return [s for s in all_tasks if card(st, s)["seen"] > 0 and card(st, s)["due"] <= today()]
 
 
-def unseen(st, exs):
-    """Unstarted exercises whose prereqs are cleared. Under a focus tag, prereqs
-    outside the tag are ignored — else a track stalls on an exercise it lacks."""
+def unseen(st, all_tasks):
+    """Unstarted tasks whose prereqs are cleared. Under a focus tag, prereqs
+    outside the tag are ignored — else a track stalls on a task it lacks."""
     focus = st.get("focus")
-    by_topic = {m["topic"]: s for s, m in exs.items()}
+    by_topic = {m["topic"]: s for s, m in all_tasks.items()}
     ready = []
-    for slug, meta in exs.items():
+    for slug, meta in all_tasks.items():
         if card(st, slug)["seen"] or (focus and focus not in meta.get("tags", [])):
             continue
         prereqs = [by_topic[p] for p in meta.get("prereqs", []) if p in by_topic]
         if focus:
-            prereqs = [s for s in prereqs if focus in exs[s].get("tags", [])]
+            prereqs = [s for s in prereqs if focus in all_tasks[s].get("tags", [])]
         if all(card(st, s)["box"] >= 1 for s in prereqs):
             ready.append(slug)
     return ready
 
 
-def queue(st, exs):
+def queue(st, all_tasks):
     """Today: every due review (most overdue first), then the new picks left."""
     done_today = sum(1 for e in st["log"] if e["date"] == today() and e["new"])
-    fresh = sorted((s for s in unseen(st, exs) if s not in st["open"]),
-                   key=lambda s: exs[s]["topic"])
-    return {"review": sorted(due_today(st, exs), key=lambda s: card(st, s)["due"]),
+    fresh = sorted((s for s in unseen(st, all_tasks) if s not in st["open"]),
+                   key=lambda s: all_tasks[s]["topic"])
+    return {"review": sorted(due_today(st, all_tasks), key=lambda s: card(st, s)["due"]),
             "new": fresh[:max(0, NEW_PER_DAY - done_today)],
             "done_today": done_today}
 
 
-def pick(st, exs):
+def pick(st, all_tasks):
     """The one suggestion. Interleaved by construction: due dates scatter topics."""
-    q = queue(st, exs)
+    q = queue(st, all_tasks)
     for kind in ("review", "new"):
         if q[kind]:
             return q[kind][0], kind
