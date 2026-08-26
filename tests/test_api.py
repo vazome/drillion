@@ -46,6 +46,8 @@ async def _stub_to_pass(api, path):
     assert cat["tasks"][0]["status"] == "new" and cat["today"]["new"] == [SLUG]
     assert cat["tags"] == ["f-strings"] and cat["stats"]["total"] == 1
     assert cat["today"]["due_total"] == 0 and cat["today"]["behind"] is False
+    assert cat["tasks"][0]["lapses"] == 0                     # a card nobody has fought yet
+    assert cat["stats"]["lapse_limit"] == scheduler.LAPSE_LIMIT
     assert cat["stats"]["due"] == 0        # the real backlog, not the capped list's length
     assert cat["tiers"] == ["core", "advanced", "packages"] and cat["tracks"] == []
     assert cat["tasks"][0]["tier"] == "core" and cat["tasks"][0]["difficulty"] == "easy"
@@ -160,7 +162,8 @@ async def _struggled_first_sighting(api, _path):
     only renders it.
     """
     task = (await api.post(f"/api/task/{SLUG}/open")).json()
-    assert state.card(state.load(), SLUG) == {"box": 0, "due": state.today(), "seen": 0}
+    assert state.card(state.load(), SLUG) == {"box": 0, "due": state.today(), "seen": 0,
+                                              "lapses": 0}
 
     etag = task["etag"]
     for _ in range(2):                       # two failures put the pass out of `pass` range
@@ -174,6 +177,9 @@ async def _struggled_first_sighting(api, _path):
     assert run["passed"] is True and run["attempts"] == 3
     assert run["grade"] == "struggled" and run["box"] == 0
     assert run["stepped"] is False           # box 0 -> box 0: it did not step anywhere
+    assert run["lapses"] == 1                # ...but the struggle itself is counted and said
+    task = (await api.get(f"/api/task/{SLUG}")).json()
+    assert task["lapses"] == 1 and task["lapse_limit"] == scheduler.LAPSE_LIMIT
 
 
 async def _assets(api, _path):

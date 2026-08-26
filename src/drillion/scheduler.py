@@ -17,6 +17,10 @@ NEW_PER_DAY = 2
 # 10:1 ratio — but a drillion review is a whole coding task rather than a flashcard, so 12
 # is roughly the same hour. A constant, not a setting: there is no settings screen.
 REVIEWS_PER_DAY = 12
+# Struggles on one task before it is flagged as beating you. Anki suspends a flashcard at
+# 8 lapses; a drillion lapse costs a whole sitting rather than seconds, so the same wasted
+# time arrives around 4. Flag only: nothing is suspended, hidden or rescheduled by it.
+LAPSE_LIMIT = 4
 # every grade grade_of() can return. A struggle costs a box: without a negative step the
 # ladder is not adaptive at all — a task that fights you every sitting would hold box 4 and its
 # 28-day gap forever, on the same schedule as one you have aced. -1 rather than back to box 0:
@@ -94,6 +98,16 @@ def grade_of(attempts, secs, par, solution_shown):
 
 
 def reschedule(c, grade):
+    """Apply a grade to a card: its lapse count, its box, and its next due date.
+
+    A struggle is counted as well as demoted, because the two answer different questions. One
+    struggle is ordinary and is exactly what the ladder is for; `LAPSE_LIMIT` of them say the
+    task is the problem rather than the sitting — its prereqs are wrong, it sits above your
+    level, or its spec is unclear. Demotion cannot tell those apart and says nothing out loud.
+    Nothing resets the count: a task you have fought four times is worth knowing about even
+    after you finally beat it."""
+    if grade == "struggled":
+        c["lapses"] = c.get("lapses", 0) + 1
     c["box"] = max(0, min(len(LADDER) - 1, c["box"] + GRADES[grade]))
     gap = LADDER[c["box"]]
     c["due"] = (date.today() + timedelta(days=gap)).isoformat()

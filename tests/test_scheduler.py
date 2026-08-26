@@ -51,6 +51,30 @@ def test_a_struggle_walks_a_card_back_down_the_ladder():
     assert c["box"] == 0
 
 
+def test_a_struggle_is_counted_as_well_as_demoted():
+    """The lapse signal was emitted and thrown away: `grade_of` returns `struggled` for a slow
+    pass, a three-run pass or a peeked one, and nothing counted it per card. One struggle is
+    ordinary; four is information about the task — wrong prereqs, above your level, an unclear
+    spec — and only a counter can tell those apart or say anything out loud. Nothing resets it:
+    a task that beat you four times is worth knowing about after you finally beat it."""
+    c = {"box": 4, "due": "2000-01-01", "seen": 9, "lapses": 0}
+    for _ in range(scheduler.LAPSE_LIMIT):
+        scheduler.reschedule(c, "struggled")
+    assert c["lapses"] == scheduler.LAPSE_LIMIT        # the count the page flags on
+    scheduler.reschedule(c, "pass")
+    scheduler.reschedule(c, "quick")
+    assert c["lapses"] == scheduler.LAPSE_LIMIT        # only a struggle is a lapse
+
+
+def test_a_card_written_before_lapses_existed_still_reads():
+    """`state.load()` merges defaults over the top-level keys only, so a new per-card field
+    cannot arrive that way. Months of progress.json already exist on disk and there is no
+    migration step, so `card()` fills the blank on the way out."""
+    old = _st(cards={"001_a": {"box": 3, "due": "2020-01-01", "seen": 7}})
+    assert state.card(old, "001_a")["lapses"] == 0
+    assert state.card(old, "002_b") == {"box": 0, "due": state.today(), "seen": 0, "lapses": 0}
+
+
 def test_unseen_respects_prereqs():
     assert scheduler.unseen(_st(), _exs()) == ["001_a", "003_c"]         # 002_b waits for topic 1
     st = _st(cards={"001_a": {"box": 1, "due": "2000-01-01", "seen": 1}})
