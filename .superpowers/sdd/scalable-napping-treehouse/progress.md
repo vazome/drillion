@@ -326,3 +326,63 @@ practise is worse than deviating from "copy config.json verbatim".
 
 Prompts live in this session's scratchpad, not /tmp: phaseb-common.md, phaseb-I{1,2}.md,
 phaseb-review-common.md, phaseb-review-I{1,2}.md. Copy them forward if another content batch runs.
+
+## Task 6 (frontend) 2026-08-26 — built from the Claude Design system
+Design input: Claude Design project `drillion design system`
+(e20cf404-9878-452c-9bf7-b013f4cdd8da, "Mineral Blue"). Pulled to `web/src/ds/`: 5 token CSS files,
+17 components (`.jsx`, verbatim) and their prop contracts (assembled into `src/ds/index.d.ts` from
+the project's per-component `.d.ts`). NOT synced back — that project was authored in Claude Design,
+has no `_ds_sync.json` anchor, and `/design-sync` would overwrite hand-made work.
+
+STACK DEVIATION from the plan, under Daniel's "hard rule: use ponytail". The plan mandated
+Tailwind v4 + shadcn/ui + TanStack Query + react-router; all four were dropped:
+- the 17 design components use zero Tailwind classes (inline styles over CSS variables), so
+  Tailwind's only job would have been layout glue the design's own screens also do inline;
+- shadcn would be a second component library re-themed to match tokens already implemented —
+  the design's primitives are already accessible (native `<select>`, `role="switch"`,
+  `aria-expanded`, Enter/Space rows, `:focus-visible` rings);
+- 3 screens / 6 endpoints and no cache-invalidation web; the exercise page's in-order request
+  chain is hand-written either way, which is what TanStack Query would not have solved;
+- hash routing for 3 routes is 12 lines (`App.tsx: useHash`).
+Kept/added: `@uiw/react-codemirror` + `@codemirror/lang-python` + `@uiw/codemirror-themes`
+(the editor, themed from the tokens), `react-markdown` + `remark-gfm` +
+`remark-github-blockquote-alert`. Net: 4 mandated deps out, 3 in. Reviewer should check against
+this entry, not the plan's stack line. Say so if you want the mandated stack instead — it is a
+rewrite of the styling layer, not of the screens.
+
+SpecText replaced. The design shipped a hand-rolled regex Markdown parser; measured against the
+real corpus it mis-renders 143/171 READMEs (plain blockquotes), 113 (`_emphasis_`), 17 (ordered
+lists), 16 (h4+), 5 (nested lists). Same visual decisions, `react-markdown` underneath. Its
+Mermaid CDN loader and `assets/` video path were dropped: 0 of 171 drills use either, and a CDN
+in a local-first app is a bug (noted in the file).
+
+Two backend changes inside Task 6's scope:
+- `api.py` mounts `StaticFiles(..., check_dir=False)` unconditionally. This closes the Task 9
+  deferred minor ("static mount decided at import") and is what lets `serve()` build `web/dist`
+  after the module is imported.
+- `serve()` calls new `build_web()`: builds `web/dist` when missing or older than `web/src`,
+  via pnpm; warns and carries on if pnpm is absent (API still serves, `/` 404s). In the container
+  no `web/package.json` is copied, so it returns early and leaves the baked dist alone.
+Dockerfile: `node:24-slim AS web` stage added, `COPY --from=web /build/dist ./web/dist`.
+
+Off-by-one found by driving the real API, not by reading: `card["box"]` is a 0-based index into
+LADDER (0-4), while `LadderMeter` fills `box` cells 1-5. Catalogue rows now pass
+`ex.seen ? ex.box + 1 : 0` and the grade line reads `box ${result.box + 1} of 5`.
+
+`web/pnpm-workspace.yaml` is load-bearing on this machine: `/home/daniel/pnpm-workspace.yaml`
+makes $HOME one workspace, and without a local one `pnpm install` in `web/` silently installs
+the home package instead (exit 0, no node_modules).
+
+Verified: `pnpm build` clean (tsc + vite); `uv run drillion` serves `/` 200 with the Vite
+index.html and `/assets/*.{js,css}` 200; unmatched `/api/*` still 404s as JSON; deleting
+`web/dist` and starting the server rebuilds and serves it; `tests/` 40 passed; `selfcheck`
+171/171; `ruff check .` clean. The whole attempt flow was driven over HTTP against a scratch
+root (never Daniel's progress.json): payload keys, PUT-before-open 409, stale-etag 409 with
+`{error,etag,code}`, syntax 400 with `{error,line,col}`, failing run, passing run
+(grade/box/due_in/code, file back to stub, archive + log written), hint 200, solution 423 with
+`need_attempts`/`need_secs`, touch.
+New check `web/check.mjs` (`pnpm --dir web check <port>`): renders all 171 specs through SpecText
+and asserts no literal `[!NOTE]`-class marker, `## ` heading count == `<h2>` count, lists stay
+lists. 171/171 pass; verified it FAILS when `remarkAlert` is removed.
+NOT verified: a real browser. Left to Task 7 per AGENTS.md.
+Not committed — Daniel asked for the build, not a commit.

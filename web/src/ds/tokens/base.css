@@ -1,0 +1,20 @@
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:var(--fs-body);line-height:var(--lh-body)}
+a{color:var(--accent);text-decoration:none}
+a:hover{color:var(--accent-hover);text-decoration:underline}
+:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+::selection{background:var(--accent-tint)}
+kbd{font-family:var(--font-mono);font-size:11px;padding:1px 5px;border:1px solid var(--border-strong);border-bottom-width:2px;border-radius:4px;background:var(--surface-2);color:var(--text-muted)}
+code,pre{font-family:var(--font-mono)}
+.tabular{font-variant-numeric:tabular-nums}
+
+/* remark-github-blockquote-alert, styled from the tokens (design system's alert look) */
+.markdown-alert{border-left:3px solid var(--accent);background:var(--surface-2);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:8px 12px;margin:2px 0 12px}
+.markdown-alert>:last-child{margin-bottom:0}
+.markdown-alert-title{display:block;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--accent);margin-bottom:2px}
+.markdown-alert-title svg{display:none}
+.markdown-alert-tip{border-left-color:var(--pass)}
+.markdown-alert-tip .markdown-alert-title{color:var(--pass)}
+.markdown-alert-warning,.markdown-alert-caution{border-left-color:var(--warn)}
+.markdown-alert-warning .markdown-alert-title,.markdown-alert-caution .markdown-alert-title{color:var(--warn)}
+.markdown-alert-important{border-left-color:var(--accent-line)}
+.spec table{display:block;overflow-x:auto;max-width:100%}

@@ -1,0 +1,9 @@
+:root{
+--font-sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+--font-mono:"Spline Sans Mono",ui-monospace,Consolas,Menlo,monospace;
+--fs-title:22px;--fs-h:17px;--fs-body:15px;--fs-small:13px;--fs-label:12px;
+--fs-spec:13.5px;--fs-code:14px;
+--lh-body:1.5;--lh-spec:1.6;--lh-code:1.55;
+--ls-label:.08em;
+--fw-regular:400;--fw-medium:500;--fw-semibold:600;
+}

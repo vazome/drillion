@@ -14,6 +14,7 @@ leak into it, and the guidance it renders comes from the drill's README.md.
 """
 
 import logging
+import shutil
 import subprocess
 import threading
 import webbrowser
@@ -328,8 +329,9 @@ def set_focus(focus: Focus):
 
 
 # The page itself, last: an unmatched /api/... must 404 as JSON, not as a missing file.
-if settings.web_dist.is_dir():                # built by the frontend build; the API runs without it
-    app.mount("/", StaticFiles(directory=settings.web_dist, html=True), name="web")
+# check_dir=False resolves the directory per request, so `serve()` may build web/dist after
+# this module is imported — and a missing build 404s instead of breaking the API at import.
+app.mount("/", StaticFiles(directory=settings.web_dist, html=True, check_dir=False), name="web")
 
 
 def _open_browser(url):
@@ -340,7 +342,33 @@ def _open_browser(url):
         webbrowser.open(url)
 
 
+def build_web():
+    """Build web/dist when it is missing or older than its sources.
+
+    web/dist is generated, so it is git-ignored: a fresh clone has none, and `drillion`
+    is supposed to just work. Without pnpm the API still serves; only `/` is missing.
+    """
+    web = settings.web_dist.parent
+    if not (web / "package.json").is_file():
+        return
+    watched = [web / "package.json", web / "index.html", web / "vite.config.ts",
+               *(web / "src").rglob("*")]
+    newest = max((p.stat().st_mtime for p in watched if p.is_file()), default=0)
+    built = settings.web_dist / "index.html"
+    if built.is_file() and built.stat().st_mtime >= newest:
+        return
+    if shutil.which("pnpm") is None:
+        log.warning("web/dist is stale and pnpm is not installed — the API runs, / will 404")
+        return
+    log.info("building web/dist (first run, or the frontend changed)")
+    for cmd in (["pnpm", "install", "--frozen-lockfile"], ["pnpm", "build"]):
+        if subprocess.run(cmd, cwd=web, check=False).returncode:
+            log.warning("`%s` failed — the API runs, / will 404", " ".join(cmd))
+            return
+
+
 def serve():
+    build_web()
     url = f"http://{settings.host}:{settings.port}/"
     print(f"drillion → {url}   (ctrl-c to stop)", flush=True)   # piped output too
     if settings.open_browser and settings.host == "127.0.0.1":   # not from a container
