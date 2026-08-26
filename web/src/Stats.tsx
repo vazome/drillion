@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Card } from "./ds/index.js";
 
-const LADDER = [2, 4, 8, 16, 28];   // days between sightings, per box — src/drillion/scheduler.py
+const LADDER = [2, 4, 8, 16, 28, 60, 120];   // days between sightings, per box — src/drillion/scheduler.py
 const LABEL: CSSProperties = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase", color: "var(--text-muted)", whiteSpace: "nowrap" };
 const NUM: CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 20, fontVariantNumeric: "tabular-nums" };
 

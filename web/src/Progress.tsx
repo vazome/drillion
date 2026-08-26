@@ -57,7 +57,7 @@ export function Progress() {
       <Card label="The ladder">
         <Ladder boxes={data.boxes} />
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 12 }}>
-          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>A quick pass climbs two boxes, a pass one, struggled none — and box 5 is the ceiling. Each box returns on its own interval.</span>
+          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>A quick pass climbs two boxes, a pass one, struggled none — and box 7 is the ceiling. Each box returns on its own interval.</span>
           <div style={{ flex: 1 }} />
           <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--text-faint)" }}>
             {data.seen} cards on the ladder · {data.total - data.seen} untouched
