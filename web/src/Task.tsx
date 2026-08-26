@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Card, Collapsible, ConflictBanner, EmptyState, LadderMeter, NoticeBanner, ResultBanner, SpecText, StatusBadge, TagChip, Timer } from "./ds/index.js";
-import { ApiError, api, post, type Catalogue, type Task as TaskData, type RunResult } from "./api";
+import { ApiError, api, post, type Task as TaskData, type RunResult } from "./api";
 import { Editor } from "./Editor";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
@@ -220,10 +220,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
         setCode(r.code!);
         // the pass is what opens the reference, and what may have just hit the lapse limit
         setTask((p) => p && ({ ...p, reference: r.reference ?? p.reference, lapses: r.lapses ?? p.lapses }));
-        // what to do next lives on the catalogue, and only matters once the card is cleared
-        api<Catalogue>("/catalogue")
-          .then((c) => setNextSlug([...c.today.review, ...c.today.new].find((s) => s !== slug) ?? null))
-          .catch(() => {});
+        setNextSlug(r.next ?? null);       // the scheduler's suggestion, now the card is cleared
       } else {
         setResult({ state: "failed", attempts: r.attempts, headline: r.headline.join("\n") || "The tests did not pass.", output: r.output });
         setTask((p) => p && p.attempt ? { ...p, attempt: { ...p.attempt, attempts: r.attempts } } : p);

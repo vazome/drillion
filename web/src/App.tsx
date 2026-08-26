@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Toggle } from "./ds/index.js";
-import { api, type Catalogue as CataloguePayload, type Health } from "./api";
+import { api, type Health } from "./api";
 import { Catalogue } from "./Catalogue";
 import { Task } from "./Task";
 import { Progress } from "./Progress";
@@ -55,22 +55,14 @@ function Header({ route, dark, setDark, total, version }: {
 export function App() {
   const route = useHash();
   const [dark, setDark] = useTheme();
-  // The header's counts live on the catalogue payload, so the header fetches them itself:
-  // routed off the catalogue — a deep link to #/progress or a task — it used to render blank.
-  // On #/ that is the load's second GET /api/catalogue, and it stays that way on purpose:
-  // Catalogue must keep its own fetch (it remounts per visit, which is what makes Today
-  // current after a pass, and it refetches after POST /api/focus). Sharing one fetch buys
-  // either a stale Today or a refetch on every route change — dearer than one local GET.
-  // The version rides on /api/health, the one endpoint that reports it, so the page
-  // never carries a number of its own to go stale.
+  // Both numbers ride on /api/health — the one endpoint that reports the version, and the
+  // cheapest place to ask how many tasks there are. The header fetches them itself because
+  // it renders on every route, including a deep link to #/progress or a task.
   const [head, setHead] = useState({ total: 0, version: "" });
   useEffect(() => {
-    api<CataloguePayload>("/catalogue")
-      .then((c) => setHead((h) => ({ ...h, total: c.stats.total })))
-      .catch(() => {});                    // a header without its counts is not worth an error
     api<Health>("/health")
-      .then((h) => setHead((s) => ({ ...s, version: h.version })))
-      .catch(() => {});
+      .then((h) => setHead({ total: h.tasks, version: h.version }))
+      .catch(() => {});                    // a header without its counts is not worth an error
   }, []);
 
   const slug = route.startsWith("/task/") ? decodeURIComponent(route.slice(6)) : null;

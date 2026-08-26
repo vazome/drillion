@@ -70,6 +70,9 @@ export interface RunResult {
   grade?: Grade; box?: number; stepped?: boolean; from_box?: number; due_in?: number; code?: string;
   /** why `grade` landed where it did — the cause, never par's number. See issue #13. */
   reason?: string; reference?: string; lapses?: number;
+  /** the scheduler's one suggestion for what to sit down with next, or null when the
+   *  day's queue is empty. Only sent on a pass — clearing the card is what asks it. */
+  next?: string | null;
 }
 
 export class ApiError extends Error {

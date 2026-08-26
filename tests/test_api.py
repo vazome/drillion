@@ -111,6 +111,7 @@ async def _stub_to_pass(api, path):
     assert run["from_box"] == 0  # ...and it is a climb, not a fall
     assert run["reason"] == "the runs it took"  # the cause, never par's number
     assert run["reference"].startswith("def _reference(")  # passing is what opens it
+    assert run["next"] is None  # the only card in this fixture is the one just cleared
     body = region.cut(path.read_text()).body
     assert region.stub(body) == body  # passing puts the stub back on disk
 

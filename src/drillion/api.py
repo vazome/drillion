@@ -56,7 +56,7 @@ from .region import (
     write_region,
 )
 from .runner import run_tests, summarise
-from .scheduler import LADDER, LAPSE_LIMIT, buried, due_today, queue
+from .scheduler import LADDER, LAPSE_LIMIT, buried, due_today, pick, queue
 from .settings import settings
 from .state import card, reading, today, writing
 
@@ -403,6 +403,8 @@ def run_task(slug: str, edit: Edit):
                 "code": code,
                 "reference": solution_text(meta["path"]),  # passing is what opens it
                 "lapses": card(st, slug)["lapses"],
+                # what to do next, now the card is cleared: the scheduler's one suggestion
+                "next": pick(st, tasks())[0],
             }  # the page reads lapse_limit off /task
         return resp | {"etag": etag(new_src)}
 
