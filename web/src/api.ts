@@ -14,6 +14,8 @@ export interface Row {
    *  already lowercased for the search box. `GET /api/task` sends `spec_md` instead. */
   text?: string;
 }
+/** GET /api/health — the version the header shows; never hardcode it here. */
+export interface Health { status: string; version: string; tasks: number; root: string }
 export interface Catalogue {
   focus: string | null; tags: string[]; tiers: string[]; tracks: string[];
   today: {
