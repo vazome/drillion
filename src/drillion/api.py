@@ -36,6 +36,7 @@ from .attempts import (
     attempt_view,
     current,
     next_hint,
+    nudge_due,
     open_attempt,
     record_pass,
     solution_text,
@@ -154,6 +155,11 @@ def _payload(st, slug, meta, src):
     show_code = c["seen"] > 0 and (
         att["solution"]["unlocked"] if o else c["due"] > today()
     )
+    # The reference reads the same rule from the other side: passing the task is what opens
+    # it, and the next sitting on that card starts clean again. While an attempt is open only
+    # the deliberate peek opens it — `unlocked` goes true as soon as the gate's price has been
+    # spent, and taking the answer is what marks the attempt, so affording it is not taking it.
+    show_ref = o["solution_shown"] if o else show_code
     return {
         "slug": slug,
         "meta": public(meta),
@@ -166,6 +172,7 @@ def _payload(st, slug, meta, src):
         "status": _status(st, slug),
         "lapses": c["lapses"],
         "lapse_limit": LAPSE_LIMIT,
+        "reference": solution_text(meta["path"]) if show_ref else None,
         **att,
         "archive": [
             {
@@ -358,16 +365,23 @@ def run_task(slug: str, edit: Edit):
             # infer: `struggled` and a `quick` at the top box both clamp, and an unseen
             # card already sits in box 0. The page renders this; it does not recompute it.
             was = card(st, slug)["box"]
-            grade, gap, box = record_pass(st, slug, meta, code)  # drops the attempt
-            log.info("%s %s box=%s due in %sd", slug, grade, box, gap)
+            grade, gap, box, reason = record_pass(
+                st, slug, meta, code
+            )  # drops the attempt
+            log.info("%s %s box=%s due in %sd (%s)", slug, grade, box, gap, reason)
             new_src = splice(new_src, stub(body))
             write_region(meta["path"], new_src)  # back to the stub
+            # `from_box` is where the card stood before the grade landed: `struggled` steps a
+            # card *down*, so the page needs the direction as well as the fact of a move.
             resp |= {
                 "grade": grade,
                 "box": box,
                 "stepped": box != was,
+                "from_box": was,
+                "reason": reason,
                 "due_in": gap,
                 "code": code,
+                "reference": solution_text(meta["path"]),  # passing is what opens it
                 "lapses": card(st, slug)["lapses"],
             }  # the page reads lapse_limit off /task
         return resp | {"etag": etag(new_src)}
@@ -376,9 +390,8 @@ def run_task(slug: str, edit: Edit):
 @app.post("/api/task/{slug}/touch")
 def touch_task(slug: str):
     with writing() as st:  # no catalogue lookup: this runs every 60 s and
-        return {
-            "active": current(st, slug)["active"]
-        }  # only an opened — known — slug is open
+        o = current(st, slug)  # only an opened — known — slug is open
+        return {"active": o["active"], "nudge": nudge_due(o)}
 
 
 @app.post("/api/task/{slug}/hint")

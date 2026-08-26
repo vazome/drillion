@@ -24,7 +24,18 @@ type Gate = { at: "hints" | "solution" | "editor"; message: string } | null;
 type Result =
   | { state: "idle" | "running" }
   | { state: "failed"; attempts: number; headline: string; output: string }
-  | { state: "passed"; grade: string; box: number; stepped: boolean; dueIn: number; attempts: number; code: string };
+  | { state: "passed"; grade: string; box: number; stepped: boolean; fromBox: number; reason: string; dueIn: number; attempts: number; code: string };
+
+/** The pass banner's one line about the card. A `struggled` pass steps a card *down* the
+ *  ladder, so a move has a direction: `stepped` is the server's answer to whether the card
+ *  moved at all, and the new box against the one it came from says which way. Exported so
+ *  web/check.mjs can hold the copy to every case. */
+export function stepLine(grade: string, box: number, fromBox: number, stepped: boolean) {
+  if (stepped) return box < fromBox ? "the card stepped back a box — it comes back sooner" : "the card stepped up";
+  if (box === BOXES - 1) return "the card is already in the top box and stays there";
+  if (box === 0) return "the card is already in the first box and stays there";
+  return `${grade} keeps the card where it is`;
+}
 
 export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [task, setTask] = useState<TaskData | null>(null);
@@ -41,6 +52,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [nextHintIn, setNextHintIn] = useState<number | null>(null);
   const [nextSlug, setNextSlug] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);          // a hint spent twice cannot be un-spent
+  const [nudge, setNudge] = useState(false);        // the server's offer of a hint, not ours
+  const [nudgeOff, setNudgeOff] = useState(false);  // ...waved away for this sitting
 
   // Refs carry the live values into the async chain; state alone would capture a stale closure.
   const codeRef = useRef(""), etagRef = useRef(""), dirtyRef = useRef(false);
@@ -57,6 +70,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     setTask(p); etagRef.current = p.etag; attemptRef.current = !!p.attempt;
     setActive(p.attempt?.active ?? 0);
     setNextHintIn(p.hints.next_in);
+    setNudge(p.nudge);
     if (!keepCode) { setCode(p.code); codeRef.current = p.code; setDirty(false); dirtyRef.current = false; }
   }, []);
 
@@ -70,7 +84,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   // ---- load, and offer a newer local draft over what the file holds
   useEffect(() => {
     let live = true;
-    setTask(null); attemptRef.current = false; dropped.current = false; setError(null); setResult({ state: "idle" }); setConflict(null); setSolutionCode(null); setGate(null); setNextSlug(null);
+    setTask(null); attemptRef.current = false; dropped.current = false; setError(null); setResult({ state: "idle" }); setConflict(null); setSolutionCode(null); setGate(null); setNextSlug(null); setNudgeOff(false);
     api<TaskData>(`/task/${encodeURIComponent(slug)}`).then((p) => {
       if (!live) return;
       adopt(p);
@@ -154,8 +168,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     }, 1000);
     const beat = setInterval(() => {
       if (document.visibilityState !== "visible") return;
-      post<{ active: number }>(`/task/${encodeURIComponent(slug)}/touch`)
-        .then((r) => setActive(r.active)).catch(() => {});
+      post<{ active: number; nudge: boolean }>(`/task/${encodeURIComponent(slug)}/touch`)
+        .then((r) => { setActive(r.active); setNudge(r.nudge); }).catch(() => {});
     }, HEARTBEAT_MS);
     return () => { clearInterval(tick); clearInterval(beat); };
   }, [hasAttempt, passed, slug]);
@@ -170,10 +184,13 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       const r = await post<RunResult>(`/task/${encodeURIComponent(slug)}/run`, { code: codeRef.current, etag: etagRef.current });
       etagRef.current = r.etag;
       dirtyRef.current = false; setDirty(false); setSyntaxBad(false);
+      setNudge(false);                     // a run answers the nudge, whichever way it went
       if (r.passed) {
         localStorage.removeItem(draftKey(slug));
-        setResult({ state: "passed", grade: r.grade!, box: r.box!, stepped: !!r.stepped, dueIn: r.due_in!, attempts: r.attempts, code: r.code! });
+        setResult({ state: "passed", grade: r.grade!, box: r.box!, stepped: !!r.stepped, fromBox: r.from_box!, reason: r.reason!, dueIn: r.due_in!, attempts: r.attempts, code: r.code! });
         setCode(r.code!);
+        // the pass is what opens the reference, and what may have just hit the lapse limit
+        setTask((p) => p && ({ ...p, reference: r.reference ?? p.reference, lapses: r.lapses ?? p.lapses }));
         // what to do next lives on the catalogue, and only matters once the card is cleared
         api<Catalogue>("/catalogue")
           .then((c) => setNextSlug([...c.today.review, ...c.today.new].find((s) => s !== slug) ?? null))
@@ -197,6 +214,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       await ensureOpen();
       const r = await post<{ level: number; total: number; text: string }>(`/task/${encodeURIComponent(slug)}/hint`);
       setGate(null);
+      setNudge(false);                     // taking the offer is the way out of it
       setTask((p) => p && ({ ...p, hints: { ...p.hints, shown: [...p.hints.shown, r.text] } }));
       setNextHintIn(null);
       api<TaskData>(`/task/${encodeURIComponent(slug)}`).then((p) => setNextHintIn(p.hints.next_in)).catch(() => {});
@@ -264,6 +282,11 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const { meta, hints, solution: gateState, attempt } = task;
   const hintsLeft = hints.total - hints.shown.length;
   const hintReady = nextHintIn === null || nextHintIn <= 0;
+  /** Peeked this sitting, or earned by passing — either way the server decided it was open.
+   * `solution_shown` is what a reload reads back: a peek survives one, and still costs. */
+  const reference = solutionCode ?? task.reference;
+  const peeked = !!solutionCode || !!attempt?.solution_shown;
+  const flagged = task.lapses >= task.lapse_limit;
   /** The gate banner, under the control that raised it. The container is always in the tree
    * so screen readers have a live region to announce into when a message lands in it. */
   const notice = (at: Exclude<Gate, null>["at"]) => (
@@ -275,8 +298,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const runNo = passed ? result.attempts : attempt ? attempt.attempts + 1 : 0;   // the run you are on
   const resultNo = "attempts" in result ? result.attempts : 0;                   // the run this result came from
   // Whether the card moved is the server's answer, not ours — see RunResult.stepped.
-  const stepped = passed && result.stepped;
-  const atTop = passed && result.box === BOXES - 1;
+  const fell = passed && result.stepped && result.box < result.fromBox;
 
   return (
     <div style={{ maxWidth: 1500, margin: "0 auto" }}>
@@ -306,6 +328,14 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               <div style={{ ...LABEL, marginBottom: 10 }}>
                 Hints <span style={PLAIN}>· {hints.shown.length} of {hints.total} shown, unlocked by time on task</span>
               </div>
+              {/* At the lapse limit the task is what keeps losing, not the learner — and the
+                * hints right below are half of what the flag is pointing at. */}
+              {flagged ? (
+                <div style={{ ...ASIDE, color: "var(--text-muted)", marginBottom: 10 }}>
+                  You have struggled with this {plural(task.lapses, "time")}. The hints below, or the
+                  tasks it builds on, are the likelier problem — not you.
+                </div>
+              ) : null}
               {hints.shown.map((text, i) => (
                 <div key={i} style={{ background: "var(--surface-2)", borderRadius: "var(--radius)", padding: "10px 12px", marginBottom: 8 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>Hint {i + 1}</div>
@@ -325,12 +355,14 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
 
             <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
               <div style={{ ...LABEL, marginBottom: 10 }}>
-                Solution <span style={PLAIN}>· {solutionCode ? "revealed — this attempt is marked" : gateState.unlocked ? "unlocked" : `locked · needs ${plural(gateState.need_attempts, "more attempt")} and ${secs(gateState.need_secs)} more work`}</span>
+                Solution <span style={PLAIN}>· {peeked ? "revealed — this attempt is marked" : reference ? "open — you passed this one" : gateState.unlocked ? "unlocked" : `locked · needs ${plural(gateState.need_attempts, "more attempt")} and ${secs(gateState.need_secs)} more work`}</span>
               </div>
-              {solutionCode ? (
+              {reference ? (
                 <div style={{ display: "grid", gap: 8 }}>
-                  <NoticeBanner message="Solution shown — this pass won’t promote the card. It grades as struggled and stays in its box." actions={[]} />
-                  <SpecText text={"```python\n" + solutionCode + "\n```"} slug={slug} />
+                  {peeked
+                    ? <NoticeBanner message="Solution shown — this pass won’t promote the card. It grades as struggled and stays in its box." actions={[]} />
+                    : <div style={ASIDE}>The reference answer, for comparison with what you wrote. It closes again when this card comes back.</div>}
+                  <SpecText text={"```python\n" + reference + "\n```"} slug={slug} />
                 </div>
               ) : (
                 <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
@@ -370,6 +402,14 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             </div>
           ) : null}
           {notice("editor")}
+          {/* Half an hour of reading with nothing run: an offer, never a scold. Taking the hint
+            * or running the tests clears it at the server; "Not now" hides it for this sitting. */}
+          {nudge && !nudgeOff && !passed ? (
+            <div className="m-drop">
+              <NoticeBanner message="Half an hour on this and nothing run yet — a hint is not cheating. You cannot work out something nobody has told you about."
+                actions={[{ label: `Show hint ${hints.shown.length + 1}`, onClick: hint }, { label: "Not now", onClick: () => setNudgeOff(true) }]} />
+            </div>
+          ) : null}
           {task.has_given ? <NoticeBanner message="This task ships given code above solve() — read it, but leave it alone." actions={[]} /> : null}
 
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
@@ -413,13 +453,17 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               </Collapsible>
             ) : null}
 
+            {/* #13: the verdict came with no rubric. The cause, post-pass, never par's number. */}
+            {passed && result.reason ? (
+              <div style={{ ...ASIDE, marginTop: 8 }}>Why {result.grade}: {result.reason}.</div>
+            ) : null}
+
             {passed ? (
               <div style={{ marginTop: 10, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                <span className={stepped ? "m-step" : undefined} style={{ display: "inline-flex" }}><LadderMeter box={result.box + 1} /></span>
+                {/* the climb animation would read as a promotion on a card that just fell */}
+                <span className={result.stepped ? (fell ? "m-fade" : "m-step") : undefined} style={{ display: "inline-flex" }}><LadderMeter box={result.box + 1} /></span>
                 <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                  {stepped ? "the card stepped up"
-                    : atTop ? "the card is already in the top box and stays there"
-                    : `${result.grade} keeps the card where it is`} — code archived, stub restored for next time
+                  {stepLine(result.grade, result.box, result.fromBox, result.stepped)} — code archived, stub restored for next time
                 </span>
                 <div style={{ flex: 1 }} />
                 <Button variant="quiet" onClick={() => { location.hash = "#/"; }}>Back to Today</Button>
