@@ -258,16 +258,15 @@ def run_task(slug: str, edit: Edit):
                 **summarise(out, bounds(new_src))}
         log.info("%s passed=%s attempts=%s", slug, passed, o["attempts"])
         if passed:
-            # The box the card sat in before grading, or null when it was never seen.
-            # A pass at the top box clamps, so only this tells the page whether the card
-            # actually moved — it cannot infer that from the grade alone.
-            c = card(st, slug)
-            was = c["box"] if c["seen"] else None
+            # Whether the card actually moved is the scheduler's fact, not the page's to
+            # infer: `struggled` and a `quick` at the top box both clamp, and an unseen
+            # card already sits in box 0. The page renders this; it does not recompute it.
+            was = card(st, slug)["box"]
             grade, gap, box = record_pass(st, slug, meta, code)     # drops the attempt
             log.info("%s %s box=%s due in %sd", slug, grade, box, gap)
             new_src = splice(new_src, stub(body))
             write_region(meta["path"], new_src)                     # back to the stub
-            resp |= {"grade": grade, "box": box, "box_before": was,
+            resp |= {"grade": grade, "box": box, "stepped": box != was,
                      "due_in": gap, "code": code}
         return resp | {"etag": etag(new_src)}
 

@@ -75,6 +75,7 @@ async def _stub_to_pass(api, path):
                           json={"code": solved, "etag": put.json()["etag"]})).json()
     assert run["passed"] is True and run["attempts"] == 2
     assert run["grade"] in scheduler.GRADES and run["due_in"] == scheduler.LADDER[run["box"]]
+    assert run["box"] == 1 and run["stepped"] is True         # box 0 -> 1: a real promotion
     body = region.cut(path.read_text()).body
     assert region.stub(body) == body                  # passing puts the stub back on disk
 
@@ -148,6 +149,29 @@ async def _guards(api, path):
     assert state.load()["archive"] == {}              # an untouched stub is not worth keeping
 
 
+async def _struggled_first_sighting(api, _path):
+    """The card the page kept claiming had stepped up.
+
+    Three attempts is `struggled`, `struggled` is +0, and a never-seen card is already
+    in box 0 — so this pass moves nothing. The server says so; the page only renders it.
+    """
+    task = (await api.post(f"/api/task/{SLUG}/open")).json()
+    assert state.card(state.load(), SLUG) == {"box": 0, "due": state.today(), "seen": 0}
+
+    etag = task["etag"]
+    for _ in range(2):                       # two failures put the pass out of `pass` range
+        run = (await api.post(f"/api/task/{SLUG}/run",
+                              json={"code": task["code"], "etag": etag})).json()
+        assert run["passed"] is False
+        etag = run["etag"]
+
+    solved = task["code"].replace("raise NotImplementedError", PASSING)
+    run = (await api.post(f"/api/task/{SLUG}/run", json={"code": solved, "etag": etag})).json()
+    assert run["passed"] is True and run["attempts"] == 3
+    assert run["grade"] == "struggled" and run["box"] == 0
+    assert run["stepped"] is False           # box 0 -> box 0: it did not step anywhere
+
+
 async def _assets(api, _path):
     """Images and clips a README points at — a filename, never a path."""
     ok = await api.get(f"/api/task/{SLUG}/assets/shape.svg")
@@ -169,6 +193,10 @@ def test_the_api_carries_a_task_from_stub_to_pass():
 
 def test_the_api_guards_its_edges():
     _api(_guards)
+
+
+def test_a_struggled_first_sighting_does_not_step_up():
+    _api(_struggled_first_sighting)
 
 
 def test_the_api_serves_a_tasks_assets():

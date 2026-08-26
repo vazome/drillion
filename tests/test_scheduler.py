@@ -80,5 +80,7 @@ def test_the_web_ladder_matches_the_scheduler():
         found = re.search(pattern, (ROOT / rel).read_text())
         assert found, f"the ladder intervals went missing from {rel}"
         assert [int(n) for n in re.findall(r"\d+", found[1])] == scheduler.LADDER, rel
-    # and the pass banner names the ladder's height: "box 3 of 5"
-    assert f"of {len(scheduler.LADDER)}" in (ROOT / "web/src/Task.tsx").read_text()
+    # and Task.tsx names the height once — the pass banner's "box 3 of 5" and its
+    # top-box copy both read it, so this is the only literal left to drift.
+    found = re.search(r"const BOXES = (\d+)", (ROOT / "web/src/Task.tsx").read_text())
+    assert found and int(found[1]) == len(scheduler.LADDER), "web/src/Task.tsx"
