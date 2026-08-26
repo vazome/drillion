@@ -18,6 +18,12 @@ REQUIRED = ("title", "difficulty", "tier", "minutes", "tags")
 BROWSER = ("topic", "title", "difficulty", "tier", "track", "tags", "prereqs", "source")
 # `minutes` is deliberately absent: par time is grade_of()'s input, not the learner's to see.
 HINT = re.compile(r"^### Hint \d+[ \t]*$", re.MULTILINE)
+# The four sections every one of the 171 tasks authors, and the only ones `search_text`
+# keeps. `## Read first` is links, and `## Introduction` / `## Instructions` are the
+# imported Exercism prose — together they triple the text for words already said above.
+SEARCHED = ("why", "you get", "you return", "rules")
+SECTION = re.compile(r"^## +(.+)$", re.MULTILINE)
+FENCE = re.compile(r"^```.*?^```", re.DOTALL | re.MULTILINE)
 _cache = (
     None,
     None,
@@ -28,6 +34,22 @@ def public(meta):
     """The fields the browser may see. An allowlist, so a field added to the record
     is private until someone puts it here — paths, hints and the spec never are."""
     return {k: meta[k] for k in BROWSER if k in meta}
+
+
+def search_text(spec_md):
+    """What a task is about, flattened into one line the catalogue can substring-match.
+
+    The catalogue's search box only ever saw titles, so a learner had to already know a
+    task's name to find it. This ships the prose with the row instead: the four authored
+    sections, minus fenced code, whitespace squeezed out and lowercased, so the client
+    filter is `row.text.includes(needle)` with no per-keystroke work. ~2 KB a task."""
+    parts = SECTION.split(spec_md)  # [before, head, body, head, body, ...]
+    kept = [
+        body
+        for head, body in zip(parts[1::2], parts[2::2])
+        if head.strip().lower() in SEARCHED
+    ]
+    return " ".join(FENCE.sub(" ", " ".join(kept)).split()).lower()
 
 
 def _stamp(folder):
@@ -92,6 +114,7 @@ def tasks():
             "dir": folder,
             "hints": hints,
             "spec_md": spec_md,
+            "search_text": search_text(spec_md),
         }
     _cache = (key, out)
     return out

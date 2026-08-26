@@ -247,10 +247,14 @@ def catalogue():
         all_tasks = tasks()
         q = queue(st, all_tasks)
         q["recent"] = _recent(st, all_tasks)
+        # `text` is the spec flattened for the search box (#14) — the same prose the
+        # task page already shows, so nothing leaks. Deliberately outside `public()`'s
+        # allowlist, because GET /api/task ships the real spec_md instead.
         rows = [
             {
                 "slug": slug,
                 **public(m),
+                "text": m["search_text"],
                 "status": _status(st, slug),
                 **{k: card(st, slug)[k] for k in ("box", "due", "seen", "lapses")},
             }
