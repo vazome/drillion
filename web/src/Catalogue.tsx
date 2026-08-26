@@ -263,7 +263,10 @@ export function Catalogue() {
                 <SortHead label="Status" col="status" sort={sort} onSort={setSort} style={{ width: COL.status }} />
                 <ResetSort disabled={unsorted} onClick={() => setSort(DEFAULT_SORT)} />
               </div>
-              <div className="m-stagger">{sorted.map((row, i) => <ListRow key={row.slug} row={row} first={i === 0} />)}</div>
+              {/* no `m-stagger` here: it is an arrival animation, and this list re-orders on every
+                * sort and every keystroke in the search box — 171 rows replaying dsRise each time
+                * reads as a flicker, not as a list that moved. The Today card keeps it; it arrives once. */}
+              <div>{sorted.map((row, i) => <ListRow key={row.slug} row={row} first={i === 0} />)}</div>
             </>}
       </Card>
     </div>

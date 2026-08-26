@@ -347,10 +347,22 @@ def set_focus(focus: Focus):
         return {"focus": st["focus"]}
 
 
+class _Web(StaticFiles):
+    """web/dist, resolved per request and optional.
+
+    `check_dir=False` only skips the constructor's check: Starlette still stats the directory
+    on the first request and raises `RuntimeError` if it is missing. A clone that has not run
+    `pnpm build` yet — CI between `pytest` and the web job, or a machine without pnpm — must
+    get a 404 on `/`, not a 500 on every unmatched route. CI runs pytest before the web build,
+    so it is the standing guard against this coming back."""
+
+    async def check_config(self):
+        return
+
+
 # The page itself, last: an unmatched /api/... must 404 as JSON, not as a missing file.
-# check_dir=False resolves the directory per request, so `serve()` may build web/dist after
-# this module is imported — and a missing build 404s instead of breaking the API at import.
-app.mount("/", StaticFiles(directory=settings.web_dist, html=True, check_dir=False), name="web")
+# Mounted rather than resolved at import, so `serve()` may build web/dist after this module loads.
+app.mount("/", _Web(directory=settings.web_dist, html=True, check_dir=False), name="web")
 
 
 def _open_browser(url):
