@@ -145,7 +145,11 @@ material around it:
 ## Hints                     Exercism .docs/hints.md content folded into Hint 1–2 where it fits;
                              Hint 3 = ours, the same idea on different data
 ```
-Attribution: frontmatter `source:` plus a last line `*Adapted from [exercism/python](…) — MIT.*`.
+Attribution: frontmatter `source:` plus `*Adapted from [exercism/python](…) — MIT.*` placed after
+`## Read first` and **before `## Hints`** — not at the end of the file. `guidance()` partitions the
+README at `\n## Hints\n` and splits the remainder on `### Hint N`, so a line below the hints is
+swallowed into hint 3 and never renders in the spec pane. `303_bob`, `335_nth_prime` and `338_clock`
+are the models.
 Never trim Exercism's wording to make room; the spec pane scrolls.
 
 ## API changes
