@@ -14,10 +14,11 @@ export function Table({ columns = [], rows = [], sortKey, sortDir = "asc", onSor
             const active = sortKey === col.key;
             const sortable = col.sortable && !!onSort;
             const arrow = active ? (sortDir === "asc" ? "▲" : "▼") : (hoverCol === col.key ? "▲" : "");
+            const nextDir = active && sortDir === "asc" ? "desc" : "asc";
             return (
-              <th key={col.key} scope="col" style={{ ...cell(col), padding: sortable ? 0 : "0 12px", height: "32px", borderBottom: "1px solid var(--border)", fontFamily: "var(--font-sans)", fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase", color: active ? "var(--text)" : "var(--text-muted)" }}>
+              <th key={col.key} scope="col" aria-sort={sortable ? (active ? (sortDir === "asc" ? "ascending" : "descending") : "none") : undefined} style={{ ...cell(col), padding: sortable ? 0 : "0 12px", height: "32px", borderBottom: "1px solid var(--border)", fontFamily: "var(--font-sans)", fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase", color: active ? "var(--text)" : "var(--text-muted)" }}>
                 {sortable ? (
-                  <button type="button" onClick={() => onSort(col.key, active && sortDir === "asc" ? "desc" : "asc")} aria-label={"Sort by " + col.label}
+                  <button type="button" onClick={() => onSort(col.key, nextDir)} aria-label={"Sort by " + col.label + " " + (nextDir === "asc" ? "ascending" : "descending")}
                     onMouseEnter={() => setHoverCol(col.key)} onMouseLeave={() => setHoverCol(null)}
                     onFocus={(e) => setFocusCol(ringTable(e) ? col.key : null)} onBlur={() => setFocusCol(null)}
                     style={{ width: "100%", height: "32px", display: "inline-flex", alignItems: "center", gap: "5px", justifyContent: col.align === "right" ? "flex-end" : "flex-start", padding: "0 12px", background: "transparent", border: "none", borderRadius: "var(--radius-sm)", font: "inherit", letterSpacing: "inherit", textTransform: "inherit", color: (active || hoverCol === col.key) ? "var(--text)" : "var(--text-muted)", cursor: "pointer", boxShadow: focusCol === col.key ? "var(--focus-ring)" : "none" }}>

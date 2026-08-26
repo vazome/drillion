@@ -13,6 +13,11 @@ The vendored design system in `web/src/ds/` diverges from the Claude Design proj
   `@media (prefers-reduced-motion: reduce)` block zeroes the durations but not the delays, so
   `.m-stagger` and `.m-step` still trickled in over up to 260 ms. We add `animation-delay: 0s`
   and `transition-delay: 0s` to that block.
+- a `Table` sortable-header accessibility fix — upstream leaves the sortable `<th>` without
+  `aria-sort` and gives the header button a static `aria-label`, so a screen-reader user gets
+  no signal of which column is sorted or what activating a header will do. We add `aria-sort`
+  (`"ascending"` / `"descending"` / `"none"`, omitted on non-sortable columns) and make the
+  button's `aria-label` name the direction the existing toggle will actually apply.
 
 Every entry above is a deliberate local divergence. Apply them upstream before any
 `/design-sync`, or the next sync will silently overwrite them.
