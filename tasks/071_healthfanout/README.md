@@ -5,7 +5,6 @@ tier: advanced
 minutes: 25
 prereqs: [40]
 tags: [concurrency]
-practices: [40, 43, 51]
 ---
 # concurrency — health-check a URL list in parallel
 

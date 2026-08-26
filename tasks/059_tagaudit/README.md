@@ -5,7 +5,6 @@ tier: packages
 minutes: 25
 prereqs: [57]
 tags: [cloud, boto3]
-practices: [17, 19, 57]
 ---
 # boto3 — audit EC2 instances for missing tags
 

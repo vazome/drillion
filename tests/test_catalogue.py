@@ -77,7 +77,7 @@ def test_topic_comes_from_the_folder_name():
         all_tasks = catalogue.tasks()
         assert list(all_tasks) == ["042_thing"]
         assert all_tasks["042_thing"]["topic"] == 42            # not in the frontmatter
-        assert all_tasks["042_thing"]["prereqs"] == [1] and all_tasks["042_thing"]["practices"] == []
+        assert all_tasks["042_thing"]["prereqs"] == [1]
         assert all_tasks["042_thing"]["hints"] == ["one", "two", "three"]
     finally:
         settings.root = keep
@@ -123,3 +123,15 @@ def test_the_scan_is_cached_but_an_edited_task_is_re_read():
     finally:
         settings.root = keep
         shutil.rmtree(tmp)
+
+
+def test_no_task_declares_practices():
+    """`practices` was a list of earlier tasks a task rehearses, authored on 16 of 171 and
+    read by nothing — not the scheduler, not the page. A field that 155 tasks lack cannot
+    be load-bearing, and read as a noun it invents a second unit of practice next to
+    **task**. It is gone; nothing may quietly start shipping it to the browser again (#6).
+    Rehearsal credit, if it is ever wanted, is a scheduler feature and needs the name
+    `rehearses`."""
+    assert "practices" not in catalogue.BROWSER
+    for slug, m in catalogue.tasks().items():
+        assert "practices" not in m, slug

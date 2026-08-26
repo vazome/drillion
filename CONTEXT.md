@@ -46,12 +46,6 @@ _Avoid_: topic, label, keyword, category
 The tasks that must already be passed before this one is offered as a **new pick**.
 _Avoid_: dependencies, requirements, blockers
 
-**Practices**:
-A verb, not a noun: the earlier **tasks** that this task rehearses. Declared per task and carried
-to the browser; nothing reads it yet (#6).
-_Avoid_: reading it as a noun — there is no such thing as "a practice" in drillion, only a task.
-Also avoid: reviews, related
-
 **Source**:
 Where a task came from. Provenance, and never a concept you can practise.
 _Avoid_: origin, author, credit
