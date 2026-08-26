@@ -3,6 +3,7 @@ name = "drillion"
 version = "0.1.0"
 description = "Spaced-repetition Python practice: pytest-graded tasks on a Leitner ladder, in a browser"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.13"
 # runtime, not dev: the app serves the API (fastapi/uvicorn), reads each task's
 # README frontmatter (pyyaml), grades in a pytest subprocess (pytest,

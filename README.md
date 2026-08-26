@@ -295,6 +295,12 @@ defines `_reference`/`_gen`/`test_*` or names `_reference` is refused.
 Sanity check for a new task: `uv run drillion selfcheck` splices `_reference` into every file and
 runs the tests — it must be green before the task is trusted.
 
+## License
+
+MIT — see [LICENSE](LICENSE). 84 of the 171 tasks carry Markdown adapted from Exercism's Python
+track (also MIT); each names its origin in a per-file `source:` field and attribution footer, and
+[NOTICE](NOTICE) reproduces the copyright and permission notice that travels with them.
+
 ## Status
 
 Backend, API, the folder-per-task Markdown format, the vocabulary above and all 171 tasks are done
