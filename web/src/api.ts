@@ -1,6 +1,6 @@
-// The JSON API in src/drillion/api.py. Every shape here is that file's response, nothing more.
+// Every shape here mirrors a response of src/drillion/api.py.
 
-export type Status = "new" | "due" | "open" | "done";   // api.py _status(): no fifth branch
+export type Status = "new" | "due" | "open" | "done";
 export type Grade = "quick" | "pass" | "struggled" | "abandoned";
 
 export interface Row {
@@ -10,16 +10,11 @@ export interface Row {
   status: Status; box: number; due: string; seen: number;
   /** Struggles on this card, never reset. At `stats.lapse_limit` the row says so. */
   lapses: number;
-  /** Put aside for today only — `POST /api/task/{slug}/bury`. Never a fifth `status`: the
-   *  card is still exactly what it was (`due`, usually), it is just not offered today, and
-   *  the bury lapses on its own tomorrow. Nothing about the schedule moves either way. */
+  /** Not offered today — `POST /api/task/{slug}/bury`. The schedule is untouched. */
   buried: boolean;
-  /** Catalogue rows only: the spec's Why / You get / You return / Rules, flattened and
-   *  already lowercased for the search box. `GET /api/task` sends `spec_md` instead. */
+  /** Catalogue rows only: the spec flattened and already lowercased for the search box. */
   text?: string;
-  /** Catalogue rows only: the prereqs this task has not passed yet, so it is not offered as
-   *  a new pick — `blocked()` in src/drillion/scheduler.py, focus and all. Empty on a task
-   *  already started, and never the page's to work out. */
+  /** Catalogue rows only: prereqs not yet passed, so the task is not offered as a new pick. */
   blocked?: string[];
 }
 /** GET /api/health — the version the header shows; never hardcode it here. */
@@ -33,9 +28,7 @@ export interface Catalogue {
     new: string[];
     recent: string[]; done_today: number;
     due_total: number; behind: boolean;
-    /** the one reason `new` is empty, named by `queue()` rather than inferred here, and
-     *  `null` whenever there is something new to offer. `ready` counts what is unlocked and
-     *  waiting for tomorrow; `nearest` is the task closest to opening. */
+    /** the one reason `new` is empty, named by `queue()`; null when there is something to offer */
     no_new: { why: "behind" | "focus" | "done" } | { why: "cap"; ready: number }
       | { why: "prereqs"; nearest: string } | null;
   };
@@ -53,34 +46,23 @@ export interface Task {
   spec_md: string; code: string; etag: string; has_given: boolean;
   marker_line: number; status: Status; buried: boolean;
   attempt: { attempts: number; hints: number; active: number; seed: number; solution_shown: boolean } | null;
-  /** the task has cost this many lapses; at `lapse_limit` it is flagged as one that keeps
-   *  beating you — a message about the task, never a punishment on the card */
+  /** at `lapse_limit` the task is flagged as one that keeps beating you */
   lapses: number; lapse_limit: number;
   /** the scheduler's return intervals, one per box */
   ladder: number[];
-  /** half an hour of active reading with nothing run and no hint taken. The server owns
-   *  the threshold; the page renders the offer. */
+  /** the server owns the half-hour threshold; the page renders the offer */
   nudge: boolean;
-  /** the reference answer, once the server's gate has opened it: `null` until the task has
-   *  been passed, and `null` again while that card is due back. Never the page's call. */
+  /** the reference answer once the server opens it; null until passed, and again while due back */
   reference: string | null;
   hints: { total: number; shown: string[]; next_in: number | null };
   solution: { unlocked: boolean; need_attempts: number; need_secs: number };
   archive: { date: string; grade: Grade; code?: string }[];
-  /** The learner's own words about this task — one note, edited in place, `""` when there is
-   *  none. It belongs to the task and not to the attempt: a grade, a re-attempt and an abandon
-   *  all leave it alone. `PUT /api/task/{slug}/note`; an empty note deletes it. */
+  /** The learner's one note on the task, `""` when there is none — `PUT /api/task/{slug}/note`. */
   note: string;
 }
 interface RunBase { attempts: number; headline: string[]; output: string; etag: string }
-/** The grade and everything it decided exist iff `passed` — which is how `run_task` builds
- *  the response — so `if (r.passed)` is what opens them. `stepped` is the scheduler's answer
- *  to "did the card move?": false for a `quick` that clamps at the top box, and for a first
- *  sighting that stayed in box 0. Never re-derive it from `box`. `from_box` is where the card
- *  stood before the grade landed: a `struggled` pass steps it *down*, so a move has a
- *  direction. `reason` is why `grade` landed where it did — the cause, never par's number
- *  (#13). `next` is the scheduler's one suggestion for what to sit down with next, null when
- *  the day's queue is empty. */
+/** The grade and everything it decided exist iff `passed`. `stepped` is the scheduler's
+ *  answer to whether the card moved — never re-derive it from `box`. */
 export type RunResult =
   | (RunBase & { passed: false })
   | (RunBase & {
@@ -89,9 +71,7 @@ export type RunResult =
       next: string | null;
     });
 
-/** Every non-2xx body api.py can send, in one all-optional shape: `{error, line, col}` for a
- *  refused edit, `{error, etag, code}` for the optimistic lock, `{error, wait_secs, exhausted}`
- *  for the hint gate and `{error, need_attempts, need_secs}` for the solution's. */
+/** Every non-2xx body api.py can send, in one all-optional shape. */
 export interface ApiErrorBody {
   error?: string; line?: number; col?: number;
   etag?: string; code?: string;

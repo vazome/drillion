@@ -5,7 +5,7 @@ import { Catalogue } from "./Catalogue";
 import { Task } from "./Task";
 import { Progress } from "./Progress";
 
-/** Hash routing, whole implementation. Three routes do not need a router. */
+/** Hash routing, whole implementation. */
 export function useHash() {
   const [hash, setHash] = useState(() => location.hash.slice(1) || "/");
   useEffect(() => {
@@ -16,8 +16,8 @@ export function useHash() {
   return hash;
 }
 
-/** Applied before first render and inside the setter, so `.dark` is never a frame behind —
- * the editor reads its colours straight off these variables with getComputedStyle. */
+/** Applied before first render as well as in the setter: the editor reads its colours
+ * straight off these variables, so `.dark` must never be a frame behind. */
 function applyTheme(dark: boolean) {
   document.documentElement.classList.toggle("dark", dark);
   localStorage.setItem("drillion-theme", dark ? "dark" : "light");
@@ -55,9 +55,6 @@ function Header({ route, dark, setDark, total, version }: {
 export function App() {
   const route = useHash();
   const [dark, setDark] = useTheme();
-  // Both numbers ride on /api/health — the one endpoint that reports the version, and the
-  // cheapest place to ask how many tasks there are. The header fetches them itself because
-  // it renders on every route, including a deep link to #/progress or a task.
   const [head, setHead] = useState({ total: 0, version: "" });
   useEffect(() => {
     api<Health>("/health")

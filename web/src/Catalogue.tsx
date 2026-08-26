@@ -6,29 +6,23 @@ import { Stats } from "./Stats";
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)", whiteSpace: "nowrap" as const };
 const FAINT = { fontSize: 12.5, color: "var(--text-faint)", whiteSpace: "nowrap" as const };
 const MONO = { fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)", fontVariantNumeric: "tabular-nums" as const };
-const STATUSES = ["new", "due", "open", "done"];   // api.py _status(): a seen, not-due card is "done"
+const STATUSES = ["new", "due", "open", "done"];
 const DIFFICULTY = ["easy", "medium", "hard"];     // the order the word means, not the alphabet
 const DAY = 86400000;
-// One column geometry for the header and the rows. The uppercase labels set the widths:
-// "DIFFICULTY" plus a sort arrow needs more room than the badge under it does.
+// one column geometry for the header and the rows; the uppercase labels set the widths
 const COL = { num: 30, path: 230, difficulty: 104, box: 56, status: 78, reset: 28 };
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 const num = (topic: number) => String(topic).padStart(3, "0");
 
-/** Today as the server means it: `state.py today()` is `date.today()`, a LOCAL date.
- * en-CA formats it as YYYY-MM-DD, which parses back to the same UTC midnight `due` does. */
+/** Today as a LOCAL YYYY-MM-DD, which parses back to the same UTC midnight `due` does. */
 const localToday = () => new Date().toLocaleDateString("en-CA");
 
-/** Everything `focus` may name, mirroring `_facets()` in src/drillion/scheduler.py —
- * the tier, the track and the tags alike. The server accepts any of the three, so the
- * catalogue must filter on all three or the screen disagrees with the scheduler. */
+/** Everything `focus` may name — tier, track and tags alike, as `_facets()` in scheduler.py.
+ * All three, or the screen disagrees with the scheduler. */
 const facets = (row: Row) => [row.tier, row.track, ...row.tags];
 
-/** The copy for `today.no_new`: the one reason New picks is empty, and the way back out of it.
- *
- * `queue()` in src/drillion/scheduler.py decides which reason it is and the payload carries
- * it, the way `today.behind` carries the cap — the page names it and never works it out. */
+/** The copy for `today.no_new`: the one reason New picks is empty, and the way back out. */
 function noPicks(no: NonNullable<Payload["today"]["no_new"]>, today: Payload["today"],
                  focus: string | null, by: Map<string, Row>) {
   const link = (slug: string) => {
@@ -71,7 +65,7 @@ function dueText(row: Row) {
   return days < 0 ? `${plural(-days, "day")} overdue` : `due in ${plural(days, "day")}`;
 }
 
-/** D13: a task's tier and its tags read as one filesystem-style path — `core/f-strings · loops`. */
+/** A task's tier and its tags as one path — `core/f-strings · loops`. */
 const Path = ({ row }: { row: Row }) => (
   <span title={`${row.tier}/${row.tags.join(" · ")}`} style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
     <span style={{ color: "var(--text-faint)" }}>{row.tier}/</span>
@@ -86,8 +80,7 @@ type SortKey = "topic" | "title" | "path" | "difficulty" | "box" | "status";
 type Sort = { key: SortKey; dir: "asc" | "desc" };
 const DEFAULT_SORT: Sort = { key: "topic", dir: "asc" };
 
-/** What each column compares on. `difficulty` and `status` rank by the meaning of the word,
- * so hard sorts past medium and the alphabet never gets a say. */
+/** What each column compares on; `difficulty` and `status` rank by meaning, not the alphabet. */
 const SORT_ON: Record<SortKey, (row: Row) => string | number> = {
   topic: (r) => r.topic,
   title: (r) => r.title.toLowerCase(),
@@ -97,8 +90,7 @@ const SORT_ON: Record<SortKey, (row: Row) => string | number> = {
   status: (r) => STATUSES.indexOf(r.status),
 };
 
-/** Sorted rows. Every column but `#` has ties, and rows that reshuffle between renders read
- * as a bug, so the task number breaks them — always ascending, whichever way the column goes. */
+/** Sorted rows. The task number breaks ties — always ascending, whichever way the column goes. */
 export function sortRows(rows: Row[], { key, dir }: Sort): Row[] {
   const on = SORT_ON[key], d = dir === "asc" ? 1 : -1;
   return [...rows].sort((a, b) => {
@@ -115,7 +107,7 @@ function useHover() {
 
 const href = (row: Row) => `#/task/${encodeURIComponent(row.slug)}`;
 
-/** A sub-header inside the Today card: what the rows under it are, and one quiet word on why. */
+/** A sub-header inside the Today card. */
 const Band = ({ label, aside, first = false }: { label: string; aside: string; first?: boolean }) => (
   <div style={{ display: "flex", alignItems: "center", gap: 10, padding: first ? "14px 0 8px" : "10px 0 6px", borderTop: first ? "none" : "1px solid var(--border)" }}>
     <span style={LABEL}>{label}</span>
@@ -123,11 +115,8 @@ const Band = ({ label, aside, first = false }: { label: string; aside: string; f
   </div>
 );
 
-/** The two quiet notes a row can carry: what it is waiting for, and whether it keeps beating
- * you. Muted text rather than a badge, deliberately — the lapse flag says "the hints or the
- * prereqs may be the problem, not you", which is worth mentioning and not worth shouting.
- * The prereq numbers are plain text here: the whole row is one anchor already, and an anchor
- * inside an anchor is not valid HTML. The Today card names them as real links instead. */
+/** The quiet notes a row can carry: what it waits on, whether it keeps beating you.
+ * The prereq numbers stay plain text — the whole row is one anchor already. */
 function Flags({ row, blocked, limit }: { row: Row; blocked: Row[]; limit: number }) {
   const marks: ReactNode[] = [];
   if (blocked.length)
@@ -146,11 +135,7 @@ function Flags({ row, blocked, limit }: { row: Row; blocked: Row[]; limit: numbe
 }
 
 /** A row of the Today card: when it is due, where it sits on the ladder, and one way in.
- * No status badge — the section it is under already says what it is.
- *
- * `onBury` puts a real button on the row, so the row is a flex box holding the link rather
- * than being the link: an anchor inside an anchor is invalid HTML, and so is a button inside
- * one. Without it the row is exactly what it always was. */
+ * `onBury` puts a real button on it, so the row holds the link rather than being the link. */
 function TodayRow({ row, ladder, limit, onBury }: { row: Row; ladder: number[]; limit: number; onBury?: (buried: boolean) => void }) {
   const [hover, hoverProps] = useHover();
   return (
@@ -162,8 +147,7 @@ function TodayRow({ row, ladder, limit, onBury }: { row: Row; ladder: number[]; 
         <LadderMeter box={rung(row)} intervals={ladder} />
         <span style={{ ...MONO, width: 30, textAlign: "right" }}>{num(row.topic)}</span>
         <span style={{ fontSize: 14.5, fontWeight: 500, flex: 1, display: "flex", alignItems: "baseline", gap: 10 }}>
-          {/* nothing in this card is blocked: a new pick is offered only once its prereqs are
-            * cleared, and recent work has been seen. Only the lapse flag can show here. */}
+          {/* nothing in this card is blocked: a new pick is offered only once its prereqs clear */}
           {row.title}<Flags row={row} blocked={[]} limit={limit} />
         </span>
         {/* the whole row is the link; the button is the affordance, so it takes no focus of its own */}
@@ -178,8 +162,8 @@ function TodayRow({ row, ladder, limit, onBury }: { row: Row; ladder: number[]; 
   );
 }
 
-/** A row of the list: quiet id, title, the tier/tag path, difficulty, ladder, status.
- * The trailing spacer holds the reset control's column, so the header stays aligned. */
+/** A row of the list. The trailing spacer holds the reset control's column, so the header
+ * stays aligned. */
 function ListRow({ row, blocked, ladder, limit, first = false }: { row: Row; blocked: Row[]; ladder: number[]; limit: number; first?: boolean }) {
   const [hover, hoverProps] = useHover();
   return (
@@ -199,8 +183,7 @@ function ListRow({ row, blocked, ladder, limit, first = false }: { row: Row; blo
   );
 }
 
-/** A column header that sorts, mirroring ds/Table's: hover previews the arrow, the sorted
- * column keeps it in the accent. The list is anchors rather than a `<table>`, so the state
+/** A column header that sorts. The list is anchors rather than a `<table>`, so the state
  * goes in the button's own name — `aria-sort` needs table semantics to mean anything. */
 function SortHead({ label, col, align, sort, onSort, style }: {
   label: string; col: SortKey; align?: "right"; sort: Sort; onSort: (s: Sort) => void; style: CSSProperties;
@@ -220,9 +203,8 @@ function SortHead({ label, col, align, sort, onSort, style }: {
   );
 }
 
-/** Back to `#` ascending. It sits past Status in the header rather than with the filters,
- * because it undoes the header, not the filtering — and it stays put, greyed, when there is
- * nothing to undo, so the column it occupies never changes width. */
+/** Back to `#` ascending. Stays put, greyed, when there is nothing to undo, so the column
+ * it occupies never changes width. */
 function ResetSort({ disabled, onClick }: { disabled: boolean; onClick: () => void }) {
   const [hover, hoverProps] = useHover();
   return (
@@ -253,8 +235,7 @@ export function Catalogue() {
     post("/focus", { tag }).then(load).catch((e) => setNotice(`Focus is still “${focus ?? "any"}” — the change did not save: ${e.message}`));
   };
 
-  // burying moves a card in and out of today's queue, so the queue, the counts and the row
-  // all change at once — reload the payload rather than patch three places from one boolean
+  // a bury moves the queue, the counts and the row at once — reload rather than patch three
   const setBuried = (row: Row, buried: boolean) => {
     setNotice(null);
     post(`/task/${encodeURIComponent(row.slug)}/bury`, { buried }).then(load)
@@ -264,8 +245,7 @@ export function Catalogue() {
   const by = useMemo(() => new Map((data?.tasks ?? []).map((e) => [e.slug, e])), [data]);
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    // `text` is the spec, flattened and lowercased by the server — the same substring
-    // contract the title already offered, so every filter still composes with it (#14)
+    // `text` is the spec, already flattened and lowercased by the server
     return (data?.tasks ?? []).filter((e) =>
       (!needle || e.title.toLowerCase().includes(needle) || e.slug.includes(needle)
         || num(e.topic).includes(needle) || !!e.text?.includes(needle)) &&
@@ -281,11 +261,9 @@ export function Catalogue() {
   const { today, stats } = data;
   const pick = (slugs: string[]) => slugs.map((s) => by.get(s)).filter(Boolean) as Row[];
   const review = pick(today.review), fresh = pick(today.new), recent = pick(today.recent);
-  // every buried card, not just the ones today's panel would have offered: a bury made from
-  // the task page has to show up here too, or the only way to see it is the row you left
+  // every buried card, not just today's: a bury made from the task page shows up here too
   const buried = data.tasks.filter((e) => e.buried);
-  // ...and a buried card collects there rather than twice: recent activity holds everything
-  // worked this week, buried or not, and one card on two rows of one panel is just noise
+  // ...and only there: one card on two rows of the same panel is noise
   const stillOffered = recent.filter((e) => !e.buried);
   const filtered = !!(q || status || activeTags.length || focus);
   const unsorted = sort.key === DEFAULT_SORT.key && sort.dir === DEFAULT_SORT.dir;
@@ -298,8 +276,7 @@ export function Catalogue() {
   };
   const here = new Set(rows.flatMap((e) => e.tags).concat(activeTags));
   const tagsHere = data.tags.filter((t) => here.has(t));
-  // `today.review` is capped, so its length is not the backlog. A cap the page hides reads
-  // as "done for today" with ninety cards still waiting, so say both numbers out loud.
+  // `today.review` is capped, so its length is not the backlog — say both numbers out loud
   const dueLine = !today.due_total ? "nothing due"
     : review.length < today.due_total ? `showing ${review.length} of ${today.due_total} due`
     : plural(today.due_total, "review");
@@ -308,7 +285,6 @@ export function Catalogue() {
     fresh.length ? `${fresh.length} new ${fresh.length === 1 ? "pick" : "picks"}` : null,
     `${today.done_today} done today`,
   ].filter(Boolean).join(" · ");
-  // The reason New picks is empty, and the way back out of it — the server names it.
   const empty = today.no_new ? noPicks(today.no_new, today, focus, by) : null;
   const act = empty?.act === "backlog" ? { label: "Show the backlog", run: () => setStatus("due") }
     : empty?.act === "focus" ? { label: "Clear focus", run: () => setFocus(null) }
@@ -327,24 +303,16 @@ export function Catalogue() {
 
       <Card padding="0 18px" style={{ overflow: "hidden" }}>
         <div className="m-stagger">
-          {/* Recent activity leads, and it is always here: coming back mid-week, the way into
-            * what you were last doing beats the queue. The daily cap rations new material and
-            * has no say here — this lists as many as the week holds. */}
           <Band label="Recent activity" aside={`last ${stats.window} days`} first />
           {stillOffered.length
             ? stillOffered.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
                 message="Nothing yet this week. Whatever you open collects here, passed or not." />}
-          {/* the sub-header carries the focus note, so it stays on screen on an empty day too */}
           <Band label="New picks" aside={today.behind ? "paused — catching up" : focus ? `from ${focus}` : "any"} />
           {fresh.length
             ? fresh.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
                 message={empty!.message} actionLabel={act?.label} onAction={act?.run} />}
-          {/* The way to see a bury, and the way out of one before tomorrow takes it. No band
-            * on a day with nothing buried: an empty state would describe a control most days
-            * never touch. These cards keep their box, their due date and their counts — the
-            * only thing a bury changed is that they are not offered until tomorrow. */}
           {buried.length ? <>
             <Band label="Buried" aside="not today — back in the queue tomorrow" />
             {buried.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)}
@@ -356,7 +324,6 @@ export function Catalogue() {
         <Input value={q} onChange={setQ} placeholder="search tasks and specs…" ariaLabel="Search tasks by title, number or what the spec says" style={{ width: 260 }} />
         <Select value={status} onChange={setStatus} options={STATUSES} placeholder="any status" ariaLabel="Filter by status" style={{ width: 150 }} />
         <div style={{ width: 1, height: 24, background: "var(--border)" }} />
-        {/* a tier or track chip is also the focus: it narrows the list and what the scheduler picks next */}
         {data.tiers.map((t) => <TagChip key={t} label={t} active={focus === t} onClick={() => setFocus(focus === t ? null : t)} />)}
         {data.tracks.length ? <div style={{ width: 1, height: 24, background: "var(--border)" }} /> : null}
         {data.tracks.map((t) => <TagChip key={t} label={t} active={focus === t} onClick={() => setFocus(focus === t ? null : t)} />)}
@@ -364,15 +331,10 @@ export function Catalogue() {
         <span style={FAINT}>{rows.length} of {stats.total} tasks{activeTags.length > 1 ? " · tags matched with AND" : ""}</span>
         {filtered ? <Button variant="quiet" onClick={clear}>Clear</Button> : null}
       </div>
-      {/* The map is the vocabulary of what is on screen, wrapped and whole — no scroller.
-        * A tag with nothing under the current filter is a dead click, so it drops out; the
-        * ones already on stay regardless, or a filter that matched nothing could not be undone. */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {tagsHere.map((t) => <TagChip key={t} label={t} active={tagOn(t)} onClick={() => toggleTag(t)} />)}
       </div>
 
-      {/* one flat table: the tier is the first segment of every row's path, so a band
-        * header for it was a second copy of the same word and a count nobody reads */}
       <Card padding={0} style={{ overflow: "hidden" }}>
         {sorted.length === 0
           ? <EmptyState message="No task matches those filters. Loosen a tag or clear the search." actionLabel="Clear filters" onAction={clear} />
@@ -386,9 +348,6 @@ export function Catalogue() {
                 <SortHead label="Status" col="status" sort={sort} onSort={setSort} style={{ width: COL.status }} />
                 <ResetSort disabled={unsorted} onClick={() => setSort(DEFAULT_SORT)} />
               </div>
-              {/* no `m-stagger` here: it is an arrival animation, and this list re-orders on every
-                * sort and every keystroke in the search box — 171 rows replaying dsRise each time
-                * reads as a flicker, not as a list that moved. The Today card keeps it; it arrives once. */}
               <div>{sorted.map((row, i) => <ListRow key={row.slug} row={row} first={i === 0}
                 blocked={pick(row.blocked ?? [])} ladder={stats.ladder} limit={stats.lapse_limit} />)}</div>
             </>}
