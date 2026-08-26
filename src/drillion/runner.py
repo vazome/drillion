@@ -1,6 +1,6 @@
-"""Running the tests: exercise code only ever executes in a pytest subprocess.
+"""Running the tests: task code only ever executes in a pytest subprocess.
 
-The server never imports a drill, so a runaway loop or a stray `sys.exit` costs a
+The server never imports a task, so a runaway loop or a stray `sys.exit` costs a
 subprocess, not the session. `summarise` turns pytest's output into the handful of
 lines the browser shows, in the editor's own line numbers.
 """
@@ -11,22 +11,22 @@ import re
 import subprocess
 import sys
 
-from .catalogue import exercises
+from .catalogue import tasks
 from .region import _solve, cut, splice, stub
 from .settings import settings
 
-_DRILL_LINE = re.compile(r"[\w./\\-]*drill\.py:(\d+)")
-# every drill.py is called drill.py, so pytest must name modules by path, not basename
+_TASK_LINE = re.compile(r"[\w./\\-]*task\.py:(\d+)")
+# every task.py is called task.py, so pytest must name modules by path, not basename
 _PYTEST = ["-q", "--no-header", "-p", "no:cacheprovider", "--import-mode=importlib"]
 
 
 def _env(**extra):
-    """`exercises/` on the path, so `from _lib import rng` works from any root."""
-    return {**os.environ, "PYTHONPATH": str(settings.exercises_dir), **extra}
+    """`tasks/` on the path, so `from _lib import rng` works from any root."""
+    return {**os.environ, "PYTHONPATH": str(settings.tasks_dir), **extra}
 
 
 def run_tests(path, seed):
-    """Exercise code only ever runs here, in its own process."""
+    """Task code only ever runs here, in its own process."""
     cmd = [sys.executable, "-m", "pytest", str(path), "-x", "--timeout=10", *_PYTEST]
     try:
         r = subprocess.run(cmd, env=_env(DRILLION_SEED=str(seed)), cwd=settings.root,
@@ -39,13 +39,13 @@ def run_tests(path, seed):
 def summarise(out, marker_line):
     """pytest output for the browser: the assertion lines, in editor coordinates.
 
-    The region starts at line 1 of drill.py, so the map is the identity — a frame
+    The region starts at line 1 of task.py, so the map is the identity — a frame
     is either the learner's or the grader's, and only the first gets a bare line."""
     def editor_line(m):
         n = int(m.group(1))
         return f"line {n}" if n < marker_line else m.group(0)
 
-    text = _DRILL_LINE.sub(editor_line, out)
+    text = _TASK_LINE.sub(editor_line, out)
     lines = text.split("\n")
     head = [ln for ln in lines if ln.startswith("E   ")][:6]
     return {"headline": head or [ln for ln in lines if ln.startswith(("FAILED", "ERROR"))][:6],
@@ -65,12 +65,12 @@ def _reference_call(body):
 
 
 def selfcheck():
-    """Does the whole set still work? Solve every exercise with its own _reference.
+    """Does the whole set still work? Solve every task with its own _reference.
     Returns the number of failures."""
-    exs = exercises()
+    all_tasks = tasks()
     made = []
     try:
-        for meta in exs.values():
+        for meta in all_tasks.values():
             src = meta["path"].read_text()
             path = meta["dir"] / "_selfcheck.py"      # an explicit path is always collected
             path.write_text(splice(src, _reference_call(cut(src).body)))
@@ -89,5 +89,5 @@ def selfcheck():
         return 1
     for slug in failed:
         print("FAILED", slug)
-    print(f"{len(exs) - len(failed)}/{len(exs)} ok")
+    print(f"{len(all_tasks) - len(failed)}/{len(all_tasks)} ok")
     return len(failed)

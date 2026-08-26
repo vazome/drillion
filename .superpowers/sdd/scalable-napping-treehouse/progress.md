@@ -326,3 +326,166 @@ practise is worse than deviating from "copy config.json verbatim".
 
 Prompts live in this session's scratchpad, not /tmp: phaseb-common.md, phaseb-I{1,2}.md,
 phaseb-review-common.md, phaseb-review-I{1,2}.md. Copy them forward if another content batch runs.
+
+## Task 6 (frontend) 2026-08-26 — built from the Claude Design system
+Design input: Claude Design project `drillion design system`
+(e20cf404-9878-452c-9bf7-b013f4cdd8da, "Mineral Blue"). Pulled to `web/src/ds/`: 5 token CSS files,
+17 components (`.jsx`, verbatim) and their prop contracts (assembled into `src/ds/index.d.ts` from
+the project's per-component `.d.ts`). NOT synced back — that project was authored in Claude Design,
+has no `_ds_sync.json` anchor, and `/design-sync` would overwrite hand-made work.
+
+STACK DEVIATION from the plan, under Daniel's "hard rule: use ponytail". The plan mandated
+Tailwind v4 + shadcn/ui + TanStack Query + react-router; all four were dropped:
+- the 17 design components use zero Tailwind classes (inline styles over CSS variables), so
+  Tailwind's only job would have been layout glue the design's own screens also do inline;
+- shadcn would be a second component library re-themed to match tokens already implemented —
+  the design's primitives are already accessible (native `<select>`, `role="switch"`,
+  `aria-expanded`, Enter/Space rows, `:focus-visible` rings);
+- 3 screens / 6 endpoints and no cache-invalidation web; the exercise page's in-order request
+  chain is hand-written either way, which is what TanStack Query would not have solved;
+- hash routing for 3 routes is 12 lines (`App.tsx: useHash`).
+Kept/added: `@uiw/react-codemirror` + `@codemirror/lang-python` + `@uiw/codemirror-themes`
+(the editor, themed from the tokens), `react-markdown` + `remark-gfm` +
+`remark-github-blockquote-alert`. Net: 4 mandated deps out, 3 in. Reviewer should check against
+this entry, not the plan's stack line. Say so if you want the mandated stack instead — it is a
+rewrite of the styling layer, not of the screens.
+
+SpecText replaced. The design shipped a hand-rolled regex Markdown parser; measured against the
+real corpus it mis-renders 143/171 READMEs (plain blockquotes), 113 (`_emphasis_`), 17 (ordered
+lists), 16 (h4+), 5 (nested lists). Same visual decisions, `react-markdown` underneath. Its
+Mermaid CDN loader and `assets/` video path were dropped: 0 of 171 drills use either, and a CDN
+in a local-first app is a bug (noted in the file).
+
+Two backend changes inside Task 6's scope:
+- `api.py` mounts `StaticFiles(..., check_dir=False)` unconditionally. This closes the Task 9
+  deferred minor ("static mount decided at import") and is what lets `serve()` build `web/dist`
+  after the module is imported.
+- `serve()` calls new `build_web()`: builds `web/dist` when missing or older than `web/src`,
+  via pnpm; warns and carries on if pnpm is absent (API still serves, `/` 404s). In the container
+  no `web/package.json` is copied, so it returns early and leaves the baked dist alone.
+Dockerfile: `node:24-slim AS web` stage added, `COPY --from=web /build/dist ./web/dist`.
+
+Off-by-one found by driving the real API, not by reading: `card["box"]` is a 0-based index into
+LADDER (0-4), while `LadderMeter` fills `box` cells 1-5. Catalogue rows now pass
+`ex.seen ? ex.box + 1 : 0` and the grade line reads `box ${result.box + 1} of 5`.
+
+`web/pnpm-workspace.yaml` is load-bearing on this machine: `/home/daniel/pnpm-workspace.yaml`
+makes $HOME one workspace, and without a local one `pnpm install` in `web/` silently installs
+the home package instead (exit 0, no node_modules).
+
+Verified: `pnpm build` clean (tsc + vite); `uv run drillion` serves `/` 200 with the Vite
+index.html and `/assets/*.{js,css}` 200; unmatched `/api/*` still 404s as JSON; deleting
+`web/dist` and starting the server rebuilds and serves it; `tests/` 40 passed; `selfcheck`
+171/171; `ruff check .` clean. The whole attempt flow was driven over HTTP against a scratch
+root (never Daniel's progress.json): payload keys, PUT-before-open 409, stale-etag 409 with
+`{error,etag,code}`, syntax 400 with `{error,line,col}`, failing run, passing run
+(grade/box/due_in/code, file back to stub, archive + log written), hint 200, solution 423 with
+`need_attempts`/`need_secs`, touch.
+New check `web/check.mjs` (`pnpm --dir web check <port>`): renders all 171 specs through SpecText
+and asserts no literal `[!NOTE]`-class marker, `## ` heading count == `<h2>` count, lists stay
+lists. 171/171 pass; verified it FAILS when `remarkAlert` is removed.
+NOT verified: a real browser. Left to Task 7 per AGENTS.md.
+Not committed — Daniel asked for the build, not a commit.
+
+## The vocabulary and catalogue effort, 2026-08-26 — plan `i-see-for-now-dazzling-whisper`
+
+Branch `task-vocabulary-and-catalogue`, off `main` @ 9933d66. Its own ledger, with every ruling
+and every review outcome, is `.superpowers/sdd/i-see-for-now-dazzling-whisper/progress.md`. This
+entry is the summary that belongs with the project's history.
+
+**What changed.** One noun for the unit (*task*), two new required frontmatter keys (`tier`,
+`difficulty`), one new optional key (`track`), a tag vocabulary that names concepts instead of
+tasks, contiguous task numbers `001`–`171`, `easy` retired as a grade in favour of `quick`, and
+par time taken off the learner's screen. The three UI screens were rebuilt on top of that.
+
+### Decisions
+
+| # | topic | decision |
+|---|---|---|
+| D1 | noun | **task**, everywhere — copy, paths, code, docs. `exercises/`→`tasks/`, `drill.py`→`task.py`, `/api/ex/`→`/api/task/`, `#/ex/`→`#/task/`. |
+| D2 | title | `subject — what you actually do`. Subject as Python spells it. Em dash, one sentence, no period, ≤ 72 chars, no prefix word. |
+| D3 | tier | required `tier: core \| advanced \| packages`. core = stdlib everyone needs; advanced = still stdlib, but you can work a while without it; packages = needs a `pip install`. |
+| D4 | difficulty | required `difficulty: easy \| medium \| hard`, **authored per task, never derived from minutes**. |
+| D5 | track | optional `track:`, orthogonal to tier, like `source:`. |
+| D6 | tags | concepts only, lowercase-kebab, 1–3 per task. Retired: `exercism`→`source:`, `core`/`data-structures`→`tier:`, `whole-task`→`difficulty:`, `rsample`→`track:`, `basics`→`functions`. |
+| D7 | focus | the header Select goes; the active filter chip in the catalogue is sticky via `POST /api/focus` and steers new picks. One control, visible effect. |
+| D8 | scroll | catalogue rows grouped by tier, collapsed, with counts. |
+| D9 | grade | `easy`→`quick`; difficulty took the word. Grades: `quick · pass · struggled · abandoned`. |
+| D10 | arrangement | Toolbar top: Run + timer above the editor, result card below. |
+| D11 | review gate | a 171-row retag is not an agent's call — publish the mapping table as an artifact and **STOP** for Daniel before touching a README. |
+| D12 | naming collision | `topic` already means the folder number in code and API; keep it. The new field is `tier`. |
+| D13 | path | tier and tag render as one filesystem-style path, `core/f-strings`, tier segment muted. One column, not two. |
+| D14 | par time | `minutes:` stays in frontmatter (`grade_of()` needs it) and never reaches the browser. "It is overload." |
+| D15 | tag rule | a tag names a **Python concept you can practise**, never the task's identity or its story. |
+| D16 | numbering | the task number is a contiguous incremental id, `001`–`171`. No difficulty, no provenance. New tasks append. |
+| D17 | migration | the renumber includes `progress.json`; back it up first. |
+| D18 | titles | titles lead with the concept, not the Exercism puzzle name. The puzzle name survives in the slug and `source:`. |
+| D19 | difficulty, again | re-read from each task's own rules against a written rubric, par minutes deliberately withheld from the judges. |
+
+### Phase 0 — the mapping table, and the STOP that paid for itself
+
+All 171 rows were proposed on one page and published as an artifact
+(https://claude.ai/code/artifact/12b47afc-e978-4c17-ab51-5e21792b767e), with five questions on it.
+Daniel's corrections became D13–D19 and are the reason the model is what it is:
+
+- the proposed two-column tier + tag became one path (D13);
+- par minutes came off the learner's screen entirely (D14);
+- eight tags that were the task's own name (`take-home-task-2`, `phone-screens`, `flatten-array`,
+  …) were replaced with the concepts those tasks teach, and the rule behind it written down (D15);
+- the number stopped meaning anything (D16), which cost a renumber of 169 of 171 folders, a remap
+  of `prereqs:` **and** `practices:`, and a migration of his live `progress.json`;
+- ~50 titles were rewritten to lead with the concept rather than an Exercism puzzle name (D18);
+- difficulty was re-derived from content by 8 readers against `phase0-difficulty-rubric.md` (D19).
+
+**D19 is the finding worth keeping.** Graded from content, difficulty disagrees with the par-minutes
+seed on 71 of 171 tasks — 58% agreement — including two the clock called `hard` that are `easy` to
+anyone who knows the trick. Par time was measuring typing volume, not difficulty. Anything that
+tries to infer one from the other in future should expect to be wrong four times in ten.
+
+### Corrections to the plan, found while building
+
+- D6 said `whole-task` → `difficulty: hard`. It is not a clean mapping: re-graded from content, the
+  14 old `whole-task` tasks landed 1 easy / 10 medium / 3 hard. `whole-task` marked *size*, and size
+  is not difficulty — which is the same lesson as D19.
+- D6 named four retired tags; there were six. The sixth is `basics` → `functions`. (The ledger
+  for that phase also records `set` being folded into `sets`; that was a merge inside the *proposed*
+  vocabulary on the review sheet, not a tag that ever existed in the corpus.)
+- The plan asserted Daniel had settled whether the three HTTP tasks were `core` or `packages`. He
+  had not. Resolved on evidence: they import nothing but `_lib` and stdlib `hmac`/`hashlib`, so
+  `core`.
+- `prereqs:` was known to hold task numbers; `practices:` does too, 49 references across 16 tasks.
+  A brief that said "leave `practices:` alone" would have left 49 numbers pointing at strangers.
+
+### Commits
+
+`1dcbbb0` client at branch time · `8e09aa5` ds difficulty looks + motion · `f2f7f35` the noun ·
+`69c25ca` grade `easy`→`quick` and par time server-side · `b81649a` tier, difficulty and the tag
+vocabulary across all 171 tasks (221 renames) · `b9b8486`+`a704293` catalogue · `b5f23c3` progress ·
+`c4f5778` task screen · `9cc093d` sortable-column a11y · then docs.
+
+Gates held at every step: `uv run drillion selfcheck` 171/171, `uv run pytest tests -q` 40 passed,
+`uv run ruff check .` clean, `pnpm --dir web build` green.
+
+### Consequences to remember
+
+- The task timer no longer changes colour at par, because it cannot know par (D14). AGENTS.md's
+  "30 minutes without a submission → offer a hint" is a wall-clock rule and does not need par.
+- `focus` is a single string matched against tier, track **and** tags alike. Tier and track chips
+  are therefore mutually exclusive in the UI. Making them combinable means `focus` becomes a list.
+- The catalogue's filter must never hold a value it cannot display. It did once, and Daniel's live
+  `focus: "class-inheritance"` would have rendered his catalogue as "0 of 171" with nothing on
+  screen to explain why.
+
+### Correction, 2026-08-26 (docs fix round)
+
+D3's tier rule turned out not to hold on six tasks, because the Phase 0 classifier tested the
+`advanced` tag set before the package tag set, and treated the *topic* tags `testing` and `llm` as
+evidence of a package. Daniel ruled that D3 stands as written and tier answers "can I run this with
+stock Python?", so `packages` beats `advanced` whenever a task is both. Fixed in the data, not the
+prose: `077_parallel_llm`, `084_fixtures`, `085_asgi_test` (langchain / pytest / fastapi+httpx)
+advanced → packages; `054_mock`, `056_whattotest`, `079_message_dig` (stdlib only) packages → core.
+Tier is now **core 139 / advanced 17 / packages 15**.
+
+Also corrected here: `scheduled` was documented as a task status in DESIGN.md and offered in the
+catalogue's status filter, but `api.py:_status()` returns only `open`, `new`, `due` and `done` —
+a seen, not-due card is `done`. The filter option could never match a row.

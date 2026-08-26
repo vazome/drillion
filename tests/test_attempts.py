@@ -10,7 +10,7 @@ import pytest
 from drillion import attempts, region, state
 from drillion.settings import settings
 
-SRC = (settings.exercises_dir / "001_fstrings" / "drill.py").read_text()
+SRC = (settings.tasks_dir / "001_fstrings" / "task.py").read_text()
 
 
 def _solved(src=SRC, code="return ''"):
@@ -30,7 +30,7 @@ def _st(**kw):
 
 
 def test_solution_returns_only_the_reference():
-    text = attempts.solution_text(settings.exercises_dir / "001_fstrings" / "drill.py")
+    text = attempts.solution_text(settings.tasks_dir / "001_fstrings" / "task.py")
     assert text.startswith("def _reference(") and "def test_" not in text
 
 
@@ -41,15 +41,15 @@ def test_touch_caps_a_long_gap():
 
 
 def test_attempt_lifecycle():
-    st, exs = _st(), _exs()
+    st, all_tasks = _st(), _exs()
     o = attempts.open_attempt(st, "001_a")
     assert o["new"] and o["attempts"] == 0 and 1000 <= o["seed"] <= 9999
     assert attempts.open_attempt(st, "001_a") is o                     # reopening keeps the timer
     o["attempts"], o["active"] = 1, 30
-    grade, gap, box = attempts.record_pass(st, "001_a", exs["001_a"], "def solve(x):\n    return x")
-    assert (grade, gap, box) == ("easy", 8, 2)
+    grade, gap, box = attempts.record_pass(st, "001_a", all_tasks["001_a"], "def solve(x):\n    return x")
+    assert (grade, gap, box) == ("quick", 8, 2)
     assert st["open"] == {} and st["cards"]["001_a"]["seen"] == 1
-    assert st["log"][-1] == {"date": state.today(), "slug": "001_a", "grade": "easy",
+    assert st["log"][-1] == {"date": state.today(), "slug": "001_a", "grade": "quick",
                              "attempts": 1, "secs": 30, "new": True}
     assert st["archive"]["001_a"][0]["code"].startswith("def solve(")
     assert attempts.open_attempt(st, "001_a")["new"] is False           # a review, not a new pick

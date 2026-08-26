@@ -1,0 +1,110 @@
+/* Motion — drillion
+   Three rules, applied everywhere:
+     entering  → ease-out       (fast in, settles)
+     leaving   → ease-in
+     changing in place → ease-in-out
+   Nothing runs past 280ms. Only transform and opacity are animated, so every
+   frame is compositor-only. The one overshoot in the system is the ladder step:
+   the moment a card climbs a box is the one moment worth watching.
+   Everything collapses to near-instant under prefers-reduced-motion. */
+
+:root {
+  --dur-press: 90ms;
+  --dur-fast: 140ms;
+  --dur-base: 200ms;
+  --dur-slow: 280ms;
+
+  --ease-out: cubic-bezier(.16, .84, .44, 1);
+  --ease-in: cubic-bezier(.4, 0, 1, 1);
+  --ease-inout: cubic-bezier(.4, 0, .2, 1);
+  --ease-step: cubic-bezier(.34, 1.32, .64, 1);
+
+  --stagger: 26ms;
+}
+
+/* Every interactive surface answers a pointer within one frame. */
+button,
+a,
+input,
+select,
+summary,
+[role="button"] {
+  transition:
+    background-color var(--dur-fast) var(--ease-inout),
+    border-color var(--dur-fast) var(--ease-inout),
+    color var(--dur-fast) var(--ease-inout),
+    box-shadow var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-inout),
+    transform var(--dur-press) var(--ease-out);
+}
+
+/* Press feedback: the control gives a little under the cursor. */
+button:not([disabled]):active,
+[role="button"]:not([disabled]):active {
+  transform: translateY(1px);
+}
+
+@keyframes dsRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes dsFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dsDrop { from { opacity: 0; transform: translateY(-7px); } to { opacity: 1; transform: none; } }
+@keyframes dsExpand { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+@keyframes dsStep { 0% { transform: scaleY(.35); opacity: .25; } 62% { transform: scaleY(1.14); opacity: 1; } 100% { transform: none; } }
+@keyframes dsPulse { 0%, 100% { opacity: .32; } 50% { opacity: 1; } }
+@keyframes dsSweep { from { transform: translateX(-40%); } to { transform: translateX(340%); } }
+
+/* Content arriving. */
+.m-rise { animation: dsRise var(--dur-base) var(--ease-out) both; }
+.m-fade { animation: dsFade var(--dur-fast) var(--ease-out) both; }
+.m-expand { animation: dsExpand var(--dur-base) var(--ease-out) both; }
+
+/* Something the app is telling you it noticed — conflict, draft, gate.
+   Drops from above the content it is about. */
+.m-drop { animation: dsDrop var(--dur-base) var(--ease-out) both; }
+
+/* A list settling in. Rows land in reading order, 26ms apart, and the whole
+   sweep is over inside 500ms however long the list is. */
+.m-stagger > * { animation: dsRise var(--dur-base) var(--ease-out) both; }
+.m-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.m-stagger > *:nth-child(2) { animation-delay: calc(var(--stagger) * 1); }
+.m-stagger > *:nth-child(3) { animation-delay: calc(var(--stagger) * 2); }
+.m-stagger > *:nth-child(4) { animation-delay: calc(var(--stagger) * 3); }
+.m-stagger > *:nth-child(5) { animation-delay: calc(var(--stagger) * 4); }
+.m-stagger > *:nth-child(6) { animation-delay: calc(var(--stagger) * 5); }
+.m-stagger > *:nth-child(7) { animation-delay: calc(var(--stagger) * 6); }
+.m-stagger > *:nth-child(8) { animation-delay: calc(var(--stagger) * 7); }
+.m-stagger > *:nth-child(9) { animation-delay: calc(var(--stagger) * 8); }
+.m-stagger > *:nth-child(10) { animation-delay: calc(var(--stagger) * 9); }
+.m-stagger > *:nth-child(n + 11) { animation-delay: calc(var(--stagger) * 10); }
+
+/* The ladder step. Cells fill left to right with a single soft overshoot. */
+.m-step i { animation: dsStep var(--dur-slow) var(--ease-step) both; transform-origin: bottom; }
+.m-step i:nth-child(2) { animation-delay: 45ms; }
+.m-step i:nth-child(3) { animation-delay: 90ms; }
+.m-step i:nth-child(4) { animation-delay: 135ms; }
+.m-step i:nth-child(5) { animation-delay: 180ms; }
+
+/* Work in flight. */
+.m-pulse { animation: dsPulse 1.15s var(--ease-inout) infinite; }
+.m-sweep { position: relative; overflow: hidden; }
+.m-sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 28%;
+  background: linear-gradient(90deg, transparent, var(--accent-tint), transparent);
+  animation: dsSweep 1.1s var(--ease-inout) infinite;
+}
+
+/* Rows and cells that only ever change fill. */
+.m-tint { transition: background-color var(--dur-fast) var(--ease-inout), color var(--dur-fast) var(--ease-inout); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    transition-delay: 0s !important;
+  }
+  .m-sweep::after { display: none; }
+}

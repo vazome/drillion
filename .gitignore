@@ -26,3 +26,4 @@ ruff_report.txt
 # SDD review packages: regenerable from git
 .superpowers/**/review-*.diff
 _selfcheck.py
+progress.json.bak
