@@ -67,9 +67,12 @@ def test_solve(): ...
 ```markdown
 ---
 title: Top-N crashing services
+difficulty: medium       # easy | medium | hard
+tier: core               # core | advanced | packages
+track: rsample            # optional, a themed run through the corpus
 minutes: 12
 prereqs: [18]
-tags: [data-structures]
+tags: [collections]
 practices: []            # optional, whole-task drills
 source: exercism/python practice/two-fer (MIT, adapted)   # optional, Exercism drills
 ---
@@ -114,9 +117,20 @@ solve(["..ERROR api..", "..ERROR api..", "..ERROR db.."], n=2)  # -> [("api", 2)
 …
 ```
 
-- Frontmatter is YAML (PyYAML `safe_load`, runtime dependency). Required: `title`, `minutes`,
-  `tags`. Optional: `prereqs` (default `[]`), `practices`, `source`. `topic` is **not** in the
-  frontmatter: it is the folder's leading number.
+- Frontmatter is YAML (PyYAML `safe_load`, runtime dependency), written in this key order:
+  `title`, `difficulty`, `tier`, `track?`, `minutes`, `prereqs`, `tags`, `practices?`, `source?`.
+  Required: `title`, `difficulty`, `tier`, `minutes`, `tags`. Optional: `track`, `prereqs`
+  (default `[]`), `practices`, `source` — an optional key is omitted, never written empty.
+  `topic` is **not** in the frontmatter: it is the folder's leading number.
+- `difficulty` is `easy` | `medium` | `hard` — how hard the task is to *get right*, judged from
+  its rules, not from `minutes`. `minutes` is par time for grading and the learner never sees it.
+- `tier` is `core` | `advanced` | `packages` — stdlib fundamentals, harder stdlib work, and
+  third-party libraries. `track` names an optional themed run (`rsample`) and is usually absent.
+- `tags` are concepts, 1-3 of them, and nothing else. Four tags that used to do other jobs are
+  gone: `exercism` → `source:`, `core` and `data-structures` → `tier:`, `whole-task` →
+  `difficulty: hard`, `rsample` → `track:`.
+- `focus` in `progress.json` matches one string against a task's `tier`, `track` and `tags`
+  alike, so all three are filters.
 - Headings are the contract: `# <title>` then `## Why`, `## You get`, `## You return`, `## Rules`,
   `## Read first`, `## Hints` with `### Hint 1..3`. Extra sections are allowed anywhere before
   `## Hints` (Exercism drills add `## Introduction` and `## Instructions`).

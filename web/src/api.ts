@@ -5,11 +5,12 @@ export type Grade = "quick" | "pass" | "struggled" | "abandoned";
 
 export interface Row {
   slug: string; topic: number; title: string;
+  difficulty: "easy" | "medium" | "hard"; tier: "core" | "advanced" | "packages"; track?: string;
   tags: string[]; prereqs?: string[]; practices?: number[]; source?: string;
   status: Status; box: number; due: string; seen: number;
 }
 export interface Catalogue {
-  focus: string | null; tags: string[];
+  focus: string | null; tags: string[]; tiers: string[]; tracks: string[];
   today: { review: string[]; new: string[]; done_today: number };
   stats: { boxes: number[]; due: number; seen: number; total: number; days_left: number };
   tasks: Row[];

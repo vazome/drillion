@@ -14,8 +14,9 @@ import yaml
 from .region import _solve, bounds, cut
 from .settings import settings
 
-REQUIRED = ("title", "minutes", "tags")
-BROWSER = ("topic", "title", "tags", "prereqs", "practices", "source")
+REQUIRED = ("title", "difficulty", "tier", "minutes", "tags")
+BROWSER = ("topic", "title", "difficulty", "tier", "track", "tags", "prereqs",
+           "practices", "source")
 # `minutes` is deliberately absent: par time is grade_of()'s input, not the learner's to see.
 HINT = re.compile(r"^### Hint \d+[ \t]*$", re.MULTILINE)
 _cache = (None, None)   # (key, records) — rebinding a global is atomic, so a race just re-scans
@@ -76,7 +77,7 @@ def tasks():
             meta, md = frontmatter((folder / "README.md").read_text())
             spec_md, hints = guidance(md)
             if any(meta.get(k) in (None, "", []) for k in REQUIRED) or len(hints) != 3:
-                raise ValueError("a task needs a title, minutes, tags and 3 hints")
+                raise ValueError("a task needs a title, difficulty, tier, minutes, tags and 3 hints")
         except Exception:  # noqa: BLE001, S112 — a half-written folder must not break the menu
             continue
         out[folder.name] = {"prereqs": [], "practices": [], **meta, "topic": topic,

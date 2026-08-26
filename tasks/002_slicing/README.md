@@ -1,8 +1,10 @@
 ---
 title: slicing — combine start, stop, step
+difficulty: easy
+tier: core
 minutes: 10
 prereqs: []
-tags: [core]
+tags: [slicing]
 ---
 # slicing — combine start, stop, step
 

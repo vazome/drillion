@@ -115,8 +115,8 @@ uv sync                                      # dependencies (runtime + dev)
 uv run pytest tests -q                       # the app's tests
 uv run ruff check .                          # lint
 uv run drillion selfcheck                    # every task green with its reference
-uv run pytest tasks/019_counter          # one task by hand (NotImplementedError on a stub)
-DRILLION_SEED=42 uv run pytest tasks/019_counter   # same task, fixed data
+uv run pytest tasks/018_counter          # one task by hand (NotImplementedError on a stub)
+DRILLION_SEED=42 uv run pytest tasks/018_counter   # same task, fixed data
 ```
 
 CI runs the same three checks on every push. The frontend dev loop (`pnpm --dir web dev` with a
