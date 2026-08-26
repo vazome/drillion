@@ -386,3 +386,91 @@ and asserts no literal `[!NOTE]`-class marker, `## ` heading count == `<h2>` cou
 lists. 171/171 pass; verified it FAILS when `remarkAlert` is removed.
 NOT verified: a real browser. Left to Task 7 per AGENTS.md.
 Not committed — Daniel asked for the build, not a commit.
+
+## The vocabulary and catalogue effort, 2026-08-26 — plan `i-see-for-now-dazzling-whisper`
+
+Branch `task-vocabulary-and-catalogue`, off `main` @ 9933d66. Its own ledger, with every ruling
+and every review outcome, is `.superpowers/sdd/i-see-for-now-dazzling-whisper/progress.md`. This
+entry is the summary that belongs with the project's history.
+
+**What changed.** One noun for the unit (*task*), two new required frontmatter keys (`tier`,
+`difficulty`), one new optional key (`track`), a tag vocabulary that names concepts instead of
+tasks, contiguous task numbers `001`–`171`, `easy` retired as a grade in favour of `quick`, and
+par time taken off the learner's screen. The three UI screens were rebuilt on top of that.
+
+### Decisions
+
+| # | topic | decision |
+|---|---|---|
+| D1 | noun | **task**, everywhere — copy, paths, code, docs. `exercises/`→`tasks/`, `drill.py`→`task.py`, `/api/ex/`→`/api/task/`, `#/ex/`→`#/task/`. |
+| D2 | title | `subject — what you actually do`. Subject as Python spells it. Em dash, one sentence, no period, ≤ 72 chars, no prefix word. |
+| D3 | tier | required `tier: core \| advanced \| packages`. core = stdlib everyone needs; advanced = still stdlib, but you can work a while without it; packages = needs a `pip install`. |
+| D4 | difficulty | required `difficulty: easy \| medium \| hard`, **authored per task, never derived from minutes**. |
+| D5 | track | optional `track:`, orthogonal to tier, like `source:`. |
+| D6 | tags | concepts only, lowercase-kebab. Retired: `exercism`→`source:`, `core`/`data-structures`→`tier:`, `whole-task`→`difficulty:`, `rsample`→`track:`, `basics`→`functions`. |
+| D7 | focus | the header Select goes; the active filter chip in the catalogue is sticky via `POST /api/focus` and steers new picks. One control, visible effect. |
+| D8 | scroll | catalogue rows grouped by tier, collapsed, with counts. |
+| D9 | grade | `easy`→`quick`; difficulty took the word. Grades: `quick · pass · struggled · abandoned`. |
+| D10 | arrangement | Toolbar top: Run + timer above the editor, result card below. |
+| D11 | review gate | a 171-row retag is not an agent's call — publish the mapping table as an artifact and **STOP** for Daniel before touching a README. |
+| D12 | naming collision | `topic` already means the folder number in code and API; keep it. The new field is `tier`. |
+| D13 | path | tier and tag render as one filesystem-style path, `core/f-strings`, tier segment muted. One column, not two. |
+| D14 | par time | `minutes:` stays in frontmatter (`grade_of()` needs it) and never reaches the browser. "It is overload." |
+| D15 | tag rule | a tag names a **Python concept you can practise**, never the task's identity or its story. |
+| D16 | numbering | the task number is a contiguous incremental id, `001`–`171`. No difficulty, no provenance. New tasks append. |
+| D17 | migration | the renumber includes `progress.json`; back it up first. |
+| D18 | titles | titles lead with the concept, not the Exercism puzzle name. The puzzle name survives in the slug and `source:`. |
+| D19 | difficulty, again | re-read from each task's own rules against a written rubric, par minutes deliberately withheld from the judges. |
+
+### Phase 0 — the mapping table, and the STOP that paid for itself
+
+All 171 rows were proposed on one page and published as an artifact
+(https://claude.ai/code/artifact/12b47afc-e978-4c17-ab51-5e21792b767e), with five questions on it.
+Daniel's corrections became D13–D19 and are the reason the model is what it is:
+
+- the proposed two-column tier + tag became one path (D13);
+- par minutes came off the learner's screen entirely (D14);
+- eight tags that were the task's own name (`take-home-task-2`, `phone-screens`, `flatten-array`,
+  …) were replaced with the concepts those tasks teach, and the rule behind it written down (D15);
+- the number stopped meaning anything (D16), which cost a renumber of 169 of 171 folders, a remap
+  of `prereqs:` **and** `practices:`, and a migration of his live `progress.json`;
+- ~50 titles were rewritten to lead with the concept rather than an Exercism puzzle name (D18);
+- difficulty was re-derived from content by 8 readers against `phase0-difficulty-rubric.md` (D19).
+
+**D19 is the finding worth keeping.** Graded from content, difficulty disagrees with the par-minutes
+seed on 71 of 171 tasks — 58% agreement — including two the clock called `hard` that are `easy` to
+anyone who knows the trick. Par time was measuring typing volume, not difficulty. Anything that
+tries to infer one from the other in future should expect to be wrong four times in ten.
+
+### Corrections to the plan, found while building
+
+- D6 said `whole-task` → `difficulty: hard`. It is not a clean mapping: re-graded from content, the
+  14 old `whole-task` tasks landed 1 easy / 10 medium / 3 hard. `whole-task` marked *size*, and size
+  is not difficulty — which is the same lesson as D19.
+- D6 named four retired tags; there were six. `basics` → `functions`, and `set` was folded into
+  `sets`.
+- The plan asserted Daniel had settled whether the three HTTP tasks were `core` or `packages`. He
+  had not. Resolved on evidence: they import nothing but `_lib` and stdlib `hmac`/`hashlib`, so
+  `core`.
+- `prereqs:` was known to hold task numbers; `practices:` does too, 48 references across 16 tasks.
+  A brief that said "leave `practices:` alone" would have left 48 numbers pointing at strangers.
+
+### Commits
+
+`1dcbbb0` client at branch time · `8e09aa5` ds difficulty looks + motion · `f2f7f35` the noun ·
+`69c25ca` grade `easy`→`quick` and par time server-side · `b81649a` tier, difficulty and the tag
+vocabulary across all 171 tasks (221 renames) · `b9b8486`+`a704293` catalogue · `b5f23c3` progress ·
+`c4f5778` task screen · `9cc093d` sortable-column a11y · then docs.
+
+Gates held at every step: `uv run drillion selfcheck` 171/171, `uv run pytest tests -q` 40 passed,
+`uv run ruff check .` clean, `pnpm --dir web build` green.
+
+### Consequences to remember
+
+- The task timer no longer changes colour at par, because it cannot know par (D14). AGENTS.md's
+  "30 minutes without a submission → offer a hint" is a wall-clock rule and does not need par.
+- `focus` is a single string matched against tier, track **and** tags alike. Tier and track chips
+  are therefore mutually exclusive in the UI. Making them combinable means `focus` becomes a list.
+- The catalogue's filter must never hold a value it cannot display. It did once, and Daniel's live
+  `focus: "class-inheritance"` would have rendered his catalogue as "0 of 171" with nothing on
+  screen to explain why.

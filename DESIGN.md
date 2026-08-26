@@ -1,14 +1,17 @@
 # Design handoff — drillion
 
-This file is the brief for designing the web UI. It describes the product, the three screens, the
-data each screen has, every state the UI must show, and the hard constraints. **No visual direction
-has been decided** — palette, type, layout language and components are open. An earlier
-exploration exists at `.superpowers/sdd/scalable-napping-treehouse/design-brief.md` (light-only,
-"index cards on a desk"); treat it as one candidate, not a constraint.
+This file is the brief for designing the web UI: the product, the three screens, the data each
+screen has, every state the UI must show, and the hard constraints. It was written before any
+visual direction existed and is kept as the contract the UI is measured against.
+
+The direction has since been chosen: the **drillion design system** ("Mineral Blue"), authored in
+Claude Design and vendored at `web/src/ds/` — see [`web/README.md`](web/README.md). An earlier
+exploration at `.superpowers/sdd/scalable-napping-treehouse/design-brief.md` (light-only, "index
+cards on a desk") was not taken.
 
 ## Product in one paragraph
 
-A single-user, local web app for practising Python. A catalogue of ~100–180 short tasks, each
+A single-user, local web app for practising Python. A catalogue of 171 short tasks, each
 with a spec, a code editor, and a test that grades the code on fresh random data.
 A spaced-repetition scheduler decides what comes back when (5-box ladder: 2/4/8/16/28 days). Hints
 unlock with time; the solution unlocks after real effort. Sessions are 20–40 minutes a day, on a
@@ -27,9 +30,10 @@ emotional core: cards climbing boxes and returning on schedule.
 - Desktop-first (≥1280 px); tablet-friendly is a bonus; mobile is out of scope.
 - Accessible: real buttons, visible focus, WCAG AA contrast in both modes, keyboard: `Mod-Enter`
   runs tests.
-- Implementation target: React + Tailwind v4 + shadcn/ui, tokens as CSS variables on `:root` and
-  `.dark`. The editor is CodeMirror 6 (themeable: background, gutter, selection, caret, syntax
-  colours for keyword/string/number/comment/function/variable).
+- Implementation: React 19 + TypeScript + Vite; the vendored design system's plain components over
+  CSS variables (no Tailwind, no shadcn/ui — see `web/README.md` for why). The editor is
+  CodeMirror 6 (themeable: background, gutter, selection, caret, syntax colours for
+  keyword/string/number/comment/function/variable).
 
 ## Screens
 
@@ -41,20 +45,28 @@ Data: `GET /api/catalogue` →
 - `today.review[]` — due reviews, most overdue first; `today.new[]` — up to 2 new picks;
   `today.done_today` (count)
 - `stats` — `boxes` (5 counts, one per ladder box), `due`, `seen`, `total`, `days_left` to the deadline
-- `focus` — a tag or null (restricts *new* picks to a track), `tags[]` — all tags
-- `tasks[]` — per row: `topic` (number), `title`, `tags[]`, `prereqs[]`,
-  `status` ∈ `new | due | scheduled | open | done`, `box` (0–5), `due` (date), `seen` (count)
+- `focus` — one string or null; it restricts *new* picks and is matched against a task's **tier,
+  track and tags alike**. `tags[]`, `tiers[]`, `tracks[]` — the three vocabularies to filter by
+- `tasks[]` — per row: `topic` (number), `title`, `difficulty`, `tier`, `track?`, `tags[]`,
+  `prereqs[]` (numbers), `practices[]`, `source?`,
+  `status` ∈ `new | due | scheduled | open | done`, `box` (0–5), `due` (date), `seen` (count).
+  **No `minutes`**: par time never leaves the server.
 
-Elements: Today panel (reviews, then new picks, focus selector), search, tag chips (multi-select
-AND), status filter, the task list (topic · title · tags · status · a miniature ladder
-showing which box the card is in), a small stats strip (days left, due today, cards per box).
+Elements: Today panel (reviews, then new picks, focus selector), search, filter chips (tier, track,
+tag), status filter, the task list (title · difficulty · the `tier/tag` path · status · a miniature
+ladder showing which box the card is in), a small stats strip (days left, due today, cards per box).
+
+Tier and tag render as one filesystem-style path, `core/f-strings`, with the tier segment muted —
+one column, not two. Whatever `focus` a row is filtered by, the UI must be able to show it: a
+filter the screen cannot display is a screen that says "0 of 171" with no way to explain itself.
 
 ### 2. Task (`#/task/:slug`)
 
 Answers: *what exactly is asked, and does my code pass?*
 
 Data: `GET /api/task/{slug}` →
-- `meta` — `topic`, `title`, `tags`, `prereqs`, `practices`, `source` (Exercism tasks)
+- `meta` — `topic`, `title`, `difficulty`, `tier`, `track?`, `tags`, `prereqs`, `practices`,
+  `source` (Exercism tasks). No `minutes` — see the vocabulary below.
 - `spec_md` — the task's guidance as **GitHub-flavoured Markdown**, ~25–120 lines: `# title`,
   then `## Why` (business context), `## You get`, `## You return`, `## Rules` with worked
   examples, `## Read first` (the links, with notes), and whatever else the task adds
@@ -78,8 +90,9 @@ state shows what is still needed), **Abandon**, archive access.
 Results panel (below or beside the editor), states:
 - idle (never run) · running · **failed** (headline lines — the assertion/exception — plus a
   collapsible full pytest output; line numbers refer to the editor) ·
-  **passed**: grade line `QUICK · 4m12s · 1 attempt · box 3/5 · back in 8 days`, the ladder
-  visibly stepping up, the passing code read-only, a way to go to the next Today item.
+  **passed**: grade line `QUICK · 4m12s · 1 attempt · box 3 of 5` — elapsed time, never time
+  against par — the ladder visibly stepping up, the passing code read-only, a way to go to the
+  next Today item.
 
 Other states: hint revealed (levels 1–3 stack up), solution revealed (marks the attempt: "this pass
 won't promote"), unsaved-draft dot (autosave every ~1 s; a silent syntax error shows as an amber
@@ -96,11 +109,33 @@ Data: `GET /api/progress` → `boxes[5]`, `due`, `seen`, `total`, `per_tag{tag: 
 Elements: the full-size ladder (5 boxes with counts and next-return intervals), a per-tag coverage
 table, the recent log, days-left to the deadline.
 
-## Grades and vocabulary (use these words)
+## Vocabulary (use these words)
 
-`QUICK` (first try, under par) · `PASS` · `STRUGGLED` · `abandoned`. Boxes 1–5. "Due", "new",
-"scheduled" (returns on a date), "open" (an attempt is in progress). Hints are "levels". The
-solution "unlocks". The deadline is shown as days left.
+**task** — the unit, and the only noun for it. One folder in `tasks/`, one spec, one `solve()`.
+171 of them, numbered `001`–`171`; the number is an id, nothing more.
+
+**tier** — `core` · `advanced` · `packages`, in that order, easiest first. How far into the
+language a task reaches.
+
+**difficulty** — `easy` · `medium` · `hard`. How hard the task is to get right the first time, not
+how long it takes.
+
+**track** — optional, at most one: a themed run across tiers (`rsample`).
+
+**tags** — the Python concepts a task practises, 76 of them across the catalogue.
+
+**grade** — `quick` (first try, under par) · `pass` · `struggled` · `abandoned`. Lowercase in the
+payload; the UI may set them in caps. `easy` is a *difficulty* and never a grade.
+
+**Par time is never shown.** `minutes` is the grader's input and stops at the server, so the
+attempt timer counts up and changes no colour at any threshold. Nothing on any screen tells the
+learner how long they were supposed to take.
+
+Boxes 1–5. "Due", "new", "scheduled" (returns on a date), "open" (an attempt is in progress).
+Hints are "levels". The solution "unlocks". The deadline is shown as days left.
+
+The full definitions, and the rules for adding a task, are in
+[README.md](README.md#vocabulary) — this list is the UI's copy of them.
 
 ## Out of scope
 
