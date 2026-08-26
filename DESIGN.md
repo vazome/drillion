@@ -44,8 +44,9 @@ Answers: *what do I do now?*
 
 Data: `GET /api/catalogue` →
 - `today.review[]` — due reviews, most overdue first; `today.new[]` — up to 2 new picks;
-  `today.recent[]` — every task worked in the last `window` days, newest first, minus whatever
-  is already in the two lists above; `today.done_today` (count)
+  `today.recent[]` — every task worked in the last `window` days, newest first, and never
+  filtered against the other two: a card worked on Friday and due again today is both things
+  at once; `today.done_today` (count)
 - `stats` — `boxes` (5 counts, one per ladder box), `due`, `seen`, `total`, and `practised` of
   `window`: distinct days worked in the last 7, a rolling count rather than a streak
 - `focus` — one string or null; it restricts *new* picks and is matched against a task's **tier,
@@ -70,8 +71,8 @@ than scrolled — pick `advanced` and 76 chips become the 11 that are actually u
 already switched on never drops out, or a filter that matched nothing could not be undone.
 
 Every group in the Today panel sits under a band that names it, and the rows carry no status
-badge as a result. Recent activity leads: coming back mid-week, the way into what you were last
-doing beats the queue. The daily cap belongs to new picks alone — recent activity lists as many as the week holds,
+badge as a result. Recent activity leads and is always present, empty line and all: coming back mid-week, the way
+into what you were last doing beats the queue. The daily cap belongs to new picks alone — recent activity lists as many as the week holds,
 because it is the way back into work already started, not a ration of new material.
 
 Tier and tag render as one filesystem-style path, `core/f-strings`, with the tier segment muted —
