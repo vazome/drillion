@@ -1,7 +1,7 @@
 [project]
 name = "drillion"
 version = "0.1.0"
-description = "Spaced-repetition Python practice: pytest-graded tasks on a Leitner ladder, in a browser"
+description = "Python practice drills that come back before you forget them. Graded by pytest, runs on your machine."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.13"
