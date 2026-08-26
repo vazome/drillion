@@ -209,3 +209,91 @@ controller: 059 fence → text, 043 WARNING → TIP, 203/213 bool wording. Defer
 Batch F ✓ committed; ruling: multi-practice section tag = first listed practice (consistent with batch E).
 Batch C ✓ committed (pretty-leaflet is Exercism 'wip': instructions say class, tests say functions — followed tests, README flags it).
 Batch B: review Approved; minor fixed (chaitanas ### General). Deferred: 218 Hint 2 names all four methods; 228 _HIGHEST narrow.
+Batch F: review Needs fixes → fixed by controller (### inside fences → #, 319 Hint 2 rewritten). Deferred: canonical counts >6 (more coverage), 318 Hint 2 borderline, 319 [3,0] canonical case order. Batch F: complete. Batch G dispatched (opus).
+Batch C: review Approved; Important fixed (230 contradiction stated), 236 rule softened. Deferred: canonical counts <3 in 234/239/240/243 (copy more variations later), 230 format_date generated count, 243 overlap rule untested. Batch H dispatched (opus).
+Batch G ✓ committed; ruling: 329 scrabble-score section tag core (map override); keep Exercism's (_[concept:...]()_) fragments (precedent 209).
+
+## RESUME POINT 2026-08-26 (session limit hit again on batch H + batch G review)
+State found on resume: HEAD 66572d8 on `main`. 159 drills pass `uv run study selfcheck`, ruff clean.
+Untracked in the working tree: batch D (10 folders, 245–259) and batch H PARTIAL (330–337; 338_clock
+and 339_high_scores never written, no phaseb-H-report.md). phaseb-D-report.md and phaseb-G-report.md
+on disk, untracked. Batch G is COMMITTED (6e59f33) but its review never ran.
+Outstanding when resumed: (1) batch H remainder + audit of the inherited 8, (2) batch G review,
+(3) batch D review + commit. Batch I (340–349) is the only batch never started.
+Reviewer prompt files written this session: /tmp/phaseb-review-common.md (binding reviewer contract,
+carries the standing rulings so reviewers stop re-raising them), /tmp/phaseb-review-{D,G}.md,
+/tmp/phaseb-H2.md (batch H remainder + audit-the-inherited-8).
+Dispatched 3 concurrent (opus, per model policy — never fable): batch H remainder, batch G review,
+batch D review.
+Batch G: review Needs fixes → 1 Important (325 secret-handshake Rules table gave the 4th-from-right
+char of "10011" as `1`, contradicting its own `solve("10011") # -> ["double blink", "wink"]` example
+and the canonical case) → fixed by controller, commit ee804ac. Reviewer independently re-ran ruff /
+stub / reference(seeds 1,2,42) / selfcheck, scripted a verbatim diff (0 differing lines across all 20
+Introduction+Instructions sections), and added a NEW check worth keeping: execute every
+`expr # -> value` example in our own sections against `_reference` (53 examples, 0 mismatches) — the
+325 error survived only because it lived in a prose table, not a fence. Concerns closed: 326 float
+rounding (1.6M cases, three association orders never diverge), 323 `//` vs exemplar `/` (README pins
+it). Report table's stale `files-text` for 329 left as-written with a controller note (the pasted
+catalogue output is evidence of what was run; the file itself carries the settled `core`).
+Batch G: complete.
+Batch D: review Needs fixes → 1 Important + 5 minors, all resolved; commit 110388a. All three of the
+implementer's concerns ruled in its favour (247 categorize_dish signature trade; 251 and 257 exemplar
+bugs are real — instructions implemented, and 257 deliberately does not port one canonical test
+expectation). Important: Hint 2 gave the literal solution in 249/258/259 (249's was a fence holding
+the whole of its only function, in the drill's own parameter name, leaving nothing for Hint 3) and
+more mildly in 247/251/254 — all six rewritten by the controller to name the routing/operator/builtin
+without the working expression. Minors fixed: two enum anchors → howto/enum.html (verified 200 + id
+present), 245's towardsdatascience link 404 → dropped, 254 now states WARNING must be declared before
+the WARN alias (the get_members assertion is messageless, so the failure was cryptic).
+NEW STANDING RULING (m-3, for later batches): when an upstream Exercism heading level is itself
+anomalous (cater-waiter introduction.md:342 is `# Set Symmetric Difference` among `##` siblings),
+demote it to the level its SIBLINGS land on, not by the fixed one level — one level would produce a
+top-level `##` section and break the section contract.
+Known ceiling (m-4, accepted): runs of two blank lines in Exercism sources render as one in our
+READMEs (41 places in batch D). Rendering-neutral in GFM; "line for line" is the stated bar and this
+is the only systematic departure. Trailing whitespace inside fences IS preserved.
+Batch D: complete.
+Batch H: authored (338_clock + 339_high_scores written; inherited 330–337 audited, nothing changed).
+Reviewer dispatched (opus) with a provenance warning — the eight inherited drills were written by a
+killed agent that never self-verified, so "it all passed as written" is a claim to check, not a given.
+Controller measured concern (b) for the reviewer: 335_nth_prime asserts solve(10001); naive trial
+division reaches 104743 in 26.9 s but src/study/runner.py:30 caps a run at --timeout=10, so a CORRECT
+but naive solution gets an opaque timeout kill. _gen caps at 1500 and the small canonical cases run
+first, so a WRONG solution still fails fast — the defect is scoped to correct-but-slow. Controller's
+leaning: keep the case, add a Rules WARNING naming the √n requirement. Concern (c) already closed by
+the controller: 336_sieve's primes literal is at drill.py:57, below the marker at drill.py:5.
+NEW CHECK worth keeping (from the batch G review): execute every `expr # -> value` example in our own
+sections against _reference, AND read prose tables that state per-character/per-position facts —
+batch G's only defect was a wrong character in a prose table that passed every scripted check.
+Batch H: review Needs fixes → 2 Important + the 335 ruling, all applied; commit b68c629.
+Provenance verdict: the second implementer's "changed nothing, all passed" HELD UP — reviewer
+independently re-derived all 10 frontmatters from config.json, re-ran a fence-aware fidelity diff
+(0 changed lines), ran all 183 upstream canonical tests against the ten _references, executed 72
+README examples plus every hint block (0 mismatches), and re-measured _gen variety.
+I-1 (330 pig-latin): the Rules WARNING said a rule-2-before-rule-3 mistake turns `square` into
+`quaresay`; it actually yields `uaresqay` (`quaresay` is a DIFFERENT bug — moving only the first
+consonant). Script-invisible, caught by reading — the second prose-table/prose-claim defect in two
+batches. The new "read the prose claims" check is earning its place; keep it in every review prompt.
+I-2 (338 clock): the non-mutation assert sat AFTER the subtraction check, so a mutating `+` failed on
+the `-` line and was blamed on subtraction while the explanatory message never ran. Fixed by checking
+each operator immediately after it runs. Controller verified empirically with a correct-arithmetic
+mutating Clock: before → "Clock(25, 2117) - 868"; after → "+ must not change Clock(25, 2117) itself".
+335 nth-prime: reviewer ruled option (b) — keep Exercism's canonical solve(10001), announce the wall.
+Reviewer measured naive at 32.6 s (controller measured 26.9 s) against --timeout=10 with
+pytest-timeout 2.4.0 installed, so the kill is hard and opaque. Decisive argument was internal
+consistency: 334_prime_factors/README.md:86 already does exactly this for the same failure mode —
+two sibling drills, same trap, one warned and one not. Added as a second paragraph inside the
+existing callout rather than a second adjacent callout (adjacent-callout style was a deferred minor).
+336 sieve: concern closed — primes-below-1000 literal exists only in drill.py:44–57, below the
+marker at line 5; grep confirms it appears in no README or hint.
+Batch H: complete. Catalogue now 161 drills, selfcheck 161/161, ruff clean.
+
+## Phase B status after 2026-08-26 session
+Complete: A, B, C, D, E, F, G, H (+ Task 11 native/X content). NOT STARTED: batch I (340–349) — the
+only remaining batch. Prompt at /tmp/phaseb-I.md; dispatch with /tmp/phaseb-common.md, then review
+with /tmp/phaseb-review-common.md + a per-batch file like /tmp/phaseb-review-{D,G,H}.md.
+Reviewer prompt improvements to carry into batch I's review: (1) execute every `expr # -> value`
+example in our own sections against _reference; (2) READ prose tables and prose claims that state
+per-character/per-position facts — both Important findings in G and H were of that class and passed
+every scripted check; (3) if a batch was written by more than one agent, tell the reviewer which
+files are inherited and unverified.
