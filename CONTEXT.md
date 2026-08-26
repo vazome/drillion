@@ -87,8 +87,9 @@ _Avoid_: estimate, time limit, target, budget
 ### The ladder
 
 **Card**:
-Your standing with one task: which **box** it is in, when it is next **due**, and how many
-times you have passed it. The task is the material; the card is your relationship to it.
+Your standing with one task: which **box** it is in, when it is next **due**, how many
+times you have passed it and how many **lapses** it has cost you. The task is the material;
+the card is your relationship to it.
 _Avoid_: entry, record, progress item
 
 **Box**:
@@ -96,7 +97,8 @@ One of five rungs on the **ladder**. Counted `0`–`4` in stored state and shown
 _Avoid_: level, stage, bucket, bin
 
 **Ladder**:
-The five fixed return intervals — 2, 4, 8, 16, 28 days — that a **card** climbs by passing.
+The five fixed return intervals — 2, 4, 8, 16, 28 days — that a **card** climbs by passing
+and steps back down on a **lapse**.
 _Avoid_: schedule, algorithm, SRS, curve
 
 **Due**:
@@ -107,16 +109,24 @@ _Avoid_: next review, scheduled date
 How many times a **card** has been passed. Only a pass increments it.
 _Avoid_: reading it as views, opens or **runs**
 
+**Lapse**:
+A sitting graded `struggled`, counted per **card** and never reset. Reaching the lapse limit
+flags the task as one that keeps beating you — a message about the task, not a punishment on
+the schedule.
+_Avoid_: fail, miss, leech
+
 **Status**:
 What a task is to you right now: `new`, `due`, `open`, `done`. Exactly four.
 _Avoid_: state, phase; and inventing a fifth
 
 **Review**:
-A **due** card, offered back to you.
+A **due** card, offered back to you. Capped per day: past the cap the rest of the backlog
+waits, and today's panel says how many it is holding.
 _Avoid_: repeat, redo, revision
 
 **New pick**:
-An unseen task whose **prereqs** are cleared, offered as new material. Capped per day.
+An unseen task whose **prereqs** are cleared, offered as new material. Capped per day, and
+held entirely while the backlog is over the **review** cap.
 _Avoid_: suggestion, recommendation, next up
 
 **Focus**:

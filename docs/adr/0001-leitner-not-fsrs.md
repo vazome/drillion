@@ -30,14 +30,21 @@ quarter.
 
 ## Consequences
 
-The ladder is deliberately cruder than FSRS. Two of the differences below are real gaps; the third
-is a decision. All three are recorded so they are decided rather than discovered:
+The ladder is deliberately cruder than FSRS. Two of the differences below were real gaps — one is
+now closed — and the third is a decision. All three are recorded so they are decided rather than
+discovered:
 
-- **A struggle never demotes.** `struggled` is worth `+0`, so a card that fights you every time
-  holds its box and its interval. Classic Leitner sends a failed card back to box 1; this ladder
-  has no negative step at all.
+- ~~**A struggle never demotes.**~~ Closed (#1): `struggled` is worth `-1`, so a card that
+  fights you walks back down a box a sitting, with box 0 as the floor. Not classic Leitner's
+  back-to-box-1, because `struggled` is drillion's grade for anything slow, anything over two
+  runs and anything peeked — common enough that one bad sitting must not cost a month of
+  laddering. Each struggle is also counted on the card (#9), and reaching `LAPSE_LIMIT` flags
+  the task rather than punishing the schedule further.
 - **Nothing ever graduates.** Box 4 returns every 28 days forever. Review load therefore only ever
   grows, toward all 171 cards on a monthly cycle, and a task you have mastered is never retired.
+  Still open (#2): the cheapest fix is a longer tail on `LADDER`, which changes the ladder's
+  shape and so is a scheduler *and* a web change, not a scheduler one. `REVIEWS_PER_DAY` (#7)
+  now bounds what a day can cost you, but nothing yet sheds a card.
 - **`difficulty` deliberately does not reach the scheduler.** Every task declares
   `easy`/`medium`/`hard`, graded against `docs/difficulty-rubric.md`, and the ladder treats all
   three identically. This is the one place drillion declines FSRS's shape on purpose rather than
@@ -45,5 +52,6 @@ is a decision. All three are recorded so they are decided rather than discovered
   will cost them before they open it. What matters is that they practise, not which label the task
   carried.
 
-The first two are gaps and each is a small change to `scheduler.py`; the third is settled. Reopen
-this decision if those fixes stop being small, not because FSRS is fashionable again.
+The first was a gap and is now closed; the second is still a gap, and no longer a change to
+`scheduler.py` alone; the third is settled. Reopen this decision if the remaining fix stops being
+small, not because FSRS is fashionable again.
