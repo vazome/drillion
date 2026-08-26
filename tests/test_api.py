@@ -224,7 +224,8 @@ def test_the_practice_count_is_a_rolling_window_not_a_streak():
 
 def test_recent_activity_is_the_week_most_recent_first():
     """The way back into work already started: distinct slugs, newest first, capped by the
-    window rather than by a count. What is already in today's queue is not repeated."""
+    window rather than by a count — and never filtered against today's queue, which once left
+    the whole section empty for a learner whose only recent work was also their only reviews."""
     def day(n):
         return (date.today() - timedelta(days=n)).isoformat()  # noqa: DTZ011
 
@@ -235,5 +236,4 @@ def test_recent_activity_is_the_week_most_recent_first():
                       "009_gone": [{"date": day(0)}]}}           # renamed away: no row for it
     tasks = {"001_a": {}, "002_b": {}, "003_c": {}, "004_d": {}}
     assert _recent(st, tasks) == ["004_d", "001_a", "002_b"]
-    assert _recent(st, tasks, exclude={"001_a"}) == ["004_d", "002_b"]
     assert _recent({"archive": {}}, tasks) == []

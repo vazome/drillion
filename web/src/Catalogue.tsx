@@ -78,7 +78,7 @@ const href = (row: Row) => `#/task/${encodeURIComponent(row.slug)}`;
 
 /** A sub-header inside the Today card: what the rows under it are, and one quiet word on why. */
 const Band = ({ label, aside, first = false }: { label: string; aside: string; first?: boolean }) => (
-  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: first ? "2px 0 6px" : "10px 0 6px", borderTop: first ? "none" : "1px solid var(--border)" }}>
+  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: first ? "14px 0 8px" : "10px 0 6px", borderTop: first ? "none" : "1px solid var(--border)" }}>
     <span style={LABEL}>{label}</span>
     <span style={FAINT}>{aside}</span>
   </div>
@@ -220,19 +220,20 @@ export function Catalogue() {
 
       <Card padding="0 18px" style={{ overflow: "hidden" }}>
         <div className="m-stagger">
-          {/* Recent activity leads: coming back mid-week, the way into what you were last doing
-            * beats the queue. The daily cap is about new material, so it does not apply here —
-            * this lists as many as the week holds. */}
-          {recent.length ? <>
-            <Band label="Recent activity" aside={`last ${stats.window} days`} first />
-            {recent.map((e) => <TodayRow key={e.slug} row={e} />)}
-          </> : null}
+          {/* Recent activity leads, and it is always here: coming back mid-week, the way into
+            * what you were last doing beats the queue. The daily cap rations new material and
+            * has no say here — this lists as many as the week holds. */}
+          <Band label="Recent activity" aside={`last ${stats.window} days`} first />
+          {recent.length
+            ? recent.map((e) => <TodayRow key={e.slug} row={e} />)
+            : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
+                message="Nothing yet this week. Whatever you open collects here, passed or not." />}
           {review.length ? <>
-            <Band label="Reviews" aside={`${review.length} due`} first={!recent.length} />
+            <Band label="Reviews" aside={`${review.length} due`} />
             {review.map((e) => <TodayRow key={e.slug} row={e} />)}
           </> : null}
           {/* the sub-header carries the focus note, so it stays on screen on an empty day too */}
-          <Band label="New picks" aside={focus ? `from ${focus}` : "any"} first={!recent.length && !review.length} />
+          <Band label="New picks" aside={focus ? `from ${focus}` : "any"} />
           {/* Three things empty this list — the daily cap, an unmet prereq and the focus — and
             * the payload cannot tell them apart, so the copy names all three rather than
             * blaming the cap for a day the prereqs closed off. */}
