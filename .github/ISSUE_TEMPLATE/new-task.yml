@@ -1,0 +1,79 @@
+name: New task
+description: Propose a new practice task for the tasks/ catalogue
+title: "task: "
+labels: ["needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read [CONTRIBUTING.md](../../CONTRIBUTING.md#the-task-authoring-contract) first — it
+        states the contract a task is graded against (frontmatter, the machinery marker, exactly
+        three hints, `uv run drillion selfcheck`). This form is for proposing the idea before
+        anyone writes the code.
+  - type: input
+    id: title
+    attributes:
+      label: Working title
+      description: "Concept first, then what you build with it — e.g. \"counter — top N by frequency\", not the puzzle's name."
+      placeholder: "concept — what you build with it"
+    validations:
+      required: true
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Tier
+      description: Can this be solved with stock Python (core/advanced), or does the solution need something pip installs (packages)?
+      options:
+        - core
+        - advanced
+        - packages
+    validations:
+      required: true
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: Difficulty
+      description: How hard to get right the first time, not how long it takes — see docs/difficulty-rubric.md.
+      options:
+        - easy
+        - medium
+        - hard
+    validations:
+      required: true
+  - type: input
+    id: tags
+    attributes:
+      label: Tags
+      description: "1–3 lowercase kebab-case Python concepts this task lets someone practise — never the task's identity or story. Check `GET /api/catalogue`'s tags list or the README's Vocabulary section for existing tags before minting a new one."
+      placeholder: "recursion, dict-get"
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: The plain-language WHY block every task opens with — the real-world reason someone would write this code, in a sentence or two, no jargon.
+      placeholder: "You are writing... and have to decide..."
+    validations:
+      required: true
+  - type: textarea
+    id: shape
+    attributes:
+      label: What you get / what you return
+      description: Roughly what solve() is handed and what it hands back. Doesn't need to be exact — just enough to picture the function signature.
+    validations:
+      required: false
+  - type: input
+    id: prereqs
+    attributes:
+      label: Prerequisites
+      description: Existing task numbers or concepts this one assumes, if any.
+    validations:
+      required: false
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: If adapted from somewhere else (Exercism or otherwise), name it here and confirm its licence permits redistribution.
+    validations:
+      required: false
