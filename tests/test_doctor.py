@@ -138,3 +138,17 @@ def test_the_shipped_catalogue_is_clean():
     """doctor gates contributions, so the 171 tasks already here must pass it — an
     off-by-one in a rule shows up as the whole catalogue lighting up."""
     assert doctor.problems() == []
+
+
+def test_tooling_directories_are_not_broken_tasks():
+    """`tasks/__pycache__` appears the moment anything imports a task, so it is there for
+    anyone who has run the suite once. It is not an attempt at a task and doctor must not
+    report it — while a genuinely misnamed folder still has to be caught."""
+    reasons = _reasons(**{"__pycache__": {"whatever.pyc": "x"},
+                          ".ruff_cache": {"x": "y"},
+                          "001_ok": {"README.md": README, "task.py": TASK}})
+    assert "__pycache__" not in reasons and ".ruff_cache" not in reasons
+    assert reasons.get("001_ok", []) == []
+
+    named = _reasons(bad_name={"README.md": README, "task.py": TASK})
+    assert any("three digits" in r for r in named["bad_name"]), named

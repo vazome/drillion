@@ -124,13 +124,21 @@ def _set_problems(metas):
     return out
 
 
+def _task_folders():
+    """The folders a contributor authored. A name starting with `.` or `_` is tooling, not
+    an attempt at a task — `tasks/__pycache__` appears the moment anything imports a task —
+    so it is not a task folder and not a problem. A misnamed `bad_name` still is."""
+    return [f for f in sorted(settings.tasks_dir.iterdir())
+            if f.is_dir() and not f.name.startswith((".", "_"))]
+
+
 def problems():
     """[(folder name, reason)] for everything wrong under tasks/, folder by folder.
 
     Nothing here stops at the first failure: a contributor should learn all of it in one
     run. The last pass is the honesty check — a folder the catalogue drops for a reason
     none of the rules above names would be exactly the silence `doctor` exists to end."""
-    folders = [f for f in sorted(settings.tasks_dir.iterdir()) if f.is_dir()]
+    folders = _task_folders()
     out, metas = [], {}
     for folder in folders:
         reasons, metas[folder.name] = _folder_problems(folder)
@@ -151,7 +159,7 @@ def doctor():
         width = max(len(name) for name, _ in found) + 8
         for name, reason in found:
             print(f"tasks/{name}/".ljust(width), reason)
-    total = sum(1 for f in settings.tasks_dir.iterdir() if f.is_dir())
+    total = len(_task_folders())
     bad = {name for name, _ in found}
     if not found:
         print(f"{total} tasks, no problems")
