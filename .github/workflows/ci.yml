@@ -36,6 +36,16 @@ jobs:
         with:
           node-version: 24
       - run: corepack enable
+      # setup-node's own cache has only covered npm since v6, so the pnpm store gets
+      # its own. Ask pnpm where the store is rather than guessing at a path: pnpm 11
+      # moved it to a new store version.
+      - run: echo "PNPM_STORE=$(pnpm store path)" >> "$GITHUB_ENV"
+        working-directory: web
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.PNPM_STORE }}
+          key: pnpm-${{ hashFiles('web/pnpm-lock.yaml') }}
+          restore-keys: pnpm-
       - run: pnpm install --frozen-lockfile
         working-directory: web
       - run: pnpm build
