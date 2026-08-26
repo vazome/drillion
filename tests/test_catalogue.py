@@ -168,20 +168,26 @@ def test_search_text_carries_the_prose_and_not_the_furniture():
     which would match everything — and so are `## Read first` (links) and the imported
     Exercism `## Introduction` / `## Instructions`, which together triple the payload for
     words the four sections have already said."""
-    spec = ("# A task\n\n## Why\nA growing LOG file.\n\n"
-            "```python\ndef solve(x):\n    return x\n```\n\n"
-            "## You get\nOne path.\n\n## You return\nOne str.\n\n## Rules\nNo imports.\n\n"
-            "## Read first\n- https://docs.python.org/3/\n\n## Instructions\nExercism prose.\n")
+    spec = (
+        "# A task\n\n## Why\nA growing LOG file.\n\n"
+        "```python\ndef solve(x):\n    return x\n```\n\n"
+        "## You get\nOne path.\n\n## You return\nOne str.\n\n## Rules\nNo imports.\n\n"
+        "## Read first\n- https://docs.python.org/3/\n\n## Instructions\nExercism prose.\n"
+    )
     text = catalogue.search_text(spec)
-    assert "growing log file" in text                      # lowercased, so the needle can be too
+    assert "growing log file" in text  # lowercased, so the needle can be too
     assert "one path" in text and "one str" in text and "no imports" in text
-    assert "\n" not in text and "  " not in text           # one line, single spaces
-    assert "def solve" not in text                         # the fence went
+    assert "\n" not in text and "  " not in text  # one line, single spaces
+    assert "def solve" not in text  # the fence went
     assert "docs.python.org" not in text and "exercism prose" not in text
-    assert "# a task" not in text                          # the title is matched separately
+    assert "# a task" not in text  # the title is matched separately
 
 
 def test_every_task_ships_searchable_text():
     for slug, m in catalogue.tasks().items():
-        assert m["search_text"] == m["search_text"].lower() and m["search_text"].strip(), slug
-        assert "search_text" not in catalogue.public(m), slug   # the catalogue route adds it
+        assert (
+            m["search_text"] == m["search_text"].lower() and m["search_text"].strip()
+        ), slug
+        assert "search_text" not in catalogue.public(m), (
+            slug
+        )  # the catalogue route adds it
