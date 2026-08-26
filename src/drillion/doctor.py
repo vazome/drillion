@@ -1,76 +1,28 @@
-"""Why a task folder was skipped: the rules `catalogue.tasks()` enforces, said out loud.
+"""Why a task folder was skipped, said out loud.
 
-`tasks()` drops a folder it cannot read and says nothing, which is right for the menu
-mid-session and a dead end for whoever is writing the task. `doctor` walks the same
-folders, collects **every** reason each one is wrong — never stopping at the first — and
-adds the value rules the catalogue never had to check: how `difficulty` and `tier` are
-spelled, that `minutes` is a real par time, that tags are kebab-case, and that no
-reference names a task that is not there. The reason string is the whole point.
+`catalogue.tasks()` drops a folder it cannot read and says nothing, which is right for the
+menu mid-session and a dead end for whoever is writing the task. `catalogue.scan()` carries
+every reason it dropped one; `doctor` prints them all — never stopping at the first — and
+adds the rules the catalogue never had to check: how `difficulty` and `tier` are spelled,
+that `minutes` is a real par time, that tags are kebab-case, and that no reference names a
+task that is not there. The reason string is the whole point.
 """
 
-import ast
 import graphlib
 import re
 
-import yaml
+from .catalogue import SLUG, scan
 
-from .catalogue import REQUIRED, frontmatter, guidance, tasks
-from .region import Invalid, _solve, bounds, cut
-from .settings import settings
-
-SLUG = re.compile(r"^(\d{3})_[a-z0-9_]+$")
 TAG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 DIFFICULTIES = ("easy", "medium", "hard")
 TIERS = ("core", "advanced", "packages")
 REFERENCES = ("prereqs",)  # optional frontmatter lists of task numbers
 
 
-def _folder_problems(folder):
-    """(reasons, frontmatter) for one task folder — every rule it breaks, in reading
-    order. The frontmatter comes back so the cross-set pass need not parse it twice;
-    it is `{}` when the README could not be read at all."""
+def _value_rules(meta):
+    """The rules the catalogue never had to check: what a filled-in field actually says.
+    A task with `difficulty: simple` loads fine and then sorts, filters and grades wrong."""
     out = []
-    if not SLUG.match(folder.name):
-        out.append(
-            "folder name is not <NNN>_<name>: three digits, then a lowercase name"
-        )
-    src = folder / "task.py"
-    if not src.is_file():
-        out.append("task.py: missing")
-    else:
-        try:
-            text = src.read_text()
-            bounds(text)  # no marker line, no task
-            _solve(ast.parse(cut(text).body))
-        except Invalid as err:
-            out.append(f"task.py: {err}")
-        except SyntaxError as err:
-            out.append(
-                f"task.py: the region above the marker is not valid Python — {err.msg}"
-            )
-        except OSError as err:
-            out.append(f"task.py: cannot be read — {err.strerror}")
-
-    readme = folder / "README.md"
-    if not readme.is_file():
-        return [*out, "README.md: missing"], {}
-    try:
-        meta, md = frontmatter(readme.read_text())
-    except ValueError as err:
-        return [*out, f"README.md: {err}"], {}
-    except yaml.YAMLError as err:
-        return [*out, f"README.md: the frontmatter is not valid YAML — {err}"], {}
-    if not isinstance(meta, dict):
-        return [
-            *out,
-            "README.md: the frontmatter is not a block of key: value lines",
-        ], {}
-
-    out += [
-        f"README.md: frontmatter is missing `{k}`"
-        for k in REQUIRED
-        if meta.get(k) in (None, "", [])
-    ]
     if (
         difficulty := meta.get("difficulty")
     ) is not None and difficulty not in DIFFICULTIES:
@@ -100,15 +52,12 @@ def _folder_problems(folder):
             not isinstance(value, list) or not all(isinstance(n, int) for n in value)
         ):
             out.append(f"README.md: {key} must be a list of task numbers")
-    hints = guidance(md)[1]
-    if len(hints) != 3:
-        out.append(f"README.md: found {len(hints)} hints, need exactly 3")
-    return out, meta
+    return out
 
 
 def _refs(meta, key):
     """The task numbers under `key` that can actually be walked. `prereqs: 3` and
-    `prereqs: [a, 2]` are both already reported as bad frontmatter by the folder pass —
+    `prereqs: [a, 2]` are both already reported as bad frontmatter by `_value_rules` —
     doctor's whole job is to say why a folder is wrong, so nothing downstream of that
     report may crash on the same value before it reaches the screen."""
     refs = meta.get(key)
@@ -119,8 +68,9 @@ def _set_problems(metas):
     """The rules no folder can check alone: task numbers are unique, every reference
     names a real task, nothing gates itself, and no chain of prereqs closes into a loop.
 
-    The loop check is also the reachability check the issue asks for — a task whose
-    prereqs all exist and never cycle can always be reached by working through them."""
+    The loop check is also the reachability check — a task whose prereqs all exist and
+    never cycle can always be reached by working through them. Only the first cycle is
+    named; the next run finds the next one."""
     out, topics = [], {}
     for name in metas:
         if m := SLUG.match(name):
@@ -147,7 +97,6 @@ def _set_problems(metas):
         for t, name in topics.items()
     }
     try:
-        # ponytail: reports the first cycle only; the next run finds the next one.
         graphlib.TopologicalSorter(graph).prepare()
     except graphlib.CycleError as err:
         loop = err.args[1]
@@ -160,35 +109,19 @@ def _set_problems(metas):
     return out
 
 
-def _task_folders():
-    """The folders a contributor authored. A name starting with `.` or `_` is tooling, not
-    an attempt at a task — `tasks/__pycache__` appears the moment anything imports a task —
-    so it is not a task folder and not a problem. A misnamed `bad_name` still is."""
-    return [
-        f
-        for f in sorted(settings.tasks_dir.iterdir())
-        if f.is_dir() and not f.name.startswith((".", "_"))
-    ]
-
-
 def problems():
     """[(folder name, reason)] for everything wrong under tasks/, folder by folder.
 
     Nothing here stops at the first failure: a contributor should learn all of it in one
-    run. The last pass is the honesty check — a folder the catalogue drops for a reason
-    none of the rules above names would be exactly the silence `doctor` exists to end."""
-    folders = _task_folders()
+    run. The catalogue's own reasons come first, then the value rules, then the rules that
+    need the whole set."""
     out, metas = [], {}
-    for folder in folders:
-        reasons, metas[folder.name] = _folder_problems(folder)
-        out += [(folder.name, r) for r in reasons]
+    for name, record, why in scan():
+        metas[name] = record or {}
+        out += [(name, r) for r in why]
+        if record is not None:
+            out += [(name, r) for r in _value_rules(record)]
     out += _set_problems(metas)
-    named, loaded = {name for name, _ in out}, tasks()
-    out += [
-        (f.name, "the catalogue skips this folder and doctor cannot say why")
-        for f in folders
-        if f.name not in loaded and f.name not in named
-    ]
     out.sort(key=lambda pair: pair[0])  # stable: reasons keep their reading order
     return out
 
@@ -201,14 +134,14 @@ def doctor():
         width = max(len(name) for name, _ in found) + 8
         for name, reason in found:
             print(f"tasks/{name}/".ljust(width), reason)
-    total = len(_task_folders())
-    bad = {name for name, _ in found}
+    folders = scan()
     if not found:
-        print(f"{total} tasks, no problems")
+        print(f"{len(folders)} tasks, no problems")
     else:
-        skipped = len(bad - set(tasks()))
+        bad = {name for name, _ in found}
+        skipped = sum(1 for _, _, why in folders if why)
         print(
-            f"{len(found)} problems in {len(bad)} of {total} tasks; "
+            f"{len(found)} problems in {len(bad)} of {len(folders)} tasks; "
             f"{skipped} would be skipped by the catalogue"
         )
     return len(found)
