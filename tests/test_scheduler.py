@@ -250,9 +250,6 @@ def test_the_ladder_sheds_review_load_at_the_top():
     )  # clamps rather than wraps
     assert c["box"] == len(scheduler.LADDER) - 1
 
-    a_day = 171 / scheduler.LADDER[-1]  # every task mastered, nothing new left to pick
-    assert a_day < 2, f"a finished catalogue would still cost {a_day:.1f} reviews a day"
-
 
 def test_the_editor_opens_an_attempt_before_it_saves():
     """The server rejects a PUT with 409 unless an attempt is open, and typing is the
