@@ -59,11 +59,12 @@ Elements: Today panel (reviews, then new picks, focus selector), search, filter 
 tag), status filter, the task list (title · difficulty · the `tier/tag` path · status · a miniature
 ladder showing which box the card is in), a small stats strip (days practised, due today, cards per box).
 
-One table, with the tiers as bands inside it — a band is a label and a count, never a
-collapsible: a list that hides two thirds of itself is not a catalogue. Every column header
-sorts, ascending then descending, within each band; `#` ascending is the default and the reset
-control restores it. `difficulty` and `status` sort by what the word means, not by the alphabet.
-The tag map shows every tag at once, wrapped rather than scrolled.
+One flat table — no tier bands and no collapsing. The tier is the first segment of every row's
+path, so a band header repeated the word and added a count, and a list that hides two thirds of
+itself is not a catalogue. Every column header sorts, ascending then descending; `#` ascending is
+the default, and the reset control (`↺`, past Status, greyed when there is nothing to undo)
+restores it. `difficulty` and `status` sort by what the word means, not by the alphabet; ties fall
+back to the task number. The tag map shows every tag at once, wrapped rather than scrolled.
 
 Tier and tag render as one filesystem-style path, `core/f-strings`, with the tier segment muted —
 one column, not two. Whatever `focus` a row is filtered by, the UI must be able to show it: a
