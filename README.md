@@ -116,11 +116,17 @@ Dockerfile, compose.yaml, .github/workflows/ci.yml
 
 | variable | default | meaning |
 |---|---|---|
-| `DRILLION_ROOT` | cwd if it has `tasks/`, else the repo | where `tasks/` and `progress.json` live |
+| `DRILLION_ROOT` | cwd if it has `tasks/`, else the checkout, else a per-user data directory | where `tasks/` and `progress.json` live |
 | `DRILLION_HOST` | `127.0.0.1` | bind address (`0.0.0.0` inside Docker) |
 | `DRILLION_PORT` | `8765` | port |
 | `DRILLION_OPEN_BROWSER` | `1` | open the browser on start (`0` in Docker) |
 | `DRILLION_SEED` | — | pin the data seed when running a task by hand |
+
+Run it from a clone and the checkout is the root: the tasks you practise are the ones in
+`tasks/`, edited in place, and nothing is copied anywhere. Run an installed drillion with no
+`tasks/` in sight and the first command copies the tasks that ship inside the package into that
+per-user directory, once — a root that already has `tasks/` is never written over, so an upgrade
+cannot touch code you saved.
 
 The server binds to loopback, accepts only `127.0.0.1`/`localhost` host headers, rejects bodies
 over 256 KB, and runs task code only inside a pytest subprocess with a timeout.
