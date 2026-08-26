@@ -14,6 +14,8 @@ from drillion.api import MAX_BODY, WINDOW, _practised, _recent, app
 from drillion.settings import settings
 
 SLUG = "001_fstrings"
+NEXT_SLUG = "002_slicing"  # no prereqs: what the scheduler offers once 001 is cleared
+TASKS = settings.tasks_dir  # the real ones — `_api()` repoints settings.root at a copy
 PASSING = 'return "\\n".join(f"{name:<14}{value:>12,.2f}" for name, value in rows)'
 
 
@@ -96,6 +98,9 @@ async def _stub_to_pass(api, path):
         and "return ''" in stale.json()["code"]
     )
 
+    # a second task, so the pass has somewhere to point and `next` can be wrong
+    shutil.copytree(TASKS / NEXT_SLUG, path.parent.parent / NEXT_SLUG)
+
     solved = task["code"].replace("raise NotImplementedError", PASSING)
     run = (
         await api.post(
@@ -111,12 +116,15 @@ async def _stub_to_pass(api, path):
     assert run["from_box"] == 0  # ...and it is a climb, not a fall
     assert run["reason"] == "the runs it took"  # the cause, never par's number
     assert run["reference"].startswith("def _reference(")  # passing is what opens it
-    assert run["next"] is None  # the only card in this fixture is the one just cleared
+    assert run["next"] == NEXT_SLUG  # what to sit down with now this card is cleared
     body = region.cut(path.read_text()).body
     assert region.stub(body) == body  # passing puts the stub back on disk
 
     st = state.load()
     assert st["open"] == {} and [e["slug"] for e in st["log"]] == [SLUG]
+    # only the card that was graded: `card()` fills blanks in place, so anything that walks
+    # every task inside `writing()` writes a blank card for each of them
+    assert list(st["cards"]) == [SLUG]
     assert PASSING in st["archive"][SLUG][0]["code"]
 
     done = (await api.get(f"/api/task/{SLUG}")).json()

@@ -163,11 +163,6 @@ def _payload(st, slug, meta, src):
     # One rule, both answers. Passing the task is what opens them, and the next sitting on
     # that card starts clean again; while an attempt is open only the deliberate peek opens
     # them, because taking the answer is what marks the attempt and costs the grade.
-    #
-    # `archive[].code` used to read `unlocked` instead, and `unlocked` goes true the moment
-    # the gate's *price* has been spent rather than when the learner asks. So sitting on a
-    # review long enough handed back your own previously accepted code — every bit as much
-    # an answer as the reference — unmarked, unpenalised, and never routed through /solution.
     reveal = o["solution_shown"] if o else c["seen"] > 0 and c["due"] > today()
     return {
         "slug": slug,
@@ -402,8 +397,8 @@ def run_task(slug: str, edit: Edit):
                 "code": code,
                 "reference": solution_text(meta["path"]),  # passing is what opens it
                 "lapses": card(st, slug)["lapses"],
-                # what to do next, now the card is cleared: the scheduler's one suggestion
-                "next": pick(st, tasks())[0],
+                # over a copy: `pick` reads every card, and `card()` fills blanks in place
+                "next": pick({**st, "cards": dict(st["cards"])}, tasks())[0],
             }  # the page reads lapse_limit off /task
         return resp | {"etag": etag(new_src)}
 
@@ -558,8 +553,7 @@ def build_web():
 
 def serve():
     build_web()
-    # The page itself, mounted after every /api route so an unmatched /api/... 404s as JSON,
-    # and after build_web() so a clone without pnpm simply has no `/` rather than a 500.
+    # The page itself, mounted after every /api route so an unmatched /api/... 404s as JSON.
     if settings.web_dist.is_dir():
         app.mount("/", StaticFiles(directory=settings.web_dist, html=True), name="web")
     url = f"http://{settings.host}:{settings.port}/"

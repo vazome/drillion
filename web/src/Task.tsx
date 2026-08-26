@@ -227,7 +227,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
         setCode(r.code);
         // the pass is what opens the reference, and what may have just hit the lapse limit
         setTask((p) => p && ({ ...p, reference: r.reference, lapses: r.lapses }));
-        setNextSlug(r.next);               // the scheduler's suggestion, now the card is cleared
+        setNextSlug(r.next);
       } else {
         setResult({ state: "failed", attempts: r.attempts, headline: r.headline.join("\n") || "The tests did not pass.", output: r.output });
         setTask((p) => p && p.attempt ? { ...p, attempt: { ...p.attempt, attempts: r.attempts } } : p);
@@ -244,6 +244,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     if (busy) return;
     setBusy(true);
     try {
+      await inflight.current;              // the payload carries an etag: never over a live PUT
       await ensureOpen();
       adopt(await post<TaskData>(`/task/${encodeURIComponent(slug)}/hint`), dirtyRef.current);
       setGate(null);
@@ -261,6 +262,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     if (busy) return;
     setBusy(true);
     try {
+      await inflight.current;              // the payload carries an etag: never over a live PUT
       await ensureOpen();
       adopt(await post<TaskData>(`/task/${encodeURIComponent(slug)}/solution`), dirtyRef.current);
       setGate(null);
