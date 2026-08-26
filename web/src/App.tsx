@@ -31,9 +31,8 @@ function useTheme(): [boolean, (v: boolean) => void] {
   return [dark, (v) => { applyTheme(v); setDark(v); }];
 }
 
-function Header({ route, dark, setDark, total, daysLeft }: {
-  route: string; dark: boolean; setDark: (v: boolean) => void;
-  total: number; daysLeft: number;
+function Header({ route, dark, setDark, total }: {
+  route: string; dark: boolean; setDark: (v: boolean) => void; total: number;
 }) {
   const link = (href: string, text: string) => (
     <a href={href} style={{ fontSize: 14, fontWeight: route === href.slice(1) ? 600 : 400, color: route === href.slice(1) ? "var(--text)" : "var(--text-muted)" }}>{text}</a>
@@ -47,7 +46,6 @@ function Header({ route, dark, setDark, total, daysLeft }: {
       <div style={{ flex: 1 }} />
       {link("#/", "Catalogue")}
       {link("#/progress", "Progress")}
-      {daysLeft ? <span className="tabular" style={{ fontSize: 13, color: "var(--text-faint)", fontFamily: "var(--font-mono)" }}>{daysLeft} days left</span> : null}
       <Toggle checked={dark} onChange={setDark} label={dark ? "Dark" : "Light"} />
     </header>
   );
@@ -62,10 +60,10 @@ export function App() {
   // Catalogue must keep its own fetch (it remounts per visit, which is what makes Today
   // current after a pass, and it refetches after POST /api/focus). Sharing one fetch buys
   // either a stale Today or a refetch on every route change — dearer than one local GET.
-  const [head, setHead] = useState({ total: 0, daysLeft: 0 });
+  const [head, setHead] = useState({ total: 0 });
   useEffect(() => {
     api<CataloguePayload>("/catalogue")
-      .then((c) => setHead({ total: c.stats.total, daysLeft: c.stats.days_left }))
+      .then((c) => setHead({ total: c.stats.total }))
       .catch(() => {});                    // a header without its counts is not worth an error
   }, []);
 

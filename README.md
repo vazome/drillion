@@ -51,14 +51,13 @@ files.
 
 **A 5-box ladder, not a fancy algorithm.** Pass a task and it returns in 2 → 4 → 8 → 16 → 28
 days. Only a pass moves a card: a failing run costs an attempt and nothing else, and a pass you
-took the solution for grades `struggled`, which leaves the card exactly where it was. Nothing is
-ever scheduled past a week before the target date.
+took the solution for grades `struggled`, which leaves the card exactly where it was.
 
 The obvious choice was FSRS (what Anki uses). Tested it: with default settings a task you get right
-three times comes back in 46 days, then 90 — i.e. after the interview. It's tuned for people
-memorising vocabulary over years. Fixed intervals are also the *more* correct choice here: with a
-known deadline, the research (Cepeda 2008) puts the optimal gap at 10–20% of the time remaining,
-which is a number you can just write down.
+three times comes back in 46 days, then 90. It's tuned for people memorising vocabulary over years,
+where the cost of a lapse is one word. Fixed intervals are the *more* correct choice here: over a
+season of practice the research (Cepeda 2008) puts the optimal gap at 10–20% of the retention
+interval, which is a number you can just write down.
 
 **Grades are computed, not self-reported.** First try under par = `quick` (+2 boxes). Two tries =
 `pass` (+1). Slow, or three-plus tries = `struggled` (stays put). Looked at the solution = never

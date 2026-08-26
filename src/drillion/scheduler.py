@@ -1,8 +1,9 @@
 """The Leitner ladder: what comes back today, what is new, and what a pass is worth.
 
-A 5-box ladder, not FSRS: the horizon is 12 weeks and Cepeda 2008 puts the optimal
-gap at 10-20% of that, so intervals are fixed rather than fitted. ponytail: a
-5-element list beats a dependency with 21 trained weights we have no data to fit.
+A 5-box ladder, not FSRS: fixed intervals over a season of practice, sized near
+Cepeda 2008's 10-20% of the retention interval rather than fitted per card.
+ponytail: a 5-element list beats a dependency with 21 trained weights we have no
+data to fit.
 """
 
 from datetime import date, timedelta
@@ -10,7 +11,6 @@ from datetime import date, timedelta
 from .state import card, today
 
 LADDER = [2, 4, 8, 16, 28]           # days until the next sighting, per box
-INTERVIEW = date(2026, 11, 2)        # everything recycles before this
 NEW_PER_DAY = 2
 GRADES = {"struggled": 0, "pass": +1, "quick": +2}   # every grade grade_of() can return
 
@@ -74,7 +74,5 @@ def grade_of(attempts, secs, par, solution_shown):
 def reschedule(c, grade):
     c["box"] = max(0, min(len(LADDER) - 1, c["box"] + GRADES[grade]))
     gap = LADDER[c["box"]]
-    nxt = date.today() + timedelta(days=gap)
-    cutoff = INTERVIEW - timedelta(days=7)
-    c["due"] = min(nxt, cutoff).isoformat()
-    return (min(nxt, cutoff) - date.today()).days
+    c["due"] = (date.today() + timedelta(days=gap)).isoformat()
+    return gap

@@ -15,8 +15,9 @@ A single-user, local web app for practising Python. A catalogue of 171 short tas
 with a spec, a code editor, and a test that grades the code on fresh random data.
 A spaced-repetition scheduler decides what comes back when (5-box ladder: 2/4/8/16/28 days). Hints
 unlock with time; the solution unlocks after real effort. Sessions are 20–40 minutes a day, on a
-laptop browser, until a fixed deadline (an interview date). The user is one person who is learning
-Python for DevOps interviews — not a classroom, not a marketplace.
+laptop browser, kept up over months — there is no deadline and no countdown, because a habit is
+what carries the practice. The user is one person learning Python — not a classroom, not a
+marketplace.
 
 The feel to aim for: a focused workbench like HackerRank/Exercism's problem page, but calmer and
 more personal — it should be **engaging to come back to daily**. Progress on the ladder is the
@@ -44,7 +45,8 @@ Answers: *what do I do now?*
 Data: `GET /api/catalogue` →
 - `today.review[]` — due reviews, most overdue first; `today.new[]` — up to 2 new picks;
   `today.done_today` (count)
-- `stats` — `boxes` (5 counts, one per ladder box), `due`, `seen`, `total`, `days_left` to the deadline
+- `stats` — `boxes` (5 counts, one per ladder box), `due`, `seen`, `total`, and `practised` of
+  `window`: distinct days worked in the last 7, a rolling count rather than a streak
 - `focus` — one string or null; it restricts *new* picks and is matched against a task's **tier,
   track and tags alike**. `tags[]`, `tiers[]`, `tracks[]` — the three vocabularies to filter by
 - `tasks[]` — per row: `slug`, `topic` (number), `title`, `difficulty`, `tier`, `track?`, `tags[]`,
@@ -55,7 +57,7 @@ Data: `GET /api/catalogue` →
 
 Elements: Today panel (reviews, then new picks, focus selector), search, filter chips (tier, track,
 tag), status filter, the task list (title · difficulty · the `tier/tag` path · status · a miniature
-ladder showing which box the card is in), a small stats strip (days left, due today, cards per box).
+ladder showing which box the card is in), a small stats strip (days practised, due today, cards per box).
 
 Tier and tag render as one filesystem-style path, `core/f-strings`, with the tier segment muted —
 one column, not two. Whatever `focus` a row is filtered by, the UI must be able to show it: a
@@ -105,12 +107,11 @@ dot and surfaces on Run), **conflict banner** (file changed on disk: reload / ov
 
 Answers: *where am I on the ladder?*
 
-Data: `GET /api/progress` → `boxes[5]`, `due`, `seen`, `total`, `per_tag{tag: {seen, total}}`,
-`log[]` (last 30: `date, slug, grade, attempts, secs, new`).
+Data: `GET /api/progress` → `boxes[5]`, `due`, `seen`, `total`, `practised`, `window`,
+`per_tag{tag: {seen, total}}`, `log[]` (last 30: `date, slug, grade, attempts, secs, new`).
 
-Elements: the full-size ladder (5 boxes with counts and next-return intervals), a per-tag coverage
-table, the recent log. Days-left to the deadline lives in the header, on every route — it comes
-off `/api/catalogue`, and this payload does not carry it.
+Elements: the same stats strip, the full-size ladder (5 boxes with counts and next-return
+intervals), a per-tag coverage table, the recent log.
 
 ## Vocabulary (use these words)
 
@@ -138,7 +139,7 @@ learner how long they were supposed to take.
 is in progress) · `done` (seen, and not due yet). Four, and only four: `_status()` in `api.py` has
 no fifth branch, so a filter offering one matches nothing.
 
-Boxes 1–5. Hints are "levels". The solution "unlocks". The deadline is shown as days left.
+Boxes 1–5. Hints are "levels". The solution "unlocks". Showing up is counted as days practised.
 
 The full definitions, and the rules for adding a task, are in
 [README.md](README.md#vocabulary) — this list is the UI's copy of them.
