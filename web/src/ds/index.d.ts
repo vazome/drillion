@@ -148,20 +148,20 @@ export interface TagChipProps {
 }
 export declare function TagChip(props: TagChipProps): El;
 
-/** Miniature 5-cell Leitner meter for rows and banners. box 0 = all empty. */
+/** Miniature Leitner meter for rows and banners, one cell per rung. box 0 = all empty. */
 export interface LadderMeterProps {
-  /** which rung to fill, 0–5; 0 is a card that is not on the ladder yet */
+  /** which rung to fill, 0–7; 0 is a card that is not on the ladder yet */
   box?: number;
   intervals?: number[];
   style?: Style;
 }
 export declare function LadderMeter(props: LadderMeterProps): El;
 
-/** Full-size ladder for the Progress page: 5 boxes with counts and return intervals. */
+/** Full-size ladder for the Progress page: one box per rung, with counts and return intervals. */
 export interface LadderProps {
-  /** card count per box, length 5 */
+  /** card count per box, one entry per rung */
   boxes?: number[];
-  /** index (0–4) of the box to outline (most recent pass) */
+  /** index of the box to outline (most recent pass) */
   highlight?: number;
   intervals?: number[];
   style?: Style;

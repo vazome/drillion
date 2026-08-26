@@ -97,7 +97,7 @@ const Path = ({ row }: { row: Row }) => (
   </span>
 );
 
-// the API numbers boxes 0-4; the meter fills 1-5, and an unseen card sits on no rung
+// the API numbers boxes from 0; the meter fills from 1, and an unseen card sits on no rung
 const rung = (row: Row) => (row.seen ? row.box + 1 : 0);
 
 type SortKey = "topic" | "title" | "path" | "difficulty" | "box" | "status";
