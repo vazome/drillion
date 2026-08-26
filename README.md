@@ -42,8 +42,11 @@ is missing or older than anything in `web/src/`, or than `web/package.json`, `we
    10 minutes, and taking it means the pass cannot promote the card.
 5. **Pass** → computed grade → card moves on the ladder → your code is archived into
    `progress.json` → the file is reset to the stub, so the next review starts blank.
+6. The spec pane carries a **note** — one free-text box per task, saved as you type. It is the
+   place for "I always forget `sorted` needs `key=`". The note belongs to the task, not to the
+   sitting: it is still there after a grade, a re-attempt and an abandon. Clearing it deletes it.
 
-State lives in `progress.json` (cards, open attempts, log, archived solutions). It is untracked
+State lives in `progress.json` (cards, open attempts, log, archived solutions, notes). It is untracked
 and listed in `.gitignore`, so a fresh clone starts with an empty ladder, not the maintainer's own
 progress. If you cloned before this changed and already have real practice in your file, pulling
 past this change may show a modify/delete conflict on `progress.json` — keep your file. It is the

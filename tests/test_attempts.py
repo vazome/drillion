@@ -186,6 +186,7 @@ def test_load_fills_in_the_keys_an_older_file_lacks():
             "open": {},
             "log": [],
             "archive": {},
+            "notes": {},
         }
         state.save({"cards": {"001_a": {"box": 1, "due": "2020-01-01", "seen": 1}}})
         st = state.load()

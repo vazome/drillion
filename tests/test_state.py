@@ -36,6 +36,7 @@ def test_a_fresh_clone_starts_with_an_empty_ladder():
             "open": {},
             "log": [],
             "archive": {},
+            "notes": {},
         }
         assert not settings.state_path.exists()
 
@@ -45,7 +46,11 @@ def test_a_fresh_clone_starts_with_an_empty_ladder():
 def test_an_existing_progress_file_upgrades_untouched():
     """Untracking progress.json must cost an existing install nothing: the file stays
     where it always was, load() reads every key back exactly as stored, and there is no
-    migration step between the two. This is the half of #4 that could destroy real work."""
+    migration step between the two. This is the half of #4 that could destroy real work.
+
+    `stored` is deliberately a file from before `notes` existed (#15). A key that arrives later
+    is defaulted in `load()` and nothing else: the old file reads back whole, with the new key
+    blank beside it, and no migration ever runs over months of real progress."""
     stored = {
         "focus": "class-inheritance",
         "cards": {"008_sortkey": {"box": 3, "due": "2026-09-01", "seen": 4}},
@@ -78,10 +83,10 @@ def test_an_existing_progress_file_upgrades_untouched():
 
     def check(_tmp):
         settings.state_path.write_text(json.dumps(stored))
-        assert state.load() == stored  # nothing added, nothing dropped, no move
+        assert state.load() == {**stored, "notes": {}}  # nothing dropped, no move
         with state.writing() as st:  # and a session on top keeps it all
             st["focus"] = None
-        assert state.load() == {**stored, "focus": None}
+        assert state.load() == {**stored, "focus": None, "notes": {}}
 
     _root(check)
 

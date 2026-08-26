@@ -54,6 +54,10 @@ export interface Task {
   hints: { total: number; shown: string[]; next_in: number | null };
   solution: { unlocked: boolean; need_attempts: number; need_secs: number };
   archive: { date: string; grade: Grade; code?: string }[];
+  /** The learner's own words about this task — one note, edited in place, `""` when there is
+   *  none. It belongs to the task and not to the attempt: a grade, a re-attempt and an abandon
+   *  all leave it alone. `PUT /api/task/{slug}/note`; an empty note deletes it. */
+  note: string;
 }
 export interface RunResult {
   passed: boolean; attempts: number; headline: string[]; output: string; etag: string;
