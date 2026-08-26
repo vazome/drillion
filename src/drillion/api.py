@@ -189,6 +189,8 @@ def catalogue():
         left = (INTERVIEW - date.fromisoformat(today())).days
         return {"focus": st["focus"],
                 "tags": sorted({t for m in all_tasks.values() for t in m["tags"]}),
+                "tiers": ["core", "advanced", "packages"],       # fixed order: easiest first
+                "tracks": sorted({m["track"] for m in all_tasks.values() if m.get("track")}),
                 "today": q,
                 "stats": {"boxes": boxes, "due": len(q["review"]), "seen": sum(boxes),
                           "total": len(all_tasks), "days_left": left},

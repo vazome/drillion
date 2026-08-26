@@ -13,6 +13,8 @@ DIRS = sorted(p for p in settings.tasks_dir.iterdir() if (p / "task.py").exists(
 README = """\
 ---
 title: A test task
+difficulty: easy
+tier: core
 minutes: 7
 prereqs: [1]
 tags: [core]
@@ -95,6 +97,7 @@ def test_a_broken_folder_is_skipped_instead_of_breaking_the_menu():
                          "task.py": "def solve(x):\n    raise NotImplementedError\n"},
         "047_nosolve": {"README.md": README, "task.py": TASK.replace("def solve", "def nope")},
         "048_noreadme": {"task.py": TASK},
+        "049_notier": {"README.md": README.replace("tier: core\n", ""), "task.py": TASK},
         "notanumber": {"README.md": README, "task.py": TASK},
     })
     try:

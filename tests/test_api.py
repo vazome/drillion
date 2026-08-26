@@ -43,7 +43,10 @@ async def _stub_to_pass(api, path):
     cat = (await api.get("/api/catalogue")).json()
     assert [e["slug"] for e in cat["tasks"]] == [SLUG]
     assert cat["tasks"][0]["status"] == "new" and cat["today"]["new"] == [SLUG]
-    assert cat["tags"] == ["core"] and cat["stats"]["total"] == 1
+    assert cat["tags"] == ["f-strings"] and cat["stats"]["total"] == 1
+    assert cat["tiers"] == ["core", "advanced", "packages"] and cat["tracks"] == []
+    assert cat["tasks"][0]["tier"] == "core" and cat["tasks"][0]["difficulty"] == "easy"
+    assert "minutes" not in cat["tasks"][0]      # par time is never the learner's
 
     task = (await api.post(f"/api/task/{SLUG}/open")).json()
     assert task["attempt"]["attempts"] == 0 and task["status"] == "open"
@@ -136,8 +139,8 @@ async def _guards(api, path):
     assert {"unlocked": False, **{k: locked.json()[k]
                                   for k in ("need_attempts", "need_secs")}} == task["solution"]
     assert (await api.post("/api/focus", json={"tag": "core"})).json() == {"focus": "core"}
-    assert (await api.get("/api/catalogue")).json()["focus"] == "core"
-    assert (await api.get("/api/progress")).json()["per_tag"] == {"core": {"seen": 0, "total": 1}}
+    assert (await api.get("/api/catalogue")).json()["focus"] == "core"   # a tier, not a tag
+    assert (await api.get("/api/progress")).json()["per_tag"] == {"f-strings": {"seen": 0, "total": 1}}
 
     stub_etag = (await api.get(f"/api/task/{SLUG}")).json()["etag"]
     gone = await api.post(f"/api/task/{SLUG}/abandon", json={"etag": stub_etag})

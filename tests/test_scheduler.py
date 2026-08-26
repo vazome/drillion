@@ -7,9 +7,11 @@ from drillion import scheduler, state
 
 def _exs():
     """A tiny catalogue: 002_b needs 001_a, which is not in the rsample track."""
-    return {"001_a": {"topic": 1, "minutes": 5, "prereqs": [], "tags": ["core"]},
-            "002_b": {"topic": 2, "minutes": 5, "prereqs": [1], "tags": ["core", "rsample"]},
-            "003_c": {"topic": 3, "minutes": 5, "prereqs": [], "tags": ["rsample"]}}
+    return {"001_a": {"topic": 1, "minutes": 5, "prereqs": [], "tier": "core", "tags": ["loops"]},
+            "002_b": {"topic": 2, "minutes": 5, "prereqs": [1], "tier": "core", "track": "rsample",
+                      "tags": ["loops"]},
+            "003_c": {"topic": 3, "minutes": 5, "prereqs": [], "tier": "advanced",
+                      "track": "rsample", "tags": ["llm"]}}
 
 
 def _st(**kw):
@@ -38,8 +40,10 @@ def test_unseen_respects_prereqs():
 
 
 def test_focus_ignores_out_of_focus_prereqs():
-    assert scheduler.unseen(_st(focus="rsample"), _exs()) == ["002_b", "003_c"]
-    assert scheduler.unseen(_st(focus="core"), _exs()) == ["001_a"]
+    assert scheduler.unseen(_st(focus="rsample"), _exs()) == ["002_b", "003_c"]   # a track
+    assert scheduler.unseen(_st(focus="core"), _exs()) == ["001_a"]              # a tier
+    assert scheduler.unseen(_st(focus="loops"), _exs()) == ["001_a"]             # a tag
+    assert scheduler.unseen(_st(focus="llm"), _exs()) == ["003_c"]
 
 
 def test_queue_caps_new_picks_and_skips_open_attempts():

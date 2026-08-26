@@ -57,8 +57,8 @@ def test_stub_is_identity_on_pristine_files():
 
 # ------------------------------------------------------------ stub
 def test_stub_keeps_given_code_and_decorators():
-    for name, needle in (("036_env", "TRUTHY = {"), ("044_customexc", "class ConfigError"),
-                         ("098_fixtures", "@pytest.fixture")):
+    for name, needle in (("034_env", "TRUTHY = {"), ("041_customexc", "class ConfigError"),
+                         ("084_fixtures", "@pytest.fixture")):
         body = region.cut((settings.tasks_dir / name / "task.py").read_text()).body
         stubbed = region.stub(body.replace("raise NotImplementedError", "return {}"))
         assert needle in stubbed and "return {}" not in stubbed, name
@@ -72,7 +72,7 @@ def test_stub_refuses_a_one_line_body():
 
 def test_has_given_spots_code_above_solve():
     assert region.has_given(region.cut(
-        (settings.tasks_dir / "036_env" / "task.py").read_text()).body)
+        (settings.tasks_dir / "034_env" / "task.py").read_text()).body)
     assert not region.has_given(region.cut(SRC).body)
 
 

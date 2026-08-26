@@ -1,8 +1,10 @@
 ---
 title: f-strings — aligned report columns
+difficulty: easy
+tier: core
 minutes: 10
 prereqs: []
-tags: [core]
+tags: [f-strings]
 ---
 # f-strings — aligned report columns
 

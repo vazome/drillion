@@ -19,18 +19,24 @@ def due_today(st, all_tasks):
     return [s for s in all_tasks if card(st, s)["seen"] > 0 and card(st, s)["due"] <= today()]
 
 
+def _facets(meta):
+    """Everything `focus` may name: the tier, the track and the tags, as one set."""
+    return {meta.get("tier"), meta.get("track"), *meta.get("tags", [])}
+
+
 def unseen(st, all_tasks):
-    """Unstarted tasks whose prereqs are cleared. Under a focus tag, prereqs
-    outside the tag are ignored — else a track stalls on a task it lacks."""
+    """Unstarted tasks whose prereqs are cleared. Under a focus, prereqs outside
+    it are ignored — else a track stalls on a task it lacks. Focus is one string
+    matched against a task's tier, track and tags alike, so any of the three filters."""
     focus = st.get("focus")
     by_topic = {m["topic"]: s for s, m in all_tasks.items()}
     ready = []
     for slug, meta in all_tasks.items():
-        if card(st, slug)["seen"] or (focus and focus not in meta.get("tags", [])):
+        if card(st, slug)["seen"] or (focus and focus not in _facets(meta)):
             continue
         prereqs = [by_topic[p] for p in meta.get("prereqs", []) if p in by_topic]
         if focus:
-            prereqs = [s for s in prereqs if focus in all_tasks[s].get("tags", [])]
+            prereqs = [s for s in prereqs if focus in _facets(all_tasks[s])]
         if all(card(st, s)["box"] >= 1 for s in prereqs):
             ready.append(slug)
     return ready
