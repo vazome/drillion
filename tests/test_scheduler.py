@@ -32,13 +32,23 @@ def test_grade_of():
 def test_reschedule():
     c = {"box": 0, "due": "2000-01-01", "seen": 1}
     assert scheduler.reschedule(c, "quick") == 8 and c["box"] == 2      # +2 boxes, LADDER[2]
-    assert scheduler.reschedule(c, "struggled") == 8 and c["box"] == 2  # same box, same gap
-    assert scheduler.reschedule(c, "pass") == 16 and c["box"] == 3      # +1 box
-    assert c["due"] == (date.today() + timedelta(days=16)).isoformat()  # noqa: DTZ011
+    assert scheduler.reschedule(c, "struggled") == 4 and c["box"] == 1  # -1 box: a struggle costs
+    assert scheduler.reschedule(c, "pass") == 8 and c["box"] == 2       # +1 box
+    assert c["due"] == (date.today() + timedelta(days=8)).isoformat()   # noqa: DTZ011
     # the top box is the ceiling: a quick pass there moves nothing, which is why /run has to
     # tell the page the box the card came from rather than let it infer a step from the grade
     assert scheduler.reschedule(c, "quick") == 28 and c["box"] == 4
     assert scheduler.reschedule(c, "quick") == 28 and c["box"] == 4
+
+
+def test_a_struggle_walks_a_card_back_down_the_ladder():
+    """Leitner is adaptive only because failing demotes. `struggled` used to be worth +0, so a
+    task that fought you every single sitting held box 4 and its 28-day gap forever — the same
+    schedule as one you had aced four times, and the struggle cost you nothing but the sitting.
+    One box per struggle walks it back down over a few sittings, and box 0 is the floor."""
+    c = {"box": 4, "due": "2000-01-01", "seen": 9}
+    assert [scheduler.reschedule(c, "struggled") for _ in range(6)] == [16, 8, 4, 2, 2, 2]
+    assert c["box"] == 0
 
 
 def test_unseen_respects_prereqs():

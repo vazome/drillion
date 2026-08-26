@@ -153,8 +153,9 @@ async def _guards(api, path):
 async def _struggled_first_sighting(api, _path):
     """The card the page kept claiming had stepped up.
 
-    Three attempts is `struggled`, `struggled` is +0, and a never-seen card is already
-    in box 0 — so this pass moves nothing. The server says so; the page only renders it.
+    Three attempts is `struggled`, a struggle now costs a box, and a never-seen card is
+    already in box 0 — the floor, so this pass moves nothing. The server says so; the page
+    only renders it.
     """
     task = (await api.post(f"/api/task/{SLUG}/open")).json()
     assert state.card(state.load(), SLUG) == {"box": 0, "due": state.today(), "seen": 0}
