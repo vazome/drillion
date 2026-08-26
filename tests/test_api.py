@@ -515,6 +515,21 @@ async def _note(api, _path):
     assert resp.status_code == 404  # a slug is a task or it is nothing
 
 
+async def _the_ladder_rides_the_payload(api, _path):
+    """Every screen that draws the ladder reads its intervals off the response, so the
+    scheduler's list is the only place the rungs are written down."""
+    cat = (await api.get("/api/catalogue")).json()
+    prog = (await api.get("/api/progress")).json()
+    task = (await api.get(f"/api/task/{SLUG}")).json()
+    assert cat["stats"]["ladder"] == scheduler.LADDER
+    assert prog["ladder"] == scheduler.LADDER
+    assert task["ladder"] == scheduler.LADDER
+
+
+def test_the_ladder_rides_the_payload():
+    _api(_the_ladder_rides_the_payload)
+
+
 def test_the_api_carries_a_task_from_stub_to_pass():
     _api(_stub_to_pass)
 

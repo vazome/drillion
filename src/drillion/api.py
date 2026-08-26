@@ -177,6 +177,7 @@ def _payload(st, slug, meta, src):
         "buried": buried(st, slug),
         "lapses": c["lapses"],
         "lapse_limit": LAPSE_LIMIT,
+        "ladder": LADDER,
         # the learner's own words about this task — about the task and never about one
         # sitting, so a grade, a re-attempt and an abandon all leave it exactly as it was
         "note": st["notes"].get(slug, ""),
@@ -292,6 +293,7 @@ def catalogue():
             "today": q,
             "stats": {
                 "boxes": boxes,
+                "ladder": LADDER,
                 "due": q["due_total"],
                 "seen": sum(boxes),
                 "total": len(all_tasks),
@@ -316,6 +318,7 @@ def progress():
         boxes = _boxes(st, all_tasks)
         return {
             "boxes": boxes,
+            "ladder": LADDER,
             "due": len(due_today(st, all_tasks)),
             "seen": sum(boxes),
             "total": len(all_tasks),

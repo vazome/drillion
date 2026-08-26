@@ -169,7 +169,7 @@ function Flags({ row, blocked, limit }: { row: Row; blocked: Row[]; limit: numbe
  * `onBury` puts a real button on the row, so the row is a flex box holding the link rather
  * than being the link: an anchor inside an anchor is invalid HTML, and so is a button inside
  * one. Without it the row is exactly what it always was. */
-function TodayRow({ row, limit, onBury }: { row: Row; limit: number; onBury?: (buried: boolean) => void }) {
+function TodayRow({ row, ladder, limit, onBury }: { row: Row; ladder: number[]; limit: number; onBury?: (buried: boolean) => void }) {
   const [hover, hoverProps] = useHover();
   return (
     <div {...hoverProps}
@@ -177,7 +177,7 @@ function TodayRow({ row, limit, onBury }: { row: Row; limit: number; onBury?: (b
       <a href={href(row)} className="m-tint"
         style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0, textDecoration: "none", color: "inherit", padding: "9px 0" }}>
         <span style={{ ...FAINT, width: 110, color: "var(--text-muted)" }}>{dueText(row)}</span>
-        <LadderMeter box={rung(row)} />
+        <LadderMeter box={rung(row)} intervals={ladder} />
         <span style={{ ...MONO, width: 30, textAlign: "right" }}>{num(row.topic)}</span>
         <span style={{ fontSize: 14.5, fontWeight: 500, flex: 1, display: "flex", alignItems: "baseline", gap: 10 }}>
           {/* nothing in this card is blocked: a new pick is offered only once its prereqs are
@@ -198,7 +198,7 @@ function TodayRow({ row, limit, onBury }: { row: Row; limit: number; onBury?: (b
 
 /** A row of the list: quiet id, title, the tier/tag path, difficulty, ladder, status.
  * The trailing spacer holds the reset control's column, so the header stays aligned. */
-function ListRow({ row, blocked, limit, first = false }: { row: Row; blocked: Row[]; limit: number; first?: boolean }) {
+function ListRow({ row, blocked, ladder, limit, first = false }: { row: Row; blocked: Row[]; ladder: number[]; limit: number; first?: boolean }) {
   const [hover, hoverProps] = useHover();
   return (
     <a href={href(row)} className="m-tint" {...hoverProps}
@@ -210,7 +210,7 @@ function ListRow({ row, blocked, limit, first = false }: { row: Row; blocked: Ro
       </span>
       <span style={{ width: COL.path, display: "flex", overflow: "hidden" }}><Path row={row} /></span>
       <span style={{ width: COL.difficulty }}><StatusBadge status={row.difficulty} /></span>
-      <span style={{ width: COL.box, height: 16, display: "flex", alignItems: "center" }}><LadderMeter box={rung(row)} /></span>
+      <span style={{ width: COL.box, height: 16, display: "flex", alignItems: "center" }}><LadderMeter box={rung(row)} intervals={ladder} /></span>
       <span style={{ width: COL.status }}><StatusBadge status={row.status} /></span>
       <span style={{ width: COL.reset }} />
     </a>
@@ -339,7 +339,7 @@ export function Catalogue() {
 
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", display: "grid", gap: 18 }}>
-      <Stats boxes={stats.boxes} due={stats.due} seen={stats.seen} total={stats.total} practised={stats.practised} outOf={stats.window} ladderHref="#/progress" />
+      <Stats boxes={stats.boxes} ladder={stats.ladder} due={stats.due} seen={stats.seen} total={stats.total} practised={stats.practised} outOf={stats.window} ladderHref="#/progress" />
 
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <span style={LABEL}>Today</span>
@@ -355,13 +355,13 @@ export function Catalogue() {
             * has no say here — this lists as many as the week holds. */}
           <Band label="Recent activity" aside={`last ${stats.window} days`} first />
           {stillOffered.length
-            ? stillOffered.map((e) => <TodayRow key={e.slug} row={e} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)
+            ? stillOffered.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
                 message="Nothing yet this week. Whatever you open collects here, passed or not." />}
           {/* the sub-header carries the focus note, so it stays on screen on an empty day too */}
           <Band label="New picks" aside={today.behind ? "paused — catching up" : focus ? `from ${focus}` : "any"} />
           {fresh.length
-            ? fresh.map((e) => <TodayRow key={e.slug} row={e} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)
+            ? fresh.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
                 message={empty!.message} actionLabel={act?.label} onAction={act?.run} />}
           {/* The way to see a bury, and the way out of one before tomorrow takes it. No band
@@ -370,7 +370,7 @@ export function Catalogue() {
             * only thing a bury changed is that they are not offered until tomorrow. */}
           {buried.length ? <>
             <Band label="Buried" aside="not today — back in the queue tomorrow" />
-            {buried.map((e) => <TodayRow key={e.slug} row={e} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)}
+            {buried.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)}
           </> : null}
         </div>
       </Card>
@@ -413,7 +413,7 @@ export function Catalogue() {
                 * sort and every keystroke in the search box — 171 rows replaying dsRise each time
                 * reads as a flicker, not as a list that moved. The Today card keeps it; it arrives once. */}
               <div>{sorted.map((row, i) => <ListRow key={row.slug} row={row} first={i === 0}
-                blocked={blocked.get(row.slug) ?? []} limit={stats.lapse_limit} />)}</div>
+                blocked={blocked.get(row.slug) ?? []} ladder={stats.ladder} limit={stats.lapse_limit} />)}</div>
             </>}
       </Card>
     </div>
