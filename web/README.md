@@ -5,6 +5,6 @@ shadcn/ui (light/dark via `.dark` class, tokens as CSS variables), TanStack Quer
 (hash routes), CodeMirror 6 via `@uiw/react-codemirror`. Verified setup notes:
 `../.superpowers/sdd/scalable-napping-treehouse/stack-notes.md`.
 
-Build output goes to `web/dist`, which `uv run study` serves at `/`; the JSON API lives under
-`/api/` (see `src/study/api.py`). Dev loop once it exists: `pnpm --dir web dev` with a proxy to
+Build output goes to `web/dist`, which `uv run drillion` serves at `/`; the JSON API lives under
+`/api/` (see `src/drillion/api.py`). Dev loop once it exists: `pnpm --dir web dev` with a proxy to
 `http://127.0.0.1:8765`.

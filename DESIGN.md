@@ -1,4 +1,4 @@
-# Design handoff — study
+# Design handoff — drillion
 
 This file is the brief for designing the web UI. It describes the product, the three screens, the
 data each screen has, every state the UI must show, and the hard constraints. **No visual direction
