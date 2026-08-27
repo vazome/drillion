@@ -4,7 +4,7 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
-## Unreleased
+## 0.2.0 — 2026-08-27
 
 - Tests run in a throwaway scratch directory rather than in the folder that holds
   `progress.json`, so a file a solution writes to a relative path is swept away with the
@@ -77,5 +77,5 @@ Bump `version` in `pyproject.toml`, add a dated heading above, then tag the rele
 CI refuses a tag whose name disagrees with the declared version.
 
 ```bash
-git tag -a v0.1.0 -m "drillion 0.1.0" && git push origin v0.1.0
+git tag -a v0.2.0 -m "drillion 0.2.0" && git push origin v0.2.0
 ```
