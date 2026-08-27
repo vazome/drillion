@@ -279,21 +279,21 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
 
   /** Not today: the card keeps its box, due date and counts, and tomorrow puts it back.
    * The catalogue's Buried band is the other end of this control. */
-  /** The nudge's second offer: put the task aside for today and go read up. */
-  const buryAndLeave = async () => {
-    try {
-      await post(`/task/${encodeURIComponent(slug)}/bury`, { buried: true });
-      location.hash = "#/";
-    } catch (e) {
-      setGate({ at: "editor", message: (e as ApiError).message });
-    }
-  };
-
   const bury = async () => {
     if (!task) return;
     try {
       const r = await post<{ buried: boolean }>(`/task/${encodeURIComponent(slug)}/bury`, { buried: !task.buried });
       setTask({ ...task, buried: r.buried });
+    } catch (e) {
+      setGate({ at: "editor", message: (e as ApiError).message });
+    }
+  };
+
+  /** The nudge's second offer: put the task aside for today and go read up. */
+  const buryAndLeave = async () => {
+    try {
+      await post(`/task/${encodeURIComponent(slug)}/bury`, { buried: true });
+      location.hash = "#/";
     } catch (e) {
       setGate({ at: "editor", message: (e as ApiError).message });
     }

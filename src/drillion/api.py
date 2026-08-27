@@ -290,17 +290,17 @@ def progress():
     with reading() as st:
         all_tasks = tasks()
         start = date.fromisoformat(today())
-        week = (start + timedelta(days=7)).isoformat()
+        week = (start + timedelta(days=6)).isoformat()
         forecast = [0] * FORECAST_DAYS
         per_tag = {}
         for slug, meta in all_tasks.items():
             c = card(st, slug)
             seen = c["seen"] > 0
             if seen:
-                # today carries everything overdue; a bury leaves the due date where it is
+                # today carries everything overdue, except what is buried: that is tomorrow's
                 ahead = (date.fromisoformat(c["due"]) - start).days
                 if ahead < FORECAST_DAYS:
-                    forecast[max(ahead, 0)] += 1
+                    forecast[max(ahead, 1 if buried(st, slug) else 0)] += 1
             for tag in meta["tags"]:
                 t = per_tag.setdefault(
                     tag,

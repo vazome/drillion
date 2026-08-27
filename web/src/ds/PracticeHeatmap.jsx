@@ -33,7 +33,7 @@ export function PracticeHeatmap({ days = {}, today, style, cell, gap = 4 }) {
   cols.forEach((week, c) => { const m = week[0].getMonth(); if (m !== prev && c < 51) { months.push({ c, m }); prev = m; } });
   const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-  const counts = Object.values(days);
+  const counts = Object.entries(days).filter(([d]) => d >= iso(first) && d <= iso(end)).map(([, n]) => n);
   const practised = counts.filter((n) => n > 0).length;
   const passes = counts.reduce((a, b) => a + b, 0);
   const fmt = (d) => d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
@@ -73,7 +73,7 @@ export function PracticeHeatmap({ days = {}, today, style, cell, gap = 4 }) {
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
         <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-          {passes === 0 ? "No passes yet. Every square fills in as you practise." : practised + " days practised in the last year"}
+          {passes === 0 ? "No passes yet. Every square fills in as you practise." : practised + (practised === 1 ? " day" : " days") + " with a pass in the last year"}
         </span>
         <div style={{ flex: 1 }} />
         <span style={{ fontSize: 11, color: "var(--text-faint)" }}>less</span>

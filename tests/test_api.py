@@ -550,8 +550,8 @@ async def _the_ladder_rides_the_payload(api, _path):
 
 
 async def _progress_looks_behind_and_ahead(api, _path):
-    """The forecast is a count, not an estimate: overdue folds into today, a bury moves
-    nothing, and the far future falls off the end. Every pass ever made lands in `days`."""
+    """The forecast is a count, not an estimate: overdue folds into today, a buried card
+    lands on tomorrow, and the far future falls off the end. Every pass is in `days`."""
 
     def day(n):
         return (date.fromisoformat(state.today()) + timedelta(days=n)).isoformat()
@@ -589,7 +589,7 @@ async def _progress_looks_behind_and_ahead(api, _path):
     state.save(st)
     prog = (await api.get("/api/progress")).json()
     assert prog["today"] == day(0) and prog["cap"] == scheduler.REVIEWS_PER_DAY
-    assert prog["forecast"] == [1, 0, 0, 1] + [0] * 10
+    assert prog["forecast"] == [0, 1, 0, 1] + [0] * 10
     assert prog["days"] == {day(-1): 1, day(0): 2}
     tag = tasks()[SLUG]["tags"][0]
     boxes = [0] * len(scheduler.LADDER)
