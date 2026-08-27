@@ -55,7 +55,6 @@ from .scheduler import (
     stats,
     stuck,
 )
-from .settings import settings
 from .state import card, own, reading, today, writing
 
 log = logging.getLogger(__name__)
