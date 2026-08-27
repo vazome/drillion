@@ -20,9 +20,9 @@ const setDisk = (body: string) => writeFileSync(TASK_PY, `${body}\n\n\n${TAIL}`)
 const body = (marker: string) => `def solve(xs):\n    return "${marker}"`;
 const STUB = "def solve(xs):\n    raise NotImplementedError";
 
-const editor = (page: Page) => page.locator(".cm-content");
+const editor = (page: Page) => page.locator(".monaco-editor .view-lines").first();
 
-/** insertText, not type(): CodeMirror auto-indents keystrokes and would mangle the body. */
+/** insertText, not type(): Monaco auto-indents keystrokes and would mangle the body. */
 async function typeCode(page: Page, text: string) {
   await editor(page).click();
   await page.keyboard.press("ControlOrMeta+a");

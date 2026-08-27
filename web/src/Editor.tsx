@@ -203,7 +203,13 @@ export function DiffView({ mine, reference, dark, maxHeight }: {
             original: { text: mine, uri: "file:///workspace/mine.py" },
             modified: { text: reference, uri: "file:///workspace/reference.py" },
           },
-          diffEditorOptions: { ...editorOptions, readOnly: true, renderSideBySide: true },
+          diffEditorOptions: {
+            ...editorOptions, readOnly: true, renderSideBySide: true,
+            // Monaco drops to an inline diff below 900px and this pane is narrower than
+            // that, which would contradict the "yours on the left, the reference on the
+            // right" copy sitting directly above it
+            renderSideBySideInlineBreakpoint: 0,
+          },
         });
         return started.start(host.current);
       })

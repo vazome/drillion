@@ -5,11 +5,33 @@ server is given — a task's machinery never reaches the browser through here. E
 is self-contained, so nothing is lost by withholding the rest."""
 
 import asyncio
+import json
 import logging
+
+from .settings import settings
 
 log = logging.getLogger(__name__)
 
 SERVER = ("basedpyright-langserver", "--stdio")
+
+
+def _rooted(message):
+    """Point the server at the real tasks directory on the way past.
+
+    The page has no business knowing filesystem paths, so it opens with a placeholder root
+    and this swaps in the truth — which is also what lets a region's imports resolve."""
+    try:
+        data = json.loads(message)
+    except ValueError:
+        return message
+    if data.get("method") != "initialize":
+        return message
+    root = settings.tasks_dir
+    params = data.setdefault("params", {})
+    params["rootUri"] = root.as_uri()
+    params["rootPath"] = str(root)
+    params["workspaceFolders"] = [{"uri": root.as_uri(), "name": "drillion"}]
+    return json.dumps(data).encode()
 
 
 async def _read(stdout):
@@ -33,7 +55,7 @@ async def _to_editor(stdout, ws):
 async def _to_server(ws, stdin):
     """Page to server: add the framing back on."""
     while True:
-        message = (await ws.receive_text()).encode()
+        message = _rooted((await ws.receive_text()).encode())
         stdin.write(f"Content-Length: {len(message)}\r\n\r\n".encode() + message)
         await stdin.drain()
 
