@@ -8,42 +8,16 @@ TL;DR: Self-hosted python practices in effective UI. With no social engagment ba
 `drillion` is a local web app with 171 short Python tasks, each tagged with the concept it
 practises so you can go straight at what you want to get better at. There is no login, no account and no server but yours: the tasks are folders of Markdown and Python on your disk, and your progress is one JSON file.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/completions-dark.png">
-  <img alt="The editor completing a list method, with the signature and the docstring beside it" src="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/completions-light.png">
-</picture>
+| | Light | Dark |
+| --- | --- | --- |
+| **The editor**<br><sub>the editor completing a list method</sub> | [![The editor, light](docs/images/completions-light.png)](docs/images/completions-light.png) | [![The editor, dark](docs/images/completions-dark.png)](docs/images/completions-dark.png) |
+| **A task**<br><sub>spec on the left, your code and the test output on the right</sub> | [![A task, light](docs/images/task-screen-1-light.png)](docs/images/task-screen-1-light.png) | [![A task, dark](docs/images/task-screen-1-dark.png)](docs/images/task-screen-1-dark.png) |
+| **The catalogue**<br><sub>today's picks, the tags, the whole table</sub> | [![The catalogue, light](docs/images/catalogue-screen-1-light.png)](docs/images/catalogue-screen-1-light.png) | [![The catalogue, dark](docs/images/catalogue-screen-1-dark.png)](docs/images/catalogue-screen-1-dark.png) |
+| **Progress**<br><sub>the ladder, what is due, where each topic sits</sub> | [![Progress, light](docs/images/progress-1-light.png)](docs/images/progress-1-light.png) | [![Progress, dark](docs/images/progress-1-dark.png)](docs/images/progress-1-dark.png) |
 
 Every `solve()` says what it takes, so the editor knows what your value can do. Completions,
 signatures and type errors come from a language server running next to the grader, on your
 machine — nothing is sent anywhere.
-
-<details>
-<summary>The three screens — a task, the catalogue, your progress</summary>
-
-<br>
-
-**A task.** The spec on the left, your code and what the tests said on the right.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/task-screen-1-dark.png">
-  <img alt="A task page: the spec on the left, the editor and test output on the right" src="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/task-screen-1-light.png">
-</picture>
-
-**The catalogue.** Every task tagged with what it practises, so you can go at one thing.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/catalogue-screen-1-dark.png">
-  <img alt="The catalogue: today's picks, the tag list, and the full task table" src="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/catalogue-screen-1-light.png">
-</picture>
-
-**Progress.** The ladder, what is due, and where each topic actually sits.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/progress-1-dark.png">
-  <img alt="The progress page: the ladder, due load, a practice heatmap and topic depth" src="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/progress-1-light.png">
-</picture>
-
-</details>
 
 ## Install
 
