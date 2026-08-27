@@ -12,6 +12,13 @@ task-folder format. The version is declared once, in `pyproject.toml`.
 - The client ships its own fonts. Nothing is fetched from Google any more, so the page
   renders in IBM Plex Sans and Spline Sans Mono offline and behind a firewall, and opening
   it tells no one.
+- A first run says what the ladder is: one dismissible note above Today, shown only while
+  nothing has been passed and nothing is open, with a link to `docs/how-it-works.md`.
+- Today names the tag that keeps beating you once two of its tasks are flagged, and the chip
+  sets the focus to it.
+- `/` anywhere goes to the catalogue and focuses the search box; `Enter` there opens the first
+  row of the filtered list.
+- The catalogue's list scrolls sideways below about 840px instead of squeezing its columns.
 - The progress page looks both ways: a 14-day due-load forecast with the daily cap drawn on
   it, a year of practice as a heatmap, and one strip per topic showing where its tasks sit on
   the ladder — sortable, stuck first, each tag a link into the catalogue (`#/?tag=…`).

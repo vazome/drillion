@@ -30,7 +30,8 @@ emotional core: cards climbing boxes and returning on schedule.
   Dark mode is a calm dark, not pure black.
 - Desktop-first (≥1280 px); tablet-friendly is a bonus; mobile is out of scope.
 - Accessible: real buttons, visible focus, WCAG AA contrast in both modes, keyboard: `Mod-Enter`
-  runs tests.
+  runs tests, `/` goes to the catalogue and focuses its search box (and `Enter` there opens the
+  first row of the filtered list).
 - Implementation: React 19 + TypeScript + Vite; the vendored design system's plain components over
   CSS variables (no Tailwind, no shadcn/ui — see `web/README.md` for why). The editor is
   CodeMirror 6 (themeable: background, gutter, selection, caret, syntax colours for
