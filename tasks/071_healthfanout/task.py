@@ -1,4 +1,8 @@
-def solve(urls: list[str], get, timeout: float, max_workers: int):
+from collections.abc import Callable
+
+
+def solve(urls: list[str], get: Callable[..., int], timeout: float,
+          max_workers: int):
     raise NotImplementedError
 
 

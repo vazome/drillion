@@ -14,7 +14,7 @@ tags: [http]
 An ops engineer needs a list of every pod in a cluster for a capacity report. The cluster's API never hands back the whole list at once: each answer holds a handful of items plus a bookmark (called a cursor) that you send back to get the next batch. Miss a batch and the report silently under-counts; keep asking after the last batch and the API refuses. The task: fetch batch after batch until the API says there are no more, and glue all the items into one list.
 
 ## You get
-`fetch_page` — a function that takes a cursor (`None` for the first call) and returns a dict like `{"items": ["pod-4", "pod-9"], "next": "cur-3f1a"}`, where `"next"` is the cursor for the following batch, or `None` when there are no more. The test hands in a stand-in over made-up batches, counts how many times you call it, and blows up if you call it too often; no real API is contacted.
+`fetch_page` — a function that takes a cursor (`None` for the first call) and returns a dict like `{"items": ["pod-4", "pod-9"], "next": "cur-3f1a"}` — the shape is written out as `Page` above `solve`, so the editor knows it — where `"next"` is the cursor for the following batch, or `None` when there are no more. The test hands in a stand-in over made-up batches, counts how many times you call it, and blows up if you call it too often; no real API is contacted.
 
 ## You return
 one flat list of every item from every batch, in the order they arrived, like `["pod-4", "pod-9", "pod-2"]`.

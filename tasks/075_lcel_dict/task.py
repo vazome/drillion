@@ -1,4 +1,8 @@
-def solve(retrieve, render):
+from collections.abc import Callable
+
+
+def solve(retrieve: Callable[[str], list[str]],
+          render: Callable[[dict[str, int | str]], str]):
     raise NotImplementedError
 
 

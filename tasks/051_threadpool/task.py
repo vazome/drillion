@@ -1,4 +1,7 @@
-def solve(work, items: list[str], workers: int):
+from collections.abc import Callable
+
+
+def solve(work: Callable[[str], dict[str, int | str]], items: list[str], workers: int):
     raise NotImplementedError
 
 
