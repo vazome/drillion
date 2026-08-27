@@ -58,3 +58,29 @@ best-documented way to feel productive while learning nothing.
 rather than blocked. Mixing confusable topics is the largest effect in the whole literature
 (d ≈ 0.83), and it will feel worse than drilling one thing at a time. That feeling is documented
 and wrong.
+
+## Why these numbers
+
+The constants live in `src/drillion/scheduler.py`; the reasoning lives here, because the next
+issue that says "make it 20" needs it.
+
+- **`LADDER = [2, 4, 8, 16, 28, 60, 120]`.** Fixed intervals over a season of practice, sized
+  near the 10–20 % of the retention interval that Cepeda 2008 found best, rather than fitted per
+  card — a seven-element list beats a dependency with 21 trained weights and no data to fit
+  them. The tail past 28 is what keeps review load from growing without bound: while 28 was the
+  ceiling, every card you had mastered still came back monthly, and a finished catalogue settled
+  at ~6 reviews a day before a single new pick. 60 and 120 shed that load without a fifth status
+  for "retired" — the card is simply `done`, and a done card you keep getting right comes back
+  rarely.
+- **`REVIEWS_PER_DAY = 12`.** Unbounded, the day you come back from three weeks away is 100 rows
+  deep and the ladder never recovers. Anki ships 200 reviews against 20 new, a 10:1 ratio; a
+  drillion review is a whole coding task rather than a flashcard, so 12 against 2 is roughly the
+  same hour. A constant, not a setting — there is no settings screen.
+- **`LAPSE_LIMIT = 4`.** Anki suspends a flashcard at 8 lapses; a drillion lapse costs a sitting
+  rather than seconds, so the same wasted time arrives around 4. It is a flag only: nothing is
+  suspended, hidden or rescheduled by it.
+- **`GRADES = {"struggled": -1, "pass": +1, "quick": +2}`.** Without a negative step the ladder
+  is not adaptive at all: a task that fights you every sitting would hold the top box and its
+  120-day gap forever, on the same schedule as one you have aced. −1 rather than back to box 0
+  because `struggled` is the grade for anything slow, anything over two runs and anything
+  peeked — it is common — and a repeated struggle still walks the card all the way down.
