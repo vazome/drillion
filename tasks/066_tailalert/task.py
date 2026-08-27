@@ -1,4 +1,7 @@
-def solve(stream, pattern: str, window: int):
+from collections.abc import Iterator
+
+
+def solve(stream: Iterator[str], pattern: str, window: int):
     raise NotImplementedError
 
 
