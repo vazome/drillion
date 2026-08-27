@@ -3,22 +3,28 @@
 export type Status = "new" | "due" | "open" | "done";
 export type Grade = "quick" | "pass" | "struggled" | "abandoned";
 
-export interface Row {
-  slug: string; topic: number; title: string;
+/** The task's own facts, `public()`'s allowlist — the same block in a catalogue row and
+ *  in `Task.meta`. */
+export interface Meta {
+  topic: number; title: string;
   difficulty: "easy" | "medium" | "hard"; tier: "core" | "advanced" | "packages"; track?: string;
   tags: string[]; source?: string;
+}
+/** A catalogue row: the task's facts plus this learner's card. */
+export interface Row extends Meta {
+  slug: string;
   status: Status; box: number; due: string; seen: number;
   /** Struggles on this card, never reset. At `stats.lapse_limit` the row says so. */
   lapses: number;
   /** Not offered today — `POST /api/task/{slug}/bury`. The schedule is untouched. */
   buried: boolean;
-  /** Catalogue rows only: the spec flattened and already lowercased for the search box. */
-  text?: string;
-  /** Catalogue rows only: prereqs not yet passed, so the task is not offered as a new pick. */
-  blocked?: string[];
+  /** the spec flattened and already lowercased for the search box */
+  text: string;
+  /** prereqs not yet passed, so the task is not offered as a new pick */
+  blocked: string[];
 }
 /** GET /api/health — the version the header shows; never hardcode it here. */
-export interface Health { status: string; version: string; tasks: number; root: string }
+export interface Health { version: string; tasks: number }
 export interface Catalogue {
   focus: string | null; tags: string[]; tiers: string[]; tracks: string[];
   today: {
@@ -50,10 +56,10 @@ export interface Progress {
   log: { date: string; slug: string; grade: Grade; attempts: number; secs: number; new: boolean }[];
 }
 export interface Task {
-  slug: string; meta: Omit<Row, "slug" | "status" | "box" | "due" | "seen" | "lapses" | "buried">;
+  slug: string; meta: Meta;
   spec_md: string; code: string; etag: string; has_given: boolean;
-  marker_line: number; status: Status; buried: boolean;
-  attempt: { attempts: number; hints: number; active: number; seed: number; solution_shown: boolean } | null;
+  status: Status; buried: boolean;
+  attempt: { attempts: number; active: number; seed: number; solution_shown: boolean } | null;
   /** at `lapse_limit` the task is flagged as one that keeps beating you */
   lapses: number; lapse_limit: number;
   /** the scheduler's return intervals, one per box */
@@ -64,7 +70,8 @@ export interface Task {
   reference: string | null;
   hints: { total: number; shown: string[]; next_in: number | null };
   solution: { unlocked: boolean; need_attempts: number; need_secs: number };
-  archive: { date: string; grade: Grade; code?: string }[];
+  /** `code` is the answer you wrote that day, null while the server keeps it closed */
+  archive: { date: string; grade: Grade; code: string | null }[];
   /** The learner's one note on the task, `""` when there is none — `PUT /api/task/{slug}/note`. */
   note: string;
 }
@@ -81,9 +88,9 @@ export type RunResult =
 
 /** Every non-2xx body api.py can send, in one all-optional shape. */
 export interface ApiErrorBody {
-  error?: string; line?: number; col?: number;
+  error?: string; line?: number | null;
   etag?: string; code?: string;
-  wait_secs?: number; exhausted?: boolean;
+  wait_secs?: number;
   need_attempts?: number; need_secs?: number;
 }
 
