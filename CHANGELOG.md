@@ -6,6 +6,9 @@ task-folder format. The version is declared once, in `pyproject.toml`.
 
 ## Unreleased
 
+- Tests run in a throwaway scratch directory rather than in the folder that holds
+  `progress.json`, so a file a solution writes to a relative path is swept away with the
+  scratch directory instead of littering the data root.
 - The client ships its own fonts. Nothing is fetched from Google any more, so the page
   renders in IBM Plex Sans and Spline Sans Mono offline and behind a firewall, and opening
   it tells no one.

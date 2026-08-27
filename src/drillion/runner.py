@@ -5,6 +5,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 
 from .catalogue import tasks
 from .region import _solve, cut, splice, stub
@@ -33,15 +34,18 @@ def run_tests(path, seed):
     """Task code only ever runs here, in its own process."""
     cmd = [sys.executable, "-m", "pytest", str(path), "-x", "--timeout=10", *_PYTEST]
     try:
-        r = subprocess.run(
-            cmd,
-            env=_env(DRILLION_SEED=str(seed)),
-            cwd=settings.root,
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=60,
-        )
+        with tempfile.TemporaryDirectory(
+            dir=settings.root, ignore_cleanup_errors=True
+        ) as scratch:
+            r = subprocess.run(
+                cmd,
+                env=_env(DRILLION_SEED=str(seed)),
+                cwd=scratch,
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=60,
+            )
     except subprocess.TimeoutExpired:
         return False, "timed out after 60s — an endless loop, most likely"
     return r.returncode == 0, r.stdout
@@ -90,14 +94,24 @@ def selfcheck():
             path = meta["dir"] / "_selfcheck.py"  # an explicit path is always collected
             path.write_text(splice(src, _reference_call(cut(src).body)))
             made.append(path)
-        r = subprocess.run(
-            [sys.executable, "-m", "pytest", *map(str, made), "--timeout=60", *_PYTEST],
-            cwd=settings.root,
-            env=_env(),
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        with tempfile.TemporaryDirectory(
+            dir=settings.root, ignore_cleanup_errors=True
+        ) as scratch:
+            r = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "pytest",
+                    *map(str, made),
+                    "--timeout=60",
+                    *_PYTEST,
+                ],
+                cwd=scratch,
+                env=_env(),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
     finally:
         for path in made:
             path.unlink(missing_ok=True)

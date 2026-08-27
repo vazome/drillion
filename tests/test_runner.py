@@ -1,6 +1,7 @@
 """Runner: pytest output turned into editor coordinates, and the selfcheck splice."""
 
 from drillion import runner
+from drillion.settings import settings
 
 CANNED = """\
 =================================== FAILURES ===================================
@@ -62,3 +63,31 @@ def test_the_output_panel_never_shows_terminal_escapes(tmp_path, monkeypatch):
     passed, out = runner.run_tests(task, seed=1)
     assert passed is False
     assert "\x1b[" not in out, "terminal escapes reached the output panel"
+
+
+def test_the_learners_code_cannot_litter_the_data_root(tmp_path, monkeypatch):
+    """pytest runs in a scratch directory, so a stray `open(\"out.txt\", \"w\")` lands somewhere
+    nobody minds losing rather than next to `progress.json`."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    task = tmp_path / "task.py"
+    task.write_text(
+        "from pathlib import Path\n"
+        "def test_solve():\n"
+        "    (Path.cwd() / 'litter.txt').write_text('x')\n"
+    )
+    passed, out = runner.run_tests(task, seed=1)
+    assert passed, out  # the write itself succeeded
+    assert not list(tmp_path.rglob("litter.txt"))
+
+
+def test_a_failure_names_the_task_the_short_way(tmp_path, monkeypatch):
+    """The scratch cwd sits inside the data root, so pytest reports the task relative to it
+    and the output panel never shows a host path."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    task = tmp_path / "tasks" / "001_fstrings" / "task.py"
+    task.parent.mkdir(parents=True)
+    task.write_text("def test_solve():\n    assert 1 == 2\n")
+    _, out = runner.run_tests(task, seed=1)
+    text = runner.summarise(out, marker_line=1)["output"]
+    assert "../tasks/001_fstrings/task.py" in text
+    assert "task.py" not in text.replace("../tasks/001_fstrings/task.py", ""), text
