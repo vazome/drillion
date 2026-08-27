@@ -20,3 +20,8 @@ export { DueForecast } from "./DueForecast.jsx";
 export { PracticeHeatmap } from "./PracticeHeatmap.jsx";
 export { TopicStrips } from "./TopicStrips.jsx";
 export { StuckNudge } from "./StuckNudge.jsx";
+export { Band } from "./Band.jsx";
+export { NoteField } from "./NoteField.jsx";
+export { SortReset } from "./SortReset.jsx";
+export { TaskPath } from "./TaskPath.jsx";
+export { RowFlags } from "./RowFlags.jsx";
