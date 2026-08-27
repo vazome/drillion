@@ -4,3 +4,8 @@ packages: []
 # (strictDepBuilds), so esbuild's postinstall needs an explicit yes.
 allowBuilds:
   esbuild: true
+
+# monaco-languageclient replaces monaco-editor with CodinGame's VS Code-API build; a second
+# copy of monaco is a runtime assertion failure, not a size problem.
+overrides:
+  monaco-editor: npm:@codingame/monaco-vscode-editor-api@^25.1.2

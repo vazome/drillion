@@ -1,71 +1,184 @@
-import { useEffect, useMemo, useRef } from "react";
-import CodeMirror from "@uiw/react-codemirror";
-import { python } from "@codemirror/lang-python";
-import { indentUnit } from "@codemirror/language";
-import { MergeView } from "@codemirror/merge";
-import { EditorView, keymap, lineNumbers } from "@codemirror/view";
-import { createTheme } from "@uiw/codemirror-themes";
-import { tags as t } from "@lezer/highlight";
+import { useEffect, useRef, useState } from "react";
+import * as monaco from "@codingame/monaco-vscode-editor-api";
+// classic mode highlights with Monarch, and the editor API ships no grammars. The package
+// index pulls all ~90 languages; drillion is a Python trainer, so it takes the one.
+import "@codingame/monaco-vscode-standalone-languages/python/python.contribution.js";
+import { EditorApp } from "monaco-languageclient/editorApp";
+import { MonacoVscodeApiWrapper } from "monaco-languageclient/vscodeApiWrapper";
+import { LanguageClientWrapper } from "monaco-languageclient/lcwrapper";
+import { configureDefaultWorkerFactory } from "monaco-languageclient/workerFactory";
 
 const token = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const bare = (name: string) => token(name).replace("#", "");
 
-/** One theme built from the design tokens, so the editor and the spec fences match exactly. */
-function themeFromTokens(dark: boolean) {
-  return createTheme({
-    theme: dark ? "dark" : "light",
-    settings: {
-      background: token("--editor"), foreground: token("--text"),
-      caret: token("--accent"), selection: token("--accent-tint"), selectionMatch: token("--accent-tint"),
-      lineHighlight: token("--surface-2"), gutterBackground: token("--gutter"),
-      gutterForeground: token("--text-faint"), gutterActiveForeground: token("--text-muted"),
-      gutterBorder: token("--border"), fontFamily: token("--font-mono"),
+/** The page only ever holds one task's region, so one file is all the server is ever told
+ *  about. The name is arbitrary; only the `.py` matters. */
+const FILE = "file:///workspace/solve.py";
+
+/** The vscode API may be started once per page — it owns global state, not per-component
+ *  state. A rejection is deliberately not cached: a first failure must not blank every
+ *  editor for the life of the page. Classic mode keeps `defineTheme` working, which is
+ *  what lets the editor wear the design tokens. */
+let api: Promise<void> | undefined;
+function startApi() {
+  return (api ??= new MonacoVscodeApiWrapper({
+    $type: "classic",
+    viewsConfig: { $type: "EditorService" },
+    // VS Code's own themes would win over `defineTheme`, and the tokens are the point
+    advanced: { loadThemes: false },
+    monacoWorkerFactory: configureDefaultWorkerFactory,
+  })
+    .start()
+    .catch((err) => {
+      api = undefined;
+      throw err;
+    }));
+}
+
+/** Completions are a bonus, never a gate: a language server that is down, slow or missing
+ *  must still leave a working editor behind, so this is started beside the editor rather
+ *  than in front of it. */
+let client: Promise<void> | undefined;
+function startLanguageClient() {
+  client ??= new LanguageClientWrapper({
+    languageId: "python",
+    connection: { options: { $type: "WebSocketUrl", url: `ws://${location.host}/lsp` } },
+    clientOptions: {
+      documentSelector: ["python"],
+      workspaceFolder: { index: 0, name: "workspace", uri: monaco.Uri.parse("file:///workspace") },
     },
-    styles: [
-      { tag: [t.keyword, t.operatorKeyword, t.modifier], color: token("--syn-keyword"), fontWeight: "600" },
-      { tag: [t.string, t.special(t.string)], color: token("--syn-string") },
-      { tag: [t.number, t.bool, t.null], color: token("--syn-number") },
-      { tag: [t.comment, t.lineComment, t.blockComment], color: token("--syn-comment"), fontStyle: "italic" },
-      { tag: [t.function(t.variableName), t.definition(t.variableName)], color: token("--syn-function"), fontWeight: "600" },
-      { tag: [t.variableName, t.propertyName], color: token("--text") },
+  })
+    .start()
+    .catch((err: unknown) => {
+      console.error("no language server; editing still works", err);
+    });
+}
+
+/** One theme, redefined per mode: Monaco themes are global and named, so the dark toggle
+ *  rewrites `drillion` rather than swapping between two. Rule colours are bare hex. */
+function applyTheme(dark: boolean) {
+  monaco.editor.defineTheme("drillion", {
+    base: dark ? "vs-dark" : "vs",
+    inherit: true,
+    rules: [
+      { token: "keyword", foreground: bare("--syn-keyword"), fontStyle: "bold" },
+      { token: "string", foreground: bare("--syn-string") },
+      { token: "number", foreground: bare("--syn-number") },
+      { token: "comment", foreground: bare("--syn-comment"), fontStyle: "italic" },
+      { token: "identifier", foreground: bare("--text") },
+      { token: "type.identifier", foreground: bare("--syn-function"), fontStyle: "bold" },
     ],
+    colors: {
+      "editor.background": token("--editor"),
+      "editor.foreground": token("--text"),
+      "editorCursor.foreground": token("--accent"),
+      "editor.selectionBackground": token("--accent-tint"),
+      "editor.lineHighlightBackground": token("--surface-2"),
+      "editorLineNumber.foreground": token("--text-faint"),
+      "editorLineNumber.activeForeground": token("--text-muted"),
+      "editorGutter.background": token("--gutter"),
+      // accent on both sides: pass/fail already mean the tests, and the left pane is code
+      // that passed
+      "diffEditor.insertedLineBackground": token("--accent-tint"),
+      "diffEditor.removedLineBackground": token("--accent-tint"),
+      "diffEditor.insertedTextBackground": token("--accent-line"),
+      "diffEditor.removedTextBackground": token("--accent-line"),
+    },
   });
+  monaco.editor.setTheme("drillion");
+}
+
+const editorOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
+  fontFamily: token("--font-mono"),
+  fontSize: parseInt(token("--fs-code")) || 13,
+  minimap: { enabled: false },
+  scrollBeyondLastLine: false,
+  wordWrap: "on",
+  tabSize: 4,
+  automaticLayout: true,
+  // the frame clips for its rounded corners, and suggest/hover/signature panels render
+  // inside the editor by default — this reparents them so they are not cut off
+  fixedOverflowWidgets: true,
+};
+
+const frame = {
+  border: "1px solid var(--border)",
+  borderRadius: "var(--radius)",
+  overflow: "hidden",
+};
+
+/** A failed editor says so. Blank boxes are the one outcome worth ruling out: the learner
+ *  cannot tell them from a task with nothing in it. */
+function Failed({ height }: { height: string }) {
+  return (
+    <div style={{
+      height, display: "grid", placeItems: "center", padding: "1rem", textAlign: "center",
+      color: "var(--text-muted)", fontSize: "var(--fs-sm)", background: "var(--editor)", ...frame,
+    }}>
+      The editor failed to load. Reload the page; if it keeps happening the browser console
+      has the reason.
+    </div>
+  );
 }
 
 export function Editor({ value, onChange, onRun, readOnly, dark, height }: {
   value: string; onChange: (v: string) => void; onRun: () => void;
   readOnly?: boolean; dark: boolean; height: string;
 }) {
-  // Memoised: @uiw/react-codemirror reconfigures the whole editor whenever these change identity.
-  const theme = useMemo(() => themeFromTokens(dark), [dark]);
-  const extensions = useMemo(() => [
-    python(),
-    indentUnit.of("    "),
-    EditorView.lineWrapping,
-    keymap.of([{ key: "Mod-Enter", run: () => { onRun(); return true; } }]),
-  ], [onRun]);
+  const host = useRef<HTMLDivElement>(null);
+  const app = useRef<EditorApp>(null);
+  const [failed, setFailed] = useState(false);
+  // the editor reads these when the user acts, so it must never close over a stale one
+  const latest = useRef({ onChange, onRun });
+  useEffect(() => { latest.current = { onChange, onRun }; }, [onChange, onRun]);
 
-  return (
-    <CodeMirror
-      value={value} onChange={onChange} theme={theme} extensions={extensions}
-      height={height} indentWithTab readOnly={readOnly}
-      basicSetup={{ foldGutter: false, highlightActiveLine: !readOnly }}
-      style={{ fontSize: "var(--fs-code)", border: "1px solid var(--border)", borderRadius: "var(--radius)", overflow: "hidden" }}
-    />
-  );
+  useEffect(() => {
+    let live = true;
+    let started: EditorApp | undefined;
+    startApi()
+      .then(() => {
+        if (!live || !host.current) return;
+        applyTheme(dark);
+        startLanguageClient();
+        started = app.current = new EditorApp({
+          id: "solve",
+          codeResources: { modified: { text: value, uri: FILE } },
+          editorOptions,
+        });
+        started.registerOnTextChangedCallback((t) => latest.current.onChange(t.modified ?? ""));
+        return started.start(host.current);
+      })
+      .then(() => {
+        started?.getEditor()?.addCommand(
+          monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+          () => latest.current.onRun(),
+        );
+      })
+      .catch((err: unknown) => {
+        console.error("editor failed to start", err);
+        if (live) setFailed(true);
+      });
+    return () => {
+      live = false;
+      app.current = null;
+      void started?.dispose();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // `value` is also the truth after a reset or a 409, so push it when it drifts
+  useEffect(() => {
+    const current = app.current?.getTextModels().modified?.getValue();
+    if (current !== undefined && current !== value) app.current?.updateCode({ modified: value });
+  }, [value]);
+
+  useEffect(() => { app.current?.getEditor()?.updateOptions({ readOnly: !!readOnly }); }, [readOnly]);
+  // waits for the API rather than testing it: `api` is truthy while still pending, and
+  // theming early touches Monaco's standalone services, which makes `start()` throw
+  useEffect(() => { void api?.then(() => applyTheme(dark)).catch(() => {}); }, [dark]);
+
+  if (failed) return <Failed height={height} />;
+  return <div ref={host} style={{ height, fontSize: "var(--fs-code)", ...frame }} />;
 }
-
-/** The merge view's own colours as design tokens, so `.dark` flips them with the rest of the
- *  page. Each selector matches the package base theme's specificity and is mounted after it.
- *  Accent rather than pass/fail on both sides: on this page those two mean the tests failed or
- *  passed, and the left pane is code that passed. */
-const mergeTheme = EditorView.theme({
-  "&.cm-merge-a .cm-changedLine": { backgroundColor: "var(--accent-tint)" },
-  "&.cm-merge-b .cm-changedLine": { backgroundColor: "var(--accent-tint)" },
-  "&.cm-merge-a .cm-changedText": { background: "linear-gradient(var(--accent-line), var(--accent-line)) bottom/100% 2px no-repeat" },
-  "&.cm-merge-b .cm-changedText": { background: "linear-gradient(var(--accent-line), var(--accent-line)) bottom/100% 2px no-repeat" },
-  "&.cm-merge-a .cm-changedLineGutter": { background: "var(--accent-line)" },
-  "&.cm-merge-b .cm-changedLineGutter": { background: "var(--accent-line)" },
-});
 
 /** Two read-only panes with the changed lines marked: what the learner wrote on the left,
  *  the reference on the right. Shares the editor's theme, so the two read as one surface. */
@@ -73,18 +186,37 @@ export function DiffView({ mine, reference, dark, maxHeight }: {
   mine: string; reference: string; dark: boolean; maxHeight: string;
 }) {
   const host = useRef<HTMLDivElement>(null);
+  const [failed, setFailed] = useState(false);
+
   useEffect(() => {
-    const parent = host.current;
-    if (!parent) return;
-    const extensions = [
-      python(), lineNumbers(), EditorView.lineWrapping,
-      EditorView.editable.of(false), themeFromTokens(dark), mergeTheme,
-    ];
-    const view = new MergeView({ a: { doc: mine, extensions }, b: { doc: reference, extensions }, parent });
-    return () => view.destroy();
+    let live = true;
+    let started: EditorApp | undefined;
+    startApi()
+      .then(() => {
+        if (!live || !host.current) return;
+        applyTheme(dark);
+        started = new EditorApp({
+          id: "diff",
+          useDiffEditor: true,
+          readOnly: true,
+          codeResources: {
+            original: { text: mine, uri: "file:///workspace/mine.py" },
+            modified: { text: reference, uri: "file:///workspace/reference.py" },
+          },
+          diffEditorOptions: { ...editorOptions, readOnly: true, renderSideBySide: true },
+        });
+        return started.start(host.current);
+      })
+      .catch((err: unknown) => {
+        console.error("diff failed to start", err);
+        if (live) setFailed(true);
+      });
+    return () => {
+      live = false;
+      void started?.dispose();
+    };
   }, [mine, reference, dark]);
-  return (
-    <div ref={host} style={{ maxHeight, overflow: "auto", fontSize: "var(--fs-code)",
-      border: "1px solid var(--border)", borderRadius: "var(--radius)" }} />
-  );
+
+  if (failed) return <Failed height={maxHeight} />;
+  return <div ref={host} style={{ height: maxHeight, fontSize: "var(--fs-code)", ...frame }} />;
 }
