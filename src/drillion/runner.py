@@ -25,7 +25,7 @@ _PYTEST = [
 ]
 
 
-def _pytest(args, timeout=None, **env):
+def _run_pytest(args, timeout=None, **env):
     """pytest in a subprocess, cwd a scratch dir so stray files never land in tasks/, and
     `tasks/` on PYTHONPATH so `from _lib import rng` works from any root."""
     with tempfile.TemporaryDirectory(
@@ -45,7 +45,7 @@ def _pytest(args, timeout=None, **env):
 def run_tests(path, seed):
     """Task code only ever runs here, in its own process."""
     try:
-        r = _pytest(
+        r = _run_pytest(
             [str(path), "-x", "--timeout=10"], timeout=60, DRILLION_SEED=str(seed)
         )
     except subprocess.TimeoutExpired:
@@ -96,7 +96,7 @@ def selfcheck():
             path = meta["dir"] / "_selfcheck.py"  # an explicit path is always collected
             path.write_text(splice(src, _reference_call(cut(src).body)))
             made.append(path)
-        r = _pytest([*map(str, made), "--timeout=60"])
+        r = _run_pytest([*map(str, made), "--timeout=60"])
     finally:
         for path in made:
             path.unlink(missing_ok=True)
