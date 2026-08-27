@@ -43,6 +43,31 @@ your temp directory — never the checkout, so your own `progress.json` and task
 touched. The last test in `web/e2e/screens.spec.ts` asserts exactly that. Nothing has to be
 running first, and a dev server on 8765 is left alone.
 
+### Screenshots the docs keep
+
+`pnpm screens` output is throwaway. The screenshots the README shows are committed, and live in
+`docs/images/`, one light and one dark per screen.
+
+Link them by absolute URL pinned to `main` — never a tag, never a relative path:
+
+```
+https://raw.githubusercontent.com/vazome/drillion/main/docs/images/task-screen-1-light.png
+```
+
+Two reasons, and both matter. `README.md` is also the PyPI long description, and PyPI resolves
+nothing relative, so a relative path is a broken image there. And a screenshot is reshot when it
+is worth reshooting, not to match a release: a reader takes the picture as the current one, so
+the link should mean the same thing. Pinning a tag would freeze a published page on whatever was
+true that day and add a step to the release checklist that would eventually be missed.
+
+The cost is that such a link cannot resolve until the image is on `main`. So land the images
+first, in their own pull request, and link them in a second one — then the README renders while
+it is still being reviewed, instead of after it is too late to look at.
+
+Quantise to a 256-colour palette before committing — UI screenshots are flat colour, so it is
+visually lossless and roughly a third of the bytes. `docs/images` is excluded from the sdist in
+`pyproject.toml`; nothing inside the package reads them.
+
 See [CONTEXT.md](CONTEXT.md) for the vocabulary every part of drillion uses, and
 [`web/README.md`](web/README.md) for frontend-specific notes.
 

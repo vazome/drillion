@@ -52,6 +52,9 @@ The most common defect in this repo is a change that works on the path you teste
 - We use `ruff`. Build should not fail ruff.
 - We use `uv` both in the environment and during docker image building.
 - Conventional commit titles, plain language: `fix(web): submission no longer causes crashes`.
+- Docs screenshots live in `docs/images/` and are linked by absolute
+  `raw.githubusercontent.com/.../main/...` URL — never a tag, never relative. `README.md` is the
+  PyPI long description too. See `CONTRIBUTING.md`.
 - Comments describe how a thing is used, and move when the code moves. To be used mostly to describe functions, not to annotate every line of behavior.
 - If a rule here fights the task in front of you, say so loudly and get a human sign-off before breaking it.
 
