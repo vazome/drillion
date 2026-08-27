@@ -93,16 +93,16 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
 
   /** A notice that says one thing and gets out of the way — the hint gate's whole UI. */
   const flash = useCallback((message: string) => {
-    setGate({ at: "hints", message });
+    const mine: Gate = { at: "hints", message };
+    setGate(mine);
     clearTimeout(gateTimer.current);
-    gateTimer.current = setTimeout(() => setGate(null), GATE_MS);
+    // nine other callers write this slot: the timer takes back only its own notice
+    gateTimer.current = setTimeout(() => setGate((g) => (g === mine ? null : g)), GATE_MS);
   }, []);
 
   // load, and offer a newer local draft over what the file holds
   useEffect(() => {
     let live = true;
-    setTask(null); attemptRef.current = false; dropped.current = false; setError(null); setResult({ state: "idle" }); setConflict(null); setGate(null); setNextSlug(null); setNudgeOff(false);
-    setNote(""); noteRef.current = ""; noteDirtyRef.current = false; setNoteDirty(false);
     api<TaskData>(`/task/${encodeURIComponent(slug)}`).then((p) => {
       if (!live) return;
       adopt(p);

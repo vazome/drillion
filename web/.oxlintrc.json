@@ -9,8 +9,6 @@
     // `null: ignore` keeps the `row.id != null` idiom in ds/Table.jsx
     "eqeqeq": ["error", "always", { "null": "ignore" }],
     "no-shadow": "error",
-    "react/rules-of-hooks": "error",
-    // off: it flags Task.tsx's per-task reset, whose fix is a remount — a behaviour change
-    "react/set-state-in-effect": "off"
+    "react/rules-of-hooks": "error"
   }
 }
