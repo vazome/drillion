@@ -189,5 +189,5 @@ Showing up is counted as days practised.
 
 ## Out of scope
 
-Accounts, sharing, leaderboards, mobile, marketing pages, onboarding flows, an admin/authoring UI
-(tasks are authored as files).
+Accounts, sharing, leaderboards, mobile, marketing pages, an admin/authoring UI (tasks are
+authored as files). Onboarding is one dismissible note; no flow.

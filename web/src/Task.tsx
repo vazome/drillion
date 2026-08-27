@@ -468,7 +468,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
           {task.has_given ? <NoticeBanner message="This task ships given code above solve() — read it, but leave it alone." actions={[]} /> : null}
 
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-            <Button kbdHint="Ctrl+Enter" onClick={run} disabled={result.state === "running" || passed}>
+            <Button kbdHint="Ctrl/⌘+Enter" onClick={run} disabled={result.state === "running" || passed}>
               {result.state === "running" ? "Running…" : "Run tests"}
             </Button>
             <Timer seconds={active} paused={!hasAttempt || passed} />
