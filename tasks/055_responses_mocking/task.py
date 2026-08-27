@@ -1,4 +1,7 @@
-def solve(rsps, spec: dict[str, dict[str, int] | list[str] | str]):
+import responses
+
+
+def solve(rsps: responses.RequestsMock, spec: dict[str, dict[str, int] | list[str] | str]):
     raise NotImplementedError
 
 

@@ -1,4 +1,7 @@
-def solve(s3, bucket: str):
+from mypy_boto3_s3 import S3Client
+
+
+def solve(s3: S3Client, bucket: str):
     raise NotImplementedError
 
 

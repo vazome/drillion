@@ -1,4 +1,7 @@
-def solve(ec2):
+from mypy_boto3_ec2 import EC2Client
+
+
+def solve(ec2: EC2Client):
     raise NotImplementedError
 
 
