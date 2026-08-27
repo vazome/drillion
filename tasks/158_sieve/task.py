@@ -1,4 +1,4 @@
-def solve(limit):
+def solve(limit: int):
     raise NotImplementedError
 
 

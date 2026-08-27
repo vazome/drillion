@@ -1,4 +1,4 @@
-def solve(cfg):
+def solve(cfg: dict[str, list[int] | list[str]]):
     raise NotImplementedError
 
 

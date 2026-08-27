@@ -1,4 +1,4 @@
-def solve(rsps, spec):
+def solve(rsps, spec: dict[str, dict[str, int] | list[str] | str]):
     raise NotImplementedError
 
 

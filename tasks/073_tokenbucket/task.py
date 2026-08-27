@@ -1,4 +1,4 @@
-def solve(requests, capacity, rate, start):
+def solve(requests: list[tuple[int, str]], capacity: int, rate: float, start: int):
     raise NotImplementedError
 
 

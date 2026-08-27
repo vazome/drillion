@@ -1,4 +1,4 @@
-def solve(request, sleep, max_attempts, default_wait):
+def solve(request, sleep, max_attempts: int, default_wait: float):
     raise NotImplementedError
 
 

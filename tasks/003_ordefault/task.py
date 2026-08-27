@@ -1,4 +1,4 @@
-def solve(port, name):
+def solve(port: int | None, name: str | None):
     raise NotImplementedError
 
 

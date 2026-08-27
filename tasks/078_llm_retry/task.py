@@ -6,7 +6,7 @@ class BadRequest(Exception):
     """The provider said 400. The identical call will never work."""
 
 
-def solve(model, prompt, sleep, max_attempts, base):
+def solve(model, prompt: str, sleep, max_attempts: int, base: float):
     raise NotImplementedError
 
 

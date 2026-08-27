@@ -1,4 +1,4 @@
-def solve(rows):
+def solve(rows: list[tuple[str, float]]):
     raise NotImplementedError
 
 

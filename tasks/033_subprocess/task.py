@@ -1,4 +1,4 @@
-def solve(argv):
+def solve(argv: list[str]):
     raise NotImplementedError
 
 

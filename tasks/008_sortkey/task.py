@@ -1,4 +1,4 @@
-def solve(services):
+def solve(services: list[list[int | str]]):
     raise NotImplementedError
 
 

@@ -1,4 +1,4 @@
-def solve(legacy_data):
+def solve(legacy_data: dict[int, list[str]]):
     raise NotImplementedError
 
 

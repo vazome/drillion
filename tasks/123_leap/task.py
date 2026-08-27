@@ -1,4 +1,4 @@
-def solve(year):
+def solve(year: int):
     raise NotImplementedError
 
 

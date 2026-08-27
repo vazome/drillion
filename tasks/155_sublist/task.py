@@ -5,7 +5,7 @@ EQUAL = "equal"
 UNEQUAL = "unequal"
 
 
-def solve(list_one, list_two):
+def solve(list_one: list[int] | list[object], list_two: list[int] | list[object]):
     raise NotImplementedError
 
 

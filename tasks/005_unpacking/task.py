@@ -1,4 +1,4 @@
-def solve(xs, pairs):
+def solve(xs: list[int], pairs: list[tuple[str, str]]):
     raise NotImplementedError
 
 

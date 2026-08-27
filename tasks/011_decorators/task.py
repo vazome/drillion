@@ -1,4 +1,4 @@
-def solve(calls):
+def solve(calls: list[tuple[dict[object, object] | dict[str, bool] | dict[str, float] | dict[str, int] | str | tuple[str, int] | tuple[str], ...]] | list[tuple[dict[object, object] | dict[str, bool] | dict[str, int] | str | tuple[str, int] | tuple[str], ...]]):
     raise NotImplementedError
 
 

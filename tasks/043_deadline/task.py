@@ -1,4 +1,4 @@
-def solve(check, now, sleep, timeout, interval):
+def solve(check, now, sleep, timeout: int, interval: int):
     raise NotImplementedError
 
 

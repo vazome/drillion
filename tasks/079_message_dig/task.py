@@ -1,4 +1,4 @@
-def solve(payload):
+def solve(payload: dict[str, dict[str, int] | list[object] | str] | dict[str, list[object] | str] | dict[str, str]):
     raise NotImplementedError
 
 

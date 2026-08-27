@@ -1,4 +1,4 @@
-def solve(from_base, digits, to_base):
+def solve(from_base: int, digits: list[int] | list[object], to_base: int):
     raise NotImplementedError
 
 

@@ -1,4 +1,4 @@
-def solve(ec2, required):
+def solve(ec2, required: list[str]):
     raise NotImplementedError
 
 

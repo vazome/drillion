@@ -1,4 +1,4 @@
-def solve(matrix):
+def solve(matrix: list[list[int] | list[object]] | list[list[int]] | list[object]):
     raise NotImplementedError
 
 

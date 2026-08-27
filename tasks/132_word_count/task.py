@@ -1,4 +1,4 @@
-def solve(subtitle):
+def solve(subtitle: str):
     raise NotImplementedError
 
 

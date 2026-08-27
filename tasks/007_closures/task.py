@@ -1,4 +1,4 @@
-def solve(n, x):
+def solve(n: int, x: int):
     raise NotImplementedError
 
 

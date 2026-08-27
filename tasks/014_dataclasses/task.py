@@ -1,4 +1,4 @@
-def solve(specs):
+def solve(specs: list[tuple[int | str, ...]]):
     raise NotImplementedError
 
 

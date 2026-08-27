@@ -1,4 +1,4 @@
-def solve(strand_a, strand_b):
+def solve(strand_a: str, strand_b: str):
     raise NotImplementedError
 
 

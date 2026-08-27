@@ -22,7 +22,7 @@ class Alien:
         pass
 
 
-def solve(positions):
+def solve(positions: list[object] | list[tuple[int, int]]):
     raise NotImplementedError
 
 

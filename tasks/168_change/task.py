@@ -1,4 +1,4 @@
-def solve(coins, target):
+def solve(coins: list[int], target: int):
     raise NotImplementedError
 
 

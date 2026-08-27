@@ -1,4 +1,4 @@
-def solve(paths, known_good):
+def solve(paths: list[str], known_good: str):
     raise NotImplementedError
 
 

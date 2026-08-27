@@ -1,4 +1,4 @@
-def solve(tasks):
+def solve(tasks: list[str]):
     raise NotImplementedError
 
 

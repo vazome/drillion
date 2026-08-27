@@ -1,4 +1,4 @@
-def solve(call, sleep, rand, max_attempts, base):
+def solve(call, sleep, rand, max_attempts: int, base: float):
     raise NotImplementedError
 
 

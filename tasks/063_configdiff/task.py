@@ -1,4 +1,4 @@
-def solve(old, new):
+def solve(old: dict[str, bool | dict[str, float | int | str] | dict[str, str]] | dict[str, dict[str, bool | dict[str, int] | float] | dict[str, dict[str, bool | int | str] | float] | dict[str, dict[str, float] | float | int | str]] | dict[str, dict[str, dict[str, bool] | dict[str, float] | dict[str, int | str]] | str] | dict[str, float], new: dict[str, dict[str, bool | dict[str, int] | str] | dict[str, dict[str, float] | float | int | str] | float] | dict[str, dict[str, dict[str, bool] | dict[str, float | str] | dict[str, int | str]] | str] | dict[str, dict[str, float | str] | dict[str, str] | float] | dict[str, int]):
     raise NotImplementedError
 
 

@@ -1,4 +1,4 @@
-def solve(urls, get, timeout, max_workers):
+def solve(urls: list[str], get, timeout: float, max_workers: int):
     raise NotImplementedError
 
 

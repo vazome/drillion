@@ -1,4 +1,4 @@
-def solve(units):
+def solve(units: list[dict[str, int | str]]):
     raise NotImplementedError
 
 

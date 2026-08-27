@@ -1,4 +1,4 @@
-def solve(isbn):
+def solve(isbn: str):
     raise NotImplementedError
 
 

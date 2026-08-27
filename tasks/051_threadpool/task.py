@@ -1,4 +1,4 @@
-def solve(work, items, workers):
+def solve(work, items: list[str], workers: int):
     raise NotImplementedError
 
 

@@ -1,7 +1,7 @@
 import sys
 
 
-def solve(version, host):
+def solve(version: str, host: str):
     raise NotImplementedError
 
 
