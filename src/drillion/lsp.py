@@ -8,6 +8,8 @@ import asyncio
 import json
 import logging
 
+from fastapi import WebSocketDisconnect
+
 from .settings import settings
 
 log = logging.getLogger(__name__)
@@ -71,11 +73,14 @@ async def bridge(ws):
     ]
     try:
         done, _ = await asyncio.wait(pump, return_when=asyncio.FIRST_COMPLETED)
-        for task in done:  # a pump that raised anything but a hangup is worth seeing
-            if (err := task.exception()) and not isinstance(err, EOFError):
+        for task in done:  # closing the tab is not news; anything else is
+            if (err := task.exception()) and not isinstance(err, WebSocketDisconnect):
                 log.info("language server bridge closed: %r", err)
     finally:
         for task in pump:
             task.cancel()
-        proc.terminate()
+        # the server exiting first is one of the ways we get here, and terminating a process
+        # that has already gone raises rather than being a no-op
+        if proc.returncode is None:
+            proc.terminate()
         await proc.wait()
