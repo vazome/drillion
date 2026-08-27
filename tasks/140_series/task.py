@@ -1,4 +1,4 @@
-def solve(series, length):
+def solve(series: str, length: int):
     raise NotImplementedError
 
 

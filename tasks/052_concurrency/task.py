@@ -1,4 +1,4 @@
-def solve(workloads):
+def solve(workloads: list[dict[str, int | str]]):
     raise NotImplementedError
 
 

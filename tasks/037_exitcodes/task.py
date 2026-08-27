@@ -2,7 +2,7 @@ KNOWN_SERVICES = ("api", "web", "db", "cache")      # given — do not edit
 MAX_REPLICAS = 10                                   # given — do not edit
 
 
-def solve(argv):
+def solve(argv: list[str]):
     raise NotImplementedError
 
 

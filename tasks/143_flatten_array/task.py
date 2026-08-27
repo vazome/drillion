@@ -1,4 +1,4 @@
-def solve(iterable):
+def solve(iterable: list[None] | list[int | None] | list[int | list[int | list[int | list[object]] | list[list[object]]]] | list[int | list[int | list[int] | list[list[None]] | list[list[object]] | None]] | list[int | list[int | list[int] | list[list[object]]]] | list[int | list[int]] | list[int] | list[list[list[None] | None] | list[list[list[None]]] | None] | list[list[list[object]]] | list[object]):
     raise NotImplementedError
 
 

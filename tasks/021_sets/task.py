@@ -1,4 +1,4 @@
-def solve(scores):
+def solve(scores: list[int]):
     raise NotImplementedError
 
 

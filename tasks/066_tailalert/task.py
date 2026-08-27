@@ -1,4 +1,4 @@
-def solve(stream, pattern, window):
+def solve(stream, pattern: str, window: int):
     raise NotImplementedError
 
 

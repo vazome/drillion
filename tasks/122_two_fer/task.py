@@ -1,4 +1,4 @@
-def solve(name="you"):
+def solve(name: str="you"):
     raise NotImplementedError
 
 

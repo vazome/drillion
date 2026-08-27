@@ -1,4 +1,4 @@
-def solve(query, rows, k):
+def solve(query: str, rows: list[dict[str, int | str]], k: int):
     raise NotImplementedError
 
 

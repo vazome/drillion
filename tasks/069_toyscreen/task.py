@@ -1,4 +1,4 @@
-def solve(phrase, pair, text, n):
+def solve(phrase: str, pair: tuple[str, str], text: str, n: int):
     raise NotImplementedError
 
 

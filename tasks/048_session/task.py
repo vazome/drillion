@@ -1,4 +1,4 @@
-def solve(base_url, token, agent, names):
+def solve(base_url: str, token: str, agent: str, names: list[str]):
     raise NotImplementedError
 
 

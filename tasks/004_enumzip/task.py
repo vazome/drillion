@@ -1,4 +1,4 @@
-def solve(hosts, ips):
+def solve(hosts: list[str], ips: list[str]):
     raise NotImplementedError
 
 

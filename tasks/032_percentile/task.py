@@ -1,4 +1,4 @@
-def solve(values, pct):
+def solve(values: list[float], pct: int):
     raise NotImplementedError
 
 

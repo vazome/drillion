@@ -1,4 +1,4 @@
-def solve(digits, span):
+def solve(digits: str, span: int):
     raise NotImplementedError
 
 

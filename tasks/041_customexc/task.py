@@ -10,7 +10,7 @@ class BadValueError(ConfigError):
     """A key is present but its value is unusable."""
 
 
-def solve(configs):
+def solve(configs: list[dict[str, int | str] | dict[str, int]] | list[dict[str, int | str] | dict[str, str | None] | dict[str, str]] | list[dict[str, int | str] | dict[str, str]]):
     raise NotImplementedError
 
 

@@ -1,4 +1,4 @@
-def solve(s3, bucket):
+def solve(s3, bucket: str):
     raise NotImplementedError
 
 

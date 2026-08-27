@@ -1,4 +1,4 @@
-def solve(path):
+def solve(path: str):
     raise NotImplementedError
 
 

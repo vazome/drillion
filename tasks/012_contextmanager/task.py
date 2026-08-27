@@ -1,4 +1,4 @@
-def solve(events, name):
+def solve(events: list[str], name: str):
     raise NotImplementedError
 
 

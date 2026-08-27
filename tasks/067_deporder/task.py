@@ -1,4 +1,4 @@
-def solve(graph):
+def solve(graph: dict[str, list[object] | list[str]] | dict[str, list[str]]):
     raise NotImplementedError
 
 

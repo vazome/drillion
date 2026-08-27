@@ -1,4 +1,4 @@
-def solve(first_url, token):
+def solve(first_url: str, token: str):
     raise NotImplementedError
 
 

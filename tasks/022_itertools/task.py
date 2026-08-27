@@ -1,4 +1,4 @@
-def solve(pages, first_n):
+def solve(pages: list[list[str]], first_n: int):
     raise NotImplementedError
 
 

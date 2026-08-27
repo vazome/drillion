@@ -1,4 +1,4 @@
-def solve(records):
+def solve(records: list[list[int | str]]):
     raise NotImplementedError
 
 

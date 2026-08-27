@@ -1,4 +1,4 @@
-def solve(text, work, max_workers):
+def solve(text: str, work, max_workers: int):
     raise NotImplementedError
 
 

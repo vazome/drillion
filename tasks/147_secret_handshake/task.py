@@ -1,4 +1,4 @@
-def solve(binary_str):
+def solve(binary_str: str):
     raise NotImplementedError
 
 

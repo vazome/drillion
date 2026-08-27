@@ -1,4 +1,4 @@
-def solve(xs):
+def solve(xs: list[int]):
     raise NotImplementedError
 
 

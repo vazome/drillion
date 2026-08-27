@@ -1,4 +1,4 @@
-def solve(state, desired):
+def solve(state: dict[str, str], desired: dict[str, str | None] | dict[str, str]):
     raise NotImplementedError
 
 

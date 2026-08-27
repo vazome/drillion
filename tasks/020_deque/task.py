@@ -1,4 +1,4 @@
-def solve(lines, n):
+def solve(lines, n: int):
     raise NotImplementedError
 
 

@@ -1,4 +1,4 @@
-def solve(services_csv, members_csv, min_cpu):
+def solve(services_csv: str, members_csv: str, min_cpu: int):
     raise NotImplementedError
 
 

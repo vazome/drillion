@@ -1,4 +1,4 @@
-def solve(name, level, messages):
+def solve(name: str, level: int, messages: list[tuple[str, str]]):
     raise NotImplementedError
 
 

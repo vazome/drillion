@@ -1,4 +1,4 @@
-def solve(values, target):
+def solve(values: list[int] | list[object], target: int):
     raise NotImplementedError
 
 

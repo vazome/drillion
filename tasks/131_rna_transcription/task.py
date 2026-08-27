@@ -1,4 +1,4 @@
-def solve(dna_strand):
+def solve(dna_strand: str):
     raise NotImplementedError
 
 

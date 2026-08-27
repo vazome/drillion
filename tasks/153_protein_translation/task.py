@@ -1,4 +1,4 @@
-def solve(strand):
+def solve(strand: str):
     raise NotImplementedError
 
 

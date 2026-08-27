@@ -1,4 +1,4 @@
-def solve(model, prompt, sentinel):
+def solve(model, prompt: str, sentinel: str):
     raise NotImplementedError
 
 

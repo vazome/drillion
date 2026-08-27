@@ -1,4 +1,4 @@
-def solve(url, token, params):
+def solve(url: str, token: str, params: dict[str, int | str]):
     raise NotImplementedError
 
 

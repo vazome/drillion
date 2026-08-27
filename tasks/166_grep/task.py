@@ -1,4 +1,4 @@
-def solve(pattern, flags, files):
+def solve(pattern: str, flags: str, files: dict[str, str]):
     raise NotImplementedError
 
 

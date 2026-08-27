@@ -1,4 +1,4 @@
-def solve(level, base_values):
+def solve(level: int, base_values: list[int] | list[object]):
     raise NotImplementedError
 
 

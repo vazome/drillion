@@ -1,4 +1,4 @@
-def solve(words):
+def solve(words: list[str]):
     raise NotImplementedError
 
 

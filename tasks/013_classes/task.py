@@ -1,4 +1,4 @@
-def solve(name, replicas, cpu):
+def solve(name: str, replicas: int, cpu: int):
     raise NotImplementedError
 
 

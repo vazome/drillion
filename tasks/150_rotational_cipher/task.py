@@ -1,4 +1,4 @@
-def solve(text, key):
+def solve(text: str, key: int):
     raise NotImplementedError
 
 

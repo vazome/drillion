@@ -1,4 +1,4 @@
-def solve(secret, body, signature):
+def solve(secret: bytes, body: bytes, signature: str):
     raise NotImplementedError
 
 
