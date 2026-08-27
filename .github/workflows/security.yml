@@ -43,7 +43,9 @@ jobs:
           # distinct per scan: code scanning replaces an upload with the next one in the same category
           category: trivy-fs
 
-      - name: scan the Dockerfile and the workflows for misconfiguration
+      # Dockerfile only in practice: measured on Trivy 0.71.2, a deliberately unsafe workflow
+      # produced no finding even with --misconfig-scanners github
+      - name: scan the Dockerfile for misconfiguration
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: config
