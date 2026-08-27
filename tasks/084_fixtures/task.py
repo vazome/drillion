@@ -33,7 +33,7 @@ _ORIGINAL = (embed_query, get_pool)   # the test checks these come back
 
 
 @pytest.fixture
-def solve(monkeypatch):
+def solve(monkeypatch: pytest.MonkeyPatch):
     raise NotImplementedError
 
 

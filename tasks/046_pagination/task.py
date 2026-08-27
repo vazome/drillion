@@ -1,4 +1,13 @@
-def solve(fetch_page):
+from collections.abc import Callable
+from typing import TypedDict
+
+
+class Page(TypedDict):
+    items: list[str]
+    next: str | None
+
+
+def solve(fetch_page: Callable[[str | None], Page]):
     raise NotImplementedError
 
 

@@ -1,4 +1,7 @@
-def solve(request, sleep, max_attempts: int, default_wait: float):
+from collections.abc import Callable
+
+
+def solve(request, sleep: Callable[[float], None], max_attempts: int, default_wait: float):
     raise NotImplementedError
 
 

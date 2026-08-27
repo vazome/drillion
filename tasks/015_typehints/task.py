@@ -1,4 +1,7 @@
-def solve(fn):
+from types import FunctionType
+
+
+def solve(fn: FunctionType):
     raise NotImplementedError
 
 

@@ -1,4 +1,7 @@
-def solve(fn):
+from collections.abc import Callable
+
+
+def solve(fn: Callable[[int], int]):
     raise NotImplementedError
 
 

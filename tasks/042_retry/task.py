@@ -1,4 +1,8 @@
-def solve(call, sleep, rand, max_attempts: int, base: float):
+from collections.abc import Callable
+
+
+def solve(call: Callable[[], int], sleep: Callable[[float], None],
+          rand: Callable[[], float], max_attempts: int, base: float):
     raise NotImplementedError
 
 

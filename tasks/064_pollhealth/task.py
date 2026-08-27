@@ -1,4 +1,9 @@
-def solve(check, now, sleep, timeout: int, interval: float, max_interval: int):
+from collections.abc import Callable
+
+
+def solve(check: Callable[[], bool], now: Callable[[], float],
+          sleep: Callable[[float], None], timeout: int, interval: float,
+          max_interval: int):
     raise NotImplementedError
 
 

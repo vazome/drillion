@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from langchain_core.runnables import Runnable
 
 
@@ -9,7 +11,8 @@ class BadRequest(Exception):
     """The provider said 400. The identical call will never work."""
 
 
-def solve(model: Runnable[str, str], prompt: str, sleep, max_attempts: int, base: float):
+def solve(model: Runnable[str, str], prompt: str, sleep: Callable[[float], None],
+          max_attempts: int, base: float):
     raise NotImplementedError
 
 
