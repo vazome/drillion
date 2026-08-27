@@ -160,6 +160,9 @@ Data: `GET /api/progress` → `boxes[7]`, `ladder[7]`, `due`, `seen`, `total`, `
 Elements: the same stats strip, the full-size ladder (7 boxes with counts and next-return
 intervals), a per-tag coverage table, the recent log.
 
+Three further figures — a 14-day due-load forecast, a practice heatmap and a topic heatmap — are
+specified in [`docs/design/progress-visualisations.md`](docs/design/progress-visualisations.md).
+
 ## Vocabulary (use these words)
 
 Every term — task, tier, difficulty, track, tag, card, box, attempt, grade, status, focus — is
