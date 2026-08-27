@@ -14,15 +14,45 @@ tasks are folders of Markdown and Python on your disk, and your progress is one 
 
 ## Install
 
+Any of these serves <http://127.0.0.1:8765>. The first three need Python 3.13 or newer and open
+your browser for you; Docker needs nothing but Docker, and opens nothing.
+
+### Try it — `uvx`
+
 ```bash
-uvx drillion                                   # run it without installing anything
-uv tool install drillion && drillion           # or keep it on your PATH
-pip install drillion && drillion               # same, with pip
+uvx drillion
+```
+
+Downloads, runs, and leaves nothing installed. Your progress still persists between runs; only
+drillion itself is temporary.
+
+### Keep it — `uv tool install`
+
+```bash
+uv tool install drillion
+drillion
+```
+
+Puts `drillion` on your PATH. `uv tool upgrade drillion` updates it.
+
+### Keep it — `pip`
+
+```bash
+pip install drillion
+drillion
+```
+
+The same thing without uv. Use a virtualenv if you keep your system Python clean.
+
+### Docker
+
+```bash
 docker run -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion
 ```
 
-Python 3.13 or newer, and not even that for Docker. It serves <http://127.0.0.1:8765>; the first
-three open your browser.
+The image carries the tasks and the page; the named volume keeps your work across upgrades.
+Open <http://127.0.0.1:8765> yourself — the container never opens a browser.
+[compose.yaml](compose.yaml) is that same run spelled out, and needs nothing else from the repo.
 
 ## Commands
 
