@@ -141,7 +141,10 @@ the `progress.json` schema, and the task-folder format:
 - **PATCH** — fixes, no new surface.
 
 Releasing: bump `pyproject.toml`, add the entry to [CHANGELOG.md](CHANGELOG.md), tag the commit
-`v<version>`. CI fails a tag whose name disagrees with the declared version.
+`v<version>`. The tag is the whole trigger — CI fails one whose name disagrees with the declared
+version, then publishes to PyPI and ghcr and cuts the GitHub release, whose notes are that
+changelog entry verbatim. A tag with no matching `## <version>` section in the changelog fails
+rather than publishing a release with nothing in it.
 
 ## Code style
 
