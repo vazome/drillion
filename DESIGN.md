@@ -155,13 +155,14 @@ dot and surfaces on Run), **conflict banner** (file changed on disk: reload / ov
 Answers: *where am I on the ladder?*
 
 Data: `GET /api/progress` → `boxes[7]`, `ladder[7]`, `due`, `seen`, `total`, `practised`, `window`,
-`per_tag{tag: {seen, total}}`, `log[]` (last 30: `date, slug, grade, attempts, secs, new`).
+`today`, `forecast[14]` (cards due per day, today carrying the overdue), `cap` (reviews a day),
+`days{date: passes}` (all history), `per_tag{tag: {seen, total, boxes[7], lapses, due7}}`,
+`log[]` (last 30: `date, slug, grade, attempts, secs, new`).
 
 Elements: the same stats strip, the full-size ladder (7 boxes with counts and next-return
-intervals), a per-tag coverage table, the recent log.
-
-Three further figures — a 14-day due-load forecast, a practice heatmap and a topic heatmap — are
-specified in [`docs/design/progress-visualisations.md`](docs/design/progress-visualisations.md).
+intervals), the 14-day due-load forecast, the practice heatmap, one strip per topic showing
+its spread across the ladder, the recent log. The three figures are specified in
+[`docs/design/progress-visualisations.md`](docs/design/progress-visualisations.md).
 
 ## Vocabulary (use these words)
 

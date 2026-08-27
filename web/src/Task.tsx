@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button, Card, Collapsible, ConflictBanner, EmptyState, LadderMeter, NoticeBanner, ResultBanner, SpecText, StatusBadge, TagChip, Timer } from "./ds/index.js";
+import { Button, Card, Collapsible, ConflictBanner, EmptyState, LadderMeter, NoticeBanner, ResultBanner, SpecText, StatusBadge, TagChip, Timer, StuckNudge } from "./ds/index.js";
 import { ApiError, api, post, type Task as TaskData, type RunResult } from "./api";
 import { Editor } from "./Editor";
 
@@ -289,6 +289,16 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     }
   };
 
+  /** The nudge's second offer: put the task aside for today and go read up. */
+  const buryAndLeave = async () => {
+    try {
+      await post(`/task/${encodeURIComponent(slug)}/bury`, { buried: true });
+      location.hash = "#/";
+    } catch (e) {
+      setGate({ at: "editor", message: (e as ApiError).message });
+    }
+  };
+
   const takeDisk = () => {
     if (!conflict) return;
     etagRef.current = conflict.etag;
@@ -438,9 +448,9 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
           ) : null}
           {notice("editor")}
           {nudge && !nudgeOff && !passed ? (
-            <div className="m-drop">
-              <NoticeBanner message="Half an hour on this and nothing run yet — a hint is not cheating. You cannot work out something nobody has told you about."
-                actions={[{ label: `Show hint ${hints.shown.length + 1}`, onClick: hint }, { label: "Not now", onClick: () => setNudgeOff(true) }]} />
+            <div style={{ position: "fixed", right: 24, bottom: 24, zIndex: 30 }}>
+              <StuckNudge minutes={Math.round(active / 60)} hintsShown={hints.shown.length} hintsTotal={hints.total} hintReady={hintReady}
+                onHint={() => { setNudgeOff(true); hint(); }} onBury={buryAndLeave} onDismiss={() => setNudgeOff(true)} />
             </div>
           ) : null}
           {task.has_given ? <NoticeBanner message="This task ships given code above solve() — read it, but leave it alone." actions={[]} /> : null}

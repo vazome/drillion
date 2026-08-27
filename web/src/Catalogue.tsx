@@ -221,7 +221,10 @@ export function Catalogue() {
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
-  const [activeTags, setActiveTags] = useState<string[]>([]);
+  // `#/?tag=x` is the progress page's way in: read once, then back to a plain `#/` so the
+  // header link lights up and a reload or Clear does not bring the filter back
+  const [activeTags, setActiveTags] = useState<string[]>(() => new URLSearchParams(location.hash.split("?")[1] ?? "").getAll("tag"));
+  useEffect(() => { if (location.hash.includes("?")) location.replace("#/"); }, []);
   const [notice, setNotice] = useState<string | null>(null);
   const [sort, setSort] = useState<Sort>(DEFAULT_SORT);
 

@@ -1,5 +1,9 @@
 # Design handover — Progress page visualisations
 
+> Built. The design chose the third topic shape — one strip per tag — and the three
+> components live in `web/src/ds/` as `DueForecast`, `PracticeHeatmap` and `TopicStrips`.
+> The brief below is kept as the record of what was asked.
+
 Three components for `#/progress`, to be drawn in Claude Design and vendored into
 `web/src/ds/` like the rest of the Mineral Blue system. This file is everything the designer
 needs; [`DESIGN.md`](../../DESIGN.md) is the product brief behind it and

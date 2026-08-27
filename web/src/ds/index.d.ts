@@ -229,3 +229,85 @@ export interface SpecTextProps {
   style?: Style;
 }
 export declare function SpecText(props: SpecTextProps): El;
+
+/** Due-load forecast for the Progress page: 14 bars, today marked and labelled, the daily
+ *  cap as a dashed line with the over-cap part of a bar hatched — a heavy day is information,
+ *  not a warning, so no semantic colour is used. Hovering a bar shows a tooltip; the same
+ *  text is on each bar as an aria-label, and the figure carries a spoken summary. */
+export interface DueForecastProps {
+  /** 14 integers; [0] is today and includes everything overdue, [13] is two weeks out */
+  forecast?: number[];
+  /** reviews served per day — the line; a day above it spills into the next */
+  cap?: number;
+  /** "YYYY-MM-DD" for bar [0], so weekday letters land right in any timezone */
+  today?: string;
+  style?: Style;
+}
+export declare function DueForecast(props: DueForecastProps): El;
+
+/** Practice heatmap: 53 weeks × 7 days of passes, four intensity steps from `--surface-2`
+ *  up through `--accent`. No total, no streak — days practised is a rolling count.
+ *  Squares size themselves to fill the card unless `cell` is given. */
+export interface PracticeHeatmapProps {
+  /** "YYYY-MM-DD" → passes that day; days with none are absent */
+  days?: Record<string, number>;
+  /** "YYYY-MM-DD" — the grid ends on this day's week */
+  today?: string;
+  /** fixed square size in px; omitted, the grid measures its card and fills the width */
+  cell?: number;
+  /** gap between squares, px */
+  gap?: number;
+  style?: Style;
+}
+export declare function PracticeHeatmap(props: PracticeHeatmapProps): El;
+
+/** Topic depth: one strip per tag. Strip width is the topic's size, its segments are the
+ *  tasks in each ladder box (pale box 1 → accent box 7) followed by the unseen remainder,
+ *  with lapses, due-in-7 and seen/total beside it. Sortable — stuck first by default —
+ *  and each tag links to the catalogue filtered by that tag. Handles the full tag list
+ *  by scrolling inside its card. */
+export interface TopicStripsTag {
+  tag: string;
+  /** tasks carrying the tag */
+  total: number;
+  /** tasks seen at least once — the strip's coloured part */
+  seen: number;
+  /** 7 counts: tasks with this tag sitting in each ladder box */
+  boxes: number[];
+  /** struggles across the tag's tasks */
+  lapses: number;
+  /** due within the next 7 days, the overdue included */
+  due7: number;
+}
+export interface TopicStripsProps {
+  tags?: TopicStripsTag[];
+  /** the seven return intervals, for labelling boxes */
+  ladder?: number[];
+  /** "stuck first" | "neglected first" | "most lapses" | "a–z" */
+  defaultSort?: string;
+  /** scroll height of the row list, px */
+  maxHeight?: number;
+  style?: Style;
+}
+export declare function TopicStrips(props: TopicStripsProps): El;
+
+/** A nudge for a task that has been open a long while (30 minutes by default): take a hint,
+ *  and if that doesn't open it, bury the task and go read the material. A `role="status"`
+ *  card, never a modal — it does not block the editor and the × dismisses it for good.
+ *  No countdown and no semantic colour: an accent rule, `--shadow-pop` in the corner. */
+export interface StuckNudgeProps {
+  /** minutes on the task, shown in the label */
+  minutes?: number;
+  /** hints already taken — sets the button's number and the "n of m shown" aside */
+  hintsShown?: number;
+  hintsTotal?: number;
+  /** false when the next hint is still time-locked; disables the hint button */
+  hintReady?: boolean;
+  onHint?: () => void;
+  onBury?: () => void;
+  onDismiss?: () => void;
+  /** "corner" — 360px and elevated, for a fixed bottom-right wrapper; "inline" — full width above the task */
+  placement?: "corner" | "inline";
+  style?: Style;
+}
+export declare function StuckNudge(props: StuckNudgeProps): El;
