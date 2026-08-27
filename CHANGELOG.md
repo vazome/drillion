@@ -4,6 +4,24 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.4.0 — 2026-08-27
+
+- The editor knows what your code means. Typing `rows.` offers the methods that value actually
+  has, with the signature and the docstring beside them, and a real type error is underlined
+  while you write rather than after you run. A language server runs next to the grader, on your
+  machine, over a new `/lsp` websocket — nothing is sent anywhere.
+- Every task's `solve()` now says what it takes — `def solve(rows: list[tuple[str, float]])` —
+  which is what those completions read: with no type on the parameter there is nothing to infer
+  from, and no editor can help. 96 of the 114 tasks that take arguments are fully annotated. The
+  remaining 18 keep a bare callback or AWS client, because annotating those means putting an
+  import into the code you open.
+- The editor is Monaco rather than CodeMirror 6. `Ctrl/⌘+Enter` still runs the tests, `/` still
+  goes to the catalogue unless you are typing in the editor, and the colours still come from the
+  same design tokens as the fenced code in the spec pane.
+- Two costs, since they are yours to pay: the page is 3.7 MB gzipped instead of 275 KB, and an
+  install now pulls basedpyright, which is 280 MB with its bundled Node runtime. Both are spent
+  on your own machine, and the page is served from it.
+
 ## 0.3.0 — 2026-08-27
 
 - A tag link from the progress page now filters the catalogue even when the catalogue is
