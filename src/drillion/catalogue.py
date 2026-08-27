@@ -86,7 +86,10 @@ def _read(folder):
         try:
             text = src.read_text()
             bounds(text)  # no marker line, no task
-            _solve(ast.parse(cut(text).body))
+            region = cut(text)
+            _solve(ast.parse(region.body))
+            if "def _reference(" not in region.tail:
+                out.append("task.py: the machinery has no `def _reference(`")
         except Invalid as err:
             out.append(f"task.py: {err}")
         except SyntaxError as err:
