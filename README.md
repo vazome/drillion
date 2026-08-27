@@ -52,7 +52,8 @@ docker run -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion
 
 The image carries the tasks and the page; the named volume keeps your work across upgrades.
 Open <http://127.0.0.1:8765> yourself — the container never opens a browser.
-[compose.yaml](compose.yaml) is that same run spelled out, and needs nothing else from the repo.
+[compose.yaml](compose.yaml) is the same thing plus `restart: unless-stopped`, so drillion comes
+back after a reboot; save that one file anywhere and `docker compose up -d`.
 
 ## Commands
 
