@@ -219,6 +219,8 @@ export function Catalogue() {
     if (searchWanted) { searchWanted = false; focusSearchBox(); }
     return () => { focusSearchBox = null; };
   }, [ready]);
+  // an unconsumed `/` dies with the page, or it steals focus on some later unrelated mount
+  useEffect(() => () => { searchWanted = false; }, []);
 
   const focus = data?.focus ?? null;
   // focus decides what the scheduler may pick next, so the whole payload is stale after it changes
@@ -281,9 +283,9 @@ export function Catalogue() {
   const showFirstRun = firstRun && stats.seen === 0 && today.recent.length === 0;
   const dismissFirstRun = () => { localStorage.setItem(FIRST_RUN, "1"); setFirstRun(false); };
   const stuck = worstTag(data.tasks, stats.lapse_limit);
-  // Enter in the search box takes the top row of what is on screen
+  // Enter in the search box takes the top row of what is on screen — an IME commit is not one
   const onSearchKey = (e: KeyboardEvent) => {
-    if (e.key === "Enter" && sorted.length) location.hash = href(sorted[0]);
+    if (e.key === "Enter" && !e.nativeEvent.isComposing && sorted.length) location.hash = href(sorted[0]);
   };
   const empty = today.no_new ? noPicks(today.no_new, today, focus, by) : null;
   const act = empty?.act === "backlog" ? { label: "Show the backlog", run: () => setStatus("due") }
@@ -301,13 +303,14 @@ export function Catalogue() {
 
       {notice ? <div className="m-drop"><NoticeBanner message={notice} actions={[{ label: "Dismiss", onClick: () => setNotice(null) }]} /></div> : null}
 
+      {/* a welcome, not a warning: NoticeBanner's own `--warn-bg` is what a save failure uses */}
       {showFirstRun ? <div className="m-drop"><NoticeBanner
+        style={{ background: "var(--surface-2)" }}
         message={<>Every task you pass climbs a ladder of seven boxes and comes back on that
           box’s own interval — {stats.ladder[0]} days at the first, {stats.ladder.at(-1)} at the
           last — and a sitting you struggle through drops it a box instead. Only two new tasks
-          are offered a day, because the point is to keep meeting the ones you have already
-          seen. Reviews come first: while the backlog is over the day’s cap, new picks pause
-          until you have caught up.</>}
+          are offered a day. Reviews come first: while the backlog is over the day’s cap, new
+          picks pause until you have caught up.</>}
         actions={[
           { label: "How it works", onClick: () => window.open(HOW_IT_WORKS, "_blank", "noopener") },
           { label: "Got it", onClick: dismissFirstRun },
@@ -334,7 +337,9 @@ export function Catalogue() {
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 14, padding: "0 0 12px" }}>
               <span>You keep struggling with</span>
               <TagChip label={stuck.tag} active={focus === stuck.tag} onClick={() => setFocus(focus === stuck.tag ? null : stuck.tag)} />
-              <span>— {plural(stuck.flagged, "task")} are flagged. Focusing on it puts its unstarted tasks first.</span>
+              {/* the chip clears the focus once it is on, so the offer to set it goes away */}
+              <span>— {plural(stuck.flagged, "task")} are flagged.
+                {focus === stuck.tag ? null : " Focusing on it puts its unstarted tasks first."}</span>
             </div>
           </> : null}
         </div>
