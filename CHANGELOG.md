@@ -19,6 +19,12 @@ task-folder format. The version is declared once, in `pyproject.toml`.
 - `/` anywhere goes to the catalogue and focuses the search box; `Enter` there opens the first
   row of the filtered list.
 - The catalogue's list scrolls sideways below about 840px instead of squeezing its columns.
+- A pass now shows your code and the reference side by side, changed lines marked, instead of
+  the reference alone as a code block. Read-only both sides, themed in light and dark.
+- The task page stacks its two panes below 1000px — spec first, then the editor, both full
+  width — so a tablet can read a spec and run it. Editing code there is still not the point.
+- The task page header carries the same quiet marks the catalogue rows do: `buried today`, and
+  `struggled N×` once a task has beaten you enough times.
 - The progress page looks both ways: a 14-day due-load forecast with the daily cap drawn on
   it, a year of practice as a heatmap, and one strip per topic showing where its tasks sit on
   the ladder — sortable, stuck first, each tag a link into the catalogue (`#/?tag=…`).
