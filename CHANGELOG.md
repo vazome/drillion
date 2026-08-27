@@ -4,6 +4,10 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## Unreleased
+
+- The run button's keyboard hint reads `Ctrl/⌘+Enter`, since the binding fires on either.
+
 ## 0.2.0 — 2026-08-27
 
 - Tests run in a throwaway scratch directory rather than in the folder that holds
