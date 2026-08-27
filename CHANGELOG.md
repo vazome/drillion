@@ -6,6 +6,9 @@ task-folder format. The version is declared once, in `pyproject.toml`.
 
 ## Unreleased
 
+- The client ships its own fonts. Nothing is fetched from Google any more, so the page
+  renders in IBM Plex Sans and Spline Sans Mono offline and behind a firewall, and opening
+  it tells no one.
 - The progress page looks both ways: a 14-day due-load forecast with the daily cap drawn on
   it, a year of practice as a heatmap, and one strip per topic showing where its tasks sit on
   the ladder — sortable, stuck first, each tag a link into the catalogue (`#/?tag=…`).
