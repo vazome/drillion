@@ -34,8 +34,9 @@ emotional core: cards climbing boxes and returning on schedule.
   first row of the filtered list).
 - Implementation: React 19 + TypeScript + Vite; the vendored design system's plain components over
   CSS variables (no Tailwind, no shadcn/ui — see `web/README.md` for why). The editor is
-  CodeMirror 6 (themeable: background, gutter, selection, caret, syntax colours for
-  keyword/string/number/comment/function/variable).
+  Monaco in classic mode (themeable: background, gutter, selection, caret, syntax colours for
+  keyword/string/number/comment/function/variable), talking to a local language server for
+  completions and diagnostics — see `docs/adr/0004-monaco-and-a-local-language-server.md`.
 
 ## Screens
 

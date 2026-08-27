@@ -17,12 +17,15 @@ if (MARKER_AT < 0) throw new Error(`${SLUG} has no ${MARKER} line: these tests w
 const TAIL = PRISTINE.slice(MARKER_AT);
 const setDisk = (body: string) => writeFileSync(TASK_PY, `${body}\n\n\n${TAIL}`);
 
-const body = (marker: string) => `def solve(xs):\n    return "${marker}"`;
-const STUB = "def solve(xs):\n    raise NotImplementedError";
+/** Both derived from the checkout's own copy, which is always the stub: a hardcoded
+ *  signature here would quietly drift the day `solve()`'s changes, and these specs would go
+ *  on passing against a shape the repo no longer has. */
+const STUB = PRISTINE.slice(0, MARKER_AT).trim();
+const body = (marker: string) => STUB.replace("raise NotImplementedError", `return "${marker}"`);
 
-const editor = (page: Page) => page.locator(".cm-content");
+const editor = (page: Page) => page.locator(".monaco-editor .view-lines").first();
 
-/** insertText, not type(): CodeMirror auto-indents keystrokes and would mangle the body. */
+/** insertText, not type(): Monaco auto-indents keystrokes and would mangle the body. */
 async function typeCode(page: Page, text: string) {
   await editor(page).click();
   await page.keyboard.press("ControlOrMeta+a");

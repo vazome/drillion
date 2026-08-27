@@ -8,7 +8,7 @@ import logging
 from collections import Counter
 from datetime import date, timedelta
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -29,6 +29,7 @@ from .attempts import (
     unlock_solution,
 )
 from .catalogue import public, tasks
+from .lsp import bridge
 from .region import (
     Invalid,
     bounds,
@@ -437,3 +438,10 @@ def set_focus(focus: Focus):
     with writing() as st:
         st["focus"] = focus.tag
         return {"focus": st["focus"]}
+
+
+@app.websocket("/lsp")
+async def lsp(ws: WebSocket):
+    """The editor's language server, one per open socket. See `lsp.bridge`."""
+    await ws.accept()
+    await bridge(ws)

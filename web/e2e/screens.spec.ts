@@ -38,14 +38,14 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await page.getByText("Full output").click(); // the pytest output is the point of the shot
   await shot(page, "3-task-tests-failed");
 
-  // insertText, not type(): CodeMirror auto-indents keystrokes and would mangle the body.
-  await page.locator(".cm-content").click();
+  // insertText, not type(): Monaco auto-indents keystrokes and would mangle the body.
+  await page.locator(".monaco-editor .view-lines").first().click();
   await page.keyboard.press("ControlOrMeta+a");
   await page.keyboard.insertText(SOLUTION);
   await run.click();
   await expect(page.getByRole("button", { name: "Back to Today" })).toBeVisible();
   // the spec pane scrolls on its own, and the diff against the reference is the point of the shot
-  await page.locator(".cm-mergeView").scrollIntoViewIfNeeded();
+  await page.locator(".monaco-diff-editor").scrollIntoViewIfNeeded();
   await shot(page, "4-task-tests-passed");
 
   // Last, so the ladder and the session table have something in them.
