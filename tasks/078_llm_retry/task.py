@@ -1,3 +1,6 @@
+from langchain_core.runnables import Runnable
+
+
 class RateLimited(Exception):
     """The provider said 429. The identical call will work later."""
 
@@ -6,7 +9,7 @@ class BadRequest(Exception):
     """The provider said 400. The identical call will never work."""
 
 
-def solve(model, prompt: str, sleep, max_attempts: int, base: float):
+def solve(model: Runnable[str, str], prompt: str, sleep, max_attempts: int, base: float):
     raise NotImplementedError
 
 

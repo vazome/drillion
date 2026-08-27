@@ -1,4 +1,7 @@
-def solve(lines, n: int):
+from collections.abc import Iterator
+
+
+def solve(lines: Iterator[str], n: int):
     raise NotImplementedError
 
 

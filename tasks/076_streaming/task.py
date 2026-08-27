@@ -1,4 +1,7 @@
-def solve(model, prompt: str, sentinel: str):
+from langchain_core.runnables import Runnable
+
+
+def solve(model: Runnable[str, str], prompt: str, sentinel: str):
     raise NotImplementedError
 
 
