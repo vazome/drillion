@@ -90,30 +90,32 @@ def queue(st, all_tasks):
         "done_today": done_today,
         "due_total": len(due),
         "behind": behind,
-        "no_new": None if new else _no_new(st, all_tasks, held, fresh, behind=behind),
+        "no_new": None
+        if new
+        else _no_new(st, all_tasks, held, fresh, behind=behind, done_today=done_today),
     }
 
 
-def _no_new(st, all_tasks, held, fresh, *, behind):
+def _no_new(st, all_tasks, held, fresh, *, behind, done_today):
     """The one reason there is nothing new to offer, for the page to name rather than guess.
 
     Ordered the way the rules bite: the backlog, then today's cap, then a bury, then a
-    prereq, then a focus. `ready` counts what is unlocked and waiting for tomorrow;
-    `nearest` is the task closest to opening."""
+    prereq, then a focus. `ready` counts what is unlocked and waiting for tomorrow, buried
+    or not; `nearest` is the task closest to opening."""
     focus = st.get("focus")
     if behind:
         return {"why": "behind"}
-    if fresh:  # unlocked and unburied, so only today's cap can be holding it back
-        return {"why": "cap", "ready": len(fresh)}
-    waiting, buried_ready = {}, False
+    waiting, ready = {}, len(fresh)
     for slug, prereqs in held.items():
         if slug in st["open"] or (focus and focus not in _facets(all_tasks[slug])):
             continue
         if prereqs:
             waiting[slug] = prereqs
-        else:  # unlocked, in focus, and not in `fresh`: buried is the only thing left
-            buried_ready = True
-    if buried_ready:
+        elif buried(st, slug):  # unlocked and in focus: the bury is what holds it back
+            ready += 1
+    if fresh or done_today >= NEW_PER_DAY:
+        return {"why": "cap", "ready": ready}
+    if ready:  # nothing fresh, so every unlocked task left is one you buried
         return {"why": "buried"}
     if waiting:
         nearest = min(waiting, key=lambda s: (len(waiting[s]), all_tasks[s]["topic"]))
@@ -149,13 +151,15 @@ def practised(st):
     )
 
 
-def stats(st, all_tasks):
-    """The ladder at a glance: the same block on the catalogue and on the progress page."""
+def stats(st, all_tasks, due=None):
+    """The ladder at a glance: the same block on the catalogue and on the progress page.
+
+    `due` is the whole backlog; pass `queue()`'s count rather than counting it twice."""
     spread = boxes(st, all_tasks)
     return {
         "boxes": spread,
         "ladder": LADDER,
-        "due": len(due_today(st, all_tasks)),
+        "due": len(due_today(st, all_tasks)) if due is None else due,
         "seen": sum(spread),
         "total": len(all_tasks),
         "practised": practised(st),

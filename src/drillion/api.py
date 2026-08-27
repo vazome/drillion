@@ -255,7 +255,7 @@ def catalogue():
             ),
             "today": q,
             "stats": {
-                **stats(st, all_tasks),
+                **stats(st, all_tasks, q["due_total"]),
                 "lapse_limit": LAPSE_LIMIT,
                 "stuck": stuck(st, all_tasks),
             },

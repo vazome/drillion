@@ -42,6 +42,11 @@ def _st(**kw):
     return {"focus": None, "cards": {}, "open": {}, "log": [], "archive": {}, **kw}
 
 
+def _new_pass():
+    """One of today's new picks, spent — what `done_today` counts."""
+    return {"date": state.today(), "slug": "001_a", "grade": "pass", "new": True}
+
+
 def test_grade_of():
     assert scheduler.grade_of(1, 120, 10, False) == "quick"
     assert scheduler.grade_of(2, 900, 10, False) == "pass"
@@ -179,6 +184,9 @@ def test_an_empty_day_names_the_one_reason_and_a_bury_is_one():
     q = scheduler.queue(st, _exs())
     assert q["new"] == [] and q["no_new"] == {"why": "buried"}
 
+    st["log"] = [_new_pass() for _ in range(scheduler.NEW_PER_DAY)]  # the cap bit first
+    assert scheduler.queue(st, _exs())["no_new"] == {"why": "cap", "ready": 1}
+
     st = _st(focus="core", cards={"001_a": {"box": 0, "due": "2999-01-01", "seen": 1}})
     assert scheduler.queue(st, _exs())["no_new"] == {
         "why": "prereqs",
@@ -191,6 +199,14 @@ def test_an_empty_day_names_the_one_reason_and_a_bury_is_one():
     st["focus"] = None
     st["cards"]["003_c"] = {"box": 0, "due": "2999-01-01", "seen": 1}
     assert scheduler.queue(st, _exs())["no_new"] == {"why": "done"}
+
+
+def test_the_ready_count_includes_what_you_buried():
+    """The count of what waits for tomorrow is a count of unlocked tasks, and a bury is one day, not a
+    withdrawal: leaving it out of the count reads as material that has gone missing."""
+    st = _st(log=[_new_pass() for _ in range(scheduler.NEW_PER_DAY)])
+    state.own(st, "001_a")["buried"] = state.today()  # 003_c is the one still on offer
+    assert scheduler.queue(st, _exs())["no_new"] == {"why": "cap", "ready": 2}
 
 
 def test_queue_caps_new_picks_and_skips_open_attempts():
