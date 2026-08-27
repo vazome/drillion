@@ -38,6 +38,11 @@ def _st(**kw):
     return {"focus": None, "cards": {}, "open": {}, "log": [], "archive": {}, **kw}
 
 
+def _new_pass():
+    """One of today's new picks, spent — what `done_today` counts."""
+    return {"date": state.today(), "slug": "001_a", "grade": "pass", "new": True}
+
+
 def test_grade_of():
     assert scheduler.grade_of(1, 120, 10, False) == "quick"
     assert scheduler.grade_of(2, 900, 10, False) == "pass"
@@ -141,7 +146,7 @@ def test_burying_a_card_changes_nothing_about_its_schedule():
     costs exactly one day of not being asked."""
     was = {"box": 3, "due": "2020-01-01", "seen": 5, "lapses": 2}
     st = _st(cards={"001_a": dict(was)})
-    state.card(st, "001_a")["buried"] = state.today()
+    state.own(st, "001_a")["buried"] = state.today()
     scheduler.queue(st, _exs())  # and reading the queue must not write to it either
     assert {k: st["cards"]["001_a"][k] for k in was} == was
 
@@ -165,14 +170,18 @@ def test_focus_ignores_out_of_focus_prereqs():
     assert scheduler.unseen(_st(focus="llm"), _exs()) == ["003_c"]
 
 
-def test_an_empty_day_names_the_one_reason_and_a_bury_is_not_one():
-    """`no_new` names the rule that actually bit, and a bury unlocks nothing."""
+def test_an_empty_day_names_the_one_reason_and_a_bury_is_one():
+    """`no_new` names the rule that actually bit. Burying the only task left is not "that is
+    today's new material, 0 done" — it is "you put it off"."""
     st = _st(focus="core")  # 002_b waits on 001_a; 003_c is out of focus
     assert scheduler.queue(st, _exs())["no_new"] is None  # 001_a is on offer
 
-    state.card(st, "001_a")["buried"] = state.today()
+    state.own(st, "001_a")["buried"] = state.today()
     q = scheduler.queue(st, _exs())
-    assert q["new"] == [] and q["no_new"] == {"why": "cap", "ready": 1}
+    assert q["new"] == [] and q["no_new"] == {"why": "buried"}
+
+    st["log"] = [_new_pass() for _ in range(scheduler.NEW_PER_DAY)]  # the cap bit first
+    assert scheduler.queue(st, _exs())["no_new"] == {"why": "cap", "ready": 1}
 
     st = _st(focus="core", cards={"001_a": {"box": 0, "due": "2999-01-01", "seen": 1}})
     assert scheduler.queue(st, _exs())["no_new"] == {
@@ -186,6 +195,14 @@ def test_an_empty_day_names_the_one_reason_and_a_bury_is_not_one():
     st["focus"] = None
     st["cards"]["003_c"] = {"box": 0, "due": "2999-01-01", "seen": 1}
     assert scheduler.queue(st, _exs())["no_new"] == {"why": "done"}
+
+
+def test_the_ready_count_includes_what_you_buried():
+    """The count of what waits for tomorrow is a count of unlocked tasks, and a bury is one day, not a
+    withdrawal: leaving it out of the count reads as material that has gone missing."""
+    st = _st(log=[_new_pass() for _ in range(scheduler.NEW_PER_DAY)])
+    state.own(st, "001_a")["buried"] = state.today()  # 003_c is the one still on offer
+    assert scheduler.queue(st, _exs())["no_new"] == {"why": "cap", "ready": 2}
 
 
 def test_queue_caps_new_picks_and_skips_open_attempts():
@@ -279,3 +296,58 @@ def test_the_ladder_sheds_review_load_at_the_top():
         scheduler.reschedule(c, "quick") == scheduler.LADDER[-1]
     )  # clamps rather than wraps
     assert c["box"] == len(scheduler.LADDER) - 1
+
+
+def test_a_read_of_the_ladder_writes_nothing_to_the_cards():
+    """Every read fills its blanks in a copy: a task you never touched stays out of the file."""
+    st = _st(cards={"001_a": {"box": 1, "due": "2000-01-01", "seen": 1}})
+    scheduler.queue(st, _exs())
+    scheduler.pick(st, _exs())
+    scheduler.stats(st, _exs())
+    scheduler.forecast(st, _exs())
+    scheduler.by_tag(st, _exs())
+    assert st["cards"] == {"001_a": {"box": 1, "due": "2000-01-01", "seen": 1}}
+
+
+def test_owning_a_card_back_fills_it_in_place():
+    st = _st(cards={"001_a": {"box": 1, "due": "2000-01-01", "seen": 1}})
+    state.own(st, "001_a")["buried"] = state.today()
+    assert st["cards"]["001_a"] == {
+        "box": 1,
+        "due": "2000-01-01",
+        "seen": 1,
+        "lapses": 0,
+        "buried": state.today(),
+    }
+
+
+def test_the_practice_count_is_a_rolling_window_not_a_streak():
+    """A day counts if anything was archived on it — a pass, or an attempt given up on."""
+
+    def day(n):
+        return (date.today() - timedelta(days=n)).isoformat()  # noqa: DTZ011
+
+    st = {
+        "archive": {
+            "a": [{"date": day(0)}, {"date": day(0)}],  # twice in a day is one day
+            "b": [{"date": day(2)}, {"date": day(scheduler.WINDOW - 1)}],
+        }
+    }
+    assert scheduler.practised(st) == 3
+    st["archive"]["c"] = [{"date": day(scheduler.WINDOW)}]  # one day past the edge
+    assert scheduler.practised(st) == 3
+    assert scheduler.practised({"archive": {}}) == 0
+
+
+def test_the_stuck_tag_needs_two_flagged_tasks():
+    """One task you keep failing is a bad day; two in one tag is a weak topic."""
+    limit = scheduler.LAPSE_LIMIT
+    seen = {"box": 1, "due": "2000-01-01", "seen": 1}
+    st = _st(cards={"001_a": {**seen, "lapses": limit}})
+    assert scheduler.stuck(st, _exs()) is None
+
+    st["cards"]["002_b"] = {**seen, "lapses": limit}
+    assert scheduler.stuck(st, _exs()) == {"tag": "loops", "flagged": 2}
+
+    st["cards"]["003_c"] = {**seen, "lapses": limit - 1}  # its tag stays under the bar
+    assert scheduler.stuck(st, _exs()) == {"tag": "loops", "flagged": 2}

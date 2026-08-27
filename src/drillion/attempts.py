@@ -8,7 +8,7 @@ from datetime import datetime
 
 from .region import cut, splice, stub
 from .scheduler import grade_of, reschedule
-from .state import card, today
+from .state import card, own, today
 
 HINT_GAP = 60  # active seconds between hints, times the level
 SOLUTION_GATE = (3, 600)  # attempts, active seconds
@@ -104,7 +104,7 @@ def record_pass(st, slug, meta, code):
     The caller writes stub(body) back to the file."""
     o = st["open"][slug]
     touch(o)
-    c = card(st, slug)
+    c = own(st, slug)
     grade = grade_of(o["attempts"], o["active"], meta["minutes"], o["solution_shown"])
     reason = grade_reason(o, meta["minutes"], grade)
     gap = reschedule(c, grade)

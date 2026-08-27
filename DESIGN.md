@@ -53,9 +53,10 @@ Data: `GET /api/catalogue` →
   included and leading, and a task whose last act was abandoning it left out; never filtered
   against the other two, since a card worked on Friday and due again today is both things at
   once; `today.done_today` (count); `today.no_new` — null while there are new picks, else the one
-  reason there are none (`behind`, `cap`, `prereqs` with the nearest task, `focus`, `done`)
+  reason there are none (`behind`, `cap`, `buried`, `prereqs` with the nearest task, `focus`, `done`)
 - `stats` — `boxes` (7 counts, one per ladder box), `ladder` (the return intervals, one per box), `due` (the whole backlog, not the capped
-  list), `lapse_limit` (the lapse count a task is flagged at), `seen`, `total`, and `practised` of
+  list), `lapse_limit` (the lapse count a task is flagged at), `stuck` (the tag with the most
+  flagged tasks, or null), `seen`, `total`, and `practised` of
   `window`: distinct days worked in the last 7, a rolling count rather than a streak
 - `focus` — one string or null; it restricts *new* picks and is matched against a task's **tier,
   track and tags alike**. `tags[]`, `tiers[]`, `tracks[]` — the three vocabularies to filter by

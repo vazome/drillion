@@ -88,7 +88,7 @@ export function App() {
     <>
       <Header route={route} dark={dark} setDark={setDark} {...head} />
       <main style={{ padding: "24px" }}>
-        {slug ? <Task slug={slug} dark={dark} />
+        {slug ? <Task key={slug} slug={slug} dark={dark} />
           : route === "/progress" ? <Progress />
           : <Catalogue />}
       </main>

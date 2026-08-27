@@ -29,11 +29,12 @@ export interface Catalogue {
     recent: string[]; done_today: number;
     due_total: number; behind: boolean;
     /** the one reason `new` is empty, named by `queue()`; null when there is something to offer */
-    no_new: { why: "behind" | "focus" | "done" } | { why: "cap"; ready: number }
+    no_new: { why: "behind" | "focus" | "done" | "buried" } | { why: "cap"; ready: number }
       | { why: "prereqs"; nearest: string } | null;
   };
-  /** `due` is the whole backlog, not `review.length` — the two differ once `behind`. */
-  stats: { boxes: number[]; ladder: number[]; due: number; seen: number; total: number; practised: number; window: number; lapse_limit: number };
+  /** `due` is the whole backlog, not `review.length` — the two differ once `behind`.
+   *  `stuck` is the tag with the most flagged tasks, or null when none stands out. */
+  stats: { boxes: number[]; ladder: number[]; due: number; seen: number; total: number; practised: number; window: number; lapse_limit: number; stuck: { tag: string; flagged: number } | null };
   tasks: Row[];
 }
 export interface Progress {

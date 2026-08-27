@@ -37,11 +37,22 @@ def today():
 
 
 def card(st, slug):
-    """Your standing with one task, blanks filled in — `load()` only defaults top-level keys."""
-    c = st["cards"].setdefault(slug, {"box": 0, "due": today(), "seen": 0})
-    c.setdefault("lapses", 0)
-    c.setdefault("buried", "")
-    return c
+    """Your standing with one task, blanks filled in — a read: the answer is a copy, and a
+    task you have never touched stays out of the file. Use `own()` to change a card."""
+    return {
+        "box": 0,
+        "due": today(),
+        "seen": 0,
+        "lapses": 0,
+        "buried": "",
+        **st["cards"].get(slug, {}),
+    }
+
+
+def own(st, slug):
+    """The stored card, created and back-filled on the spot: the write path."""
+    st["cards"][slug] = card(st, slug)
+    return st["cards"][slug]
 
 
 _LOCK = threading.Lock()

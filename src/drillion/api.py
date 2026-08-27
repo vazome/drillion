@@ -52,19 +52,21 @@ from .scheduler import (
     LADDER,
     LAPSE_LIMIT,
     REVIEWS_PER_DAY,
+    WINDOW,
     blocked,
     buried,
-    due_today,
+    by_tag,
+    forecast,
     pick,
     queue,
+    stats,
+    stuck,
 )
 from .settings import settings
-from .state import card, reading, today, writing
+from .state import card, own, reading, today, writing
 
 log = logging.getLogger(__name__)
 MAX_BODY = 256 * 1024
-WINDOW = 7  # days in the consistency window; the page reads it off the payload
-FORECAST_DAYS = 14  # how far ahead the progress page looks
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -189,15 +191,6 @@ def _payload(st, slug, meta, src):
     }
 
 
-def _practised(st):
-    """Days worked in the last WINDOW, counted from the archive, so a day you gave up on
-    still counts. A rolling window, never a streak."""
-    cut = (date.fromisoformat(today()) - timedelta(days=WINDOW - 1)).isoformat()
-    return len(
-        {r["date"] for runs in st["archive"].values() for r in runs if r["date"] >= cut}
-    )
-
-
 def _recent(st, all_tasks):
     """Tasks worked in the last WINDOW days, most recent first — distinct slugs, no cap.
 
@@ -220,15 +213,6 @@ def _recent(st, all_tasks):
     )
 
 
-def _boxes(st, all_tasks):
-    boxes = [0] * len(LADDER)
-    for slug in all_tasks:
-        c = card(st, slug)
-        if c["seen"]:
-            boxes[c["box"]] += 1
-    return boxes
-
-
 @app.get("/api/health")
 def health():
     """Is the app up and pointed at the tasks? No lock, no state, no writes —
@@ -243,7 +227,7 @@ def health():
 
 @app.get("/api/catalogue")
 def catalogue():
-    with reading() as st:  # card() only fills blanks; nothing commits
+    with reading() as st:
         all_tasks = tasks()
         q = queue(st, all_tasks)
         q["recent"] = _recent(st, all_tasks)
@@ -262,7 +246,6 @@ def catalogue():
             }
             for slug, m in all_tasks.items()
         ]
-        boxes = _boxes(st, all_tasks)
         return {
             "focus": st["focus"],
             "tags": sorted({t for m in all_tasks.values() for t in m["tags"]}),
@@ -272,14 +255,9 @@ def catalogue():
             ),
             "today": q,
             "stats": {
-                "boxes": boxes,
-                "ladder": LADDER,
-                "due": q["due_total"],
-                "seen": sum(boxes),
-                "total": len(all_tasks),
-                "practised": _practised(st),
-                "window": WINDOW,
+                **stats(st, all_tasks, q["due_total"]),
                 "lapse_limit": LAPSE_LIMIT,
+                "stuck": stuck(st, all_tasks),
             },
             "tasks": rows,
         }
@@ -289,50 +267,14 @@ def catalogue():
 def progress():
     with reading() as st:
         all_tasks = tasks()
-        start = date.fromisoformat(today())
-        week = (start + timedelta(days=6)).isoformat()
-        forecast = [0] * FORECAST_DAYS
-        per_tag = {}
-        for slug, meta in all_tasks.items():
-            c = card(st, slug)
-            seen = c["seen"] > 0
-            if seen:
-                # today carries everything overdue, except what is buried: that is tomorrow's
-                ahead = (date.fromisoformat(c["due"]) - start).days
-                if ahead < FORECAST_DAYS:
-                    forecast[max(ahead, 1 if buried(st, slug) else 0)] += 1
-            for tag in meta["tags"]:
-                t = per_tag.setdefault(
-                    tag,
-                    {
-                        "seen": 0,
-                        "total": 0,
-                        "boxes": [0] * len(LADDER),
-                        "lapses": 0,
-                        "due7": 0,
-                    },
-                )
-                t["total"] += 1
-                if seen:
-                    t["seen"] += 1
-                    t["boxes"][c["box"]] += 1
-                    t["lapses"] += c["lapses"]
-                    t["due7"] += c["due"] <= week
-        boxes = _boxes(st, all_tasks)
         return {
-            "boxes": boxes,
-            "ladder": LADDER,
-            "due": len(due_today(st, all_tasks)),
-            "seen": sum(boxes),
-            "total": len(all_tasks),
-            "practised": _practised(st),
-            "window": WINDOW,
+            **stats(st, all_tasks),
             "today": today(),
-            "forecast": forecast,
+            "forecast": forecast(st, all_tasks),
             "cap": REVIEWS_PER_DAY,
             "days": dict(Counter(e["date"] for e in st["log"])),
             "log": st["log"][-30:],
-            "per_tag": per_tag,
+            "per_tag": by_tag(st, all_tasks),
         }
 
 
@@ -402,8 +344,7 @@ def run_task(slug: str, edit: Edit):
                 "code": body,
                 "reference": solution_text(meta["path"]),  # passing is what opens it
                 "lapses": card(st, slug)["lapses"],
-                # over a copy: `pick` reads every card, and `card()` fills blanks in place
-                "next": pick({**st, "cards": dict(st["cards"])}, tasks())[0],
+                "next": pick(st, tasks())[0],
             }
         return resp | {"etag": etag(new_src)}
 
@@ -474,7 +415,7 @@ def bury_task(slug: str, want: Bury):
     Tomorrow un-buries it, and `{"buried": false}` is the same door, taken early."""
     with writing() as st:
         _task(slug)  # a slug that is not a task is a 404, not a card in progress.json
-        card(st, slug)["buried"] = today() if want.buried else ""
+        own(st, slug)["buried"] = today() if want.buried else ""
         log.info("%s %s", slug, "buried" if want.buried else "unburied")
         return {"buried": buried(st, slug)}
 
