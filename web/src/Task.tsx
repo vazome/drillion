@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { Button, Card, Collapsible, ConflictBanner, EmptyState, LadderMeter, NoteField, NoticeBanner, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
 import { ApiError, api, post, type Task as TaskData, type RunResult } from "./api";
 import { DiffView, Editor } from "./Editor";
+import { conflictOf, useDraft } from "./useDraft";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
 const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };
@@ -11,7 +12,6 @@ const ATTEMPT_MS = 5000;    // reading the task is work: the clock starts once t
 const HEARTBEAT_MS = 60_000;
 // long enough for `role="status"` to finish speaking the message before the node goes
 const GATE_MS = 4000;
-const draftKey = (slug: string) => `drillion-draft-${slug}`;
 /** Below this the two panes stack, spec first. A tablet is for reading a spec and running it,
  *  never for writing code side by side. Both arguments are module constants: rebuilt every
  *  render, they would make `useSyncExternalStore` re-subscribe every render. */
@@ -27,12 +27,6 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 /** A refused action, shown beside the control that asked for it. */
 type Gate = { at: "hints" | "solution" | "editor" | "note"; message: string } | null;
-
-/** The optimistic lock's 409, or null for any other failure. */
-const conflictOf = ({ status, detail }: ApiError) =>
-  status === 409 && detail?.etag !== undefined && detail.code !== undefined
-    ? { etag: detail.etag, code: detail.code }
-    : null;
 
 type Result =
   | { state: "idle" | "running" }
@@ -51,12 +45,7 @@ export function stepLine(grade: string, box: number, fromBox: number, stepped: b
 export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [task, setTask] = useState<TaskData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [code, setCode] = useState("");
-  const [dirty, setDirty] = useState(false);
-  const [syntaxBad, setSyntaxBad] = useState(false);
   const [result, setResult] = useState<Result>({ state: "idle" });
-  const [conflict, setConflict] = useState<{ etag: string; code: string } | null>(null);
-  const [draftOffer, setDraftOffer] = useState<string | null>(null);
   const [gate, setGate] = useState<Gate>(null);
   const [active, setActive] = useState(0);
   const [nextHintIn, setNextHintIn] = useState<number | null>(null);
@@ -64,32 +53,38 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [busy, setBusy] = useState(false);          // a hint spent twice cannot be un-spent
   const [nudge, setNudge] = useState(false);        // the server's offer of a hint, not ours
   const [nudgeOff, setNudgeOff] = useState(false);
-  const [note, setNote] = useState("");
-  const [noteDirty, setNoteDirty] = useState(false);
   const narrow = useSyncExternalStore(watchNarrow, isNarrow);
 
-  // Refs carry the live values into the async chain; state alone would capture a stale closure.
-  const codeRef = useRef(""), etagRef = useRef(""), dirtyRef = useRef(false);
-  const noteRef = useRef(""), noteDirtyRef = useRef(false);
-  const timer = useRef<number | undefined>(undefined);
+  /** The note, against what the server last confirmed of it. The ref is what the async chain
+   *  and the unmount flush read; state alone would capture a stale closure. */
+  const noteLive = useRef({ text: "", saved: "" });
+  const [note, setNoteState] = useState({ text: "", saved: "" });
+  const setNote = useCallback((next: Partial<typeof noteLive.current>) => {
+    setNoteState({ ...Object.assign(noteLive.current, next) });
+  }, []);
+  const noteDirty = note.text !== note.saved;
+
   const noteTimer = useRef<number | undefined>(undefined);
   const gateTimer = useRef<number | undefined>(undefined);
-  const inflight = useRef<Promise<void> | null>(null);
-  const attemptRef = useRef(false);
-  const opening = useRef<Promise<void> | null>(null);
   const dropped = useRef(false);             // discarded here: do not re-open the attempt behind them
   const hasAttempt = !!task?.attempt;
   const passed = result.state === "passed";
+  const url = `/task/${encodeURIComponent(slug)}`;
 
-  const adopt = useCallback((p: TaskData, keepCode = false) => {
-    setTask(p); etagRef.current = p.etag; attemptRef.current = !!p.attempt;
+  /** Everything a task payload says that is not the draft's business. */
+  const onPayload = useCallback((p: TaskData) => {
+    setTask(p);
     setActive(p.attempt?.active ?? 0);
     setNextHintIn(p.hints.next_in);
     setNudge(p.nudge);
     // a note half typed when the attempt opens itself must not be replaced by the server's
-    if (!noteDirtyRef.current) { setNote(p.note); noteRef.current = p.note; }
-    if (!keepCode) { setCode(p.code); codeRef.current = p.code; setDirty(false); dirtyRef.current = false; }
-  }, []);
+    if (noteLive.current.text === noteLive.current.saved) setNote({ text: p.note, saved: p.note });
+  }, [setNote]);
+
+  const gateEditor = useCallback((message: string) => setGate({ at: "editor", message }), []);
+  const { code, dirty, syntaxBad, conflict, offer, adopt, reset, edit, landed, ensureOpen,
+    current, pending, settle, takeDisk, keepMine, discard, restore, setConflict, setSyntaxBad } =
+    useDraft(slug, onPayload, gateEditor);
 
   /** A notice that says one thing and gets out of the way — the hint gate's whole UI. */
   const flash = useCallback((message: string) => {
@@ -100,69 +95,25 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     gateTimer.current = setTimeout(() => setGate((g) => (g === mine ? null : g)), GATE_MS);
   }, []);
 
-  // load, and offer a newer local draft over what the file holds
   useEffect(() => {
     let live = true;
-    api<TaskData>(`/task/${encodeURIComponent(slug)}`).then((p) => {
-      if (!live) return;
-      adopt(p);
-      try {
-        const saved = JSON.parse(localStorage.getItem(draftKey(slug)) || "null");
-        if (saved && saved.etag === p.etag && saved.code !== p.code) setDraftOffer(saved.code);
-        else setDraftOffer(null);
-      } catch { setDraftOffer(null); }
-    }).catch((e) => live && setError(e.message));
+    api<TaskData>(url).then((p) => live && reset(p)).catch((e) => live && setError(e.message));
     return () => { live = false; };
-  }, [slug, adopt]);
-
-  /** An attempt must exist before the server will accept an edit, a run or a hint.
-   * Concurrent callers share one POST — the debounced save and Run can arrive together. */
-  const ensureOpen = useCallback(async () => {
-    if (attemptRef.current) return;
-    if (!opening.current) {
-      opening.current = post<TaskData>(`/task/${encodeURIComponent(slug)}/open`)
-        .then((p) => { adopt(p, dirtyRef.current); })          // never clobber text already typed
-        .finally(() => { opening.current = null; });
-    }
-    await opening.current;
-  }, [slug, adopt]);
-
-  const flush = useCallback(async () => {
-    if (!dirtyRef.current || !etagRef.current) return;
-    const sent = codeRef.current;
-    try {
-      await ensureOpen();                  // typing is starting work; the PUT 409s without this
-      const r = await api<{ etag: string }>(`/task/${encodeURIComponent(slug)}`, {
-        method: "PUT", body: JSON.stringify({ code: sent, etag: etagRef.current }),
-      });
-      etagRef.current = r.etag;
-      setSyntaxBad(false);
-      if (codeRef.current === sent) { dirtyRef.current = false; setDirty(false); }
-    } catch (e) {
-      // never rethrow: `edit()` fires this unawaited and `run()` awaits it
-      if (!(e instanceof ApiError)) { setGate({ at: "editor", message: `could not save — ${(e as Error).message}` }); return; }
-      const clash = conflictOf(e);
-      if (e.status === 400) setSyntaxBad(true);                       // silent: an amber dot, no banner
-      else if (clash) setConflict(clash);
-      else if (e.status === 409) setGate({ at: "editor", message: e.detail?.error ?? e.message }); // no open attempt
-      else setGate({ at: "editor", message: e.message });
-    }
-  }, [slug, ensureOpen]);
+  }, [url, reset]);
 
   /** The note's save: debounce, then one PUT. No etag and no attempt to open — one note,
    * last write wins. */
   const saveNote = useCallback(async (text: string) => {
     try {
-      await api(`/task/${encodeURIComponent(slug)}/note`, { method: "PUT", body: JSON.stringify({ text }) });
-      if (noteRef.current === text) { noteDirtyRef.current = false; setNoteDirty(false); }
+      await api(`${url}/note`, { method: "PUT", body: JSON.stringify({ text }) });
+      if (noteLive.current.text === text) setNote({ saved: text });
     } catch (e) {
       setGate({ at: "note", message: `note not saved — ${(e as Error).message}` });
     }
-  }, [slug]);
+  }, [url, setNote]);
 
   const editNote = (next: string) => {
-    setNote(next); noteRef.current = next;
-    noteDirtyRef.current = true; setNoteDirty(true);
+    setNote({ text: next });
     clearTimeout(noteTimer.current);
     noteTimer.current = setTimeout(() => saveNote(next), AUTOSAVE_MS);
   };
@@ -174,24 +125,18 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     return () => clearTimeout(t);
   }, [task, hasAttempt, passed, ensureOpen]);
 
-  const edit = (next: string) => {
-    setCode(next); codeRef.current = next;
-    dirtyRef.current = true; setDirty(true);
-    localStorage.setItem(draftKey(slug), JSON.stringify({ code: next, etag: etagRef.current }));
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => { inflight.current = flush(); }, AUTOSAVE_MS);
-  };
-
   useEffect(() => () => {
-    clearTimeout(timer.current); clearTimeout(gateTimer.current); clearTimeout(noteTimer.current);
-    if (noteDirtyRef.current) saveNote(noteRef.current);   // leaving mid-debounce must not eat it
-  }, [slug, saveNote]);
+    clearTimeout(gateTimer.current); clearTimeout(noteTimer.current);
+    // leaving mid-debounce must not eat it
+    if (noteLive.current.text !== noteLive.current.saved) saveNote(noteLive.current.text);
+  }, [saveNote]);
 
   useEffect(() => {
-    const warn = (e: BeforeUnloadEvent) => { if (dirtyRef.current || noteDirtyRef.current) e.preventDefault(); };
+    if (!dirty && !noteDirty) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
     addEventListener("beforeunload", warn);
     return () => removeEventListener("beforeunload", warn);
-  }, []);
+  }, [dirty, noteDirty]);
 
   // local ticks between heartbeats, server truth on every touch
   useEffect(() => {
@@ -211,19 +156,15 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   }, [hasAttempt, passed, slug]);
 
   const run = async () => {
-    clearTimeout(timer.current);
     setResult({ state: "running" });
     try {
-      await inflight.current;              // ride the etag the pending PUT returns
+      await settle();                // ride the etag the pending PUT returns
       await ensureOpen();
-      const r = await post<RunResult>(`/task/${encodeURIComponent(slug)}/run`, { code: codeRef.current, etag: etagRef.current });
-      etagRef.current = r.etag;
-      dirtyRef.current = false; setDirty(false); setSyntaxBad(false);
+      const r = await post<RunResult>(`${url}/run`, current());
+      landed(r.etag, r.passed ? r.code : undefined);
       setNudge(false);                     // a run answers the nudge, whichever way it went
       if (r.passed) {
-        localStorage.removeItem(draftKey(slug));
         setResult({ state: "passed", grade: r.grade, box: r.box, stepped: r.stepped, fromBox: r.from_box, reason: r.reason, dueIn: r.due_in, attempts: r.attempts, code: r.code });
-        setCode(r.code);
         setTask((p) => p && ({ ...p, reference: r.reference, lapses: r.lapses }));
         setNextSlug(r.next);
       } else {
@@ -242,9 +183,9 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     if (busy) return;
     setBusy(true);
     try {
-      await inflight.current;              // the payload carries an etag: never over a live PUT
+      await pending();               // the payload carries an etag: never over a live PUT
       await ensureOpen();
-      adopt(await post<TaskData>(`/task/${encodeURIComponent(slug)}/hint`), dirtyRef.current);
+      adopt(await post<TaskData>(`${url}/hint`));
       setGate(null);
     } catch (e) {
       const err = e as ApiError;
@@ -260,9 +201,9 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     if (busy) return;
     setBusy(true);
     try {
-      await inflight.current;              // the payload carries an etag: never over a live PUT
+      await pending();               // the payload carries an etag: never over a live PUT
       await ensureOpen();
-      adopt(await post<TaskData>(`/task/${encodeURIComponent(slug)}/solution`), dirtyRef.current);
+      adopt(await post<TaskData>(`${url}/solution`));
       setGate(null);
     } catch (e) {
       const err = e as ApiError;
@@ -275,13 +216,12 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
 
   const abandon = async () => {
     if (!confirm("Discard this attempt? The work is archived and the stub comes back.")) return;
-    clearTimeout(timer.current);
-    await inflight.current;
+    await settle();
     try {
-      const p = await post<TaskData>(`/task/${encodeURIComponent(slug)}/abandon`, { etag: etagRef.current });
-      localStorage.removeItem(draftKey(slug));
+      const p = await post<TaskData>(`${url}/abandon`, { etag: current().etag });
+      discard();
       dropped.current = true;
-      adopt(p); setResult({ state: "idle" }); setGate(null); setNextSlug(null);
+      reset(p); setResult({ state: "idle" }); setGate(null); setNextSlug(null);
     } catch (e) {
       const err = e as ApiError, clash = conflictOf(err);
       if (clash) setConflict(clash); else setGate({ at: "editor", message: err.message });
@@ -308,22 +248,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     } catch (e) {
       setGate({ at: "editor", message: (e as ApiError).message });
     }
-  };
-
-  const takeDisk = () => {
-    if (!conflict) return;
-    etagRef.current = conflict.etag;
-    setCode(conflict.code); codeRef.current = conflict.code;
-    dirtyRef.current = false; setDirty(false);
-    localStorage.removeItem(draftKey(slug));
-    setConflict(null);
-  };
-  const keepMine = () => {
-    if (!conflict) return;
-    etagRef.current = conflict.etag;          // adopt the disk version's etag, then overwrite with ours
-    dirtyRef.current = true; setDirty(true);
-    setConflict(null);
-    inflight.current = flush();
   };
 
   if (error) return <EmptyState message={`Could not load ${slug}: ${error}`} actionLabel="Back to Today" onAction={() => { location.hash = "#/"; }} />;
@@ -425,7 +349,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             </div>
 
             <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-              <NoteField value={note} onChange={editNote} dirty={noteDirty}
+              <NoteField value={note.text} onChange={editNote} dirty={noteDirty}
                 ariaLabel={`Your note on ${meta.title}`}
                 placeholder="What caught you out? Write it down while you still remember." />
               {notice("note")}
@@ -449,12 +373,12 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
 
         <div style={{ flex: 1, minWidth: narrow ? 0 : 420, display: "grid", gap: 12 }}>
           {conflict ? <div className="m-drop"><ConflictBanner detail="Your draft and the file on disk have diverged." onReload={takeDisk} onKeep={keepMine} /></div> : null}
-          {draftOffer ? (
+          {offer ? (
             <div className="m-drop">
               <NoticeBanner message="A newer local draft exists for this task."
                 actions={[
-                  { label: "Restore it", onClick: () => { edit(draftOffer); setDraftOffer(null); } },
-                  { label: "Discard", onClick: () => { localStorage.removeItem(draftKey(slug)); setDraftOffer(null); } },
+                  { label: "Restore it", onClick: restore },
+                  { label: "Discard", onClick: discard },
                 ]} />
             </div>
           ) : null}
