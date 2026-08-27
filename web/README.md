@@ -2,7 +2,8 @@
 
 React 19 + TypeScript + Vite. Three hash routes — catalogue, task, progress — over `src/api.ts`,
 the one `fetch` wrapper and every response shape from `src/drillion/api.py`. The editor is
-CodeMirror 6, themed from the design tokens in both modes.
+Monaco, themed from the design tokens in both modes, with completions and diagnostics from a
+basedpyright that the API runs locally and serves over `/lsp`.
 
 ```bash
 pnpm --dir web install          # once
