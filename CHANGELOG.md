@@ -8,6 +8,7 @@ task-folder format. The version is declared once, in `pyproject.toml`.
 
 - A tag link from the progress page now filters the catalogue even when the catalogue is
   already open, instead of only on the way in from another page.
+- Focus rings appear for keyboard focus only; a mouse click no longer draws one on inputs, toggles and table rows.
 - A hint or solution notice on the task page no longer disappears while you are reading it.
 - The "not saved — syntax" marker no longer follows you to the next task.
 - The HTTP API no longer sends fields nothing reads: `marker_line` on a task, `hints` on an

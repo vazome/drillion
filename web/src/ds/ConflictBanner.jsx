@@ -1,13 +1,10 @@
 import React from "react";
-const ringConflict = (e) => { try { return e.target.matches(":focus-visible"); } catch { return true; } };
 function Action({ label, onClick, strong, disabled }) {
   const [hover, setHover] = React.useState(false);
-  const [focus, setFocus] = React.useState(false);
   return (
     <button type="button" disabled={disabled} onClick={onClick}
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-      onFocus={(e) => setFocus(ringConflict(e))} onBlur={() => setFocus(false)}
-      style={{ fontFamily: "var(--font-sans)", fontSize: "13px", fontWeight: 600, whiteSpace: "nowrap", cursor: disabled ? "default" : "pointer", borderRadius: "var(--radius-sm)", boxShadow: focus ? "var(--focus-ring)" : "none", transition: "background-color var(--dur-fast) var(--ease-inout), border-color var(--dur-fast) var(--ease-inout), color var(--dur-fast) var(--ease-inout), box-shadow var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out)", ...(strong
+      style={{ fontFamily: "var(--font-sans)", fontSize: "13px", fontWeight: 600, whiteSpace: "nowrap", cursor: disabled ? "default" : "pointer", borderRadius: "var(--radius-sm)", transition: "background .12s", ...(strong
         ? { padding: "5px 10px", border: "1px solid " + (disabled ? "var(--border)" : "var(--border-strong)"), background: disabled ? "transparent" : (hover ? "var(--surface)" : "transparent"), color: disabled ? "var(--text-faint)" : "var(--text)" }
         : { padding: "5px 4px", border: "none", background: "transparent", color: disabled ? "var(--text-faint)" : "var(--accent)", textDecoration: (hover && !disabled) ? "underline" : "none" }) }}>{label}</button>
   );

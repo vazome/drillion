@@ -184,7 +184,7 @@ export interface ResultBannerProps {
   headline?: string;
   /** failed: full pytest output behind a disclosure */
   output?: string;
-  /** passed: "QUICK · 4m12s · 1 attempt · box 3 of 5" */
+  /** passed: "QUICK · 4m12s · 1 attempt · box 3 of 7" */
   gradeLine?: string;
   /** passed: "8 days" */
   backIn?: string;
@@ -281,8 +281,8 @@ export interface TopicStripsTag {
 }
 export interface TopicStripsProps {
   tags?: TopicStripsTag[];
-  /** the seven return intervals, for labelling boxes */
-  ladder?: number[];
+  /** how many ladder boxes a strip is divided into, for the footer legend — seven as the scheduler ships */
+  boxes?: number;
   defaultSort?: "stuck first" | "neglected first" | "most lapses" | "a–z";
   /** scroll height of the row list, px */
   maxHeight?: number;
