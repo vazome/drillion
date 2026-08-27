@@ -6,6 +6,8 @@ task-folder format. The version is declared once, in `pyproject.toml`.
 
 ## Unreleased
 
+- A hint or solution notice on the task page no longer disappears while you are reading it.
+- The "not saved — syntax" marker no longer follows you to the next task.
 - The run button's keyboard hint reads `Ctrl/⌘+Enter`, since the binding fires on either.
 - Burying the last unstarted task no longer reads as "that is today's new material, 0 done".
   Today names the bury as the reason there is nothing new, so unburying is the obvious way out.
