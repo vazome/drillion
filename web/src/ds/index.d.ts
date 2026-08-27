@@ -311,3 +311,80 @@ export interface StuckNudgeProps {
   style?: Style;
 }
 export declare function StuckNudge(props: StuckNudgeProps): El;
+
+/** A group header inside a panel: an uppercase label, an aside that says what the group is.
+ *  Every group in the Today panel sits under one, which is why those rows carry no status
+ *  badge — the band already said it. `first` drops the separator on the top band. */
+export interface BandProps {
+  label: string;
+  /** the quiet half-sentence beside it — "last 7 days", "paused — catching up" */
+  aside?: React.ReactNode;
+  /** first band in the panel: no top border, more headroom */
+  first?: boolean;
+  style?: Style;
+}
+export declare function Band(props: BandProps): El;
+
+/** The learner's own words about a task: one note, edited in place, autosaved the way the
+ *  editor is. Always open — a note you have to click to see is a note you never re-read.
+ *  Plain text, no Markdown, no history; emptying the box deletes it. The component owns the
+ *  field and the state line, never the saving: pass `dirty` while a save is pending. */
+export interface NoteFieldProps {
+  value?: string;
+  onChange?: (text: string) => void;
+  /** label above the field */
+  label?: string;
+  /** what the state line says when everything is saved */
+  hint?: React.ReactNode;
+  /** a save is pending — the line reads "unsaved" */
+  dirty?: boolean;
+  placeholder?: string;
+  rows?: number;
+  /** accessible name, when the visible label is not enough ("Your note on Counter — top N") */
+  ariaLabel?: string;
+  style?: Style;
+}
+export declare function NoteField(props: NoteFieldProps): El;
+
+/** Undo the sort — back to `#` ascending. Sits at the end of the header row, past Status, and
+ *  stays put and greyed when there is nothing to undo, so the column it occupies never
+ *  changes width. */
+export interface SortResetProps {
+  /** already at the default sort */
+  disabled?: boolean;
+  onClick?: () => void;
+  title?: string;
+  ariaLabel?: string;
+  style?: Style;
+}
+export declare function SortReset(props: SortResetProps): El;
+
+/** A task's tier and tags as one filesystem-style path — `core/f-strings · loops`, the tier
+ *  segment muted. One column, not two: the tier is the first segment of every row's path, so
+ *  a separate tier column repeated the word. Truncates with an ellipsis and keeps the whole
+ *  path in its tooltip. */
+export interface TaskPathProps {
+  tier: string;
+  tags?: string[];
+  /** between tags; " · " by default */
+  separator?: string;
+  style?: Style;
+}
+export declare function TaskPath(props: TaskPathProps): El;
+
+/** The quiet notes a catalogue row can carry, beside the title: what it waits on, whether it
+ *  is put aside today, whether it keeps beating you. Faint text rather than badges — none of
+ *  these is the row's status, and a row with three of them must still read as one line.
+ *  Renders nothing when there is nothing to say. */
+export interface RowFlagsProps {
+  /** prereqs not yet passed (`blocked`) — task numbers, or `{topic, title}` for the tooltip */
+  needs?: Array<number | { topic: number; title?: string }>;
+  /** put aside for today only; the box, the due date and the counts are untouched */
+  buried?: boolean;
+  /** how many times this task has been failed back down the ladder */
+  lapses?: number;
+  /** `stats.lapse_limit` — the flag appears at or above it; 0 turns the flag off */
+  lapseLimit?: number;
+  style?: Style;
+}
+export declare function RowFlags(props: RowFlagsProps): El | null;
