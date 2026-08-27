@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Toggle } from "./ds/index.js";
 import { api, type Health } from "./api";
-import { Catalogue } from "./Catalogue";
+import { Catalogue, focusSearch } from "./Catalogue";
 import { Task } from "./Task";
 import { Progress } from "./Progress";
 
@@ -14,6 +14,26 @@ export function useHash() {
     return () => removeEventListener("hashchange", on);
   }, []);
   return hash;
+}
+
+/** True while the keystroke belongs to something the user is typing in. */
+function typing(el: EventTarget | null) {
+  const node = el as HTMLElement | null;
+  return !!node?.closest?.("input, textarea, select, [contenteditable='true'], .cm-content");
+}
+
+/** `/` anywhere goes to the catalogue and puts the cursor in its search box. */
+function useSlashToSearch() {
+  useEffect(() => {
+    const on = (e: globalThis.KeyboardEvent) => {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey || typing(e.target)) return;
+      e.preventDefault();
+      if (location.hash !== "#/") location.hash = "#/";
+      focusSearch();
+    };
+    addEventListener("keydown", on);
+    return () => removeEventListener("keydown", on);
+  }, []);
 }
 
 /** Applied before first render as well as in the setter: the editor reads its colours
@@ -56,6 +76,7 @@ export function App() {
   const route = useHash();
   const [dark, setDark] = useTheme();
   const [head, setHead] = useState({ total: 0, version: "" });
+  useSlashToSearch();
   useEffect(() => {
     api<Health>("/health")
       .then((h) => setHead({ total: h.tasks, version: h.version }))

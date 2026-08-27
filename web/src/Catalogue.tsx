@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import { Button, Card, EmptyState, Input, LadderMeter, NoticeBanner, Select, StatusBadge, TagChip } from "./ds/index.js";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { Band, Button, Card, EmptyState, Input, Kbd, LadderMeter, NoticeBanner, RowFlags, Select, SortReset, StatusBadge, TagChip, TaskPath } from "./ds/index.js";
 import { api, post, type Catalogue as Payload, type Row } from "./api";
 import { Stats } from "./Stats";
 
@@ -11,6 +11,10 @@ const DIFFICULTY = ["easy", "medium", "hard"];     // the order the word means, 
 const DAY = 86400000;
 // one column geometry for the header and the rows; the uppercase labels set the widths
 const COL = { num: 30, path: 230, difficulty: 104, box: 56, status: 78, reset: 28 };
+// below this the list card scrolls sideways rather than squeezing the columns
+const LIST_MIN = 840;
+const FIRST_RUN = "drillion-first-run";
+const HOW_IT_WORKS = "https://github.com/vazome/drillion/blob/main/docs/how-it-works.md";
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 const num = (topic: number) => String(topic).padStart(3, "0");
@@ -65,14 +69,6 @@ function dueText(row: Row) {
   return days < 0 ? `${plural(-days, "day")} overdue` : `due in ${plural(days, "day")}`;
 }
 
-/** A task's tier and its tags as one path — `core/f-strings · loops`. */
-const Path = ({ row }: { row: Row }) => (
-  <span title={`${row.tier}/${row.tags.join(" · ")}`} style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-    <span style={{ color: "var(--text-faint)" }}>{row.tier}/</span>
-    <span style={{ color: "var(--text-muted)" }}>{row.tags.join(" · ")}</span>
-  </span>
-);
-
 // the API numbers boxes from 0; the meter fills from 1, and an unseen card sits on no rung
 const rung = (row: Row) => (row.seen ? row.box + 1 : 0);
 
@@ -107,33 +103,6 @@ function useHover() {
 
 const href = (row: Row) => `#/task/${encodeURIComponent(row.slug)}`;
 
-/** A sub-header inside the Today card. */
-const Band = ({ label, aside, first = false }: { label: string; aside: string; first?: boolean }) => (
-  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: first ? "14px 0 8px" : "10px 0 6px", borderTop: first ? "none" : "1px solid var(--border)" }}>
-    <span style={LABEL}>{label}</span>
-    <span style={FAINT}>{aside}</span>
-  </div>
-);
-
-/** The quiet notes a row can carry: what it waits on, whether it keeps beating you.
- * The prereq numbers stay plain text — the whole row is one anchor already. */
-function Flags({ row, blocked, limit }: { row: Row; blocked: Row[]; limit: number }) {
-  const marks: ReactNode[] = [];
-  if (blocked.length)
-    marks.push(<span key="needs" title={`Not offered as a new pick until these are passed: ${blocked.map((b) => `#${num(b.topic)} ${b.title}`).join(", ")}`}>
-      needs {blocked.map((b) => `#${num(b.topic)}`).join(" ")}
-    </span>);
-  if (row.buried)
-    marks.push(<span key="buried" title="Put aside for today. It is back in the queue tomorrow, in the same box and on the same due date — unbury it from the Today panel to have it back sooner.">
-      buried today
-    </span>);
-  if (limit && row.lapses >= limit)
-    marks.push(<span key="lapses" title={`You have struggled with this ${row.lapses} times; the hints or the prereqs may be the problem, not you.`}>
-      struggled {row.lapses}×
-    </span>);
-  return marks.length ? <span style={{ ...FAINT, display: "inline-flex", gap: 10 }}>{marks}</span> : null;
-}
-
 /** A row of the Today card: when it is due, where it sits on the ladder, and one way in.
  * `onBury` puts a real button on it, so the row holds the link rather than being the link. */
 function TodayRow({ row, ladder, limit, onBury }: { row: Row; ladder: number[]; limit: number; onBury?: (buried: boolean) => void }) {
@@ -148,7 +117,7 @@ function TodayRow({ row, ladder, limit, onBury }: { row: Row; ladder: number[]; 
         <span style={{ ...MONO, width: 30, textAlign: "right" }}>{num(row.topic)}</span>
         <span style={{ fontSize: 14.5, fontWeight: 500, flex: 1, display: "flex", alignItems: "baseline", gap: 10 }}>
           {/* nothing in this card is blocked: a new pick is offered only once its prereqs clear */}
-          {row.title}<Flags row={row} blocked={[]} limit={limit} />
+          {row.title}<RowFlags buried={row.buried} lapses={row.lapses} lapseLimit={limit} />
         </span>
         {/* the whole row is the link; the button is the affordance, so it takes no focus of its own */}
         <span inert aria-hidden="true"><Button variant="secondary" style={{ padding: "6px 12px", fontSize: 13 }}>Open</Button></span>
@@ -168,13 +137,13 @@ function ListRow({ row, blocked, ladder, limit, first = false }: { row: Row; blo
   const [hover, hoverProps] = useHover();
   return (
     <a href={href(row)} className="m-tint" {...hoverProps}
-      style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 44, borderTop: first ? "none" : "1px solid var(--border)", textDecoration: "none", color: "inherit", background: hover ? "var(--surface-2)" : "transparent" }}>
+      style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 44, minWidth: LIST_MIN, boxSizing: "border-box", borderTop: first ? "none" : "1px solid var(--border)", textDecoration: "none", color: "inherit", background: hover ? "var(--surface-2)" : "transparent" }}>
       <span style={{ ...MONO, width: COL.num, textAlign: "right" }}>{num(row.topic)}</span>
       <span style={{ flex: 1, display: "flex", alignItems: "baseline", gap: 10, overflow: "hidden" }}>
         <span style={{ fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.title}</span>
-        <Flags row={row} blocked={blocked} limit={limit} />
+        <RowFlags needs={blocked} buried={row.buried} lapses={row.lapses} lapseLimit={limit} />
       </span>
-      <span style={{ width: COL.path, display: "flex", overflow: "hidden" }}><Path row={row} /></span>
+      <span style={{ width: COL.path, display: "flex", overflow: "hidden" }}><TaskPath tier={row.tier} tags={row.tags} /></span>
       <span style={{ width: COL.difficulty }}><StatusBadge status={row.difficulty} /></span>
       <span style={{ width: COL.box, height: 16, display: "flex", alignItems: "center" }}><LadderMeter box={rung(row)} intervals={ladder} /></span>
       <span style={{ width: COL.status }}><StatusBadge status={row.status} /></span>
@@ -203,17 +172,26 @@ function SortHead({ label, col, align, sort, onSort, style }: {
   );
 }
 
-/** Back to `#` ascending. Stays put, greyed, when there is nothing to undo, so the column
- * it occupies never changes width. */
-function ResetSort({ disabled, onClick }: { disabled: boolean; onClick: () => void }) {
-  const [hover, hoverProps] = useHover();
-  return (
-    <button type="button" onClick={onClick} disabled={disabled} {...hoverProps}
-      title="Reset sort" aria-label="Reset sort to task number, ascending"
-      style={{ width: COL.reset, height: 24, display: "inline-flex", alignItems: "center", justifyContent: "center", background: hover && !disabled ? "var(--surface-2)" : "transparent", border: "none", borderRadius: "var(--radius-sm)", fontSize: 15, lineHeight: 1, color: disabled ? "var(--border-strong)" : hover ? "var(--text)" : "var(--text-muted)", cursor: disabled ? "default" : "pointer" }}>
-      <span aria-hidden="true">↺</span>
-    </button>
-  );
+let focusSearchBox: (() => void) | null = null;
+let searchWanted = false;
+
+/** `/` from anywhere: focus the catalogue's search box, now or as soon as the page mounts. */
+export function focusSearch() {
+  if (focusSearchBox) focusSearchBox();
+  else searchWanted = true;
+}
+
+/** The tag whose tasks keep beating you: the one with the most flagged tasks, at least two. */
+function worstTag(rows: Row[], limit: number) {
+  if (!limit) return null;
+  const flagged = new Map<string, number>(), lapses = new Map<string, number>();
+  for (const row of rows) for (const tag of row.tags) {
+    lapses.set(tag, (lapses.get(tag) ?? 0) + row.lapses);
+    if (row.lapses >= limit) flagged.set(tag, (flagged.get(tag) ?? 0) + 1);
+  }
+  const worst = [...flagged].filter(([, n]) => n >= 2)
+    .sort((a, b) => b[1] - a[1] || (lapses.get(b[0]) ?? 0) - (lapses.get(a[0]) ?? 0) || a[0].localeCompare(b[0]))[0];
+  return worst ? { tag: worst[0], flagged: worst[1] } : null;
 }
 
 export function Catalogue() {
@@ -227,9 +205,20 @@ export function Catalogue() {
   useEffect(() => { if (location.hash.includes("?")) location.replace("#/"); }, []);
   const [notice, setNotice] = useState<string | null>(null);
   const [sort, setSort] = useState<Sort>(DEFAULT_SORT);
+  const [firstRun, setFirstRun] = useState(() => !localStorage.getItem(FIRST_RUN));
+  const searchBox = useRef<HTMLSpanElement>(null);
 
   const load = useCallback(() => api<Payload>("/catalogue").then(setData).catch((e) => setError(e.message)), []);
   useEffect(() => { load(); }, [load]);
+
+  // the box only exists once the payload has rendered, so a `/` pressed on the task page waits
+  const ready = !!data;
+  useEffect(() => {
+    if (!ready) return;
+    focusSearchBox = () => searchBox.current?.querySelector("input")?.focus();
+    if (searchWanted) { searchWanted = false; focusSearchBox(); }
+    return () => { focusSearchBox = null; };
+  }, [ready]);
 
   const focus = data?.focus ?? null;
   // focus decides what the scheduler may pick next, so the whole payload is stale after it changes
@@ -288,6 +277,14 @@ export function Catalogue() {
     fresh.length ? `${fresh.length} new ${fresh.length === 1 ? "pick" : "picks"}` : null,
     `${today.done_today} done today`,
   ].filter(Boolean).join(" · ");
+  // nothing passed and nothing open: the ladder has never shown itself, so say what it is
+  const showFirstRun = firstRun && stats.seen === 0 && today.recent.length === 0;
+  const dismissFirstRun = () => { localStorage.setItem(FIRST_RUN, "1"); setFirstRun(false); };
+  const stuck = worstTag(data.tasks, stats.lapse_limit);
+  // Enter in the search box takes the top row of what is on screen
+  const onSearchKey = (e: KeyboardEvent) => {
+    if (e.key === "Enter" && sorted.length) location.hash = href(sorted[0]);
+  };
   const empty = today.no_new ? noPicks(today.no_new, today, focus, by) : null;
   const act = empty?.act === "backlog" ? { label: "Show the backlog", run: () => setStatus("due") }
     : empty?.act === "focus" ? { label: "Clear focus", run: () => setFocus(null) }
@@ -303,6 +300,18 @@ export function Catalogue() {
       </div>
 
       {notice ? <div className="m-drop"><NoticeBanner message={notice} actions={[{ label: "Dismiss", onClick: () => setNotice(null) }]} /></div> : null}
+
+      {showFirstRun ? <div className="m-drop"><NoticeBanner
+        message={<>Every task you pass climbs a ladder of seven boxes and comes back on that
+          box’s own interval — {stats.ladder[0]} days at the first, {stats.ladder.at(-1)} at the
+          last — and a sitting you struggle through drops it a box instead. Only two new tasks
+          are offered a day, because the point is to keep meeting the ones you have already
+          seen. Reviews come first: while the backlog is over the day’s cap, new picks pause
+          until you have caught up.</>}
+        actions={[
+          { label: "How it works", onClick: () => window.open(HOW_IT_WORKS, "_blank", "noopener") },
+          { label: "Got it", onClick: dismissFirstRun },
+        ]} /></div> : null}
 
       <Card padding="0 18px" style={{ overflow: "hidden" }}>
         <div className="m-stagger">
@@ -320,11 +329,22 @@ export function Catalogue() {
             <Band label="Buried" aside="not today — back in the queue tomorrow" />
             {buried.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)}
           </> : null}
+          {stuck ? <>
+            <Band label="Worth a focus" />
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 14, padding: "0 0 12px" }}>
+              <span>You keep struggling with</span>
+              <TagChip label={stuck.tag} active={focus === stuck.tag} onClick={() => setFocus(focus === stuck.tag ? null : stuck.tag)} />
+              <span>— {plural(stuck.flagged, "task")} are flagged. Focusing on it puts its unstarted tasks first.</span>
+            </div>
+          </> : null}
         </div>
       </Card>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6, flexWrap: "wrap" }}>
-        <Input value={q} onChange={setQ} placeholder="search tasks and specs…" ariaLabel="Search tasks by title, number or what the spec says" style={{ width: 260 }} />
+        <span ref={searchBox} onKeyDown={onSearchKey} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          <Input value={q} onChange={setQ} placeholder="search tasks and specs…" ariaLabel="Search tasks by title, number or what the spec says — Enter opens the first match" style={{ width: 260 }} />
+          <Kbd>/</Kbd>
+        </span>
         <Select value={status} onChange={setStatus} options={STATUSES} placeholder="any status" ariaLabel="Filter by status" style={{ width: 150 }} />
         <div style={{ width: 1, height: 24, background: "var(--border)" }} />
         {data.tiers.map((t) => <TagChip key={t} label={t} active={focus === t} onClick={() => setFocus(focus === t ? null : t)} />)}
@@ -338,20 +358,21 @@ export function Catalogue() {
         {tagsHere.map((t) => <TagChip key={t} label={t} active={tagOn(t)} onClick={() => toggleTag(t)} />)}
       </div>
 
-      <Card padding={0} style={{ overflow: "hidden" }}>
+      {/* narrower than the columns need, the card scrolls sideways; the page body never does */}
+      <Card padding={0} style={{ overflowX: "auto" }}>
         {sorted.length === 0
           ? <EmptyState message="No task matches those filters. Loosen a tag or clear the search." actionLabel="Clear filters" onAction={clear} />
           : <>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 34, borderBottom: "1px solid var(--border-strong)", background: "var(--surface)", ...LABEL }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 34, minWidth: LIST_MIN, boxSizing: "border-box", borderBottom: "1px solid var(--border-strong)", background: "var(--surface)", ...LABEL }}>
                 <SortHead label="#" col="topic" align="right" sort={sort} onSort={setSort} style={{ width: COL.num }} />
                 <SortHead label="Task" col="title" sort={sort} onSort={setSort} style={{ flex: 1 }} />
                 <SortHead label="tier/tag" col="path" sort={sort} onSort={setSort} style={{ width: COL.path }} />
                 <SortHead label="Difficulty" col="difficulty" sort={sort} onSort={setSort} style={{ width: COL.difficulty }} />
                 <SortHead label="Box" col="box" sort={sort} onSort={setSort} style={{ width: COL.box }} />
                 <SortHead label="Status" col="status" sort={sort} onSort={setSort} style={{ width: COL.status }} />
-                <ResetSort disabled={unsorted} onClick={() => setSort(DEFAULT_SORT)} />
+                <SortReset disabled={unsorted} onClick={() => setSort(DEFAULT_SORT)} style={{ width: COL.reset }} />
               </div>
-              <div>{sorted.map((row, i) => <ListRow key={row.slug} row={row} first={i === 0}
+              <div style={{ minWidth: LIST_MIN }}>{sorted.map((row, i) => <ListRow key={row.slug} row={row} first={i === 0}
                 blocked={pick(row.blocked ?? [])} ladder={stats.ladder} limit={stats.lapse_limit} />)}</div>
             </>}
       </Card>
