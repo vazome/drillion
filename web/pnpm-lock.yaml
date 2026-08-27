@@ -6,6 +6,7 @@ settings:
 
 overrides:
   monaco-editor: npm:@codingame/monaco-vscode-editor-api@^25.1.2
+  dompurify: ^3.4.14
 
 importers:
 
@@ -807,8 +808,8 @@ packages:
   devlop@1.1.0:
     resolution: {integrity: sha512-RWmIqhcFf1lRYBvNmr7qTNuyCt/7/ns2jbpp1+PalgE/rDQcBT0fioSMUpJ93irlUhC5hrg4cYqe6U+0ImW0rA==}
 
-  dompurify@3.3.1:
-    resolution: {integrity: sha512-qkdCKzLNtrgPFP1Vo+98FRzJnBRGe4ffyCea9IwHB1fyxPOeNTHpLKYGd4Uk9xvNoH0ZoOjwZxNptyMwqrId1Q==}
+  dompurify@3.4.14:
+    resolution: {integrity: sha512-dVoH9z+MY+C9IilgGCk3YfFqjLi3fChm2OiKJMzh6axrJ5qwxqWaZamgmHrpv22CN/KdbZJuGEGgfQoL00LTdg==}
 
   esbuild@0.28.2:
     resolution: {integrity: sha512-HKVLS8dvII+xoKW9kmqxbRKrnWEXfJJr/FZhhJmiqIB0e053QNYFqOBouTMO/k5sID4MvCiUCvv8b9M4h32wIA==}
@@ -1325,7 +1326,7 @@ snapshots:
       '@codingame/monaco-vscode-layout-service-override': 25.1.2
       '@codingame/monaco-vscode-quickaccess-service-override': 25.1.2
       '@vscode/iconv-lite-umd': 0.7.1
-      dompurify: 3.3.1
+      dompurify: 3.4.14
       jschardet: 3.1.4
       marked: 14.0.0
 
@@ -1846,7 +1847,7 @@ snapshots:
     dependencies:
       dequal: 2.0.3
 
-  dompurify@3.3.1:
+  dompurify@3.4.14:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 

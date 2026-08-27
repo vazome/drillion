@@ -9,3 +9,6 @@ allowBuilds:
 # copy of monaco is a runtime assertion failure, not a size problem.
 overrides:
   monaco-editor: npm:@codingame/monaco-vscode-editor-api@^25.1.2
+  # dompurify@<=3.4.12 covers all 18 open Dependabot alerts (XSS/prototype-pollution),
+  # pulled in transitively by @codingame/monaco-vscode-api. 3.4.14 stays inside the same major.
+  dompurify: ^3.4.14
