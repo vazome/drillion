@@ -52,6 +52,14 @@ test.afterAll(async () => {
   expect(gone.ok, await gone.text()).toBe(true);
 });
 
+test("the page starts the clock by itself, with nothing typed", async ({ page }) => {
+  await page.goto(`/#/task/${SLUG}`);
+  await expect(page.getByRole("button", { name: "Run tests" })).toBeVisible();
+  // reading the task is work: the attempt opens on a timer, not on the first keystroke
+  const opened = () => page.evaluate(async (s) => (await (await fetch(`/api/task/${s}`)).json()).attempt !== null, SLUG);
+  await expect.poll(opened, { timeout: 10_000 }).toBe(true);
+});
+
 test("a draft that never reached the server is offered back, unless the file moved", async ({ page }) => {
   await page.route("**/api/task/*", (route) =>
     route.request().method() === "PUT" ? route.abort() : route.continue());

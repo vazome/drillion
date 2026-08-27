@@ -18,7 +18,7 @@ API still serves and only `/` 404s. To work on the frontend itself:
 pnpm --dir web install                       # once
 pnpm --dir web dev                           # Vite on 5173, proxying /api to the server on 8765
 pnpm --dir web lint                          # lint — CI fails if this fails, same as ruff
-pnpm --dir web check 8765                    # renders all 171 task specs against a running server
+pnpm --dir web screens                       # Playwright: renders all 171 task pages, photographs the rest
 ```
 
 ## Seeing the client without running it

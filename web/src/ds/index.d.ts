@@ -130,7 +130,7 @@ export declare function Table(props: TableProps): El;
 
 /** Status / grade pill. Words carry the meaning; colour is never the only signal. */
 export interface StatusBadgeProps {
-  status?: "new" | "due" | "open" | "done" | "easy" | "medium" | "hard" | "quick" | "pass" | "struggled" | "abandoned" | string;
+  status?: "new" | "due" | "open" | "done" | "easy" | "medium" | "hard" | "quick" | "pass" | "struggled" | "abandoned";
   /** override label (e.g. "done 6 d") */
   children?: React.ReactNode;
   style?: Style;
@@ -283,8 +283,7 @@ export interface TopicStripsProps {
   tags?: TopicStripsTag[];
   /** the seven return intervals, for labelling boxes */
   ladder?: number[];
-  /** "stuck first" | "neglected first" | "most lapses" | "a–z" */
-  defaultSort?: string;
+  defaultSort?: "stuck first" | "neglected first" | "most lapses" | "a–z";
   /** scroll height of the row list, px */
   maxHeight?: number;
   style?: Style;

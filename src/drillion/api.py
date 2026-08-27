@@ -55,7 +55,6 @@ from .scheduler import (
     stats,
     stuck,
 )
-from .settings import settings
 from .state import card, own, reading, today, writing
 
 log = logging.getLogger(__name__)
@@ -87,8 +86,8 @@ class Note(BaseModel):
 
 @app.exception_handler(Invalid)
 async def _rejected(_request, exc):
-    """A refused edit is the learner's problem, not a crash: 400 with coordinates."""
-    return JSONResponse({"error": exc.msg, "line": exc.line, "col": exc.col}, 400)
+    """A refused edit is the learner's problem, not a crash: 400 with the line."""
+    return JSONResponse({"error": exc.msg, "line": exc.line}, 400)
 
 
 @app.exception_handler(NoAttempt)
@@ -153,9 +152,10 @@ def _payload(st, slug, meta, src):
     o = st["open"].get(slug)
     c = card(st, slug)
     att = attempt_view(o, meta["hints"])
+    status = _status(st, slug)
     # one rule, both answers: passing opens them, and while an attempt is open only the
     # deliberate peek does
-    reveal = o["solution_shown"] if o else c["seen"] > 0 and c["due"] > today()
+    reveal = o["solution_shown"] if o else status == "done"
     return {
         "slug": slug,
         "meta": public(meta),
@@ -163,8 +163,7 @@ def _payload(st, slug, meta, src):
         "code": body,
         "etag": etag(src),
         "has_given": has_given(body),
-        "marker_line": bounds(src),
-        "status": _status(st, slug),
+        "status": status,
         # not a fifth `status`: a buried card is still exactly `due`, just not offered today
         "buried": buried(st, slug),
         "lapses": c["lapses"],
@@ -177,7 +176,7 @@ def _payload(st, slug, meta, src):
             {
                 "date": a["date"],
                 "grade": a["grade"],
-                **({"code": a["code"]} if reveal else {}),
+                "code": a["code"] if reveal else None,
             }
             for a in st["archive"].get(slug, [])
         ],
@@ -210,12 +209,7 @@ def _recent(st, all_tasks):
 def health():
     """Is the app up and pointed at the tasks? No lock, no state, no writes —
     a container health check must never queue behind a 60 s pytest run."""
-    return {
-        "status": "ok",
-        "version": __version__,
-        "tasks": len(tasks()),
-        "root": str(settings.root),
-    }
+    return {"version": __version__, "tasks": len(tasks())}
 
 
 @app.get("/api/catalogue")
@@ -364,7 +358,6 @@ def hint_task(slug: str):
                     if gate.wait_secs
                     else "no hints left — the solution is the next step",
                     "wait_secs": gate.wait_secs,
-                    "exhausted": not gate.wait_secs,
                 },
             ) from None
         return _payload(st, slug, meta, meta["path"].read_text())

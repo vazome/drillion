@@ -8,7 +8,6 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "check": "node check.mjs",
     "screens": "playwright test"
   },
   "dependencies": {
@@ -30,7 +29,6 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.0",
-    "esbuild": "^0.28.2",
     "oxlint": "^1.80.0",
     "typescript": "^7.0.2",
     "vite": "^8.2.2"

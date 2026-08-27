@@ -243,7 +243,7 @@ export function Catalogue() {
     // `text` is the spec, already flattened and lowercased by the server
     return (data?.tasks ?? []).filter((e) =>
       (!needle || e.title.toLowerCase().includes(needle) || e.slug.includes(needle)
-        || num(e.topic).includes(needle) || !!e.text?.includes(needle)) &&
+        || num(e.topic).includes(needle) || e.text.includes(needle)) &&
       (!status || e.status === status) &&
       (!focus || facets(e).includes(focus)) &&
       activeTags.every((t) => e.tags.includes(t)));
@@ -379,7 +379,7 @@ export function Catalogue() {
                 <SortReset disabled={unsorted} onClick={() => setSort(DEFAULT_SORT)} style={{ width: COL.reset }} />
               </div>
               <div style={{ minWidth: LIST_MIN }}>{sorted.map((row, i) => <ListRow key={row.slug} row={row} first={i === 0}
-                blocked={pick(row.blocked ?? [])} ladder={stats.ladder} limit={stats.lapse_limit} />)}</div>
+                blocked={pick(row.blocked)} ladder={stats.ladder} limit={stats.lapse_limit} />)}</div>
             </>}
       </Card>
     </div>

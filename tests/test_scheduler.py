@@ -1,12 +1,8 @@
 """Scheduler: grades, the Leitner ladder and today's queue."""
 
-import re
 from datetime import date, timedelta
-from pathlib import Path
 
 from drillion import scheduler, state
-
-ROOT = Path(__file__).resolve().parent.parent
 
 
 def _exs():
@@ -355,30 +351,3 @@ def test_the_stuck_tag_needs_two_flagged_tasks():
 
     st["cards"]["003_c"] = {**seen, "lapses": limit - 1}  # its tag stays under the bar
     assert scheduler.stuck(st, _exs()) == {"tag": "loops", "flagged": 2}
-
-
-def test_the_editor_opens_an_attempt_before_it_saves():
-    """The server 409s a PUT unless an attempt is open, so the autosave path — not just Run —
-    has to open one."""
-    body = re.search(
-        r"const flush = useCallback\(async \(\) => \{(.*?)\n  \}, \[",
-        (ROOT / "web/src/Task.tsx").read_text(),
-        re.DOTALL,
-    )
-    assert body, "flush() went missing from web/src/Task.tsx"
-    assert "await ensureOpen()" in body[1], (
-        "flush() must open an attempt before it PUTs"
-    )
-    assert body[1].index("await ensureOpen()") < body[1].index('method: "PUT"'), (
-        "flush() opens the attempt after the PUT it is meant to make legal"
-    )
-
-
-def test_the_page_starts_the_clock_by_itself():
-    """The attempt is the timer, so it starts when the task page settles, not on the first
-    Run. Only Task.tsx knows the delay."""
-    src = (ROOT / "web/src/Task.tsx").read_text()
-    assert re.search(r"const ATTEMPT_MS = \d+", src), "the page names no delay at all"
-    assert re.search(r"setTimeout\(.*ensureOpen\(\).*ATTEMPT_MS\)", src), (
-        "nothing arms ATTEMPT_MS — the clock is back to starting on Run"
-    )
