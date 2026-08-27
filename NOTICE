@@ -43,3 +43,9 @@ the repository, as MIT requires for a substantial portion of borrowed work.
 It does not replace the per-file `source:` field and attribution footer on
 each of the 84 tasks — those stay as the finer-grained record of exactly what
 came from where.
+
+The client ships two webfonts under `web/public/fonts/`, both licensed under the
+SIL Open Font License 1.1, whose full text sits beside them:
+
+- IBM Plex Sans — Copyright © 2017 IBM Corp., `web/public/fonts/IBM-Plex-Sans-OFL.txt`
+- Spline Sans Mono — Copyright 2022 The Spline Sans Mono Project Authors, `web/public/fonts/Spline-Sans-Mono-OFL.txt`

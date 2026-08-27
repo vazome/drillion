@@ -531,6 +531,7 @@ def build_web():
         web / "index.html",
         web / "vite.config.ts",
         *(web / "src").rglob("*"),
+        *(web / "public").rglob("*"),
     ]
     newest = max((p.stat().st_mtime for p in watched if p.is_file()), default=0)
     built = settings.web_dist / "index.html"
