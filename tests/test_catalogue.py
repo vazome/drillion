@@ -2,55 +2,12 @@
 
 import os
 import shutil
-import tempfile
-from pathlib import Path
 
-from drillion import catalogue, region
+from drillion import catalogue
 from drillion.settings import settings
+from tests.fixtures import README, TASK, tasks_root
 
 DIRS = sorted(p for p in settings.tasks_dir.iterdir() if (p / "task.py").exists())
-
-README = """\
----
-title: A test task
-difficulty: easy
-tier: core
-minutes: 7
-prereqs: [1]
-tags: [core]
----
-# A test task
-
-## Why
-Because.
-
-## Hints
-### Hint 1
-one
-### Hint 2
-two
-### Hint 3
-three
-"""
-TASK = (
-    "def solve(x):\n    raise NotImplementedError\n\n\n"
-    f"{region.MARKER}\nfrom _lib import rng  # noqa: E402\n\n\n"
-    "def _reference(x):\n    return x\n\n\ndef test_solve():\n    assert rng()\n"
-)
-
-
-def _root(**folders):
-    """A throwaway tasks/ root: {folder: {file: text}}."""
-    tmp = Path(tempfile.mkdtemp(prefix="drillion_cat_"))
-    for name, files in folders.items():
-        (tmp / "tasks" / name).mkdir(parents=True)
-        for fname, text in files.items():
-            path = tmp / "tasks" / name / fname
-            if isinstance(text, bytes):
-                path.write_bytes(text)
-            else:
-                path.write_text(text)
-    return tmp
 
 
 def test_every_task_folder_is_read():
@@ -77,7 +34,8 @@ def test_every_readme_has_the_contract():
 
 def test_topic_comes_from_the_folder_name():
     keep = settings.root
-    tmp = _root(**{"042_thing": {"README.md": README, "task.py": TASK}})
+    gated = README.replace("prereqs: []", "prereqs: [1]")
+    tmp = tasks_root(**{"042_thing": {"README.md": gated, "task.py": TASK}})
     try:
         settings.root = tmp
         all_tasks = catalogue.tasks()
@@ -93,7 +51,7 @@ def test_topic_comes_from_the_folder_name():
 def test_a_broken_folder_is_skipped_instead_of_breaking_the_menu():
     """And `scan()` still names it, with why — the menu and doctor read one parse."""
     keep = settings.root
-    tmp = _root(
+    tmp = tasks_root(
         **{
             "042_thing": {"README.md": README, "task.py": TASK},
             "043_nofrontmatter": {
@@ -155,7 +113,7 @@ def test_a_broken_folder_is_skipped_instead_of_breaking_the_menu():
 
 def test_the_scan_is_cached_but_an_edited_task_is_re_read():
     tmp, keep = (
-        _root(**{"001_a": {"README.md": README, "task.py": TASK}}),
+        tasks_root(**{"001_a": {"README.md": README, "task.py": TASK}}),
         settings.root,
     )
     try:
