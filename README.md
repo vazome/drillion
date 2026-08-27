@@ -3,19 +3,14 @@
 [![PyPI](https://img.shields.io/pypi/v/drillion.svg)](https://pypi.org/project/drillion/)
 [![CI](https://github.com/vazome/drillion/actions/workflows/ci.yml/badge.svg)](https://github.com/vazome/drillion/actions/workflows/ci.yml)
 
-Python practice drills that come back before you forget them. Graded by pytest, runs on your machine.
+TL;DR: Self-hosted python practices in effective UI. With no social engagment bait, public rating bullshit and no achievements. Pragmatic and simple by nature.
 
-drillion is a local web app with 171 short Python tasks, each tagged with the concept it
-practises so you can go straight at what you want to get better at. Every task ships its own
-pytest test, and many draw fresh data each time you open them, so you cannot pass by remembering
-last week's answer. Pass one and it comes back in 2 days, then 4, 8, 16, and on up to 120; fail
-and it costs you nothing but the attempt. There is no login, no account and no server but yours: the
-tasks are folders of Markdown and Python on your disk, and your progress is one JSON file.
+`drillion` is a local web app with 171 short Python tasks, each tagged with the concept it
+practises so you can go straight at what you want to get better at. There is no login, no account and no server but yours: the tasks are folders of Markdown and Python on your disk, and your progress is one JSON file.
 
 ## Install
 
-Any of these serves <http://127.0.0.1:8765>. The first three need Python 3.13 or newer and open
-your browser for you; Docker needs nothing but Docker, and opens nothing.
+Any of these serve <http://127.0.0.1:8765>. The first three need Python 3.13 or newer; Docker needs nothing but Docker.
 
 ### Try it — `uvx`
 
@@ -75,7 +70,7 @@ bind-mount recipe.
 
 ## Docs
 
-- [How a sitting works, and why](docs/how-it-works.md) — the loop, the ladder, the grading rules
+- [How a sitting works, and why](docs/how-it-works.md) — the learning loop, what is the ladder and grading rules.
 - [Configuration](docs/configuration.md) — environment, data root, Docker, release verification
 - [Authoring a task](docs/authoring-tasks.md) — tiers, difficulty, tags, the folder format
 - [CONTEXT.md](CONTEXT.md) — the vocabulary the code, the API and the UI all use
