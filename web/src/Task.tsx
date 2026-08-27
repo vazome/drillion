@@ -190,7 +190,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       reset(p); setResult({ state: "idle" }); setGate(null); setNextSlug(null);
     } catch (e) {
       const err = e as ApiError;
-      if (!absorb(err)) setGate({ at: "editor", message: err.message });
+      if (err.status === 400 || !absorb(err)) setGate({ at: "editor", message: err.message });
     }
   };
 
