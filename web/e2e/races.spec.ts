@@ -4,7 +4,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { repoRoot, scratchRoot } from "../playwright.config";
+import { port, repoRoot, scratchRoot } from "../playwright.config";
 
 /** Not 001: `screens.spec.ts` photographs a clean pass on that one. */
 const SLUG = "002_slicing";
@@ -12,7 +12,9 @@ const TASK_PY = join(scratchRoot, "tasks", SLUG, "task.py");
 const MARKER = "# ══ machinery";
 /** `region.py`'s `splice`, over the checkout's copy — the scratch file is what we rewrite. */
 const PRISTINE = readFileSync(join(repoRoot, "tasks", SLUG, "task.py"), "utf8");
-const TAIL = PRISTINE.slice(PRISTINE.indexOf(MARKER));
+const MARKER_AT = PRISTINE.indexOf(MARKER);
+if (MARKER_AT < 0) throw new Error(`${SLUG} has no ${MARKER} line: these tests would write a task with no grader`);
+const TAIL = PRISTINE.slice(MARKER_AT);
 const setDisk = (body: string) => writeFileSync(TASK_PY, `${body}\n\n\n${TAIL}`);
 
 const body = (marker: string) => `def solve(xs):\n    return "${marker}"`;
@@ -27,9 +29,11 @@ async function typeCode(page: Page, text: string) {
   await page.keyboard.insertText(text);
 }
 
-const putRequest = (page: Page) => page.waitForRequest((r) => r.method() === "PUT");
+/** the code save, not `PUT …/note`, which the same debounce can fire alongside it */
+const isSave = (r: { method(): string; url(): string }) => r.method() === "PUT" && r.url().endsWith(SLUG);
+const putRequest = (page: Page) => page.waitForRequest(isSave);
 const putOk = (page: Page) =>
-  page.waitForResponse((r) => r.request().method() === "PUT" && r.status() === 200);
+  page.waitForResponse((r) => isSave(r.request()) && r.status() === 200);
 
 test.beforeEach(async ({ page }) => {
   setDisk(STUB);
@@ -37,8 +41,16 @@ test.beforeEach(async ({ page }) => {
   page.on("dialog", (d) => d.accept());
 });
 
-// leave the scratch task as the screenshot pass expects to find it
-test.afterAll(() => setDisk(STUB));
+/** Give the attempt back: it puts the stub on disk and keeps 002 out of the Open band of
+ *  the catalogue and progress screenshots the next spec file takes. */
+test.afterAll(async () => {
+  const url = `http://127.0.0.1:${port}/api/task/${SLUG}`;
+  const { etag } = await (await fetch(url)).json();
+  const gone = await fetch(`${url}/abandon`, {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ etag }),
+  });
+  expect(gone.ok, await gone.text()).toBe(true);
+});
 
 test("a draft that never reached the server is offered back, unless the file moved", async ({ page }) => {
   await page.route("**/api/task/*", (route) =>

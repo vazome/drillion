@@ -10,7 +10,7 @@ export const scratchRoot = join(tmpdir(), "drillion-e2e-root");
 
 /** 8766, not the app's 8765, so a run never collides with a dev server someone left up.
  *  Override with DRILLION_PORT. */
-const port = Number(process.env.DRILLION_PORT ?? 8766);
+export const port = Number(process.env.DRILLION_PORT ?? 8766);
 
 export default defineConfig({
   testDir: "e2e",
