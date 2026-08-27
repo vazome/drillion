@@ -25,27 +25,29 @@ _PYTEST = [
 ]
 
 
-def _env(**extra):
-    """`tasks/` on the path, so `from _lib import rng` works from any root."""
-    return {**os.environ, "PYTHONPATH": str(settings.tasks_dir), **extra}
+def _run_pytest(args, timeout=None, **env):
+    """pytest in a subprocess, cwd a scratch dir so stray files never land in tasks/, and
+    `tasks/` on PYTHONPATH so `from _lib import rng` works from any root."""
+    with tempfile.TemporaryDirectory(
+        dir=settings.root, ignore_cleanup_errors=True
+    ) as scratch:
+        return subprocess.run(
+            [sys.executable, "-m", "pytest", *args, *_PYTEST],
+            env={**os.environ, "PYTHONPATH": str(settings.tasks_dir), **env},
+            cwd=scratch,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=timeout,
+        )
 
 
 def run_tests(path, seed):
     """Task code only ever runs here, in its own process."""
-    cmd = [sys.executable, "-m", "pytest", str(path), "-x", "--timeout=10", *_PYTEST]
     try:
-        with tempfile.TemporaryDirectory(
-            dir=settings.root, ignore_cleanup_errors=True
-        ) as scratch:
-            r = subprocess.run(
-                cmd,
-                env=_env(DRILLION_SEED=str(seed)),
-                cwd=scratch,
-                capture_output=True,
-                text=True,
-                check=False,
-                timeout=60,
-            )
+        r = _run_pytest(
+            [str(path), "-x", "--timeout=10"], timeout=60, DRILLION_SEED=str(seed)
+        )
     except subprocess.TimeoutExpired:
         return False, "timed out after 60s — an endless loop, most likely"
     return r.returncode == 0, r.stdout
@@ -94,24 +96,7 @@ def selfcheck():
             path = meta["dir"] / "_selfcheck.py"  # an explicit path is always collected
             path.write_text(splice(src, _reference_call(cut(src).body)))
             made.append(path)
-        with tempfile.TemporaryDirectory(
-            dir=settings.root, ignore_cleanup_errors=True
-        ) as scratch:
-            r = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "pytest",
-                    *map(str, made),
-                    "--timeout=60",
-                    *_PYTEST,
-                ],
-                cwd=scratch,
-                env=_env(),
-                capture_output=True,
-                text=True,
-                check=False,
-            )
+        r = _run_pytest([*map(str, made), "--timeout=60"])
     finally:
         for path in made:
             path.unlink(missing_ok=True)

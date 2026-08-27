@@ -3,6 +3,10 @@
 import argparse
 import logging
 import shutil
+import subprocess
+import threading
+import webbrowser
+from pathlib import Path
 
 from . import __version__
 from .settings import TASKS_TEMPLATE, settings
@@ -22,6 +26,60 @@ def seed():
         "first run: seeding %s from the tasks that ship with drillion", settings.root
     )
     shutil.copytree(TASKS_TEMPLATE, settings.tasks_dir)
+
+
+def _open_browser(url):
+    version = Path("/proc/version")
+    if version.exists() and "microsoft" in version.read_text().lower():
+        subprocess.Popen(["explorer.exe", url])  # WSL: exit code 1 even when it worked
+    else:
+        webbrowser.open(url)
+
+
+def build_web():
+    """Build web/dist when it is missing or older than its sources. Without pnpm the API
+    still serves; only `/` is missing."""
+    web = settings.web_dist.parent
+    if not (web / "package.json").is_file():
+        return
+    watched = [
+        web / "package.json",
+        web / "index.html",
+        web / "vite.config.ts",
+        *(web / "src").rglob("*"),
+        *(web / "public").rglob("*"),
+    ]
+    newest = max((p.stat().st_mtime for p in watched if p.is_file()), default=0)
+    built = settings.web_dist / "index.html"
+    if built.is_file() and built.stat().st_mtime >= newest:
+        return
+    if shutil.which("pnpm") is None:
+        log.warning(
+            "web/dist is stale and pnpm is not installed — the API runs, / will 404"
+        )
+        return
+    log.info("building web/dist (first run, or the frontend changed)")
+    for cmd in (["pnpm", "install", "--frozen-lockfile"], ["pnpm", "build"]):
+        if subprocess.run(cmd, cwd=web, check=False).returncode:
+            log.warning("`%s` failed — the API runs, / will 404", " ".join(cmd))
+            return
+
+
+def serve():
+    import uvicorn
+    from fastapi.staticfiles import StaticFiles
+
+    from .api import app
+
+    build_web()
+    # mounted after every /api route, so an unmatched /api/... 404s as JSON
+    if settings.web_dist.is_dir():
+        app.mount("/", StaticFiles(directory=settings.web_dist, html=True), name="web")
+    url = f"http://{settings.host}:{settings.port}/"
+    print(f"drillion → {url}   (ctrl-c to stop)", flush=True)  # piped output too
+    if settings.open_browser and settings.host == "127.0.0.1":  # not from a container
+        threading.Timer(0.7, _open_browser, [url]).start()
+    uvicorn.run(app, host=settings.host, port=settings.port, log_level="info")
 
 
 def main(argv=None):
@@ -55,6 +113,4 @@ def main(argv=None):
         from .runner import selfcheck
 
         raise SystemExit(1 if selfcheck() else 0)
-    from .api import serve
-
     serve()
