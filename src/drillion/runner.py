@@ -34,7 +34,9 @@ def run_tests(path, seed):
     """Task code only ever runs here, in its own process."""
     cmd = [sys.executable, "-m", "pytest", str(path), "-x", "--timeout=10", *_PYTEST]
     try:
-        with tempfile.TemporaryDirectory() as scratch:
+        with tempfile.TemporaryDirectory(
+            dir=settings.root, ignore_cleanup_errors=True
+        ) as scratch:
             r = subprocess.run(
                 cmd,
                 env=_env(DRILLION_SEED=str(seed)),
@@ -92,7 +94,9 @@ def selfcheck():
             path = meta["dir"] / "_selfcheck.py"  # an explicit path is always collected
             path.write_text(splice(src, _reference_call(cut(src).body)))
             made.append(path)
-        with tempfile.TemporaryDirectory() as scratch:
+        with tempfile.TemporaryDirectory(
+            dir=settings.root, ignore_cleanup_errors=True
+        ) as scratch:
             r = subprocess.run(
                 [
                     sys.executable,

@@ -6,9 +6,9 @@ task-folder format. The version is declared once, in `pyproject.toml`.
 
 ## Unreleased
 
-- Tests run in a throwaway scratch directory instead of the folder that holds
-  `progress.json`, so a file a solution writes to a relative path lands somewhere
-  nobody minds losing.
+- Tests run in a throwaway scratch directory rather than in the folder that holds
+  `progress.json`, so a file a solution writes to a relative path is swept away with the
+  scratch directory instead of littering the data root.
 - The progress page looks both ways: a 14-day due-load forecast with the daily cap drawn on
   it, a year of practice as a heatmap, and one strip per topic showing where its tasks sit on
   the ladder — sortable, stuck first, each tag a link into the catalogue (`#/?tag=…`).
