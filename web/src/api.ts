@@ -38,7 +38,14 @@ export interface Catalogue {
 }
 export interface Progress {
   boxes: number[]; ladder: number[]; due: number; seen: number; total: number; practised: number; window: number;
-  per_tag: Record<string, { seen: number; total: number }>;
+  today: string;
+  /** cards due per day for the next 14, [0] today with everything overdue folded in */
+  forecast: number[];
+  /** reviews served a day — the line the forecast draws */
+  cap: number;
+  /** passes per calendar day, all history */
+  days: Record<string, number>;
+  per_tag: Record<string, { seen: number; total: number; boxes: number[]; lapses: number; due7: number }>;
   log: { date: string; slug: string; grade: Grade; attempts: number; secs: number; new: boolean }[];
 }
 export interface Task {

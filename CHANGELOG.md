@@ -6,6 +6,13 @@ task-folder format. The version is declared once, in `pyproject.toml`.
 
 ## Unreleased
 
+- The progress page looks both ways: a 14-day due-load forecast with the daily cap drawn on
+  it, a year of practice as a heatmap, and one strip per topic showing where its tasks sit on
+  the ladder — sortable, stuck first, each tag a link into the catalogue (`#/?tag=…`).
+  `GET /api/progress` gains `today`, `forecast`, `cap` and `days`; `per_tag` rows gain
+  `boxes`, `lapses` and `due7`.
+- The half-hour nudge is a card in the corner rather than a banner over the editor: take a
+  hint, or bury the task and go read up.
 - `POST …/hint` and `POST …/solution` answer with the whole task, the same shape as `GET /api/task`.
 - Catalogue rows carry `blocked` (the prereq slugs not yet passed) instead of `prereqs`, and
   `today.no_new` names the one reason there are no new picks; the page no longer re-derives either.

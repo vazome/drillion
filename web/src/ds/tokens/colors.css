@@ -8,6 +8,7 @@
 --surface-card:var(--surface);--text-body:var(--text);
 --focus-ring:0 0 0 2px var(--surface),0 0 0 4px var(--accent);
 --shadow-card:0 1px 2px rgba(28,34,38,.05),0 0 0 1px var(--border);
+--shadow-pop:0 8px 24px rgba(28,34,38,.14),0 0 0 1px var(--border);
 color-scheme:light;
 }
 .dark{
@@ -18,5 +19,6 @@ color-scheme:light;
 --pass:#5CC496;--pass-bg:#20332B;--fail:#F08A8A;--fail-bg:#392527;--warn:#E0B45C;--warn-bg:#363023;
 --syn-keyword:#6FA2F5;--syn-string:#5CC496;--syn-number:#E0A46F;--syn-comment:#5E6A74;--syn-function:#E4E9ED;
 --shadow-card:0 1px 2px rgba(0,0,0,.25),0 0 0 1px var(--border);
+--shadow-pop:0 10px 28px rgba(0,0,0,.5),0 0 0 1px var(--border-strong);
 color-scheme:dark;
 }

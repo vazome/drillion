@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import threading
 import webbrowser
+from collections import Counter
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -47,13 +48,23 @@ from .region import (
     write_region,
 )
 from .runner import run_tests, summarise
-from .scheduler import LADDER, LAPSE_LIMIT, blocked, buried, due_today, pick, queue
+from .scheduler import (
+    LADDER,
+    LAPSE_LIMIT,
+    REVIEWS_PER_DAY,
+    blocked,
+    buried,
+    due_today,
+    pick,
+    queue,
+)
 from .settings import settings
 from .state import card, reading, today, writing
 
 log = logging.getLogger(__name__)
 MAX_BODY = 256 * 1024
 WINDOW = 7  # days in the consistency window; the page reads it off the payload
+FORECAST_DAYS = 14  # how far ahead the progress page looks
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -278,12 +289,35 @@ def catalogue():
 def progress():
     with reading() as st:
         all_tasks = tasks()
+        start = date.fromisoformat(today())
+        week = (start + timedelta(days=7)).isoformat()
+        forecast = [0] * FORECAST_DAYS
         per_tag = {}
         for slug, meta in all_tasks.items():
-            seen = card(st, slug)["seen"] > 0
+            c = card(st, slug)
+            seen = c["seen"] > 0
+            if seen:
+                # today carries everything overdue; a bury leaves the due date where it is
+                ahead = (date.fromisoformat(c["due"]) - start).days
+                if ahead < FORECAST_DAYS:
+                    forecast[max(ahead, 0)] += 1
             for tag in meta["tags"]:
-                t = per_tag.setdefault(tag, {"seen": 0, "total": 0})
-                t["total"], t["seen"] = t["total"] + 1, t["seen"] + seen
+                t = per_tag.setdefault(
+                    tag,
+                    {
+                        "seen": 0,
+                        "total": 0,
+                        "boxes": [0] * len(LADDER),
+                        "lapses": 0,
+                        "due7": 0,
+                    },
+                )
+                t["total"] += 1
+                if seen:
+                    t["seen"] += 1
+                    t["boxes"][c["box"]] += 1
+                    t["lapses"] += c["lapses"]
+                    t["due7"] += c["due"] <= week
         boxes = _boxes(st, all_tasks)
         return {
             "boxes": boxes,
@@ -293,6 +327,10 @@ def progress():
             "total": len(all_tasks),
             "practised": _practised(st),
             "window": WINDOW,
+            "today": today(),
+            "forecast": forecast,
+            "cap": REVIEWS_PER_DAY,
+            "days": dict(Counter(e["date"] for e in st["log"])),
             "log": st["log"][-30:],
             "per_tag": per_tag,
         }

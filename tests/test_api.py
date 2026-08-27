@@ -240,7 +240,13 @@ async def _guards(api, path):
         "focus"
     ] == "core"  # a tier, not a tag
     assert (await api.get("/api/progress")).json()["per_tag"] == {
-        "f-strings": {"seen": 0, "total": 1}
+        "f-strings": {
+            "seen": 0,
+            "total": 1,
+            "boxes": [0] * len(scheduler.LADDER),
+            "lapses": 0,
+            "due7": 0,
+        }
     }
 
     stub_etag = (await api.get(f"/api/task/{SLUG}")).json()["etag"]
@@ -541,6 +547,64 @@ async def _the_ladder_rides_the_payload(api, _path):
     assert cat["stats"]["ladder"] == scheduler.LADDER
     assert prog["ladder"] == scheduler.LADDER
     assert task["ladder"] == scheduler.LADDER
+
+
+async def _progress_looks_behind_and_ahead(api, _path):
+    """The forecast is a count, not an estimate: overdue folds into today, a bury moves
+    nothing, and the far future falls off the end. Every pass ever made lands in `days`."""
+
+    def day(n):
+        return (date.fromisoformat(state.today()) + timedelta(days=n)).isoformat()
+
+    st = state.load()
+    st["cards"][SLUG] = {"box": 2, "due": day(3), "seen": 1, "lapses": 2, "buried": ""}
+    st["cards"][PREREQ] = {"box": 0, "due": day(-40), "seen": 1, "buried": day(0)}
+    st["cards"][GATED] = {"box": 6, "due": day(120), "seen": 1}
+    st["log"] = [
+        {
+            "date": day(-1),
+            "slug": SLUG,
+            "grade": "pass",
+            "attempts": 1,
+            "secs": 9,
+            "new": True,
+        },
+        {
+            "date": day(0),
+            "slug": SLUG,
+            "grade": "pass",
+            "attempts": 1,
+            "secs": 9,
+            "new": False,
+        },
+        {
+            "date": day(0),
+            "slug": PREREQ,
+            "grade": "quick",
+            "attempts": 1,
+            "secs": 9,
+            "new": True,
+        },
+    ]
+    state.save(st)
+    prog = (await api.get("/api/progress")).json()
+    assert prog["today"] == day(0) and prog["cap"] == scheduler.REVIEWS_PER_DAY
+    assert prog["forecast"] == [1, 0, 0, 1] + [0] * 10
+    assert prog["days"] == {day(-1): 1, day(0): 2}
+    tag = tasks()[SLUG]["tags"][0]
+    boxes = [0] * len(scheduler.LADDER)
+    boxes[2] = 1
+    assert prog["per_tag"][tag] == {
+        "seen": 1,
+        "total": 1,
+        "boxes": boxes,
+        "lapses": 2,
+        "due7": 1,
+    }
+
+
+def test_the_progress_page_looks_behind_and_ahead():
+    _api(_progress_looks_behind_and_ahead, extra=(PREREQ, GATED))
 
 
 def test_the_ladder_rides_the_payload():

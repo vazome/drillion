@@ -16,3 +16,7 @@ export { Table } from "./Table.jsx";
 export { TagChip } from "./TagChip.jsx";
 export { Timer } from "./Timer.jsx";
 export { Toggle } from "./Toggle.jsx";
+export { DueForecast } from "./DueForecast.jsx";
+export { PracticeHeatmap } from "./PracticeHeatmap.jsx";
+export { TopicStrips } from "./TopicStrips.jsx";
+export { StuckNudge } from "./StuckNudge.jsx";

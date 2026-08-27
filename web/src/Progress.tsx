@@ -1,22 +1,11 @@
 import { useEffect, useState } from "react";
-import { Card, EmptyState, Ladder, StatusBadge, Table } from "./ds/index.js";
+import { Card, DueForecast, EmptyState, Ladder, PracticeHeatmap, StatusBadge, Table, TopicStrips } from "./ds/index.js";
 import { api, type Progress as Payload } from "./api";
 import { Stats } from "./Stats";
 
 const mmss = (s: number) => `${Math.floor(s / 60)}m${String(s % 60).padStart(2, "0")}s`;
 /** "2026-08-26" → "26 Aug". Parsed at local midnight so the day never slips a timezone. */
 const day = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" });
-
-export type TagKey = "tag" | "seen" | "total" | "share";
-export type TagRow = { id: string; tag: string; seen: number; total: number; share: number };
-
-/** `share` is kept a number and rendered with the %, so 10% sorts above 9%. */
-const TAG_COLS = [
-  { key: "tag", label: "Tag", sortable: true, render: (r: TagRow) => <span title={r.tag}>{r.tag}</span> },
-  { key: "seen", label: "Seen", align: "right" as const, mono: true, width: "70px", sortable: true },
-  { key: "total", label: "Total", align: "right" as const, mono: true, width: "78px", sortable: true, muted: true },
-  { key: "share", label: "Share", align: "right" as const, mono: true, width: "80px", sortable: true, render: (r: TagRow) => `${r.share}%` },
-];
 
 const LOG_COLS = [
   { key: "date", label: "Date", width: "76px", mono: true, muted: true, render: (r: LogRow) => day(r.date) },
@@ -28,25 +17,15 @@ const LOG_COLS = [
 ];
 type LogRow = Payload["log"][number];
 
-/** Sort the coverage rows; ties keep the API's order because Array.sort is stable. */
-export function sortTags(rows: TagRow[], key: TagKey, dir: "asc" | "desc"): TagRow[] {
-  const d = dir === "asc" ? 1 : -1;
-  return [...rows].sort((a, b) => (key === "tag" ? a.tag.localeCompare(b.tag) : a[key] - b[key]) * d);
-}
-
 export function Progress() {
   const [data, setData] = useState<Payload | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [sort, setSort] = useState<{ key: TagKey; dir: "asc" | "desc" }>({ key: "seen", dir: "desc" });
   useEffect(() => { api<Payload>("/progress").then(setData).catch((e) => setError(e.message)); }, []);
 
   if (error) return <EmptyState message={`Could not load progress: ${error}`} />;
   if (!data) return <EmptyState message="Loading…" />;
 
-  const tagRows = sortTags(Object.entries(data.per_tag).map(([tag, t]) => (
-    { id: tag, tag, seen: t.seen, total: t.total, share: t.total ? Math.round((t.seen / t.total) * 100) : 0 }
-  )), sort.key, sort.dir);
-
+  const tags = Object.entries(data.per_tag).map(([tag, t]) => ({ tag, ...t }));
   const logRows = [...data.log].reverse().map((row, i) => ({ ...row, id: i, time: mmss(row.secs), kind: row.new ? "new" : "review" }));
 
   return (
@@ -64,24 +43,18 @@ export function Progress() {
         </div>
       </Card>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(360px, 420px) minmax(0, 1fr)", gap: 18, alignItems: "start" }}>
-        <Card label="Coverage by tag" padding={16}>
-          <div style={{ maxHeight: 520, overflow: "auto" }}>
-            <Table style={{ tableLayout: "fixed" }} columns={TAG_COLS} rows={tagRows} sortKey={sort.key} sortDir={sort.dir}
-              onSort={(key, d) => setSort({ key: key as TagKey, dir: d })}
-              emptyMessage="No tags yet." />
-          </div>
-        </Card>
+      <Card label="Due load · next 14 days"><DueForecast forecast={data.forecast} cap={data.cap} today={data.today} /></Card>
+      <Card label="Practice"><PracticeHeatmap days={data.days} today={data.today} /></Card>
+      <Card label="Topic depth" padding={16}><TopicStrips tags={tags} ladder={data.ladder} /></Card>
 
-        <Card label="Last 30 sessions" padding={16}>
-          <div style={{ maxHeight: 520, overflow: "auto" }}>
-            <Table columns={LOG_COLS} rows={logRows} emptyMessage="No passes logged yet. The first one lands here." />
-          </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 10, fontSize: 12.5, color: "var(--text-faint)" }}>
-            <span>QUICK · first try, under par</span><span>·</span><span>PASS</span><span>·</span><span>STRUGGLED</span><span>·</span><span>abandoned</span>
-          </div>
-        </Card>
-      </div>
+      <Card label="Last 30 sessions" padding={16}>
+        <div style={{ maxHeight: 420, overflow: "auto", paddingRight: 10 }}>
+          <Table columns={LOG_COLS} rows={logRows} emptyMessage="No passes logged yet. The first one lands here." />
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 10, fontSize: 12.5, color: "var(--text-faint)" }}>
+          <span>QUICK · first try, under par</span><span>·</span><span>PASS</span><span>·</span><span>STRUGGLED</span><span>·</span><span>abandoned</span>
+        </div>
+      </Card>
     </div>
   );
 }
