@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Toggle } from "./ds/index.js";
 import { api, type Health } from "./api";
-import { Catalogue, focusSearch } from "./Catalogue";
+import { Catalogue } from "./Catalogue";
 import { Task } from "./Task";
 import { Progress } from "./Progress";
 
@@ -22,14 +22,14 @@ function typing(el: EventTarget | null) {
   return !!node?.closest?.("input, textarea, select, [contenteditable='true'], .cm-content");
 }
 
-/** `/` anywhere goes to the catalogue and puts the cursor in its search box. */
+/** `/` anywhere goes to the catalogue and asks it, through the hash, for its search box. */
 function useSlashToSearch() {
   useEffect(() => {
     const on = (e: globalThis.KeyboardEvent) => {
-      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey || typing(e.target)) return;
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey || e.isComposing || typing(e.target)) return;
       e.preventDefault();
-      if (location.hash !== "#/") location.hash = "#/";
-      focusSearch();
+      // replace on the catalogue itself, or Back gets an entry that goes nowhere
+      if (location.hash === "#/") location.replace("#/?q"); else location.hash = "#/?q";
     };
     addEventListener("keydown", on);
     return () => removeEventListener("keydown", on);
