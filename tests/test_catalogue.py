@@ -117,6 +117,10 @@ def test_a_broken_folder_is_skipped_instead_of_breaking_the_menu():
                 "task.py": TASK.replace("def solve", "def nope"),
             },
             "048_noreadme": {"task.py": TASK},
+            "050_noreference": {
+                "README.md": README,
+                "task.py": TASK.replace("def _reference", "def _answer"),
+            },
             "051_notutf8": {"README.md": README, "task.py": TASK.encode() + b"\xff"},
             "052_readmenotutf8": {
                 "README.md": README.encode() + b"\xff",
@@ -138,6 +142,9 @@ def test_a_broken_folder_is_skipped_instead_of_breaking_the_menu():
         assert reasons["042_thing"] == []
         assert all(why for n, why in reasons.items() if n != "042_thing")
         assert reasons["046_nomarker"] == ["task.py: a task needs the machinery marker"]
+        assert reasons["050_noreference"] == [
+            "task.py: the machinery has no `def _reference(`"
+        ]
         assert reasons["051_notutf8"] == ["task.py: is not valid UTF-8"]
         assert reasons["052_readmenotutf8"] == ["README.md: is not valid UTF-8"]
         assert reasons["042_Thing"][0].startswith("folder name is not")
