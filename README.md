@@ -87,7 +87,8 @@ bind-mount recipe.
 The most useful contribution is a new task. Open an issue with the **New task** template first,
 then read [CONTRIBUTING.md](CONTRIBUTING.md) for the dev loop and the contract a task is graded
 against, and [AGENTS.md](AGENTS.md) for how the project decides things. Bugs and ideas go in
-[Issues](https://github.com/vazome/drillion/issues).
+[Issues](https://github.com/vazome/drillion/issues); a vulnerability goes through
+[SECURITY.md](SECURITY.md), which also spells out what running drillion does to your machine.
 
 ## License
 
