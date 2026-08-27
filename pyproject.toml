@@ -54,6 +54,8 @@ exclude = [
     "/DESIGN.md",
     "/web/node_modules",
     "/web/screenshots",
+    # the README points at these by URL; they never need to ship inside the package
+    "/docs/images",
     "/web/test-results",
     "*.tsbuildinfo",
 ]

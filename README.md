@@ -8,6 +8,43 @@ TL;DR: Self-hosted python practices in effective UI. With no social engagment ba
 `drillion` is a local web app with 171 short Python tasks, each tagged with the concept it
 practises so you can go straight at what you want to get better at. There is no login, no account and no server but yours: the tasks are folders of Markdown and Python on your disk, and your progress is one JSON file.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/completions-dark.png">
+  <img alt="The editor completing a list method, with the signature and the docstring beside it" src="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/completions-light.png">
+</picture>
+
+Every `solve()` says what it takes, so the editor knows what your value can do. Completions,
+signatures and type errors come from a language server running next to the grader, on your
+machine — nothing is sent anywhere.
+
+<details>
+<summary>The three screens — a task, the catalogue, your progress</summary>
+
+<br>
+
+**A task.** The spec on the left, your code and what the tests said on the right.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/task-screen-1-dark.png">
+  <img alt="A task page: the spec on the left, the editor and test output on the right" src="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/task-screen-1-light.png">
+</picture>
+
+**The catalogue.** Every task tagged with what it practises, so you can go at one thing.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/catalogue-screen-1-dark.png">
+  <img alt="The catalogue: today's picks, the tag list, and the full task table" src="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/catalogue-screen-1-light.png">
+</picture>
+
+**Progress.** The ladder, what is due, and where each topic actually sits.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/progress-1-dark.png">
+  <img alt="The progress page: the ladder, due load, a practice heatmap and topic depth" src="https://raw.githubusercontent.com/vazome/drillion/v0.4.0/docs/images/progress-1-light.png">
+</picture>
+
+</details>
+
 ## Install
 
 Any of these serve <http://127.0.0.1:8765>. The first three need Python 3.13 or newer; Docker needs nothing but Docker.
