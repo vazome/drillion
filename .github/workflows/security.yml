@@ -1,0 +1,123 @@
+name: security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # the vulnerability database moves under commits that never change, so re-scan on a clock
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # what Dependabot already watches, plus the misconfiguration checks it has no opinion on
+  repo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: scan the lockfiles and the source tree
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          # secrets are GitHub's own push protection to catch; this scan is about dependencies
+          scanners: vuln
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-fs.sarif
+          exit-code: 0
+      - uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          sarif_file: trivy-fs.sarif
+          # distinct per scan: code scanning replaces an upload with the next one in the same category
+          category: trivy-fs
+
+      - name: scan the Dockerfile and the workflows for misconfiguration
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: sarif
+          output: trivy-config.sarif
+          exit-code: 0
+          skip-setup-trivy: true
+      - uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          sarif_file: trivy-config.sarif
+          category: trivy-config
+
+      # the gates come after both uploads, so a red build still leaves the findings in the Security tab
+      - name: fail on a fixable CRITICAL or HIGH dependency
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          skip-setup-trivy: true
+      - name: fail on a CRITICAL or HIGH misconfiguration
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          skip-setup-trivy: true
+
+  # the OS layer and everything vendored into the venv: the surface nothing else looks at
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+      # built once here, and both scans below read that one artifact
+      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          load: true
+          tags: drillion:security
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: scan the image we would publish
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: drillion:security
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-image.sarif
+          exit-code: 0
+      - uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-image
+
+      # reports, does not gate: the database moves, so the same commit goes green and red on different
+      # days. Flip exit-code to 1 once the baseline below is agreed and driven down.
+      - name: the fixable CRITICAL and HIGH in the image today
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: drillion:security
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          exit-code: 0
+          skip-setup-trivy: true

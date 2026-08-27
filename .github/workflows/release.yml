@@ -26,6 +26,8 @@ jobs:
     needs: tag-matches-version
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
     permissions:
       contents: read
       packages: write
@@ -59,6 +61,27 @@ jobs:
           subject-name: ghcr.io/${{ github.repository }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
+
+  # the image is public the moment the job above finishes; record what we shipped, in the release's
+  # own summary. Reports only — a release cannot be un-published by failing here.
+  image-scan:
+    needs: image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: ghcr.io/${{ github.repository }}@${{ needs.image.outputs.digest }}
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          format: table
+          output: trivy-release.txt
+          exit-code: 0
+      - run: '{ echo "### fixable CRITICAL/HIGH in ${GITHUB_REF_NAME}"; echo "```"; cat trivy-release.txt; echo "```"; } >> "$GITHUB_STEP_SUMMARY"'
+
   # separate from `pypi`: this job runs a third-party npm build and must never hold the PyPI credential
   dists:
     needs: tag-matches-version
