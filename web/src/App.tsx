@@ -19,7 +19,7 @@ export function useHash() {
 /** True while the keystroke belongs to something the user is typing in. */
 function typing(el: EventTarget | null) {
   const node = el as HTMLElement | null;
-  return !!node?.closest?.("input, textarea, select, [contenteditable='true'], .cm-content");
+  return !!node?.closest?.("input, textarea, select, [contenteditable='true'], .monaco-editor");
 }
 
 /** `/` anywhere goes to the catalogue and asks it, through the hash, for its search box. */
