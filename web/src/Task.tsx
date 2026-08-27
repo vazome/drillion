@@ -2,12 +2,11 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { Button, Card, Collapsible, ConflictBanner, EmptyState, LadderMeter, NoteField, NoticeBanner, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
 import { ApiError, api, post, type Task as TaskData, type RunResult } from "./api";
 import { DiffView, Editor } from "./Editor";
-import { conflictOf, useDraft } from "./useDraft";
+import { useDraft } from "./useDraft";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
 const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };
 const PLAIN = { fontWeight: 400, textTransform: "none" as const, letterSpacing: 0, ...ASIDE };
-const AUTOSAVE_MS = 800;
 const ATTEMPT_MS = 5000;    // reading the task is work: the clock starts once the page settles
 const HEARTBEAT_MS = 60_000;
 // long enough for `role="status"` to finish speaking the message before the node goes
@@ -55,16 +54,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [nudgeOff, setNudgeOff] = useState(false);
   const narrow = useSyncExternalStore(watchNarrow, isNarrow);
 
-  /** The note, against what the server last confirmed of it. The ref is what the async chain
-   *  and the unmount flush read; state alone would capture a stale closure. */
-  const noteLive = useRef({ text: "", saved: "" });
-  const [note, setNoteState] = useState({ text: "", saved: "" });
-  const setNote = useCallback((next: Partial<typeof noteLive.current>) => {
-    setNoteState({ ...Object.assign(noteLive.current, next) });
-  }, []);
-  const noteDirty = note.text !== note.saved;
-
-  const noteTimer = useRef<number | undefined>(undefined);
   const gateTimer = useRef<number | undefined>(undefined);
   const dropped = useRef(false);             // discarded here: do not re-open the attempt behind them
   const hasAttempt = !!task?.attempt;
@@ -77,14 +66,12 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     setActive(p.attempt?.active ?? 0);
     setNextHintIn(p.hints.next_in);
     setNudge(p.nudge);
-    // a note half typed when the attempt opens itself must not be replaced by the server's
-    if (noteLive.current.text === noteLive.current.saved) setNote({ text: p.note, saved: p.note });
-  }, [setNote]);
+  }, []);
 
-  const gateEditor = useCallback((message: string) => setGate({ at: "editor", message }), []);
-  const { code, dirty, syntaxBad, conflict, offer, adopt, reset, edit, landed, ensureOpen,
-    current, pending, settle, takeDisk, keepMine, discard, restore, setConflict, setSyntaxBad } =
-    useDraft(slug, onPayload, gateEditor);
+  const onSaveError = useCallback((message: string, at: "editor" | "note" = "editor") => setGate({ at, message }), []);
+  const { code, dirty, syntaxBad, conflict, offer, note, noteDirty, adopt, reset, edit, editNote,
+    landed, ensureOpen, current, pending, settle, takeDisk, keepMine, discard, restore, absorb } =
+    useDraft(slug, onPayload, onSaveError);
 
   /** A notice that says one thing and gets out of the way — the hint gate's whole UI. */
   const flash = useCallback((message: string) => {
@@ -101,23 +88,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     return () => { live = false; };
   }, [url, reset]);
 
-  /** The note's save: debounce, then one PUT. No etag and no attempt to open — one note,
-   * last write wins. */
-  const saveNote = useCallback(async (text: string) => {
-    try {
-      await api(`${url}/note`, { method: "PUT", body: JSON.stringify({ text }) });
-      if (noteLive.current.text === text) setNote({ saved: text });
-    } catch (e) {
-      setGate({ at: "note", message: `note not saved — ${(e as Error).message}` });
-    }
-  }, [url, setNote]);
-
-  const editNote = (next: string) => {
-    setNote({ text: next });
-    clearTimeout(noteTimer.current);
-    noteTimer.current = setTimeout(() => saveNote(next), AUTOSAVE_MS);
-  };
-
   // the page opens its own attempt once it has sat open; the delay skips a mis-click
   useEffect(() => {
     if (!task || hasAttempt || passed || dropped.current) return;
@@ -125,11 +95,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     return () => clearTimeout(t);
   }, [task, hasAttempt, passed, ensureOpen]);
 
-  useEffect(() => () => {
-    clearTimeout(gateTimer.current); clearTimeout(noteTimer.current);
-    // leaving mid-debounce must not eat it
-    if (noteLive.current.text !== noteLive.current.saved) saveNote(noteLive.current.text);
-  }, [saveNote]);
+  useEffect(() => () => clearTimeout(gateTimer.current), []);
 
   useEffect(() => {
     if (!dirty && !noteDirty) return;
@@ -172,10 +138,10 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
         setTask((p) => p && p.attempt ? { ...p, attempt: { ...p.attempt, attempts: r.attempts } } : p);
       }
     } catch (e) {
-      const err = e as ApiError, clash = conflictOf(err);
-      if (clash) { setConflict(clash); setResult({ state: "idle" }); }
-      else if (err.status === 400) { setSyntaxBad(true); setResult({ state: "failed", attempts: 0, headline: `${err.detail?.error}${err.detail?.line != null ? ` (line ${err.detail.line})` : ""}`, output: "" }); }
-      else { setResult({ state: "failed", attempts: 0, headline: err.message, output: "" }); }
+      const err = e as ApiError, bad = err.status === 400;
+      if (absorb(err) && !bad) setResult({ state: "idle" });      // the conflict banner has it now
+      else setResult({ state: "failed", attempts: 0, output: "",
+        headline: bad ? `${err.detail?.error}${err.detail?.line != null ? ` (line ${err.detail.line})` : ""}` : err.message });
     }
   };
 
@@ -223,8 +189,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       dropped.current = true;
       reset(p); setResult({ state: "idle" }); setGate(null); setNextSlug(null);
     } catch (e) {
-      const err = e as ApiError, clash = conflictOf(err);
-      if (clash) setConflict(clash); else setGate({ at: "editor", message: err.message });
+      const err = e as ApiError;
+      if (!absorb(err)) setGate({ at: "editor", message: err.message });
     }
   };
 
@@ -349,7 +315,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             </div>
 
             <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-              <NoteField value={note.text} onChange={editNote} dirty={noteDirty}
+              <NoteField value={note} onChange={editNote} dirty={noteDirty}
                 ariaLabel={`Your note on ${meta.title}`}
                 placeholder="What caught you out? Write it down while you still remember." />
               {notice("note")}

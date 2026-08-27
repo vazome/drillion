@@ -5,42 +5,51 @@ const AUTOSAVE_MS = 800;
 const draftKey = (slug: string) => `drillion-draft-${slug}`;
 
 /** The optimistic lock's 409, or null for any other failure. */
-export const conflictOf = ({ status, detail }: ApiError) =>
+const conflictOf = ({ status, detail }: ApiError) =>
   status === 409 && detail?.etag !== undefined && detail.code !== undefined
     ? { etag: detail.etag, code: detail.code }
     : null;
 
 /** The values the async chain reads live; state alone would capture a stale closure. */
-type Live = { code: string; saved: string; etag: string; attempt: boolean };
+type Live = { code: string; saved: string; note: string; noteSaved: string; etag: string; attempt: boolean };
 
-/** The task page's draft: the buffer against what the server last confirmed of it, the
- *  optimistic lock, the debounced save, the attempt the server wants open before it takes an
- *  edit, and the local copy that outlives a save the server never got. `onPayload` gets every
- *  task payload that passes through, `onError` a save that failed in a way worth showing;
- *  both must be stable, or `ensureOpen` and `reset` are rebuilt on every render. */
-export function useDraft(slug: string, onPayload: (p: TaskData) => void, onError: (message: string) => void) {
-  const [buf, setBuf] = useState({ code: "", saved: "" });
+const EMPTY: Live = { code: "", saved: "", note: "", noteSaved: "", etag: "", attempt: false };
+
+/** The task page's draft: the code and the note against what the server last confirmed of
+ *  them, the optimistic lock, both debounced saves, the attempt the server wants open before
+ *  it takes an edit, and the local copy that outlives a save the server never got.
+ *  `onPayload`/`onError` must be stable or `ensureOpen`/`reset` rebuild every render. */
+export function useDraft(
+  slug: string,
+  onPayload: (p: TaskData) => void,
+  onError: (message: string, at?: "editor" | "note") => void,
+) {
+  const [buf, setBuf] = useState<Live>(EMPTY);
   const [syntaxBad, setSyntaxBad] = useState(false);
   const [conflict, setConflict] = useState<{ etag: string; code: string } | null>(null);
   const [offer, setOffer] = useState<string | null>(null);
 
-  const live = useRef<Live>({ code: "", saved: "", etag: "", attempt: false });
+  const live = useRef<Live>({ ...EMPTY });
   const timer = useRef<number | undefined>(undefined);
+  const noteTimer = useRef<number | undefined>(undefined);
   const inflight = useRef<Promise<void> | null>(null);
   const opening = useRef<Promise<void> | null>(null);
   const url = `/task/${encodeURIComponent(slug)}`;
 
   const commit = useCallback((next: Partial<Live>) => {
-    const v = Object.assign(live.current, next);
-    setBuf({ code: v.code, saved: v.saved });
+    setBuf({ ...Object.assign(live.current, next) });
   }, []);
+
+  /** The server's note, unless one is part way through being typed here. */
+  const serverNote = (p: TaskData): Partial<Live> =>
+    live.current.note === live.current.noteSaved ? { note: p.note, noteSaved: p.note } : {};
 
   /** A later payload: its lock always, its code only over a buffer nobody has typed into. */
   const adopt = useCallback((p: TaskData) => {
     live.current.attempt = !!p.attempt;
     commit(live.current.code === live.current.saved
-      ? { code: p.code, saved: p.code, etag: p.etag }
-      : { saved: p.code, etag: p.etag });
+      ? { code: p.code, saved: p.code, etag: p.etag, ...serverNote(p) }
+      : { saved: p.code, etag: p.etag, ...serverNote(p) });
     onPayload(p);
   }, [commit, onPayload]);
 
@@ -48,7 +57,7 @@ export function useDraft(slug: string, onPayload: (p: TaskData) => void, onError
    *  and a stored draft about that same file is offered over it. */
   const reset = useCallback((p: TaskData) => {
     live.current.attempt = !!p.attempt;
-    commit({ code: p.code, saved: p.code, etag: p.etag });
+    commit({ code: p.code, saved: p.code, etag: p.etag, ...serverNote(p) });
     try {
       const stored = JSON.parse(localStorage.getItem(draftKey(slug)) || "null");
       setOffer(stored && stored.etag === p.etag && stored.code !== p.code ? stored.code : null);
@@ -66,6 +75,15 @@ export function useDraft(slug: string, onPayload: (p: TaskData) => void, onError
     await opening.current;
   }, [url, adopt]);
 
+  /** A failure the draft owns: a 409 becomes the conflict banner, a 400 the amber dot. */
+  const absorb = (e: unknown) => {
+    if (!(e instanceof ApiError)) return false;
+    if (e.status === 400) { setSyntaxBad(true); return true; }    // silent: an amber dot, no banner
+    const clash = conflictOf(e);
+    if (clash) { setConflict(clash); return true; }
+    return false;
+  };
+
   const save = async (sent: string, force = false) => {
     if (!live.current.etag || (!force && live.current.code === live.current.saved)) return;
     try {
@@ -73,18 +91,25 @@ export function useDraft(slug: string, onPayload: (p: TaskData) => void, onError
       const r = await api<{ etag: string }>(url, {
         method: "PUT", body: JSON.stringify({ code: sent, etag: live.current.etag }),
       });
-      commit({ saved: sent, etag: r.etag });   // typed since? then `sent` is no longer the buffer
+      commit({ saved: sent, etag: r.etag });
       setSyntaxBad(false);
     } catch (e) {
       // never rethrow: `edit()` fires this unawaited and `run()` awaits it
-      if (!(e instanceof ApiError)) { onError(`could not save — ${(e as Error).message}`); return; }
-      if (e.status === 400) setSyntaxBad(true);                       // silent: an amber dot, no banner
-      else {
-        const clash = conflictOf(e);
-        if (clash) setConflict(clash); else onError(e.message);
-      }
+      if (absorb(e)) return;
+      onError(e instanceof ApiError ? e.message : `could not save — ${(e as Error).message}`);
     }
   };
+
+  /** The note's save: debounce, then one PUT. No etag and no attempt to open — one note,
+   * last write wins. */
+  const saveNote = useCallback(async (text: string) => {
+    try {
+      await api(`${url}/note`, { method: "PUT", body: JSON.stringify({ text }) });
+      if (live.current.note === text) commit({ noteSaved: text });
+    } catch (e) {
+      onError(`note not saved — ${(e as Error).message}`, "note");
+    }
+  }, [url, commit, onError]);
 
   const edit = (next: string) => {
     commit({ code: next });
@@ -93,16 +118,27 @@ export function useDraft(slug: string, onPayload: (p: TaskData) => void, onError
     timer.current = setTimeout(() => { inflight.current = save(next); }, AUTOSAVE_MS);
   };
 
+  const editNote = (next: string) => {
+    commit({ note: next });
+    clearTimeout(noteTimer.current);
+    noteTimer.current = setTimeout(() => saveNote(next), AUTOSAVE_MS);
+  };
+
   const discard = () => {
     localStorage.removeItem(draftKey(slug));
     setOffer(null);
   };
 
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => () => {
+    clearTimeout(timer.current); clearTimeout(noteTimer.current);
+    // leaving mid-debounce must not eat it
+    if (live.current.note !== live.current.noteSaved) saveNote(live.current.note);
+  }, [slug, saveNote]);
 
   return {
     code: buf.code, dirty: buf.code !== buf.saved, syntaxBad, conflict, offer,
-    adopt, reset, edit, ensureOpen, discard, setSyntaxBad, setConflict,
+    note: buf.note, noteDirty: buf.note !== buf.noteSaved,
+    adopt, reset, edit, editNote, ensureOpen, discard, absorb,
     /** A run came back: its etag, and on a pass its archived code over the local draft. */
     landed: (etag: string, code?: string) => {
       setSyntaxBad(false);
@@ -124,7 +160,7 @@ export function useDraft(slug: string, onPayload: (p: TaskData) => void, onError
     },
     /** The save already on the wire, whose etag the caller rides. */
     pending: () => inflight.current,
-    /** The same, having called off one that has not left yet: the caller carries the code. */
+    /** The same, and cancels a save still in the debounce. */
     settle: () => { clearTimeout(timer.current); return inflight.current; },
     current: () => ({ code: live.current.code, etag: live.current.etag }),
   };
