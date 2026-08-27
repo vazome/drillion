@@ -100,10 +100,10 @@ metadata, and three shapes to weigh.
 tags: Array<{
   tag: string
   total: number         // tasks carrying the tag
+  seen: number          // tasks seen at least once
   boxes: number[]       // 7 counts: tasks with this tag sitting in each ladder box (unseen tasks are in none)
-  lapses: number        // struggled-past-the-limit events across the tag's tasks
-  due7: number          // due within the next 7 days
-  last: string | null   // date of the most recent pass on the tag
+  lapses: number        // times a card with this tag was graded struggled, summed across the tag's tasks; never resets
+  due7: number          // due within the next 7 days, overdue included
 }>
 ladder: number[]        // the seven return intervals, for labelling boxes
 ```
