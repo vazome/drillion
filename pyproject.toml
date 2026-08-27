@@ -8,6 +8,7 @@ requires-python = ">=3.13"
 # 14 tasks import boto3, moto, langchain-core, requests, responses and httpx, and run in
 # the app's own interpreter — an extras group would ship tasks that fail at import
 dependencies = [
+    "basedpyright>=1.39.10",
     "boto3>=1.43.69",
     "fastapi>=0.141.1",
     "httpx>=0.28.1",
@@ -18,7 +19,7 @@ dependencies = [
     "pyyaml>=6.0.3",
     "requests>=2.34.2",
     "responses>=0.26.2",
-    "uvicorn>=0.52.4",
+    "uvicorn[standard]>=0.52.4",
 ]
 
 [project.urls]
