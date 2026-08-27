@@ -5,6 +5,8 @@ description = "Python practice drills that come back before you forget them. Gra
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.13"
+# 14 tasks import boto3, moto, langchain-core, requests, responses and httpx, and run in
+# the app's own interpreter — an extras group would ship tasks that fail at import
 dependencies = [
     "boto3>=1.43.69",
     "fastapi>=0.141.1",
