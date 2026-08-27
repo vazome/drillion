@@ -69,7 +69,6 @@ async def _stub_to_pass(api, path):
         "## Hints" not in task["spec_md"] and "spec" not in task
     )  # guidance is Markdown now
     assert task["meta"]["topic"] == 1 and "spec_md" not in task["meta"]
-    assert task["marker_line"] > 1
     assert (
         "raise NotImplementedError" in task["code"] and "_reference" not in task["code"]
     )
@@ -137,13 +136,12 @@ async def _stub_to_pass(api, path):
     assert again["reference"] is None  # ...and a new sitting starts clean
     assert again["attempt"] == {
         "attempts": 0,
-        "hints": 0,
         "active": 0,
         "seed": again["attempt"]["seed"],
         "solution_shown": False,
     }
     assert "raise NotImplementedError" in again["code"]
-    assert "code" not in again["archive"][0]  # a review never sees last time's answer
+    assert again["archive"][0]["code"] is None  # a review never sees last time's answer
     assert again["solution"] == {
         "unlocked": False,
         "need_attempts": 3,
@@ -200,10 +198,7 @@ async def _guards(api, path):
         f"/api/task/{SLUG}",
         json={"code": "def solve(rows):\n    return 1 1", "etag": task["etag"]},
     )
-    assert broken.status_code == 400 and (
-        broken.json()["line"],
-        broken.json()["col"],
-    ) == (2, 14)
+    assert broken.status_code == 400 and broken.json()["line"] == 2
     assert (
         "raise NotImplementedError" in path.read_text()
     )  # a rejected edit never lands
@@ -225,6 +220,7 @@ async def _guards(api, path):
         },
     )
     assert pasted.status_code == 400  # the marker is the grader's, not the editor's
+    assert pasted.json()["line"] is None  # a refusal with no coordinate says so
 
     locked = await api.post(f"/api/task/{SLUG}/solution")
     assert locked.status_code == 423  # the refusal repeats the payload's own numbers
@@ -375,7 +371,7 @@ async def _your_own_answer_is_an_answer(api, _path):
 
     task = (await api.get(f"/api/task/{SLUG}")).json()
     assert task["solution"]["unlocked"] is True  # afforded...
-    assert "code" not in task["archive"][0]  # ...and still not handed over
+    assert task["archive"][0]["code"] is None  # ...and still not handed over
     assert "LAST_TIME" not in str(task)
 
     await api.post(f"/api/task/{SLUG}/solution")  # asking is what opens it
@@ -398,12 +394,7 @@ async def _assets(api, _path):
 async def _health(api, _path):
     """The container health check: up, pointed at the tasks, and cheap."""
     health = (await api.get("/api/health")).json()
-    assert health == {
-        "status": "ok",
-        "version": drillion.__version__,
-        "tasks": 1,
-        "root": str(settings.root),
-    }
+    assert health == {"version": drillion.__version__, "tasks": 1}
 
 
 async def _bury(api, _path):

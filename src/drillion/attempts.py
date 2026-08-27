@@ -191,9 +191,7 @@ def attempt_view(o, hints):
     if o and shown < len(hints):
         next_in = max(0, HINT_GAP * (shown + 1) - o["active"]) if shown else 0
     return {
-        "attempt": {
-            k: o[k] for k in ("attempts", "hints", "active", "seed", "solution_shown")
-        }
+        "attempt": {k: o[k] for k in ("attempts", "active", "seed", "solution_shown")}
         if o
         else None,
         "nudge": nudge_due(o),

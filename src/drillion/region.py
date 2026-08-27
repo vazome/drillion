@@ -13,11 +13,11 @@ _MARKER_HEAD = "# ══ machinery"
 
 
 class Invalid(Exception):
-    """A rejected edit. line/col are 1-based editor coordinates when known."""
+    """A rejected edit. `line` is a 1-based editor line when known."""
 
-    def __init__(self, msg, line=None, col=None):
+    def __init__(self, msg, line=None):
         super().__init__(msg)
-        self.msg, self.line, self.col = msg, line, col
+        self.msg, self.line = msg, line
 
 
 def _solve(tree):
@@ -67,9 +67,7 @@ def stub(body):
     first = fn.body[0]
     pre = lines[first.lineno - 1][: first.col_offset]
     if pre.strip():  # `def solve(x): return x` — no room for a stub body
-        raise Invalid(
-            "put solve()'s body on its own line", first.lineno, first.col_offset + 1
-        )
+        raise Invalid("put solve()'s body on its own line", first.lineno)
     return "\n".join(lines[: first.lineno - 1] + [pre + "raise NotImplementedError"])
 
 
@@ -86,7 +84,7 @@ def etag(disk_src):
 
 
 def validate(edited, disk_src):
-    """The write gate: return the new file source, or raise Invalid(msg, line, col)."""
+    """The write gate: return the new file source, or raise Invalid(msg, line)."""
     if not edited.strip():
         raise Invalid("write something in solve() first")
     if _MARKER_HEAD in edited:
@@ -94,7 +92,7 @@ def validate(edited, disk_src):
     try:
         tree = ast.parse(edited)
     except SyntaxError as err:
-        raise Invalid(err.msg, err.lineno, err.offset) from None
+        raise Invalid(err.msg, err.lineno) from None
     solves = [
         n
         for n in tree.body
@@ -112,11 +110,7 @@ def validate(edited, disk_src):
                 )
     for node in ast.walk(tree):
         if isinstance(node, ast.Name) and node.id == "_reference":
-            raise Invalid(
-                "_reference is the answer — write your own",
-                node.lineno,
-                node.col_offset + 1,
-            )
+            raise Invalid("_reference is the answer — write your own", node.lineno)
     stub(edited)  # a pass rewrites the file to the stub: it must be possible
     new_src = splice(disk_src, edited)
     try:

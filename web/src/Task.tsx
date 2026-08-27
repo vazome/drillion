@@ -233,7 +233,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     } catch (e) {
       const err = e as ApiError, clash = conflictOf(err);
       if (clash) { setConflict(clash); setResult({ state: "idle" }); }
-      else if (err.status === 400) { setSyntaxBad(true); setResult({ state: "failed", attempts: 0, headline: `${err.detail?.error} (line ${err.detail?.line})`, output: "" }); }
+      else if (err.status === 400) { setSyntaxBad(true); setResult({ state: "failed", attempts: 0, headline: `${err.detail?.error}${err.detail?.line != null ? ` (line ${err.detail.line})` : ""}`, output: "" }); }
       else { setResult({ state: "failed", attempts: 0, headline: err.message, output: "" }); }
     }
   };
