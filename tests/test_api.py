@@ -10,7 +10,7 @@ import httpx
 
 import drillion
 from drillion import region, scheduler, state
-from drillion.api import MAX_BODY, WINDOW, _practised, _recent, app
+from drillion.api import MAX_BODY, _recent, app
 from drillion.catalogue import tasks
 from drillion.settings import settings
 
@@ -124,8 +124,7 @@ async def _stub_to_pass(api, path):
 
     st = state.load()
     assert st["open"] == {} and [e["slug"] for e in st["log"]] == [SLUG]
-    # only the card that was graded: `card()` fills blanks in place
-    assert list(st["cards"]) == [SLUG]
+    assert list(st["cards"]) == [SLUG]  # only the card that was graded reaches the file
     assert PASSING in st["archive"][SLUG][0]["code"]
 
     done = (await api.get(f"/api/task/{SLUG}")).json()
@@ -663,24 +662,6 @@ def test_an_empty_new_picks_band_carries_its_one_reason():
     _api(_why_no_new, extra=(PREREQ, GATED))
 
 
-def test_the_practice_count_is_a_rolling_window_not_a_streak():
-    """A day counts if anything was archived on it — a pass, or an attempt given up on."""
-
-    def day(n):
-        return (date.today() - timedelta(days=n)).isoformat()  # noqa: DTZ011
-
-    st = {
-        "archive": {
-            "a": [{"date": day(0)}, {"date": day(0)}],  # twice in a day is one day
-            "b": [{"date": day(2)}, {"date": day(WINDOW - 1)}],
-        }
-    }
-    assert _practised(st) == 3
-    st["archive"]["c"] = [{"date": day(WINDOW)}]  # one day past the edge
-    assert _practised(st) == 3
-    assert _practised({"archive": {}}) == 0
-
-
 def test_recent_activity_is_the_week_most_recent_first():
     """Distinct slugs, newest first, capped by the window rather than by a count — and never
     filtered against today's queue."""
@@ -693,7 +674,7 @@ def test_recent_activity_is_the_week_most_recent_first():
         "archive": {
             "001_a": [{"date": day(3)}, {"date": day(1), "grade": "pass"}],
             "002_b": [{"date": day(2)}],
-            "003_c": [{"date": day(WINDOW)}],  # a day past the window
+            "003_c": [{"date": day(scheduler.WINDOW)}],  # a day past the window
             "004_d": [{"date": day(0)}],
             "009_gone": [{"date": day(0)}],
         },
