@@ -5,8 +5,8 @@ import { join, resolve } from "node:path";
 export const repoRoot = resolve(import.meta.dirname, "..");
 
 /** The content root the server under test is given: a throwaway copy of `tasks/`, never
- *  the checkout, which a run would write into. Override with DRILLION_E2E_ROOT so two
- *  checkouts can run at once. */
+ *  the checkout, which a run would write into. DRILLION_E2E_ROOT gives a run its own copy
+ *  and its own `progress.json`; a concurrent run needs DRILLION_PORT too. */
 export const scratchRoot = process.env.DRILLION_E2E_ROOT ?? join(tmpdir(), "drillion-e2e-root");
 
 /** 8766, not the app's 8765, so a run never collides with a dev server someone left up.

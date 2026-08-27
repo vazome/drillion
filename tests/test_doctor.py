@@ -2,10 +2,9 @@
 
 import shutil
 
-from conftest import README, TASK, tasks_root
-
 from drillion import doctor
 from drillion.settings import settings
+from tests.fixtures import README, TASK, tasks_root
 
 
 def _reasons(**folders):

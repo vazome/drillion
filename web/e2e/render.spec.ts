@@ -19,6 +19,11 @@ test("every task in the catalogue renders", async ({ page }) => {
     await page.goto(`/#/task/${slug}`);
     // the button lives below the spec pane, so it is only there once the spec rendered
     await expect(page.getByRole("button", { name: "Run tests" })).toBeVisible();
+    // ...and that the spec rendered as Markdown: every README is contract-tested to carry
+    // `## ` headings, and a callout must never reach the page as its literal marker
+    const html = await page.locator("main").innerHTML();
+    if (!html.includes("<h2") || /\[!(NOTE|TIP|WARNING|IMPORTANT|CAUTION)\]/.test(html))
+      problems.push(`${slug}: spec did not render as Markdown`);
   }
   expect(problems.join("\n")).toBe("");
 });

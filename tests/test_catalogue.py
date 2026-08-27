@@ -3,10 +3,9 @@
 import os
 import shutil
 
-from conftest import README, TASK, tasks_root
-
 from drillion import catalogue
 from drillion.settings import settings
+from tests.fixtures import README, TASK, tasks_root
 
 DIRS = sorted(p for p in settings.tasks_dir.iterdir() if (p / "task.py").exists())
 
