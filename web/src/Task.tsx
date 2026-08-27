@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Button, Card, Collapsible, ConflictBanner, EmptyState, LadderMeter, NoticeBanner, ResultBanner, SpecText, StatusBadge, TagChip, Timer, StuckNudge } from "./ds/index.js";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { Button, Card, Collapsible, ConflictBanner, EmptyState, LadderMeter, NoteField, NoticeBanner, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
 import { ApiError, api, post, type Task as TaskData, type RunResult } from "./api";
-import { Editor } from "./Editor";
+import { DiffView, Editor } from "./Editor";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
 const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };
@@ -12,6 +12,16 @@ const HEARTBEAT_MS = 60_000;
 // long enough for `role="status"` to finish speaking the message before the node goes
 const GATE_MS = 4000;
 const draftKey = (slug: string) => `drillion-draft-${slug}`;
+/** Below this the two panes stack, spec first. A tablet is for reading a spec and running it,
+ *  never for writing code side by side. Both arguments are module constants: rebuilt every
+ *  render, they would make `useSyncExternalStore` re-subscribe every render. */
+const NARROW = "(max-width: 999px)";
+const watchNarrow = (onChange: () => void) => {
+  const q = matchMedia(NARROW);
+  q.addEventListener("change", onChange);
+  return () => q.removeEventListener("change", onChange);
+};
+const isNarrow = () => matchMedia(NARROW).matches;
 const secs = (n: number) => n >= 60 ? `${Math.floor(n / 60)}m${String(n % 60).padStart(2, "0")}s` : `${n}s`;
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
@@ -56,6 +66,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [nudgeOff, setNudgeOff] = useState(false);
   const [note, setNote] = useState("");
   const [noteDirty, setNoteDirty] = useState(false);
+  const narrow = useSyncExternalStore(watchNarrow, isNarrow);
 
   // Refs carry the live values into the async chain; state alone would capture a stale closure.
   const codeRef = useRef(""), etagRef = useRef(""), dirtyRef = useRef(false);
@@ -324,6 +335,11 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   /** Peeked this sitting or earned by passing; `solution_shown` survives a reload, and still costs. */
   const peeked = !!attempt?.solution_shown;
   const flagged = task.lapses >= task.lapse_limit;
+  /** The code to diff against the reference: this sitting's pass, else the last archived one.
+   *  A peek has no passing code of its own, and an abandoned draft is archived with code too. */
+  const mine = passed ? result.code
+    : peeked ? ""
+    : task.archive.filter((a) => a.code && a.grade !== "abandoned").at(-1)?.code ?? "";
   /** The gate banner, under the control that raised it. The container stays in the tree so
    * screen readers have a live region to announce into. */
   const notice = (at: Exclude<Gate, null>["at"]) => (
@@ -339,21 +355,21 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   return (
     <div style={{ maxWidth: 1500, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
-        <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)" }}>{meta.topic}</span>
+        <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)" }}>{String(meta.topic).padStart(3, "0")}</span>
         <h1 style={{ margin: 0, fontSize: "var(--fs-h)", fontWeight: 600 }}>{meta.title}</h1>
         <StatusBadge status={task.status} />
         <StatusBadge status={meta.difficulty} />
+        <RowFlags buried={task.buried} lapses={task.lapses} lapseLimit={task.lapse_limit} />
         <div style={{ flex: 1 }} />
         {meta.track ? <TagChip label={meta.track} small /> : null}
-        <span title={`${meta.tier}/${meta.tags.join(" ")}`} style={{ fontFamily: "var(--font-mono)", fontSize: 12.5 }}>
-          <span style={{ color: "var(--text-faint)" }}>{meta.tier}/</span>
-          <span style={{ color: "var(--text-muted)" }}>{meta.tags.join(" · ")}</span>
-        </span>
+        <TaskPath tier={meta.tier} tags={meta.tags} />
         {meta.source ? <span style={ASIDE}>{meta.source}</span> : null}
       </div>
 
-      <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
-        <div style={{ width: "42%", minWidth: 340, maxWidth: "70%", maxHeight: "calc(100vh - 148px)", overflow: "auto", resize: "horizontal" }}>
+      <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", gap: 20, alignItems: narrow ? "stretch" : "flex-start" }}>
+        <div style={narrow
+          ? { width: "auto" }
+          : { width: "42%", minWidth: 340, maxWidth: "70%", maxHeight: "calc(100vh - 148px)", overflow: "auto", resize: "horizontal" }}>
           <Card label={`Spec · ${slug}/README.md`}>
             <SpecText text={task.spec_md} slug={slug} hideTitle />
 
@@ -392,8 +408,12 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                 <div style={{ display: "grid", gap: 8 }}>
                   {peeked
                     ? <NoticeBanner message="Solution shown — this pass won’t promote the card. It grades as struggled and stays in its box." actions={[]} />
-                    : <div style={ASIDE}>The reference answer, for comparison with what you wrote. It closes again when this card comes back.</div>}
-                  <SpecText text={"```python\n" + reference + "\n```"} slug={slug} />
+                    : <div style={ASIDE}>{mine
+                        ? "Your solution on the left, the reference on the right. It closes again when this card comes back."
+                        : "The reference answer, for comparison with what you wrote. It closes again when this card comes back."}</div>}
+                  {mine
+                    ? <DiffView mine={mine} reference={reference} dark={dark} maxHeight="46vh" />
+                    : <SpecText text={"```python\n" + reference + "\n```"} slug={slug} />}
                 </div>
               ) : (
                 <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
@@ -405,17 +425,9 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             </div>
 
             <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-              <div style={{ ...LABEL, marginBottom: 10 }}>
-                Note <span style={PLAIN}>· {noteDirty ? "unsaved" : "yours, kept with the task"}</span>
-              </div>
-              {/* ds/ has no multi-line field: plain element, DS tokens, the browser's focus ring */}
-              <textarea value={note} onChange={(e) => editNote(e.target.value)} rows={3}
-                aria-label={`Your note on ${meta.title}`}
-                placeholder="What caught you out? Write it down while you still remember."
-                style={{ width: "100%", boxSizing: "border-box", resize: "vertical", display: "block",
-                  fontFamily: "var(--font-sans)", fontSize: 14, lineHeight: 1.55, padding: "8px 12px",
-                  borderRadius: "var(--radius)", border: "1px solid var(--border-strong)",
-                  background: "var(--surface-2)", color: "var(--text)" }} />
+              <NoteField value={note} onChange={editNote} dirty={noteDirty}
+                ariaLabel={`Your note on ${meta.title}`}
+                placeholder="What caught you out? Write it down while you still remember." />
               {notice("note")}
             </div>
 
@@ -435,7 +447,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
           </Card>
         </div>
 
-        <div style={{ flex: 1, minWidth: 420, display: "grid", gap: 12 }}>
+        <div style={{ flex: 1, minWidth: narrow ? 0 : 420, display: "grid", gap: 12 }}>
           {conflict ? <div className="m-drop"><ConflictBanner detail="Your draft and the file on disk have diverged." onReload={takeDisk} onKeep={keepMine} /></div> : null}
           {draftOffer ? (
             <div className="m-drop">
@@ -448,7 +460,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
           ) : null}
           {notice("editor")}
           {nudge && !nudgeOff && !passed ? (
-            <div style={{ position: "fixed", right: 24, bottom: 24, zIndex: 30 }}>
+            <div style={{ position: "fixed", right: 24, left: narrow ? 24 : undefined, bottom: 24, zIndex: 30 }}>
               <StuckNudge minutes={Math.round(active / 60)} hintsShown={hints.shown.length} hintsTotal={hints.total} hintReady={hintReady}
                 onHint={() => { setNudgeOff(true); hint(); }} onBury={buryAndLeave} onDismiss={() => setNudgeOff(true)} />
             </div>
@@ -478,7 +490,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             )}
           </div>
 
-          <Editor value={code} onChange={edit} onRun={run} readOnly={passed} dark={dark} height="calc(100vh - 364px)" />
+          <Editor value={code} onChange={edit} onRun={run} readOnly={passed} dark={dark} height={narrow ? "60vh" : "calc(100vh - 364px)"} />
 
           <Card label={resultNo ? `Result · attempt ${resultNo}` : "Result"} padding={16}>
             {/* the region stays mounted and only the banner inside it is keyed: a live region

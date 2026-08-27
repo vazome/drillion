@@ -44,12 +44,20 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await page.keyboard.insertText(SOLUTION);
   await run.click();
   await expect(page.getByRole("button", { name: "Back to Today" })).toBeVisible();
+  // the spec pane scrolls on its own, and the diff against the reference is the point of the shot
+  await page.locator(".cm-mergeView").scrollIntoViewIfNeeded();
   await shot(page, "4-task-tests-passed");
 
   // Last, so the ladder and the session table have something in them.
   await page.goto("/#/progress");
   await expect(page.getByText("The ladder", { exact: true })).toBeVisible();
   await shot(page, "5-progress");
+
+  // The panes stack below 1000px. After the others, so each of those keeps the fixed viewport.
+  await page.setViewportSize({ width: 900, height: 1200 });
+  await page.goto(`/#/task/${SLUG}`);
+  await expect(page.getByRole("button", { name: "Run tests" })).toBeVisible();
+  await shot(page, "6-task-tablet");
 });
 
 test("the run cannot have touched the repository's own state", () => {

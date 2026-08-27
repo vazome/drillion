@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
 import { indentUnit } from "@codemirror/language";
-import { EditorView, keymap } from "@codemirror/view";
+import { MergeView } from "@codemirror/merge";
+import { EditorView, keymap, lineNumbers } from "@codemirror/view";
 import { createTheme } from "@uiw/codemirror-themes";
 import { tags as t } from "@lezer/highlight";
 
@@ -50,5 +51,40 @@ export function Editor({ value, onChange, onRun, readOnly, dark, height }: {
       basicSetup={{ foldGutter: false, highlightActiveLine: !readOnly }}
       style={{ fontSize: "var(--fs-code)", border: "1px solid var(--border)", borderRadius: "var(--radius)", overflow: "hidden" }}
     />
+  );
+}
+
+/** The merge view's own colours as design tokens, so `.dark` flips them with the rest of the
+ *  page. Each selector matches the package base theme's specificity and is mounted after it.
+ *  Accent rather than pass/fail on both sides: on this page those two mean the tests failed or
+ *  passed, and the left pane is code that passed. */
+const mergeTheme = EditorView.theme({
+  "&.cm-merge-a .cm-changedLine": { backgroundColor: "var(--accent-tint)" },
+  "&.cm-merge-b .cm-changedLine": { backgroundColor: "var(--accent-tint)" },
+  "&.cm-merge-a .cm-changedText": { background: "linear-gradient(var(--accent-line), var(--accent-line)) bottom/100% 2px no-repeat" },
+  "&.cm-merge-b .cm-changedText": { background: "linear-gradient(var(--accent-line), var(--accent-line)) bottom/100% 2px no-repeat" },
+  "&.cm-merge-a .cm-changedLineGutter": { background: "var(--accent-line)" },
+  "&.cm-merge-b .cm-changedLineGutter": { background: "var(--accent-line)" },
+});
+
+/** Two read-only panes with the changed lines marked: what the learner wrote on the left,
+ *  the reference on the right. Shares the editor's theme, so the two read as one surface. */
+export function DiffView({ mine, reference, dark, maxHeight }: {
+  mine: string; reference: string; dark: boolean; maxHeight: string;
+}) {
+  const host = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const parent = host.current;
+    if (!parent) return;
+    const extensions = [
+      python(), lineNumbers(), EditorView.lineWrapping,
+      EditorView.editable.of(false), themeFromTokens(dark), mergeTheme,
+    ];
+    const view = new MergeView({ a: { doc: mine, extensions }, b: { doc: reference, extensions }, parent });
+    return () => view.destroy();
+  }, [mine, reference, dark]);
+  return (
+    <div ref={host} style={{ maxHeight, overflow: "auto", fontSize: "var(--fs-code)",
+      border: "1px solid var(--border)", borderRadius: "var(--radius)" }} />
   );
 }
