@@ -54,7 +54,6 @@ exclude = [
     "/web/node_modules",
     "/web/screenshots",
     "/web/test-results",
-    "/web/.check.bundle.mjs",
     "*.tsbuildinfo",
 ]
 
@@ -79,6 +78,6 @@ exclude = ["tasks/**", "*.md"]
 
 [tool.pytest.ini_options]
 python_files = ["task.py", "test_*.py"]
-testpaths = ["tests", "tasks"]
-pythonpath = ["tasks"]
+testpaths = ["tests"]
+pythonpath = ["tasks", "tests"]  # `conftest` is importable, not just collected
 addopts = "--import-mode=importlib"

@@ -1,5 +1,7 @@
 """Runner: pytest output turned into editor coordinates, and the selfcheck splice."""
 
+import shutil
+
 from drillion import runner
 from drillion.settings import settings
 
@@ -91,3 +93,25 @@ def test_a_failure_names_the_task_the_short_way(tmp_path, monkeypatch):
     text = runner.summarise(out, marker_line=1)["output"]
     assert "../tasks/001_fstrings/task.py" in text
     assert "task.py" not in text.replace("../tasks/001_fstrings/task.py", ""), text
+
+
+def test_selfcheck_solves_each_task_with_its_own_reference(
+    tmp_path, monkeypatch, capsys
+):
+    """A scratch root of two real tasks, not all 171: each is spliced to call `_reference`,
+    every splice is cleaned up, and a task that fails comes back named."""
+    source = settings.tasks_dir
+    monkeypatch.setattr(settings, "root", tmp_path)
+    (tmp_path / "tasks").mkdir()
+    shutil.copy(source / "_lib.py", tmp_path / "tasks" / "_lib.py")
+    for slug in ("001_fstrings", "002_slicing"):
+        shutil.copytree(source / slug, tmp_path / "tasks" / slug)
+
+    assert runner.selfcheck() == 0
+    assert "2/2 ok" in capsys.readouterr().out
+    assert not list(tmp_path.rglob("_selfcheck.py"))
+
+    task = tmp_path / "tasks" / "001_fstrings" / "task.py"
+    task.write_text(task.read_text() + "\n\ndef test_broken():\n    assert False\n")
+    assert runner.selfcheck() == 1
+    assert "FAILED 001_fstrings" in capsys.readouterr().out

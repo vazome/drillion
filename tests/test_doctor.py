@@ -1,48 +1,16 @@
 """doctor: every reason a task folder would be skipped, and never just the first one."""
 
 import shutil
-import tempfile
-from pathlib import Path
 
-from drillion import doctor, region
+from conftest import README, TASK, tasks_root
+
+from drillion import doctor
 from drillion.settings import settings
-
-README = """\
----
-title: A test task
-difficulty: easy
-tier: core
-minutes: 7
-prereqs: []
-tags: [core]
----
-# A test task
-
-## Why
-Because.
-
-## Hints
-### Hint 1
-one
-### Hint 2
-two
-### Hint 3
-three
-"""
-TASK = (
-    "def solve(x):\n    raise NotImplementedError\n\n\n"
-    f"{region.MARKER}\nfrom _lib import rng  # noqa: E402\n\n\n"
-    "def _reference(x):\n    return x\n\n\ndef test_solve():\n    assert rng()\n"
-)
 
 
 def _reasons(**folders):
     """{folder: [reason]} from a throwaway tasks/ root of {folder: {file: text}}."""
-    tmp, keep = Path(tempfile.mkdtemp(prefix="drillion_doc_")), settings.root
-    for name, files in folders.items():
-        (tmp / "tasks" / name).mkdir(parents=True)
-        for fname, text in files.items():
-            (tmp / "tasks" / name / fname).write_text(text)
+    tmp, keep = tasks_root(**folders), settings.root
     try:
         settings.root = tmp
         out = {}
