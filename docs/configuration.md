@@ -39,8 +39,8 @@ docker run -d --name drillion -p 127.0.0.1:8765:8765 -v drillion:/data \
 The named volume outlives the container: upgrading is `docker pull` and start again, and your
 progress is still there. `latest` follows the newest release; name a version —
 `ghcr.io/vazome/drillion:0.1.0` — to stay put. [compose.yaml](../compose.yaml) is that same run
-spelled out, and needs nothing else from the repo: save the one file anywhere and
-`docker compose up -d`.
+spelled out, plus `restart: unless-stopped` so it survives a reboot: save the one file anywhere
+and `docker compose up -d`.
 
 To keep those files in a directory you can open, bind-mount one and hand the container your own
 uid — it runs as uid 1000 and cannot write a directory Docker made for root:
