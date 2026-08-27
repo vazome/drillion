@@ -1,4 +1,5 @@
 import React from "react";
+import { Tip } from "./Tip.jsx";
 /* Due-load forecast — 14 bars, today marked, the cap as a quiet line. */
 export function DueForecast({ forecast = [], cap = 12, today, style }) {
   const start = new Date((today || new Date().toISOString().slice(0, 10)) + "T00:00:00");
@@ -14,18 +15,11 @@ export function DueForecast({ forecast = [], cap = 12, today, style }) {
     : "Due-load forecast, " + cap + " reviews a day. " + dates.map((d, i) => fmt(d) + " " + forecast[i]).join(", ") + ".";
   const [tip, setTip] = React.useState(null);
   const show = (e, text) => setTip({ text, x: e.currentTarget.offsetLeft + e.currentTarget.offsetWidth / 2 });
-  /* Keep the bubble inside the card: clamp its centre once it has measured itself. */
-  const clamp = (el) => {
-    if (!el || !tip) return;
-    const w = el.offsetWidth / 2 + 2;
-    const room = (el.offsetParent || el.parentElement).clientWidth;
-    el.style.left = Math.min(Math.max(tip.x, w), Math.max(w, room - w)) + "px";
-  };
 
   return (
     <div style={style}>
       <div role="img" aria-label={aria} style={{ position: "relative", paddingRight: 54 }} onMouseLeave={() => setTip(null)}>
-        {tip ? <div ref={clamp} style={{ position: "absolute", left: tip.x, top: -6, transform: "translate(-50%, -100%)", pointerEvents: "none", zIndex: 2, whiteSpace: "nowrap", fontSize: 12.5, padding: "5px 9px", borderRadius: "var(--radius-sm)", background: "var(--text)", color: "var(--bg)", boxShadow: "0 2px 8px rgba(0,0,0,.18)" }}>{tip.text}</div> : null}
+        {tip ? <Tip text={tip.text} x={tip.x} /> : null}
         <div style={{ display: "flex", alignItems: "flex-end", gap: 6 }}>
           {forecast.map((n, i) => {
             const isToday = i === 0;
@@ -33,7 +27,7 @@ export function DueForecast({ forecast = [], cap = 12, today, style }) {
             const base = n - over;
             const text = n + (n === 1 ? " task" : " tasks") + " due " + (isToday ? "today, " : "") + fmt(dates[i]) + (over > 0 ? " · " + over + " over the cap" : "");
             return (
-              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "stretch" }} aria-label={text} onMouseEnter={(e) => show(e, text)}>
+              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "stretch" }} title={text} onMouseEnter={(e) => show(e, text)}>
                 <div style={{ ...mono, height: 17, fontSize: 11.5, textAlign: "center", color: isToday ? "var(--accent)" : "transparent" }}>{n}</div>
                 <div style={{ height: H, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
                   {over > 0 ? <div style={{ height: px(over), borderRadius: "3px 3px 0 0", border: "1px solid var(--accent-line)", borderBottom: "none", background: "repeating-linear-gradient(135deg, var(--accent-line) 0 2px, transparent 2px 5px)" }} /> : null}

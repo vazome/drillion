@@ -1,4 +1,5 @@
 import React from "react";
+import { Tip } from "./Tip.jsx";
 /* Practice heatmap — 53 weeks × 7 days, four intensity steps off the accent. */
 const HEAT = ["var(--surface-2)", "var(--accent-tint)", "color-mix(in srgb, var(--accent) 45%, var(--surface))", "var(--accent)"];
 const heatLevel = (n) => (!n ? 0 : n <= 3 ? 1 : n <= 8 ? 2 : 3);
@@ -41,18 +42,11 @@ export function PracticeHeatmap({ days = {}, today, style, cell, gap = 4 }) {
   const track = { display: "grid", gridTemplateColumns: "repeat(53, minmax(0, 1fr))", gap: gap + "px" };
   const [tip, setTip] = React.useState(null);
   const show = (e, text) => setTip({ text, x: e.currentTarget.offsetLeft + e.currentTarget.offsetWidth / 2, y: e.currentTarget.offsetTop });
-  /* Keep the bubble inside the card: clamp its centre once it has measured itself. */
-  const clamp = (el) => {
-    if (!el || !tip) return;
-    const w = el.offsetWidth / 2 + 2;
-    const room = (el.offsetParent || el.parentElement).clientWidth;
-    el.style.left = Math.min(Math.max(tip.x, w), Math.max(w, room - w)) + "px";
-  };
 
   return (
     <div style={style} ref={box}>
       <div role="img" aria-label={aria} style={{ display: "flex", gap: 8, position: "relative" }} onMouseLeave={() => setTip(null)}>
-        {tip ? <div ref={clamp} style={{ position: "absolute", left: tip.x, top: tip.y - 8, transform: "translate(-50%, -100%)", pointerEvents: "none", zIndex: 2, whiteSpace: "nowrap", fontSize: 12.5, padding: "5px 9px", borderRadius: "var(--radius-sm)", background: "var(--text)", color: "var(--bg)", boxShadow: "0 2px 8px rgba(0,0,0,.18)" }}>{tip.text}</div> : null}
+        {tip ? <Tip text={tip.text} x={tip.x} y={tip.y} /> : null}
         <div style={{ display: "grid", gridTemplateRows: "14px repeat(7, " + size + "px)", gap: gap + "px", fontSize: 10, color: "var(--text-faint)", width: 20, justifyItems: "end", alignItems: "center" }}>
           <div /><div /><div>M</div><div /><div>W</div><div /><div>F</div><div />
         </div>
@@ -65,7 +59,7 @@ export function PracticeHeatmap({ days = {}, today, style, cell, gap = 4 }) {
               const future = d > end;
               const n = days[iso(d)] || 0;
               const text = n === 0 ? "No practice on " + fmt(d) : n + (n === 1 ? " pass" : " passes") + " on " + fmt(d);
-              return <div key={iso(d)} aria-label={future ? undefined : text} onMouseEnter={future ? undefined : (e) => show(e, text)}
+              return <div key={iso(d)} title={future ? undefined : text} onMouseEnter={future ? undefined : (e) => show(e, text)}
                 style={{ height: size, borderRadius: size > 14 ? 3 : 2, visibility: future ? "hidden" : "visible", background: HEAT[heatLevel(n)], boxShadow: n === 0 ? "none" : "inset 0 0 0 1px var(--accent-line)" }} />;
             }))}
           </div>

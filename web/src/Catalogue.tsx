@@ -54,11 +54,16 @@ function noPicks(no: NonNullable<Payload["today"]["no_new"]>, today: Payload["to
       act: "focus" as const,
       message: <>Nothing unseen is left under the focus “{focus}” — every task it covers is already started.</>,
     };
-    default: return {
+    case "done": return {
       act: null,
       message: <>Nothing unseen is left: you have opened every task in the catalogue. Reviews are the work now.</>,
     };
+    case "buried": return {
+      act: null,
+      message: <>Every task that was up next is buried. Unbury one to carry on.</>,
+    };
   }
+  return no satisfies never;
 }
 
 /** "4 days overdue" / "due today" / "due in 3 days" / "never seen". */
@@ -172,55 +177,51 @@ function SortHead({ label, col, align, sort, onSort, style }: {
   );
 }
 
-let focusSearchBox: (() => void) | null = null;
-let searchWanted = false;
-
-/** `/` from anywhere: focus the catalogue's search box, now or as soon as the page mounts. */
-export function focusSearch() {
-  if (focusSearchBox) focusSearchBox();
-  else searchWanted = true;
-}
-
-/** The tag whose tasks keep beating you: the one with the most flagged tasks, at least two. */
-function worstTag(rows: Row[], limit: number) {
-  if (!limit) return null;
-  const flagged = new Map<string, number>(), lapses = new Map<string, number>();
-  for (const row of rows) for (const tag of row.tags) {
-    lapses.set(tag, (lapses.get(tag) ?? 0) + row.lapses);
-    if (row.lapses >= limit) flagged.set(tag, (flagged.get(tag) ?? 0) + 1);
-  }
-  const worst = [...flagged].filter(([, n]) => n >= 2)
-    .sort((a, b) => b[1] - a[1] || (lapses.get(b[0]) ?? 0) - (lapses.get(a[0]) ?? 0) || a[0].localeCompare(b[0]))[0];
-  return worst ? { tag: worst[0], flagged: worst[1] } : null;
-}
+/** The query of `#/?…`, the page's one inbox: `q` from the `/` key, `tag` from a progress link. */
+const inbox = () => new URLSearchParams(location.hash.split("?")[1] ?? "");
 
 export function Catalogue() {
   const [data, setData] = useState<Payload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
-  // `#/?tag=x` is the progress page's way in: read once, then back to a plain `#/` so the
-  // header link lights up and a reload or Clear does not bring the filter back
-  const [activeTags, setActiveTags] = useState<string[]>(() => new URLSearchParams(location.hash.split("?")[1] ?? "").getAll("tag"));
-  useEffect(() => { if (location.hash.includes("?")) location.replace("#/"); }, []);
+  const [activeTags, setActiveTags] = useState<string[]>(() => inbox().getAll("tag"));
   const [notice, setNotice] = useState<string | null>(null);
   const [sort, setSort] = useState<Sort>(DEFAULT_SORT);
   const [firstRun, setFirstRun] = useState(() => !localStorage.getItem(FIRST_RUN));
   const searchBox = useRef<HTMLSpanElement>(null);
+  const wantSearch = useRef(inbox().has("q"));
 
   const load = useCallback(() => api<Payload>("/catalogue").then(setData).catch((e) => setError(e.message)), []);
   useEffect(() => { load(); }, [load]);
 
-  // the box only exists once the payload has rendered, so a `/` pressed on the task page waits
-  const ready = !!data;
+  // the box exists only once the payload has rendered, so a `/` from another route waits
+  const focusSearch = () => {
+    const box = searchBox.current?.querySelector("input");
+    if (box) { wantSearch.current = false; box.focus(); }
+  };
+
+  // the mount read the hash above; this is the same inbox arriving while the page is up
   useEffect(() => {
-    if (!ready) return;
-    focusSearchBox = () => searchBox.current?.querySelector("input")?.focus();
-    if (searchWanted) { searchWanted = false; focusSearchBox(); }
-    return () => { focusSearchBox = null; };
+    const take = () => {
+      if (!location.hash.includes("?")) return;
+      const params = inbox();
+      const tags = params.getAll("tag");
+      if (tags.length) setActiveTags(tags);
+      if (params.has("q")) wantSearch.current = true;
+      location.replace("#/");
+      focusSearch();
+    };
+    addEventListener("hashchange", take);
+    return () => removeEventListener("hashchange", take);
+  }, []);
+
+  // emptying the hash keeps the header link lit and stops a reload replaying the query
+  const ready = !!data || !!error;
+  useEffect(() => {
+    if (location.hash.includes("?")) location.replace("#/");
+    if (ready && wantSearch.current) focusSearch();
   }, [ready]);
-  // an unconsumed `/` dies with the page, or it steals focus on some later unrelated mount
-  useEffect(() => () => { searchWanted = false; }, []);
 
   const focus = data?.focus ?? null;
   // focus decides what the scheduler may pick next, so the whole payload is stale after it changes
@@ -282,7 +283,7 @@ export function Catalogue() {
   // nothing passed and nothing open: the ladder has never shown itself, so say what it is
   const showFirstRun = firstRun && stats.seen === 0 && today.recent.length === 0;
   const dismissFirstRun = () => { localStorage.setItem(FIRST_RUN, "1"); setFirstRun(false); };
-  const stuck = worstTag(data.tasks, stats.lapse_limit);
+  const stuck = stats.stuck;
   // Enter in the search box takes the top row of what is on screen — an IME commit is not one
   const onSearchKey = (e: KeyboardEvent) => {
     if (e.key === "Enter" && !e.nativeEvent.isComposing && sorted.length) location.hash = href(sorted[0]);

@@ -21,7 +21,7 @@ function TopicStripsSort({ value, onChange }) {
   );
 }
 
-export function TopicStrips({ tags = [], ladder = [2, 4, 8, 16, 28, 60, 120], defaultSort = "stuck first", maxHeight = 520, style }) {
+export function TopicStrips({ tags = [], boxes = 7, defaultSort = "stuck first", maxHeight = 520, style }) {
   const [sort, setSort] = React.useState(defaultSort);
   const rows = [...tags].sort(STRIP_SORTS[sort]);
   const widest = Math.max(1, ...tags.map((t) => t.total));
@@ -53,7 +53,7 @@ export function TopicStrips({ tags = [], ladder = [2, 4, 8, 16, 28, 60, 120], de
         ))}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
-        <span style={{ fontSize: 12.5, color: "var(--text-faint)" }}>{tags.length} tags · strip width is the topic's size, segments are boxes 1–{ladder.length} then unseen</span>
+        <span style={{ fontSize: 12.5, color: "var(--text-faint)" }}>{tags.length} tags · strip width is the topic's size, segments are boxes 1–{boxes} then unseen</span>
         <div style={{ flex: 1 }} />
         <div style={{ display: "flex", gap: 2, alignItems: "center" }}>
           {STRIP_RAMP.map((c, i) => <div key={i} style={{ width: 12, height: 10, borderRadius: 1, background: c }} title={"box " + (i + 1)} />)}
