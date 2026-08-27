@@ -4,7 +4,7 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
-## Unreleased
+## 0.3.0 — 2026-08-27
 
 - A tag link from the progress page now filters the catalogue even when the catalogue is
   already open, instead of only on the way in from another page.
