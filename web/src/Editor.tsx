@@ -12,8 +12,15 @@ const token = (name: string) => getComputedStyle(document.documentElement).getPr
 const bare = (name: string) => token(name).replace("#", "");
 
 /** The page only ever holds one task's region, so one file is all the server is ever told
- *  about. The name is arbitrary; only the `.py` matters. */
-const FILE = "file:///workspace/solve.py";
+ *  about. `/workspace` is a placeholder the bridge swaps for the real tasks directory: a
+ *  browser has no business knowing filesystem paths. */
+const WORKSPACE = "file:///workspace";
+const FILE = `${WORKSPACE}/solve.py`;
+
+/** wss on a served-over-TLS page: a tunnel or a reverse proxy in front of drillion makes a
+ *  plain ws:// socket mixed content, which the browser blocks outright. */
+const socketUrl = () =>
+  `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/lsp`;
 
 /** The vscode API may be started once per page — it owns global state, not per-component
  *  state. A rejection is deliberately not cached: a first failure must not blank every
@@ -42,10 +49,10 @@ let client: Promise<void> | undefined;
 function startLanguageClient() {
   client ??= new LanguageClientWrapper({
     languageId: "python",
-    connection: { options: { $type: "WebSocketUrl", url: `ws://${location.host}/lsp` } },
+    connection: { options: { $type: "WebSocketUrl", url: socketUrl() } },
     clientOptions: {
       documentSelector: ["python"],
-      workspaceFolder: { index: 0, name: "workspace", uri: monaco.Uri.parse("file:///workspace") },
+      workspaceFolder: { index: 0, name: "workspace", uri: monaco.Uri.parse(WORKSPACE) },
     },
   })
     .start()
