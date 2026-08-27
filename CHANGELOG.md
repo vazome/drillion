@@ -6,6 +6,8 @@ task-folder format. The version is declared once, in `pyproject.toml`.
 
 ## Unreleased
 
+- A hint or solution notice on the task page no longer disappears while you are reading it.
+- The "not saved — syntax" marker no longer follows you to the next task.
 - The run button's keyboard hint reads `Ctrl/⌘+Enter`, since the binding fires on either.
 
 ## 0.2.0 — 2026-08-27
