@@ -45,7 +45,7 @@ export function Progress() {
 
       <Card label="Due load · next 14 days"><DueForecast forecast={data.forecast} cap={data.cap} today={data.today} /></Card>
       <Card label="Practice"><PracticeHeatmap days={data.days} today={data.today} /></Card>
-      <Card label="Topic depth" padding={16}><TopicStrips tags={tags} ladder={data.ladder} /></Card>
+      <Card label="Topic depth" padding={16}><TopicStrips tags={tags} /></Card>
 
       <Card label="Last 30 sessions" padding={16}>
         <div style={{ maxHeight: 420, overflow: "auto", paddingRight: 10 }}>
