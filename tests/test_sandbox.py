@@ -24,6 +24,7 @@ PROBE = '''
 import os
 import socket
 import subprocess
+import sys
 from pathlib import Path
 
 CANARY = Path({canary!r})
@@ -67,7 +68,10 @@ ENVIRONMENT = """
 ESCAPED = """
     assert CANARY.read_text() == "written by the parent"
     CANARY.write_text("owned")
-    done = subprocess.run(["/bin/echo", "spawned"], capture_output=True, text=True)
+    # the interpreter rather than /bin/echo: this control runs on Windows too
+    done = subprocess.run(
+        [sys.executable, "-c", "print('spawned')"], capture_output=True, text=True
+    )
     assert done.stdout.strip() == "spawned"
 """
 
