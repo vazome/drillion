@@ -11,15 +11,15 @@
     "screens": "playwright test"
   },
   "dependencies": {
-    "@codingame/monaco-vscode-editor-api": "^25.1.2",
-    "@codingame/monaco-vscode-standalone-languages": "25.1.2",
-    "monaco-languageclient": "^10.7.0",
+    "@codingame/monaco-vscode-editor-api": "36.2.2",
+    "@codingame/monaco-vscode-standalone-languages": "36.2.2",
+    "monaco-languageclient": "11.0.0-next.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "remark-github-blockquote-alert": "^2.1.0",
-    "vscode": "npm:@codingame/monaco-vscode-extension-api@^25.1.2"
+    "vscode": "npm:@codingame/monaco-vscode-extension-api@36.2.2"
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",

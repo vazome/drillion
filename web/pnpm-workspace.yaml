@@ -7,8 +7,48 @@ allowBuilds:
 
 # monaco-languageclient replaces monaco-editor with CodinGame's VS Code-API build; a second
 # copy of monaco is a runtime assertion failure, not a size problem.
+#
+# The rest of the list is the same rule for the rest of the family: every
+# @codingame/monaco-vscode-* package pins the others to an exact version, so they only work
+# as one set. monaco-languageclient 11.0.0-next.1 still asks for 35.x — its 36 bump is on
+# upstream main, a range change with no source change, but unpublished — so these entries
+# are the set it declares, held at the version it is about to ask for. When a release ships
+# with 36, delete everything below `vscode` and let it choose.
 overrides:
-  monaco-editor: npm:@codingame/monaco-vscode-editor-api@^25.1.2
+  monaco-editor: npm:@codingame/monaco-vscode-editor-api@36.2.2
+  # the extension API arrives under the alias `vscode`, which an override keyed on the real
+  # package name does not reach
+  vscode: npm:@codingame/monaco-vscode-extension-api@36.2.2
+  "@codingame/monaco-vscode-api": "36.2.2"
+  "@codingame/monaco-vscode-configuration-service-override": "36.2.2"
+  "@codingame/monaco-vscode-editor-api": "36.2.2"
+  "@codingame/monaco-vscode-editor-service-override": "36.2.2"
+  "@codingame/monaco-vscode-extensions-service-override": "36.2.2"
+  "@codingame/monaco-vscode-files-service-override": "36.2.2"
+  "@codingame/monaco-vscode-language-pack-cs": "36.2.2"
+  "@codingame/monaco-vscode-language-pack-de": "36.2.2"
+  "@codingame/monaco-vscode-language-pack-es": "36.2.2"
+  "@codingame/monaco-vscode-language-pack-fr": "36.2.2"
+  "@codingame/monaco-vscode-language-pack-it": "36.2.2"
+  "@codingame/monaco-vscode-language-pack-ja": "36.2.2"
+  "@codingame/monaco-vscode-language-pack-ko": "36.2.2"
+  "@codingame/monaco-vscode-language-pack-pl": "36.2.2"
+  "@codingame/monaco-vscode-language-pack-pt-br": "36.2.2"
+  "@codingame/monaco-vscode-language-pack-qps-ploc": "36.2.2"
+  "@codingame/monaco-vscode-language-pack-ru": "36.2.2"
+  "@codingame/monaco-vscode-language-pack-tr": "36.2.2"
+  "@codingame/monaco-vscode-language-pack-zh-hans": "36.2.2"
+  "@codingame/monaco-vscode-language-pack-zh-hant": "36.2.2"
+  "@codingame/monaco-vscode-languages-service-override": "36.2.2"
+  "@codingame/monaco-vscode-localization-service-override": "36.2.2"
+  "@codingame/monaco-vscode-log-service-override": "36.2.2"
+  "@codingame/monaco-vscode-model-service-override": "36.2.2"
+  "@codingame/monaco-vscode-monarch-service-override": "36.2.2"
+  "@codingame/monaco-vscode-textmate-service-override": "36.2.2"
+  "@codingame/monaco-vscode-theme-defaults-default-extension": "36.2.2"
+  "@codingame/monaco-vscode-theme-service-override": "36.2.2"
+  "@codingame/monaco-vscode-views-service-override": "36.2.2"
+  "@codingame/monaco-vscode-workbench-service-override": "36.2.2"
   # dompurify@<=3.4.12 covers all 18 open Dependabot alerts (XSS/prototype-pollution),
   # pulled in transitively by @codingame/monaco-vscode-api. 3.4.14 stays inside the same major.
   dompurify: ^3.4.14
