@@ -5,6 +5,28 @@ description = "Python practice drills that come back before you forget them. Gra
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.13"
+# the same eight words the repo's GitHub topics use; keep the two lists identical
+keywords = [
+    "education",
+    "exercism",
+    "learning",
+    "leitner-system",
+    "pytest",
+    "python",
+    "self-hosted",
+    "spaced-repetition",
+]
+# every string is an exact line of https://pypi.org/pypi?%3Aaction=list_classifiers —
+# an invalid one is a hard upload rejection. A Python version here claims CI tests it.
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Framework :: FastAPI",
+    "Intended Audience :: Education",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Education :: Computer Aided Instruction (CAI)",
+]
 # 14 tasks import boto3, moto, langchain-core, requests, responses and httpx, and run in
 # the app's own interpreter — an extras group would ship tasks that fail at import
 dependencies = [
@@ -25,6 +47,8 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/vazome/drillion"
+Source = "https://github.com/vazome/drillion"
+Changelog = "https://github.com/vazome/drillion/blob/main/CHANGELOG.md"
 Issues = "https://github.com/vazome/drillion/issues"
 
 [project.scripts]
@@ -84,3 +108,12 @@ exclude = ["tasks/**", "*.md"]
 python_files = ["task.py", "test_*.py"]
 testpaths = ["tests"]
 addopts = "--import-mode=importlib"
+# a dependency announces a breaking change as a warning a release before it lands; under
+# -q nobody reads it, so make it fail instead. Learner submissions never see this config —
+# runner._run_pytest pins its own (empty) one.
+filterwarnings = [
+    "error",
+    # that one message only, so starlette's next deprecation still stops the build; dies
+    # when we move off httpx 0.28 + TestClient, which starlette is asking us to
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated:starlette.exceptions.StarletteDeprecationWarning",
+]
