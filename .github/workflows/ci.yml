@@ -210,3 +210,20 @@ jobs:
           test "$(curl -fsS http://127.0.0.1:8765/api/health | jq .tasks)" = 171
           curl -fsS -o /dev/null http://127.0.0.1:8765/
           curl -fsS -o /dev/null -X POST http://127.0.0.1:8765/api/task/001_fstrings/open
+
+  # the single context branch protection requires: one name that survives the matrix
+  # growing a cell or a job being renamed, so the ruleset never goes stale again
+  gate:
+    if: always()
+    needs: [check, web, screens, image]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: every job above succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "$RESULTS"
+          case "$RESULTS" in
+            *failure*|*cancelled*|*skipped*) exit 1 ;;
+          esac
