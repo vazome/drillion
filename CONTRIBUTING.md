@@ -143,14 +143,18 @@ the `progress.json` schema, and the task-folder format:
   drills is not a breaking change.
 - **PATCH** — fixes, no new surface.
 
-Releasing: bump `pyproject.toml`, add the entry to [CHANGELOG.md](CHANGELOG.md), merge that to
-`main`, then `git fetch` and tag `<remote>/main` **by name**:
+Releasing: bump `pyproject.toml`, run `uv lock`, add the entry to
+[CHANGELOG.md](CHANGELOG.md), merge that to `main`, then `git fetch` and tag
+`<remote>/main` **by name**:
 
 ```bash
 git fetch origin main
 git tag -s v<version> origin/main -m "v<version>"
 git push origin v<version>
 ```
+
+`uv.lock` records drillion's own version, so a bump without `uv lock` fails every
+`uv sync --locked` in CI — the whole matrix, not one job. Commit the lockfile with the bump.
 
 Never tag a local branch, and never tag the release branch you just merged: a squash merge
 rewrites the commit, so that branch's head is not what landed on `main` and the gate will refuse
