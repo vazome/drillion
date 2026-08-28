@@ -1,13 +1,12 @@
 """Running the tests: task code only ever executes in a pytest subprocess."""
 
 import ast
-import os
 import re
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 
+from . import sandbox
 from .catalogue import tasks
 from .region import _solve, cut, splice, stub
 from .settings import settings
@@ -32,8 +31,9 @@ _PYTEST = [
 
 
 def _run_pytest(args, timeout=None, **env):
-    """pytest in a subprocess, cwd a scratch dir so stray files never land in tasks/, and
-    `tasks/` on PYTHONPATH so `from _lib import rng` works from any root."""
+    """pytest in a subprocess, sandboxed: cwd a scratch dir that is also the child's `HOME`
+    and the only place it may write, and `tasks/` on PYTHONPATH so `from _lib import rng`
+    works from any root. `sandbox.confine` decides everything else about the child."""
     with tempfile.TemporaryDirectory(
         dir=settings.root, ignore_cleanup_errors=True
     ) as scratch:
@@ -44,24 +44,13 @@ def _run_pytest(args, timeout=None, **env):
         ini = Path(scratch, "pytest.ini")
         ini.write_text("[pytest]\n", encoding="utf-8")
         return subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "pytest",
-                "-c",
-                str(ini),
-                f"--rootdir={settings.root}",
-                *args,
-                *_PYTEST,
-            ],
-            # task files are UTF-8; a Windows pipe would otherwise be cp1252 at both ends
-            env={
-                **os.environ,
-                "PYTHONPATH": str(settings.tasks_dir),
-                "PYTHONIOENCODING": "utf-8",
+            **sandbox.confine(
+                ["-c", str(ini), f"--rootdir={settings.root}", *args, *_PYTEST],
+                scratch,
+                timeout,
+                PYTHONPATH=str(settings.tasks_dir),
                 **env,
-            },
-            cwd=scratch,
+            ),
             capture_output=True,
             text=True,
             encoding="utf-8",
