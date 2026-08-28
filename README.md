@@ -36,32 +36,26 @@ chat about it with peers.
 I took heavy inspiration from Exercism, HackerRank and — surprisingly — Anki, and built
 it from scratch.
 
-Core ideas, and the reason each one is there:
+Core ideas I'm keeping in mind during the development:
 
 - **A clean UI that does not gate the task.** Nothing stands between opening drillion and
-  writing code. No modal, no tour, no "complete your profile".
-- **Categorisation you can actually navigate.** Every task is tagged with the concept it
-  drills, and a tag spans many tasks, so you can go straight at the thing you are worst at
-  instead of grinding a track in order.
+  writing code.
+- **Categorisation.** Every task is tagged with the concept it drills, and a tag spans
+  many tasks, so you can go straight at the thing you are worst at instead of grinding a
+  track in order.
 - **Anki-like progression.** A task comes back before you forget it, with a daily cap so a
-  backlog cannot bury you. When one topic keeps beating you, Today names it rather than
-  leaving you to notice.
+  backlog cannot bury you.
 - **An editor that behaves like an IDE without the complexity of one.** Every `solve()` is
-  typed, so completions, signatures and inline type errors are real — they come from a
-  language server running next to the grader, on your machine. Nothing writes the answer
-  for you. The point is to know it, not to accept it.
-- **Hints unlock; they are not free.** Three per task, escalating from a nudge to the same
-  idea worked through on different data, and they open on attempts and time spent. After
-  half an hour with no submission, drillion suggests taking one — you cannot brute-force
-  something you are unaware of.
-- **Grading is the real thing.** Your code is spliced into the task's own pytest file and
-  run. No string matching, no hidden judge, and `drillion selfcheck` proves all 171 tasks
-  still pass against their own reference solutions.
-- **Your progress is yours.** One JSON file on your disk. drillion stamps it with a schema
-  version and refuses to rewrite a file a newer version wrote, rather than quietly
-  mangling it. It is the only thing here you cannot redo.
-- **It is free, and it stays free.** No tier, no voucher, no account, no telemetry. If I
-  stop working on it tomorrow, the copy you cloned still runs.
+  typed, so completions, signatures and inline type errors are real as they come from a
+  language server running next to the grader, on your machine.
+- **Hints unlock and they are not free.** Three per task, escalating from a nudge to the
+  same idea worked through on different data. After half an hour with no submission,
+  drillion suggests taking one as you cannot brute-force something you are unaware of.
+- **Grading is the real.** Your code is spliced into the task's own pytest file and run.
+- **YOUR progress** One JSON file on your disk. drillion stamps it with a schema version
+  and refuses to rewrite a file a newer version wrote, rather than quietly mangling it.
+- **It is free, and it stays free.** No tier, no voucher, no account, no telemetry,
+  open-source.
 
 One consequence worth stating plainly: 171 tasks ship as executable Python, and `task.py`
 runs on import. So the sandbox is not a badge I bolted on to look serious — it is the
