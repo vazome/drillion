@@ -199,6 +199,11 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: write
+      # the wheel and sdist are attested here rather than in `dists`, for the same reason `dists`
+      # holds no PyPI credential: that job runs a third-party npm build, so it gets no signing
+      # identity either. This one runs a checkout, a download and `gh release create`.
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -207,8 +212,16 @@ jobs:
         with:
           name: dists
           path: dist/
+      # ghcr has the image's provenance and PyPI has its own; neither is visible to somebody who
+      # downloads the wheel from the releases page. With two subjects the bundle is one JSON line
+      # each, which is what `gh attestation verify` and every scanner read as `.intoto.jsonl`.
+      - id: attest
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist/*
       - env:
           GH_TOKEN: ${{ github.token }}
+          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
         run: |
           version=${GITHUB_REF_NAME#v}
           awk -v pat="^## ${version} " '/^## / && p {exit} p; $0 ~ pat {p=1}' CHANGELOG.md > notes.md
@@ -216,4 +229,6 @@ jobs:
             echo "::error::CHANGELOG.md has no '## $version' section"
             exit 1
           fi
-          gh release create "$GITHUB_REF_NAME" dist/* --title "drillion $version" --notes-file notes.md --latest
+          cp "$BUNDLE" "drillion-${version}.intoto.jsonl"
+          gh release create "$GITHUB_REF_NAME" dist/* "drillion-${version}.intoto.jsonl" \
+            --title "drillion $version" --notes-file notes.md --latest
