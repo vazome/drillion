@@ -1,6 +1,7 @@
 """The ways in: serve the tasks in a browser, or check the whole set still works."""
 
 import argparse
+import io
 import logging
 import shutil
 import subprocess
@@ -86,7 +87,7 @@ def serve():
 def main(argv=None):
     # everything we print is UTF-8; a redirected stdout is locale-encoded on Windows
     for stream in (sys.stdout, sys.stderr):
-        if hasattr(stream, "reconfigure"):
+        if isinstance(stream, io.TextIOWrapper):
             stream.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(
         prog="drillion", description="Spaced-repetition Python tasks."

@@ -256,11 +256,9 @@ def catalogue():
         ]
         return {
             "focus": st["focus"],
-            "tags": sorted({t for m in all_tasks.values() for t in m["tags"]}),
+            "tags": sorted({t for m in all_tasks.values() for t in m.get("tags", ())}),
             "tiers": ["core", "advanced", "packages"],  # fixed order: easiest first
-            "tracks": sorted(
-                {m["track"] for m in all_tasks.values() if m.get("track")}
-            ),
+            "tracks": sorted({t for m in all_tasks.values() if (t := m.get("track"))}),
             "today": q,
             "stats": {
                 **stats(st, all_tasks, q["due_total"]),

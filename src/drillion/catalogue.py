@@ -4,6 +4,8 @@
 
 import ast
 import re
+from pathlib import Path
+from typing import TypedDict, cast
 
 import yaml
 
@@ -20,11 +22,41 @@ SEARCHED = ("why", "you get", "you return", "rules")
 SECTION = re.compile(r"^## +(.+)$", re.MULTILINE)
 FENCE = re.compile(r"^```.*?^```", re.DOTALL | re.MULTILINE)
 SLUG = re.compile(r"^(\d{3})_[a-z0-9_]+$")
-_cache = (
-    None,
-    None,
-    None,
-)  # (key, scan, tasks) — rebinding a global is atomic, so a race just re-scans
+# (key, scan, tasks) — rebinding a global is atomic, so a race just re-scans. The empty
+# scan is never served: no real key equals None, so the first call always rebuilds.
+_cache: "tuple[object, Scan, dict[str, TaskMeta]]" = (None, [], {})
+
+
+class _Built(TypedDict):
+    """What `_read` fills in itself, so a record always carries it."""
+
+    prereqs: list[str]
+    topic: int | None
+    path: Path
+    dir: Path
+    hints: list[str]
+    spec_md: str
+    search_text: str
+
+
+class TaskMeta(_Built, total=False):
+    """One catalogue record: what `_read` builds, plus the README's frontmatter.
+
+    The keys here are the frontmatter's, and they are optional because `_read` returns a
+    record whenever the frontmatter *parsed* — a task missing `title` still has a record,
+    carrying the reason it was rejected. Only `tasks()` promises them, because it drops
+    every folder that gave a reason."""
+
+    title: str
+    difficulty: str
+    tier: str
+    minutes: int
+    tags: list[str]
+    source: str
+    track: str
+
+
+Scan = list[tuple[str, TaskMeta | None, list[str]]]
 
 
 def public(meta):
@@ -71,7 +103,7 @@ def guidance(md):
     return spec.strip(), [h.strip() for h in HINT.split(rest)[1:]]
 
 
-def _read(folder):
+def _read(folder) -> tuple[TaskMeta | None, list[str]]:
     """(record | None, [reason]) for one folder: every rule a task must pass to reach the
     menu, and the record whenever the frontmatter parsed — wrong folder or not."""
     out = []
@@ -127,16 +159,20 @@ def _read(folder):
     spec_md, hints = guidance(md)
     if len(hints) != 3:
         out.append(f"README.md: found {len(hints)} hints, need exactly 3")
-    return {
-        "prereqs": [],
-        **meta,
-        "topic": int(slug.group(1)) if slug else None,
-        "path": src,
-        "dir": folder,
-        "hints": hints,
-        "spec_md": spec_md,
-        "search_text": search_text(spec_md),
-    }, out
+    # the frontmatter is YAML, so its keys are only as good as the checks above
+    return cast(
+        "TaskMeta",
+        {
+            "prereqs": [],
+            **meta,
+            "topic": int(slug.group(1)) if slug else None,
+            "path": src,
+            "dir": folder,
+            "hints": hints,
+            "spec_md": spec_md,
+            "search_text": search_text(spec_md),
+        },
+    ), out
 
 
 def _scanned():
@@ -150,7 +186,9 @@ def _scanned():
     key = (settings.tasks_dir, tuple(_stamp(f) for f in folders))
     if _cache[0] != key:
         found = [(f.name, *_read(f)) for f in folders]
-        _cache = (key, found, {n: r for n, r, why in found if not why})
+        # `r is not None` is the same set as `not why` — every None path files a
+        # reason — but it is the half that makes the record type check
+        _cache = (key, found, {n: r for n, r, why in found if not why and r})
     return _cache[1], _cache[2]
 
 
@@ -161,6 +199,6 @@ def scan():
     return _scanned()[0]
 
 
-def tasks():
-    """{slug: frontmatter + topic, path, dir, spec_md, hints} for the folders that pass."""
+def tasks() -> dict[str, TaskMeta]:
+    """{slug: TaskMeta} for the folders that pass — every frontmatter key present."""
     return _scanned()[1]

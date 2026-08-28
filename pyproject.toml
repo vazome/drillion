@@ -117,3 +117,9 @@ filterwarnings = [
     # when we move off httpx 0.28 + TestClient, which starlette is asking us to
     "ignore:Using `httpx` with `starlette.testclient` is deprecated:starlette.exceptions.StarletteDeprecationWarning",
 ]
+
+# aimed at src/ only. `tasks/` is untyped on purpose, and the learner's editor resolves its
+# own config from `settings.tasks_dir` — see tests/test_lsp.py, which holds that line.
+[tool.basedpyright]
+include = ["src"]
+typeCheckingMode = "standard"
