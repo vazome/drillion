@@ -290,7 +290,7 @@ def progress():
 def get_task(slug: str):
     with reading() as st:
         meta = _task(slug)
-        return _payload(st, slug, meta, meta["path"].read_text())
+        return _payload(st, slug, meta, meta["path"].read_text(encoding="utf-8"))
 
 
 @app.post("/api/task/{slug}/open")
@@ -298,7 +298,7 @@ def open_task(slug: str):
     with writing() as st:
         meta = _task(slug)
         open_attempt(st, slug)
-        return _payload(st, slug, meta, meta["path"].read_text())
+        return _payload(st, slug, meta, meta["path"].read_text(encoding="utf-8"))
 
 
 @app.put("/api/task/{slug}")
@@ -307,7 +307,7 @@ def save_task(slug: str, edit: Edit):
         meta = _task(slug)
         if slug not in st["open"]:  # a closed task is a stub; keep it one
             raise NoAttempt(slug)
-        src = meta["path"].read_text()
+        src = meta["path"].read_text(encoding="utf-8")
         _check_etag(src, edit.etag)
         new_src = validate(edit.code, src)
         write_region(meta["path"], new_src)
@@ -320,7 +320,7 @@ def run_task(slug: str, edit: Edit):
     with writing() as st:
         meta = _task(slug)
         o = current(st, slug)
-        src = meta["path"].read_text()
+        src = meta["path"].read_text(encoding="utf-8")
         _check_etag(src, edit.etag)
         new_src = validate(edit.code, src)
         write_region(meta["path"], new_src)
@@ -381,7 +381,7 @@ def hint_task(slug: str):
                     "wait_secs": gate.wait_secs,
                 },
             ) from None
-        return _payload(st, slug, meta, meta["path"].read_text())
+        return _payload(st, slug, meta, meta["path"].read_text(encoding="utf-8"))
 
 
 @app.post("/api/task/{slug}/solution")
@@ -396,7 +396,7 @@ def solution_task(slug: str):
                 423, {"error": "the answer opens after real effort", **gate.owed}
             ) from None
         # after `unlock_solution`, so `solution_shown` is set and the payload carries the answer
-        return _payload(st, slug, meta, meta["path"].read_text())
+        return _payload(st, slug, meta, meta["path"].read_text(encoding="utf-8"))
 
 
 @app.post("/api/task/{slug}/abandon")
@@ -408,7 +408,7 @@ def abandon_task(slug: str, sent: Etag):
     with writing() as st:
         meta = _task(slug)
         current(st, slug)
-        src = meta["path"].read_text()
+        src = meta["path"].read_text(encoding="utf-8")
         _check_etag(src, sent.etag)
         new_src = abandon(st, slug, src)
         log.info("%s abandoned", slug)

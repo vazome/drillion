@@ -37,7 +37,7 @@ def _run_pytest(args, timeout=None, **env):
         # `filterwarnings = error` above all. `-c` moves rootdir too, so pin that back to
         # `root` or pytest reports failures with no filename in them.
         ini = Path(scratch, "pytest.ini")
-        ini.write_text("[pytest]\n")
+        ini.write_text("[pytest]\n", encoding="utf-8")
         return subprocess.run(
             [
                 sys.executable,
@@ -49,10 +49,17 @@ def _run_pytest(args, timeout=None, **env):
                 *args,
                 *_PYTEST,
             ],
-            env={**os.environ, "PYTHONPATH": str(settings.tasks_dir), **env},
+            # task files are UTF-8; a Windows pipe would otherwise be cp1252 at both ends
+            env={
+                **os.environ,
+                "PYTHONPATH": str(settings.tasks_dir),
+                "PYTHONIOENCODING": "utf-8",
+                **env,
+            },
             cwd=scratch,
             capture_output=True,
             text=True,
+            encoding="utf-8",
             check=False,
             timeout=timeout,
         )
@@ -108,9 +115,11 @@ def selfcheck():
     made = []
     try:
         for meta in all_tasks.values():
-            src = meta["path"].read_text()
+            src = meta["path"].read_text(encoding="utf-8")
             path = meta["dir"] / "_selfcheck.py"  # an explicit path is always collected
-            path.write_text(splice(src, _reference_call(cut(src).body)))
+            path.write_text(
+                splice(src, _reference_call(cut(src).body)), encoding="utf-8"
+            )
             made.append(path)
         r = _run_pytest([*map(str, made), "--timeout=60"])
     finally:

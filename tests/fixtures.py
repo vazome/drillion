@@ -45,5 +45,5 @@ def tasks_root(**folders):
             if isinstance(text, bytes):
                 path.write_bytes(text)
             else:
-                path.write_text(text)
+                path.write_text(text, encoding="utf-8")
     return tmp

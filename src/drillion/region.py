@@ -123,5 +123,5 @@ def validate(edited, disk_src):
 def write_region(path, new_src):
     """Atomic write: a crash mid-save cannot leave half a task on disk."""
     tmp = path.with_suffix(".tmp")
-    tmp.write_text(new_src)
+    tmp.write_text(new_src, encoding="utf-8")
     os.replace(tmp, path)

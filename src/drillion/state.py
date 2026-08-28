@@ -13,7 +13,7 @@ from .settings import settings
 
 def load():
     path = settings.state_path  # read at call time: tests move the root
-    st = json.loads(path.read_text()) if path.exists() else {}
+    st = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
     return {
         "focus": None,
         "cards": {},
@@ -28,7 +28,7 @@ def load():
 def save(st):
     path = settings.state_path
     tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(st, indent=1))
+    tmp.write_text(json.dumps(st, indent=1), encoding="utf-8")
     os.replace(tmp, path)  # atomic: a crash mid-write can't eat months of progress
 
 

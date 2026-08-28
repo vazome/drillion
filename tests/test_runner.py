@@ -61,7 +61,7 @@ def test_the_output_panel_never_shows_terminal_escapes(tmp_path, monkeypatch):
     tty is, and the escapes then reach the page as literal `[31mF[0m`."""
     monkeypatch.setenv("FORCE_COLOR", "1")
     task = tmp_path / "task.py"
-    task.write_text("def test_solve():\n    assert 1 == 2\n")
+    task.write_text("def test_solve():\n    assert 1 == 2\n", encoding="utf-8")
     passed, out = runner.run_tests(task, seed=1)
     assert passed is False
     assert "\x1b[" not in out, "terminal escapes reached the output panel"
@@ -75,7 +75,8 @@ def test_the_learners_code_cannot_litter_the_data_root(tmp_path, monkeypatch):
     task.write_text(
         "from pathlib import Path\n"
         "def test_solve():\n"
-        "    (Path.cwd() / 'litter.txt').write_text('x')\n"
+        "    (Path.cwd() / 'litter.txt').write_text('x')\n",
+        encoding="utf-8",
     )
     passed, out = runner.run_tests(task, seed=1)
     assert passed, out  # the write itself succeeded
@@ -108,7 +109,7 @@ def test_a_failure_names_the_task_the_short_way(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "root", tmp_path)
     task = tmp_path / "tasks" / "001_fstrings" / "task.py"
     task.parent.mkdir(parents=True)
-    task.write_text("def test_solve():\n    assert 1 == 2\n")
+    task.write_text("def test_solve():\n    assert 1 == 2\n", encoding="utf-8")
     _, out = runner.run_tests(task, seed=1)
     text = runner.summarise(out, marker_line=1)["output"]
     assert "../tasks/001_fstrings/task.py" in text
@@ -132,6 +133,9 @@ def test_selfcheck_solves_each_task_with_its_own_reference(
     assert not list(tmp_path.rglob("_selfcheck.py"))
 
     task = tmp_path / "tasks" / "001_fstrings" / "task.py"
-    task.write_text(task.read_text() + "\n\ndef test_broken():\n    assert False\n")
+    task.write_text(
+        task.read_text(encoding="utf-8") + "\n\ndef test_broken():\n    assert False\n",
+        encoding="utf-8",
+    )
     assert runner.selfcheck() == 1
     assert "FAILED 001_fstrings" in capsys.readouterr().out

@@ -121,7 +121,9 @@ def test_the_scan_is_cached_but_an_edited_task_is_re_read():
         first = catalogue.tasks()
         assert catalogue.tasks() is first  # same folders, same mtimes
         task = tmp / "tasks" / "001_a" / "task.py"
-        task.write_text(TASK.replace("def solve(x):", "def solve(x, y):"))
+        task.write_text(
+            TASK.replace("def solve(x):", "def solve(x, y):"), encoding="utf-8"
+        )
         os.utime(task, (0, 0))  # a same-nanosecond edit is still an edit
         assert catalogue.tasks() is not first
         (tmp / "tasks" / "002_b").mkdir()

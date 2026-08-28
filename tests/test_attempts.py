@@ -10,7 +10,7 @@ import pytest
 from drillion import attempts, region, scheduler, state
 from drillion.settings import settings
 
-SRC = (settings.tasks_dir / "001_fstrings" / "task.py").read_text()
+SRC = (settings.tasks_dir / "001_fstrings" / "task.py").read_text(encoding="utf-8")
 
 
 def _solved(src=SRC, code="return ''"):
