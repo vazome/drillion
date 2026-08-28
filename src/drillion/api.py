@@ -56,6 +56,7 @@ from .scheduler import (
     stats,
     stuck,
 )
+from .settings import settings
 from .state import card, own, reading, today, writing
 
 log = logging.getLogger(__name__)
@@ -102,6 +103,25 @@ async def _error(_request, exc):
     """One error shape for the page: {"error": ...} plus whatever the case adds."""
     body = exc.detail if isinstance(exc.detail, dict) else {"error": exc.detail}
     return JSONResponse(body, exc.status_code, headers=exc.headers)
+
+
+def _allowed_origins():
+    """The page this server itself serves, on the two hosts TrustedHostMiddleware admits.
+
+    Read per request rather than frozen at import: the port is configurable, and an origin
+    carries it."""
+    return {f"http://{host}:{settings.port}" for host in ("127.0.0.1", "localhost")}
+
+
+@app.middleware("http")
+async def _same_origin(request, call_next):
+    """Refuse the write a foreign page provoked: a browser attaches `Origin` to a cross-site
+    request, and curl and the container healthcheck attach none, so absent stays allowed.
+    `"null"` is what a sandboxed iframe sends — a string, not absent, and never trusted."""
+    origin = request.headers.get("origin")
+    if origin is not None and origin not in _allowed_origins():
+        return JSONResponse({"error": "cross-origin request refused"}, 403)
+    return await call_next(request)
 
 
 @app.middleware("http")
@@ -442,6 +462,12 @@ def set_focus(focus: Focus):
 
 @app.websocket("/lsp")
 async def lsp(ws: WebSocket):
-    """The editor's language server, one per open socket. See `lsp.bridge`."""
+    """The editor's language server, one per open socket. See `lsp.bridge`.
+
+    The origin check is here and not in middleware, which never runs for a websocket — and a
+    websocket is exempt from the same-origin policy, so any page could otherwise open one."""
+    if ws.headers.get("origin") not in _allowed_origins():
+        await ws.close(code=1008)
+        return
     await ws.accept()
     await bridge(ws)

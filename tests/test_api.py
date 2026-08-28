@@ -7,6 +7,9 @@ from datetime import date, timedelta
 from pathlib import Path
 
 import httpx
+import pytest
+from fastapi import WebSocketDisconnect
+from fastapi.testclient import TestClient
 
 import drillion
 from drillion import region, scheduler, state
@@ -690,3 +693,67 @@ def test_recent_activity_is_the_week_most_recent_first():
     st["open"] = {}
     st["archive"]["001_a"].append({"date": day(0), "grade": "pass"})
     assert _recent(st, tasks)[0] == "001_a"
+
+
+# ── the origin guard ────────────────────────────────────────────────────────────────────
+FOREIGN = "http://evil.example"
+SAME = f"http://127.0.0.1:{settings.port}"
+# a browser sends this from a sandboxed iframe: a string, never a missing header
+SANDBOX = "null"
+# every route a cross-site form can reach: no body, so no preflight stands in the way
+BODYLESS = ("open", "touch", "hint", "solution")
+
+
+async def _origins(api, _path):
+    """No `Origin` is curl and the container healthcheck; a foreign one is another tab."""
+    await api.post(f"/api/task/{SLUG}/open")  # opened by the learner, no header at all
+    for origin in (FOREIGN, SANDBOX):
+        for route in BODYLESS:
+            r = await api.post(f"/api/task/{SLUG}/{route}", headers={"Origin": origin})
+            assert r.status_code == 403, (origin, route)
+            assert r.json() == {"error": "cross-origin request refused"}
+    for origin in (SAME, f"http://localhost:{settings.port}"):
+        r = await api.post(f"/api/task/{SLUG}/touch", headers={"Origin": origin})
+        assert r.status_code == 200, origin
+    assert (await api.post(f"/api/task/{SLUG}/touch")).status_code == 200
+    # the guard is the whole app, not the four routes it was found on
+    assert (
+        await api.get("/api/health", headers={"Origin": FOREIGN})
+    ).status_code == 403
+    assert (await api.get("/api/health")).status_code == 200
+
+
+def test_a_cross_site_post_is_refused_and_a_headerless_one_is_not():
+    _api(_origins)
+
+
+def _socket(origin, monkeypatch):
+    """Open /lsp with `origin`, or with none at all. Returns the close code, or None if the
+    socket was accepted — the bridge is stubbed, so accepting costs no language server."""
+
+    async def _stub(ws):
+        await ws.send_text("bridged")
+
+    monkeypatch.setattr(drillion.api, "bridge", _stub)
+    # the test client sends `Host: testserver`, which TrustedHostMiddleware refuses first
+    headers = {"Host": "127.0.0.1"} | ({} if origin is None else {"Origin": origin})
+    with TestClient(app, base_url=SAME) as client:
+        try:
+            with client.websocket_connect("/lsp", headers=headers) as ws:
+                assert ws.receive_text() == "bridged"
+        except WebSocketDisconnect as hangup:
+            return hangup.code
+    return None
+
+
+@pytest.mark.parametrize("origin", [FOREIGN, SANDBOX, None])
+def test_the_language_server_socket_refuses_a_page_this_server_did_not_serve(
+    origin, monkeypatch
+):
+    """A websocket is exempt from the same-origin policy, so any tab could open this one."""
+    assert _socket(origin, monkeypatch) == 1008
+
+
+@pytest.mark.parametrize("host", ["127.0.0.1", "localhost"])
+def test_the_language_server_socket_still_serves_the_editor(host, monkeypatch):
+    assert _socket(f"http://{host}:{settings.port}", monkeypatch) is None
