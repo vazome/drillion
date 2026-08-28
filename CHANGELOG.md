@@ -4,6 +4,25 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.5.1 — 2026-08-28
+
+- A release can now be checked without trusting the index it came from. The wheel and the sdist
+  are attested where they are built and the provenance travels with them as a release asset, so
+  `gh attestation verify drillion-0.5.1-py3-none-any.whl --repo vazome/drillion` answers from a
+  plain download. ghcr has carried the image's provenance and SBOM since 0.4.6 and PyPI keeps its
+  own; what was missing was anything on the releases page itself, which is where somebody who does
+  not use either registry actually gets the file.
+- The editor is on the current Monaco. It sat eleven majors behind, on 25.x, because the packages
+  it needs only work as one set and a partial upgrade produced two incompatible copies of the same
+  types — so every offered bump failed and the whole family stayed frozen. It is on 36 now, which
+  matters because completions, signatures and the type errors underlined as you write all come
+  from a language server wired to that API: staying behind meant drifting away from anything
+  upstream documents or fixes. Nothing changes in how the editor behaves.
+- The image builds on node 25, and on whatever node comes after it. The web stage assumed
+  `corepack` was in the base image; node stopped shipping it, so the build died on `corepack: not
+  found` and every node bump was blocked. pnpm is still pinned in exactly one place, and still
+  resolves to that version.
+
 ## 0.5.0 — 2026-08-28
 
 - `progress.json` now says which format it is. Every file drillion writes carries a `version`,
