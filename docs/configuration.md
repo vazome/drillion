@@ -63,12 +63,32 @@ tool; do not put it on a public address.
 
 ## Verifying a release
 
-Releases go out through PyPI's trusted publishing, so drillion stores no upload token anywhere.
-Every wheel and sdist carries a [PEP 740](https://peps.python.org/pep-0740/) attestation naming
-the workflow run that built it, and every image carries a build provenance attestation:
+Releases go out through PyPI's trusted publishing, so drillion stores no upload token anywhere,
+and every artifact is attested where it lands. Which command you want depends on where you got
+the file from.
+
+**From the GitHub release** — the wheel, the sdist and their provenance are all on the release
+page, so this needs nothing but the download:
+
+```bash
+gh attestation verify drillion-<version>-py3-none-any.whl --repo vazome/drillion
+```
+
+The `drillion-<version>.intoto.jsonl` beside them is the same provenance in a file, for a checker
+that cannot reach GitHub's API.
+
+**From PyPI** — PyPI keeps its own [PEP 740](https://peps.python.org/pep-0740/) attestation:
 
 ```bash
 pypi-attestations verify pypi --repository https://github.com/vazome/drillion \
-  pypi:drillion-0.1.1-py3-none-any.whl
-gh attestation verify oci://ghcr.io/vazome/drillion:latest -R vazome/drillion
+  pypi:drillion-<version>-py3-none-any.whl
 ```
+
+**From ghcr** — the image carries build provenance and an SPDX SBOM. Verify the tag rather than a
+platform digest; the tag resolves to the multi-arch index, which is what was signed:
+
+```bash
+gh attestation verify oci://ghcr.io/vazome/drillion:<version> --repo vazome/drillion
+```
+
+All three name the same thing: the `release.yml` run at the tag that built it.
