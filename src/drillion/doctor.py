@@ -3,6 +3,7 @@
 import graphlib
 import re
 
+from . import sandbox
 from .catalogue import SLUG, scan
 
 TAG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -109,8 +110,11 @@ def problems():
 
 
 def doctor():
-    """Print every problem under tasks/, one line each, and return how many there were.
-    Non-zero from the CLI on any, so CI can gate a contribution on it."""
+    """Print what is confining graded code and every problem under tasks/, one line each,
+    and return how many problems there were. Non-zero from the CLI on any, so CI can gate a
+    contribution on it — the sandbox line is information, never a failure."""
+    tier, why = sandbox.status()
+    print(f"sandbox: {tier} — {why}")
     found = problems()
     if found:
         width = max(len(name) for name, _ in found) + 8
