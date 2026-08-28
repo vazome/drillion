@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as monaco from "@codingame/monaco-vscode-editor-api";
 // classic mode highlights with Monarch, and the editor API ships no grammars. The package
 // index pulls all ~90 languages; drillion is a Python trainer, so it takes the one.
-import "@codingame/monaco-vscode-standalone-languages/python/python.contribution.js";
+import "@codingame/monaco-vscode-standalone-languages/languages/definitions/python/register.js";
 import { EditorApp } from "monaco-languageclient/editorApp";
 import { MonacoVscodeApiWrapper } from "monaco-languageclient/vscodeApiWrapper";
 import { LanguageClientWrapper } from "monaco-languageclient/lcwrapper";
