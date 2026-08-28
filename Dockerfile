@@ -2,7 +2,10 @@
 FROM node:24-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e AS web
 WORKDIR /build
 COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml ./
-RUN corepack enable
+# node images no longer bundle corepack. It stays the mechanism because it reads the pnpm version
+# out of package.json's packageManager, which keeps that pin the only place the version is
+# written; --force is for the yarn shim the image ships and this stage never uses.
+RUN npm install -g --force corepack@0.35.0 && corepack enable pnpm
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --store-dir /pnpm/store
 COPY web/ ./
