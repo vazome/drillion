@@ -24,17 +24,17 @@ Python. Your progress is a single JSON file.
 
 Every `solve()` says what it takes, so the editor knows what your value can do. Completions,
 signatures and type errors come from a language server running next to the grader, on your
-machine — nothing is sent anywhere.
+machine, and nothing is sent anywhere.
 
 ## But why?
 
-I have tried a lot of learning platforms. Some stuck better than others, and there was
-plenty I did not like — the gamification and the ratings above all. I simply do not care
-about them. I came for one thing: to keep my Python sharp and learn new things, not to
-chat about it with peers.
+I have tried some learning platforms. Some stuck better than others, and there were
+plenty of things I did not like about all of them, the gamification and the ratings
+above all. I simply do not care about them. I came for one thing: to keep my Python
+sharp and learn new things, not to chat about it with peers.
 
-I took heavy inspiration from Exercism, HackerRank and — surprisingly — Anki, and built
-it from scratch.
+I took heavy inspiration from Exercism, HackerRank and, surprisingly, Anki, and built it
+from scratch.
 
 Core ideas I'm keeping in mind during the development:
 
@@ -58,15 +58,16 @@ Core ideas I'm keeping in mind during the development:
   open-source.
 
 One consequence worth stating plainly: 171 tasks ship as executable Python, and `task.py`
-runs on import. So the sandbox is not a badge I bolted on to look serious — it is the
-price of shipping tasks as code, and it is why graded code is confined by the kernel
-rather than by my word. **What running it does to your machine**, below, is the detail.
+runs on import. Shipping tasks as code is what makes the sandbox necessary, so graded code
+is confined by the kernel and you do not have to take my word for it. **What running it
+does to your machine**, below, is the detail.
 
 ## Install
 
 You do not need Python, and you do not need to know what a virtual environment is. Pick your
 system below, run two commands, and drillion opens in your browser at
-<http://127.0.0.1:8765>. It runs on your machine — nothing is uploaded and there is no account.
+<http://127.0.0.1:8765>. It runs on your machine, so nothing is uploaded and there is no
+account.
 
 ### Linux, macOS, or Windows with WSL
 
@@ -82,7 +83,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uvx drillion
 ```
 
-The first run takes a minute — it is fetching Python and drillion. After that it starts in
+The first run takes a minute while it fetches Python and drillion. After that it starts in
 seconds.
 
 ### Windows
@@ -100,7 +101,7 @@ uvx drillion
 ```
 
 One difference worth knowing: the code you submit is sandboxed less tightly on Windows than on
-Linux and macOS — Windows blocks what it can write, not what it can read.
+Linux and macOS. Windows blocks what it can write, but not what it can read.
 [SECURITY.md](SECURITY.md) says exactly which half is which.
 
 ### Using it day to day
@@ -126,7 +127,7 @@ Same on every system, if you already run Docker:
 docker run -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion
 ```
 
-Open <http://127.0.0.1:8765> yourself — the container never opens a browser. The image carries
+Open <http://127.0.0.1:8765> yourself, since the container never opens a browser. The image carries
 the tasks and the page; the named volume keeps your work across upgrades.
 [compose.yaml](compose.yaml) is the same thing plus `restart: unless-stopped`, so drillion comes
 back after a reboot; save that one file anywhere and `docker compose up -d`.
@@ -135,7 +136,7 @@ back after a reboot; save that one file anywhere and `docker compose up -d`.
 
 ```bash
 drillion              # serve the web UI (default)
-drillion selfcheck    # solve every task with its own reference — proves the set still works
+drillion selfcheck    # solve every task with its own reference, proving the set still works
 drillion doctor       # say why a task folder would be skipped
 ```
 
@@ -151,18 +152,18 @@ bind-mount recipe.
 
 ## What running it does to your machine
 
-drillion runs Python on your computer — the code you write, and the code that ships inside the
+drillion runs Python on your computer: the code you write, and the code that ships inside the
 171 tasks. So it is worth saying plainly what that costs you.
 
-- **Your submissions are confined by the kernel, not by a promise.** Landlock on Linux, an
+- **Your submissions are confined by the kernel.** Landlock on Linux, an
   `sandbox-exec` profile on macOS, a restricted token at low integrity on Windows. On Linux and
   macOS graded code reads only the interpreter, the system libraries and the tasks, writes only
   to a scratch directory deleted after the run, and cannot open a network connection. Windows
   confines the writes but not the reads or the network. `drillion doctor` prints the tier you
   actually got, read back from a process that tried it.
 - **Nothing leaves your machine.** No account, no telemetry, no fonts or scripts fetched from
-  anyone. The server binds `127.0.0.1`, and refuses a request from a page it did not serve — so a
-  website you happen to have open cannot drive your local drillion.
+  anyone. The server binds `127.0.0.1`, and refuses a request from a page it did not serve, so
+  a website you happen to have open cannot drive your local drillion.
 - **What you downloaded can be checked.** Every release carries provenance naming the workflow
   run that built it, attached to the release itself:
 
@@ -172,16 +173,17 @@ drillion runs Python on your computer — the code you write, and the code that 
   ```
 
 [SECURITY.md](SECURITY.md) is the whole picture, including which half of it Windows does not
-cover and how to report something.
+cover, and how to report something.
 
 ## Docs
 
-- [How a sitting works, and why](docs/how-it-works.md) — the learning loop, what is the ladder and grading rules.
-- [Configuration](docs/configuration.md) — environment, data root, Docker, release verification
-- [Authoring a task](docs/authoring-tasks.md) — tiers, difficulty, tags, the folder format
-- [CONTEXT.md](CONTEXT.md) — the vocabulary the code, the API and the UI all use
-- [DESIGN.md](DESIGN.md) — the UI brief; [`web/README.md`](web/README.md) for the frontend
-- [docs/adr/](docs/adr/) — decisions worth their own page
+- [How a sitting works, and why](docs/how-it-works.md): the learning loop, what the ladder
+  is, and the grading rules.
+- [Configuration](docs/configuration.md): environment, data root, Docker, release verification
+- [Authoring a task](docs/authoring-tasks.md): tiers, difficulty, tags, the folder format
+- [CONTEXT.md](CONTEXT.md): the vocabulary the code, the API and the UI all use
+- [DESIGN.md](DESIGN.md): the UI brief; [`web/README.md`](web/README.md) for the frontend
+- [docs/adr/](docs/adr/): decisions worth their own page
 
 ## Contributing
 
@@ -193,6 +195,6 @@ against, and [AGENTS.md](AGENTS.md) for how the project decides things. Bugs and
 
 ## License
 
-MIT — see [LICENSE](LICENSE). 84 of the 171 tasks carry Markdown adapted from Exercism's Python
+MIT. See [LICENSE](LICENSE). 84 of the 171 tasks carry Markdown adapted from Exercism's Python
 track (also MIT); each names its origin in a `source:` field and an attribution footer, and
 [NOTICE](NOTICE) reproduces the notice that travels with them.

@@ -12,7 +12,7 @@
 
 ## The root
 
-Everything drillion owns — `tasks/` and `progress.json` — lives under one root, and nothing it
+Everything drillion owns, `tasks/` and `progress.json`, lives under one root, and nothing it
 owns lives anywhere else.
 
 Run it from a clone and the checkout is the root: the tasks you practise are the ones in
@@ -24,7 +24,7 @@ you saved. [ADR 0003](adr/0003-ship-the-tasks-and-seed-a-writable-root.md) has t
 
 `progress.json` holds your cards, open attempts, log, archived solutions and notes. It is
 untracked and git-ignored, so a fresh clone starts with an empty ladder rather than the
-maintainer's. It is the only copy of your practice history and nothing rebuilds it — if a pull
+maintainer's. It is the only copy of your practice history and nothing rebuilds it. If a pull
 ever offers you a modify/delete conflict on it, keep your file.
 
 ## Docker
@@ -37,13 +37,13 @@ docker run -d --name drillion -p 127.0.0.1:8765:8765 -v drillion:/data \
 ```
 
 The named volume outlives the container: upgrading is `docker pull` and start again, and your
-progress is still there. `latest` follows the newest release; name a version —
-`ghcr.io/vazome/drillion:0.1.0` — to stay put. [compose.yaml](../compose.yaml) is that same run
+progress is still there. `latest` follows the newest release; name a version such as
+`ghcr.io/vazome/drillion:0.1.0` to stay put. [compose.yaml](../compose.yaml) is that same run
 spelled out, plus `restart: unless-stopped` so it survives a reboot: save the one file anywhere
 and `docker compose up -d`.
 
 To keep those files in a directory you can open, bind-mount one and hand the container your own
-uid — it runs as uid 1000 and cannot write a directory Docker made for root:
+uid, since it runs as uid 1000 and cannot write a directory Docker made for root:
 
 ```bash
 mkdir -p drillion-data
@@ -67,7 +67,7 @@ Releases go out through PyPI's trusted publishing, so drillion stores no upload 
 and every artifact is attested where it lands. Which command you want depends on where you got
 the file from.
 
-**From the GitHub release** — the wheel, the sdist and their provenance are all on the release
+**From the GitHub release.** The wheel, the sdist and their provenance are all on the release
 page, so this needs nothing but the download:
 
 ```bash
@@ -77,14 +77,14 @@ gh attestation verify drillion-<version>-py3-none-any.whl --repo vazome/drillion
 The `drillion-<version>.intoto.jsonl` beside them is the same provenance in a file, for a checker
 that cannot reach GitHub's API.
 
-**From PyPI** — PyPI keeps its own [PEP 740](https://peps.python.org/pep-0740/) attestation:
+**From PyPI.** PyPI keeps its own [PEP 740](https://peps.python.org/pep-0740/) attestation:
 
 ```bash
 pypi-attestations verify pypi --repository https://github.com/vazome/drillion \
   pypi:drillion-<version>-py3-none-any.whl
 ```
 
-**From ghcr** — the image carries build provenance and an SPDX SBOM. Verify the tag rather than a
+**From ghcr.** The image carries build provenance and an SPDX SBOM. Verify the tag rather than a
 platform digest; the tag resolves to the multi-arch index, which is what was signed:
 
 ```bash
