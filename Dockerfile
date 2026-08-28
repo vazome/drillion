@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM node:24-slim AS web
+FROM node:24-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e AS web
 WORKDIR /build
 COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml ./
 RUN corepack enable
@@ -8,7 +8,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 COPY web/ ./
 RUN pnpm build
 
-FROM python:3.13-slim AS wheel
+FROM python:3.13-slim@sha256:7ce4b6dfe35e55397b7cda544f8a13f191b7ae28dc5aad71fe664dbc9bc2623f AS wheel
 # v0.12.7
 COPY --from=ghcr.io/astral-sh/uv@sha256:95f2aa1fe59274951cfe9b0cbc7972e879ff1004bc8945d130a32eb0dbd85945 /uv /usr/local/bin/
 ENV UV_LINK_MODE=copy
@@ -19,10 +19,15 @@ COPY tasks/ ./tasks/
 COPY --from=web /build/dist ./web/dist
 RUN --mount=type=cache,target=/root/.cache/uv uv build --wheel -o /wheel
 
-FROM python:3.13-slim
+FROM python:3.13-slim@sha256:7ce4b6dfe35e55397b7cda544f8a13f191b7ae28dc5aad71fe664dbc9bc2623f
 
 # v0.12.7
 COPY --from=ghcr.io/astral-sh/uv@sha256:95f2aa1fe59274951cfe9b0cbc7972e879ff1004bc8945d130a32eb0dbd85945 /uv /uvx /usr/local/bin/
+
+# a base tag is a snapshot of Debian, and the digest pins above freeze that snapshot on
+# purpose. This upgrade is what keeps the OS packages current regardless, so a pin can never
+# mean a stale openssl.
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 # no uv cache reaches the image: it lives only in the build cache mounts below, and a cache
@@ -44,6 +49,14 @@ RUN set -eu; \
     node_dir="$(echo /app/.venv/lib/python3.*/site-packages/nodejs_wheel)"; \
     test -x "$node_dir/bin/node"; \
     rm -rf "$node_dir/lib/node_modules/npm" "$node_dir/bin/npm" "$node_dir/bin/npx"
+
+# the app runs out of /app/.venv, which uv fills without ever calling the interpreter's own
+# pip. That pip is never invoked, and the versions its vendor.txt pins are the rest of the
+# image's CVE count.
+RUN set -eu; \
+    sp="$(echo /usr/local/lib/python3.*/site-packages)"; \
+    test -f "$sp/pip/_vendor/vendor.txt"; \
+    rm -rf "$sp"/pip "$sp"/pip-*.dist-info /usr/local/bin/pip*
 
 ENV PATH="/app/.venv/bin:$PATH" \
     DRILLION_ROOT=/data \
