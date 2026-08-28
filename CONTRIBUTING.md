@@ -135,7 +135,10 @@ the `progress.json` schema, and the task-folder format:
 
 - **MAJOR** — an existing `progress.json` stops loading or needs migrating, existing task
   folders stop being valid, or a CLI/HTTP contract breaks. A learner's saved progress is the
-  thing they cannot afford to lose, so it is the thing MAJOR is about.
+  thing they cannot afford to lose, so it is the thing MAJOR is about. The schema half of that
+  promise is a number in the code and in every file written: `SCHEMA` in
+  `src/drillion/state.py`, stamped as `"version"`. A MAJOR is what bumps it, and a build
+  refuses a file from a schema above its own rather than rewriting it.
 - **MINOR** — new features, new payload fields, new tasks. Task content is content; adding
   drills is not a breaking change.
 - **PATCH** — fixes, no new surface.
