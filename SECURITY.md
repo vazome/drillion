@@ -26,7 +26,10 @@ This holds whatever the kernel offers, and it removes the highest-value target o
 - **`HOME` and `TMPDIR` point at the scratch directory** the runner makes and deletes per
   run, so `~/.aws/credentials`, `~/.ssh` and `~/.config` resolve into an empty temp dir.
 - **POSIX resource limits** in `preexec_fn`: address space, file size, core dumps, CPU time
-  bounded by the run's own wall-clock timeout, and a process cap a fork bomb reaches.
+  bounded by the run's own wall-clock timeout, and a process cap a fork bomb reaches. A limit
+  the kernel refuses is skipped rather than fatal, so two of these are Linux-only in practice:
+  macOS declines a finite address-space limit, and the process cap is counted from
+  `/proc/loadavg`, which only Linux has.
 - **Timeouts**, as before: 10 seconds per test, 60 seconds for the run.
 
 ## Tiers
