@@ -24,43 +24,70 @@ machine — nothing is sent anywhere.
 
 ## Install
 
-Any of these serve <http://127.0.0.1:8765>. The first three need Python 3.13 or newer; Docker needs nothing but Docker.
+You do not need Python, and you do not need to know what a virtual environment is. Pick your
+system below, run two commands, and drillion opens in your browser at
+<http://127.0.0.1:8765>. It runs on your machine — nothing is uploaded and there is no account.
 
-### Try it — `uvx`
+### Linux, macOS, or Windows with WSL
+
+Open a terminal. Install [uv](https://docs.astral.sh/uv/), which is the one tool drillion needs:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**Close the terminal and open a new one**, so it picks up the new command. Then:
 
 ```bash
 uvx drillion
 ```
 
-Downloads, runs, and leaves nothing installed. Your progress still persists between runs; only
-drillion itself is temporary.
+The first run takes a minute — it is fetching Python and drillion. After that it starts in
+seconds.
 
-### Keep it — `uv tool install`
+### Windows
 
-```bash
-uv tool install drillion
-drillion
+Open **PowerShell** from the Start menu. Install uv:
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-Puts `drillion` on your PATH. `uv tool upgrade drillion` updates it.
+**Close PowerShell and open it again**, then:
 
-### Keep it — `pip`
-
-```bash
-pip install drillion
-drillion
+```powershell
+uvx drillion
 ```
 
-The same thing without uv. Use a virtualenv if you keep your system Python clean.
+One difference worth knowing: the code you submit is sandboxed less tightly on Windows than on
+Linux and macOS — Windows blocks what it can write, not what it can read.
+[SECURITY.md](SECURITY.md) says exactly which half is which.
+
+### Using it day to day
+
+- **Stop it**: press `Ctrl+C` in the terminal window.
+- **Start it again**: `uvx drillion`, in any terminal.
+- **Update**: nothing to do. `uvx` fetches the current version each time.
+- **Your work is kept** between runs, and an update never overwrites it.
+
+Want a permanent `drillion` command instead of typing `uvx` every time? Either of these
+installs one:
+
+```bash
+uv tool install drillion    # uv tool upgrade drillion to update
+pip install drillion        # the same, if you already have Python 3.13+ and no uv
+```
 
 ### Docker
+
+Same on every system, if you already run Docker:
 
 ```bash
 docker run -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion
 ```
 
-The image carries the tasks and the page; the named volume keeps your work across upgrades.
-Open <http://127.0.0.1:8765> yourself — the container never opens a browser.
+Open <http://127.0.0.1:8765> yourself — the container never opens a browser. The image carries
+the tasks and the page; the named volume keeps your work across upgrades.
 [compose.yaml](compose.yaml) is the same thing plus `restart: unless-stopped`, so drillion comes
 back after a reboot; save that one file anywhere and `docker compose up -d`.
 
