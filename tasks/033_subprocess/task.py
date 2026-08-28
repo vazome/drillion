@@ -11,18 +11,13 @@ from _lib import rng
 
 
 def _gen(r):
+    """Always a python child: `echo`/`true`/`false` are cmd builtins on Windows."""
     word = r.choice(["deploy", "sync", "drain", "evict", "rollout"])
     word += f"-{r.randint(10, 99)}"
-    kind = r.choice(["echo", "true", "false", "py", "py"])
-    if kind == "echo":
-        return ["echo", word]
-    if kind == "true":
-        return ["true"]
-    if kind == "false":
-        return ["false"]
-    code = r.choice([0, 1, 2, 5])
-    prog = (f"import sys; print({word!r}); "
-            f"sys.stderr.write('warn: slow disk\\n'); sys.exit({code})")
+    out = r.choice([f"print({word!r}); ", ""])
+    err = r.choice(["sys.stderr.write('warn: slow disk\\n'); ", ""])
+    code = r.choice([0, 0, 1, 2, 5])
+    prog = f"import sys; {out}{err}sys.exit({code})"
     return [sys.executable, "-c", prog]
 
 
