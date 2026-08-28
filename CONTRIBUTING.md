@@ -182,6 +182,9 @@ does about 0.4.5.
   rules are in `web/.oxlintrc.json`, each with the mistake it is there to catch.
 - Conventional commit titles, plain language: `fix(web): submission no longer causes crashes`.
 - Comments describe how a thing is used, not a line-by-line narration.
+- New functionality comes with tests in `tests/`, in the same change. A bug fix comes with
+  the test that fails without it. Perfection is not the bar — a change that adds behaviour
+  nothing exercises is.
 
 ## Pull requests
 
