@@ -11,8 +11,8 @@
     "screens": "playwright test"
   },
   "dependencies": {
-    "@codingame/monaco-vscode-editor-api": "^25.1.2",
-    "@codingame/monaco-vscode-standalone-languages": "25.1.2",
+    "@codingame/monaco-vscode-editor-api": "^36.1.1",
+    "@codingame/monaco-vscode-standalone-languages": "36.1.1",
     "monaco-languageclient": "^10.7.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
