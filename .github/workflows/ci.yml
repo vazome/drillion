@@ -4,12 +4,20 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    # nightly: the 14 tasks that import boto3, moto, requests, responses, langchain-core,
+    # fastapi and httpx at grade time can break on an upstream release with no commit landing
+    # here to trigger CI. Offset from security.yml (17 6 * * 1) and scorecard.yml (41 6 * * 1),
+    # and off the hour, where GitHub's scheduler is congested and runs get delayed.
+    - cron: "37 3 * * *"
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  # github.ref is the same default-branch ref for a push to main and every scheduled run, so
+  # without this a nightly run and a just-landed push could cancel each other out
+  group: ci-${{ github.event_name == 'schedule' && 'schedule' || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -44,6 +52,13 @@ jobs:
           enable-cache: true
           python-version: ${{ matrix.python }} # sets UV_PYTHON, which wins over .python-version
       - run: uv sync --locked
+        if: github.event_name != 'schedule'
+      # --locked pins every package to the lockfile, so a push or PR run install the exact
+      # same versions every time; that's reproducible, but it's also blind to the upstream
+      # release that broke a task overnight, which is the entire point of running this nightly
+      - name: resolve today's allowed versions instead of the lockfile
+        if: github.event_name == 'schedule'
+        run: uv lock --upgrade && uv sync
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest tests -q
@@ -227,3 +242,28 @@ jobs:
           case "$RESULTS" in
             *failure*|*cancelled*|*skipped*) exit 1 ;;
           esac
+
+  # a cron nobody watches is worth little to a solo maintainer: turn a red nightly into one
+  # issue that gets refreshed on each further failure, instead of a run nobody opens
+  report:
+    if: github.event_name == 'schedule' && failure()
+    needs: [gate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: file or refresh the tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          ISSUE=$(gh issue list -R "$REPO" --state open -A "github-actions[bot]" \
+            --search '"nightly CI run failed" in:title' --json number -q '.[0].number')
+          if [ -z "$ISSUE" ]; then
+            gh issue create -R "$REPO" -t "nightly CI run failed" \
+              -b "The scheduled run of ci.yml failed: $RUN_URL"
+          else
+            gh issue edit -R "$REPO" "$ISSUE" -b "The scheduled run of ci.yml failed again: $RUN_URL"
+          fi
