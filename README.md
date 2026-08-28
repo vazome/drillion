@@ -6,10 +6,18 @@
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14269/badge)](https://www.bestpractices.dev/projects/14269)
 [![License](https://img.shields.io/pypi/l/drillion)](https://github.com/vazome/drillion/blob/main/LICENSE)
 
-TL;DR: Self-hosted python practices in effective UI. With no social engagment bait, public rating bullshit and no achievements. Pragmatic and simple by nature.
+TL;DR: self-hosted Python practice with a UI that stays out of your way. No streaks,
+no leaderboard nonsense, no badges and no engagement bait. Made by a neurodivergent
+engineer. It is simple, and it runs your code in a sandbox.
 
-`drillion` is a local web app with 171 short Python tasks, each tagged with the concept it
-practises so you can go straight at what you want to get better at. There is no login, no account and no server but yours: the tasks are folders of Markdown and Python on your disk, and your progress is one JSON file.
+Longer: drillion is a local web app with 171 short Python tasks, each tagged with the
+concept it drills so you can go straight at whatever you're worst at. No login, no
+account, no server except the one on your laptop. Tasks are folders of Markdown and
+Python. Your progress is a single JSON file.
+
+Graded code is confined by the kernel, not by a promise — Landlock on Linux,
+`sandbox-exec` on macOS, a restricted token on Windows. **What running it does to your
+machine**, further down, says what that does and does not cover.
 
 | | Light | Dark |
 | --- | --- | --- |
@@ -21,6 +29,24 @@ practises so you can go straight at what you want to get better at. There is no 
 Every `solve()` says what it takes, so the editor knows what your value can do. Completions,
 signatures and type errors come from a language server running next to the grader, on your
 machine — nothing is sent anywhere.
+
+## But why?
+
+I have tried a lot of learning platforms. Some stuck better than others, and there was
+plenty I did not like — the gamification and the ratings above all. I simply do not care
+about them. I came for one thing: to keep my Python sharp and learn new things, not to
+chat about it with peers.
+
+I took heavy inspiration from Exercism, HackerRank and — surprisingly — Anki, and built
+it from scratch.
+
+Core ideas:
+
+- A clean UI that does not gate the task.
+- Categorisation that is convenient and easy to navigate.
+- Anki-like progression: a task comes back before you forget it.
+- An editor that behaves like an IDE without the complexity of one, with non-AI
+  autocomplete that works.
 
 ## Install
 
@@ -108,6 +134,31 @@ inside the wheel. In Docker it is the volume at `/data`. An upgrade never writes
 already has tasks in it, so nothing you have written is at risk.
 See [docs/configuration.md](docs/configuration.md) for the environment variables and the Docker
 bind-mount recipe.
+
+## What running it does to your machine
+
+drillion runs Python on your computer — the code you write, and the code that ships inside the
+171 tasks. So it is worth saying plainly what that costs you.
+
+- **Your submissions are confined by the kernel, not by a promise.** Landlock on Linux, an
+  `sandbox-exec` profile on macOS, a restricted token at low integrity on Windows. On Linux and
+  macOS graded code reads only the interpreter, the system libraries and the tasks, writes only
+  to a scratch directory deleted after the run, and cannot open a network connection. Windows
+  confines the writes but not the reads or the network. `drillion doctor` prints the tier you
+  actually got, read back from a process that tried it.
+- **Nothing leaves your machine.** No account, no telemetry, no fonts or scripts fetched from
+  anyone. The server binds `127.0.0.1`, and refuses a request from a page it did not serve — so a
+  website you happen to have open cannot drive your local drillion.
+- **What you downloaded can be checked.** Every release carries provenance naming the workflow
+  run that built it, attached to the release itself:
+
+  ```bash
+  gh attestation verify drillion-0.5.1-py3-none-any.whl --repo vazome/drillion
+  gh attestation verify oci://ghcr.io/vazome/drillion:0.5.1 --repo vazome/drillion
+  ```
+
+[SECURITY.md](SECURITY.md) is the whole picture, including which half of it Windows does not
+cover and how to report something.
 
 ## Docs
 
