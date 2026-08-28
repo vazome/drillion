@@ -153,3 +153,6 @@ def test_the_repos_own_type_config_cannot_reach_a_learners_task(tmp_path):
     )
     severities = {d["severity"] for d in json.loads(done.stdout)["generalDiagnostics"]}
     assert severities == {"warning"}, done.stdout
+    # a key pyright does not know is not an error, it is a diagnostic in the learner's
+    # editor — and it never reaches --outputjson, only stderr
+    assert "unrecognized" not in done.stderr.lower(), done.stderr

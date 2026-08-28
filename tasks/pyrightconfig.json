@@ -1,4 +1,11 @@
 {
-  "//": "The learner's editor, pinned. lsp.py points the language server at this directory, and without this file the checker would walk up and adopt the repo's own [tool.basedpyright] in a git-clone install — where drillion is checked, not where tasks are. That is basedpyright's default mode, so a pip or Docker install, which has no pyproject above tasks/, already behaves this way; naming it here makes every distribution line identical.",
+  // The learner's editor, pinned. lsp.py points the language server at this directory, and
+  // without this file the checker walks up and adopts the repo's own [tool.basedpyright] in
+  // a git-clone install — where drillion is checked, not where tasks are. This is
+  // basedpyright's own default, so a pip or Docker install, which has no pyproject above
+  // tasks/, already behaves this way; naming it here makes every install identical.
+  //
+  // Comments are fine, unknown keys are not: pyright reports `unrecognized setting` as a
+  // diagnostic, which lands in the learner's editor. tests/test_lsp.py holds both lines.
   "typeCheckingMode": "recommended"
 }
