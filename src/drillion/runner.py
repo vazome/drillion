@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
 from .catalogue import tasks
 from .region import _solve, cut, splice, stub
@@ -31,8 +32,23 @@ def _run_pytest(args, timeout=None, **env):
     with tempfile.TemporaryDirectory(
         dir=settings.root, ignore_cleanup_errors=True
     ) as scratch:
+        # an empty config, pinned: from a checkout pytest would otherwise walk up, adopt
+        # the repo's pyproject.toml and grade a learner against our own settings — its
+        # `filterwarnings = error` above all. `-c` moves rootdir too, so pin that back to
+        # `root` or pytest reports failures with no filename in them.
+        ini = Path(scratch, "pytest.ini")
+        ini.write_text("[pytest]\n")
         return subprocess.run(
-            [sys.executable, "-m", "pytest", *args, *_PYTEST],
+            [
+                sys.executable,
+                "-m",
+                "pytest",
+                "-c",
+                str(ini),
+                f"--rootdir={settings.root}",
+                *args,
+                *_PYTEST,
+            ],
             env={**os.environ, "PYTHONPATH": str(settings.tasks_dir), **env},
             cwd=scratch,
             capture_output=True,

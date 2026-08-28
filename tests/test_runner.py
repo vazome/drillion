@@ -82,6 +82,26 @@ def test_the_learners_code_cannot_litter_the_data_root(tmp_path, monkeypatch):
     assert not list(tmp_path.rglob("litter.txt"))
 
 
+def test_a_warning_in_the_learners_code_is_not_a_failure(tmp_path, monkeypatch):
+    """drillion's own pyproject turns warnings into errors, and in a checkout pytest walks
+    up from the task and adopts it. The grader pins an empty config so a learner is graded
+    on their assertion, never on a `DeprecationWarning` from the library they were told to
+    use."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    (tmp_path / "pyproject.toml").write_text(
+        "[tool.pytest.ini_options]\nfilterwarnings = ['error']\n"
+    )
+    task = tmp_path / "task.py"
+    task.write_text(
+        "import warnings\n"
+        "def test_solve():\n"
+        "    warnings.warn('old api', DeprecationWarning)\n"
+        "    assert True\n"
+    )
+    passed, out = runner.run_tests(task, seed=1)
+    assert passed, out
+
+
 def test_a_failure_names_the_task_the_short_way(tmp_path, monkeypatch):
     """The scratch cwd sits inside the data root, so pytest reports the task relative to it
     and the output panel never shows a host path."""
