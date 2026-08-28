@@ -135,22 +135,41 @@ the `progress.json` schema, and the task-folder format:
 
 - **MAJOR** — an existing `progress.json` stops loading or needs migrating, existing task
   folders stop being valid, or a CLI/HTTP contract breaks. A learner's saved progress is the
-  thing they cannot afford to lose, so it is the thing MAJOR is about.
+  thing they cannot afford to lose, so it is the thing MAJOR is about. The schema half of that
+  promise is a number in the code and in every file written: `SCHEMA` in
+  `src/drillion/state.py`, stamped as `"version"`. A MAJOR is what bumps it, and a build
+  refuses a file from a schema above its own rather than rewriting it.
 - **MINOR** — new features, new payload fields, new tasks. Task content is content; adding
   drills is not a breaking change.
 - **PATCH** — fixes, no new surface.
 
 Releasing: bump `pyproject.toml`, add the entry to [CHANGELOG.md](CHANGELOG.md), merge that to
-`main`, then tag the commit `v<version>`. The tag is the whole trigger — the `gate` job fails a
-tag whose name disagrees with the declared version, and fails a commit that is not on `main`,
-because the `main` ruleset is what proves the commit went green. Past the gate it publishes to
-PyPI and ghcr and cuts the GitHub release, with the wheel and sdist attached and the changelog
-entry verbatim as its notes. A tag with no matching `## <version>` section in the changelog fails
-rather than publishing a release with nothing in it.
+`main`, then `git fetch` and tag `<remote>/main` **by name**:
+
+```bash
+git fetch origin main
+git tag -s v<version> origin/main -m "v<version>"
+git push origin v<version>
+```
+
+Never tag a local branch, and never tag the release branch you just merged: a squash merge
+rewrites the commit, so that branch's head is not what landed on `main` and the gate will refuse
+it. The tag is the whole trigger — the `gate` job fails a tag whose name disagrees with the
+declared version, and fails a commit that is not on `main`, because the `main` ruleset is what
+proves the commit went green. Past the gate it publishes to PyPI and ghcr and cuts the GitHub
+release, with the wheel and sdist attached and the changelog entry verbatim as its notes. A tag
+with no matching `## <version>` section in the changelog fails rather than publishing a release
+with nothing in it.
 
 When a publish dies for a reason that is not the code — a network blip, a `pypi` approval that
 arrives after the job timed out — rerun it from **Actions → release → Run workflow**, choosing the
-tag rather than a branch. Never move a published tag.
+tag rather than a branch.
+
+Never move a published tag, and note that you could not if you wanted to: the `published version
+tags` ruleset makes `refs/tags/v*` immutable with no bypass actors. A tag pushed at the wrong
+commit therefore spends that version number for good — the gate refuses to publish it, and it can
+neither be deleted nor repointed. Go to the next patch and say so in the changelog, the way 0.4.6
+does about 0.4.5.
 
 ## Code style
 

@@ -57,7 +57,7 @@ from .scheduler import (
     stuck,
 )
 from .settings import settings
-from .state import card, own, reading, today, writing
+from .state import TooNew, card, own, reading, today, writing
 
 log = logging.getLogger(__name__)
 MAX_BODY = 256 * 1024
@@ -90,6 +90,12 @@ class Note(BaseModel):
 async def _rejected(_request, exc):
     """A refused edit is the learner's problem, not a crash: 400 with the line."""
     return JSONResponse({"error": exc.msg, "line": exc.line}, 400)
+
+
+@app.exception_handler(TooNew)
+async def _too_new(_request, exc):
+    """A progress file from a newer drillion: say so on the page, do not 500 the log."""
+    return JSONResponse({"error": str(exc)}, 409)
 
 
 @app.exception_handler(NoAttempt)
@@ -443,10 +449,16 @@ def note_task(slug: str, note: Note):
 
 @app.get("/api/task/{slug}/assets/{name}")
 def asset(slug: str, name: str):
-    """An image, diagram or clip the README points at. A name, never a path."""
-    folder = _task(slug)["dir"]
-    path = folder / "assets" / name
-    if "/" in name or "\\" in name or ".." in name or not path.is_file():
+    """An image, diagram or clip the README points at. A name, never a path.
+
+    The guard is containment of the resolved path, not a list of forbidden characters: a
+    list has to know every escape, and it missed both a symlink out of `assets/` and a
+    Windows drive-relative name like `C:progress.json`, which carries none of them and
+    still throws the left side of the join away. `is_file()` runs first so a name that
+    cannot be resolved at all — an embedded null — is a 404 rather than a 500."""
+    assets = _task(slug)["dir"] / "assets"
+    path = assets / name
+    if not path.is_file() or not path.resolve().is_relative_to(assets.resolve()):
         raise HTTPException(404, f"no asset {name!r}")
     return FileResponse(path)
 

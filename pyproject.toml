@@ -25,6 +25,7 @@ classifiers = [
     "Intended Audience :: Education",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Education :: Computer Aided Instruction (CAI)",
 ]
 # 14 tasks import boto3, moto, langchain-core, requests, responses and httpx, and run in

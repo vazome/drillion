@@ -140,13 +140,14 @@ jobs:
         with:
           persist-credentials: false
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
-      # reports, does not gate: release.yml still carries findings this branch does not touch.
-      # Drop --no-exit-codes once that baseline is agreed and cleared.
+      # gates: the workflows carry no findings today, so any new one fails this job. The upload
+      # below still runs on that failure, so a red build leaves the findings in the Security tab.
       - name: audit the workflows
         env:
           GH_TOKEN: ${{ github.token }}
-        run: uvx zizmor@1.29.0 --format sarif --no-exit-codes --no-progress .github/workflows/ > zizmor.sarif
+        run: uvx zizmor@1.29.0 --format sarif --no-progress .github/workflows/ > zizmor.sarif
       - uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        if: ${{ !cancelled() }}
         with:
           sarif_file: zizmor.sarif
           category: zizmor

@@ -14,7 +14,7 @@ tags: [stdlib-ops]
 A deploy script has to run other command-line tools (kubectl, terraform, a health check) and decide what to do based on whether each one succeeded and what it printed. The team lead wants one helper that runs a command and reports back in one tidy package: did it succeed, the exit code, its normal output and its error output. It must never glue the command into one string, because that is how attackers sneak extra commands in.
 
 ## You get
-`argv` — a list of strings: the program name followed by its arguments, like `["echo", "hi"]`. The test creates it and hands it to you; you never build it yourself.
+`argv` — a list of strings: the program name followed by its arguments, like `["echo", "hi"]`. The test creates it and hands it to you; you never build it yourself. The examples below say `echo` because it reads well; the test itself always runs a Python child process, which behaves the same on every platform.
 
 ## You return
 a dict with exactly the keys `"ok"`, `"code"`, `"out"` and `"err"`, as described in the rules below.

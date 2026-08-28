@@ -189,6 +189,7 @@ def test_load_fills_in_the_keys_an_older_file_lacks():
     try:
         settings.root = tmp  # progress.json lives under root
         assert state.load() == {
+            "version": state.SCHEMA,
             "focus": None,
             "cards": {},
             "open": {},

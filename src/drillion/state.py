@@ -10,11 +10,27 @@ from datetime import date
 
 from .settings import settings
 
+SCHEMA = 1  # the shape this build reads and writes; a bump here is the MAJOR in CONTRIBUTING.md
+
+
+class TooNew(Exception):
+    """progress.json came from a drillion this one cannot read. Raised by `load()` before
+    anything opens the file for writing, so the refusal is never lossy."""
+
 
 def load():
     path = settings.state_path  # read at call time: tests move the root
     st = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    # No version means v1: every drillion that has ever written this file wrote v1. A version
+    # that is not a number is not a claim about the schema either, so it reads the same way.
+    version = st.get("version", SCHEMA)
+    if isinstance(version, (int, float)) and version > SCHEMA:
+        raise TooNew(
+            f"{path} was written by a newer drillion (schema v{version}; this build reads "
+            f"v{SCHEMA}). Your progress is intact and untouched — upgrade drillion to open it."
+        )
     return {
+        "version": SCHEMA,
         "focus": None,
         "cards": {},
         "open": {},
