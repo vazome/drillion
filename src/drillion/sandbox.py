@@ -172,6 +172,9 @@ _DEV = ("read_file", "write_file", "read_dir", "ioctl_dev")
 
 class _PathBeneath(ctypes.Structure):
     _pack_ = 1
+    # the kernel struct is packed, which is exactly what MSVC layout plus `_pack_` gives:
+    # 3.14 deprecates leaving it implicit, and ctypes ignores the name before then
+    _layout_ = "ms"
     _fields_ = [("allowed_access", ctypes.c_uint64), ("parent_fd", ctypes.c_int32)]
 
 
@@ -505,7 +508,12 @@ def preexec(scratch, targets, cpu):
 
     def child():
         for what, soft_hard in limits:
-            resource.setrlimit(what, soft_hard)
+            try:
+                resource.setrlimit(what, soft_hard)
+            except (OSError, ValueError):
+                # Darwin refuses a finite RLIMIT_AS. One limit the kernel will not take is
+                # a weaker floor, not a reason to refuse to grade at all
+                pass
         if plan:
             _restrict(plan)
 
