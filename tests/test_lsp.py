@@ -23,6 +23,7 @@ class FakeWS:
 
     def __init__(self, script=(), expect=0):
         self.script, self.sent, self.expect = list(script), [], expect
+        self.closed = None
 
     async def receive_text(self):
         if self.script:
@@ -33,6 +34,9 @@ class FakeWS:
 
     async def send_text(self, text):
         self.sent.append(text)
+
+    async def close(self, code=1000):
+        self.closed = code
 
 
 def server(code):
@@ -101,3 +105,21 @@ def test_a_server_that_cannot_start_is_not_swallowed():
     lsp.SERVER = ("drillion-no-such-language-server",)
     with pytest.raises(FileNotFoundError):
         asyncio.run(lsp.bridge(FakeWS()))
+    assert lsp._live == 0  # a server that never started still gives its slot back
+
+
+def test_the_running_servers_are_capped():
+    """One process per socket is a resource exhaustion path: a reconnect loop must stop at
+    the cap rather than at the machine's memory."""
+    run(FakeWS(), "pass")
+    assert lsp._live == 0  # a finished bridge gives its slot back
+
+    lsp._live = lsp.MAX_SERVERS
+    try:
+        ws = FakeWS()
+        asyncio.run(lsp.bridge(ws))
+        assert (
+            ws.closed == 1013 and ws.sent == []
+        )  # try again later, and nothing spawned
+    finally:
+        lsp._live = 0
