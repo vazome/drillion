@@ -3,6 +3,7 @@
 [![PyPI](https://img.shields.io/pypi/v/drillion)](https://pypi.org/project/drillion/)
 [![Python](https://img.shields.io/pypi/pyversions/drillion)](https://pypi.org/project/drillion/)
 [![CI](https://github.com/vazome/drillion/actions/workflows/ci.yml/badge.svg)](https://github.com/vazome/drillion/actions/workflows/ci.yml)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14269/badge)](https://www.bestpractices.dev/projects/14269)
 [![License](https://img.shields.io/pypi/l/drillion)](https://github.com/vazome/drillion/blob/main/LICENSE)
 
 TL;DR: Self-hosted python practices in effective UI. With no social engagment bait, public rating bullshit and no achievements. Pragmatic and simple by nature.
