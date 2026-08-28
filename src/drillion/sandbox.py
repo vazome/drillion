@@ -504,9 +504,9 @@ def status():
         return "restricted-token", (
             "a restricted token at Low integrity in a job object: writes confined to the "
             "scratch directory, memory capped, and anything left running killed with the "
-            "job. Reads and the network are NOT restricted — Windows has no unprivileged "
-            "tier that does, and AppContainer would need every path the interpreter reads "
-            "ACLed for a package SID"
+            "job. Reads are NOT restricted — Windows has no unprivileged tier that does, "
+            "and AppContainer would need every path the interpreter reads ACLed for a "
+            "package SID. The audit hook rides along for the network, as a speed bump"
         )
     if _guard_works():
         return "guard", (
@@ -553,14 +553,13 @@ def run(args, scratch, cpu, **env):
     """Grade pytest `args` under the strongest tier this machine has, and hand back what
     `subprocess.run` would have. The one entry point the runner calls: Windows needs
     `CreateProcessAsUser` for a restricted token, so it cannot go through `subprocess`."""
+    plan = confine(args, scratch, cpu, **env)
     if status()[0] == "restricted-token":
         from . import winsandbox
 
-        return winsandbox.run(
-            [sys.executable, "-m", "pytest", *args], scratch, timeout=cpu, **env
-        )
+        return winsandbox.run(plan["args"], scratch, timeout=cpu, **env)
     return subprocess.run(
-        **confine(args, scratch, cpu, **env),
+        **plan,
         capture_output=True,
         text=True,
         encoding="utf-8",
@@ -582,9 +581,10 @@ def confine(args, scratch, cpu, **env):
         }
     )
     cmd = [sys.executable, "-m", "pytest", *args]
-    if tier == "guard":
+    if tier in ("guard", "restricted-token"):
         # `-p` plugins load before pytest imports any task module, and `_PYTEST` already
-        # passes `-p no:cacheprovider`, so this needs no new mechanism
+        # passes `-p no:cacheprovider`, so this needs no new mechanism. Windows loads it
+        # too: Low integrity denies the writes but says nothing about the network
         cmd += ["-p", "drillion.guard"]
     if tier == "sandbox-exec":
         cmd = [SANDBOX_EXEC, "-p", _sbpl(scratch, targets), *cmd]
