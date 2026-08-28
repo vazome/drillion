@@ -141,6 +141,28 @@ jobs:
           docker logs drillion
           exit 1
       - run: docker exec drillion drillion selfcheck
+      # selfcheck never opens /lsp, so nothing else here would notice a language server that
+      # cannot start — which is exactly what trimming the image could break
+      - name: the editor's language server answers on /lsp
+        run: |
+          docker exec -i drillion python - <<'PY'
+          import json
+          from websockets.sync.client import connect
+
+          # the origin the page itself would send; api._allowed_origins() refuses any other
+          with connect("ws://127.0.0.1:8765/lsp", origin="http://127.0.0.1:8765") as ws:
+              ws.send(json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize",
+                                  "params": {"processId": None, "rootUri": None,
+                                             "capabilities": {}}}))
+              for _ in range(50):  # the server logs a few notifications before it answers
+                  reply = json.loads(ws.recv(timeout=120))
+                  if reply.get("id") == 1:
+                      break
+              else:
+                  raise SystemExit("::error::no reply to the LSP initialize")
+          assert "capabilities" in reply.get("result", {}), reply
+          print("lsp initialize ok:", reply["result"].get("serverInfo"))
+          PY
       - name: start it again with nothing but a volume
         run: |
           docker rm -f drillion

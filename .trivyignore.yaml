@@ -1,0 +1,20 @@
+# Findings Trivy is right to raise and we are right to ignore, each scoped to the one path it
+# is about — a rule suppressed outright would stop reporting a real key committed under src/.
+# `trivy.yaml` is what points Trivy at this file; the plain `.trivyignore` format has no paths.
+# Every entry expires, so a suppression is re-argued rather than inherited.
+secrets:
+  # moto ships a CA for its HTTPS-proxy mode. Both are real PEM private keys and both are
+  # published in every copy of moto on PyPI, so they protect nothing and leak nothing.
+  - id: private-key
+    paths:
+      - "**/site-packages/moto/moto_proxy/ca.key"
+      - "**/site-packages/moto/moto_proxy/cert.key"
+    statement: moto's own published HTTPS-proxy CA, not a credential of ours
+    expired_at: 2027-03-01
+
+  # a hardcoded fake AKIA... in moto's EC2 model, there so a mocked call has an id to return
+  - id: aws-access-key-id
+    paths:
+      - "**/site-packages/moto/ec2/models/elastic_network_interfaces.py"
+    statement: moto's hardcoded fake AWS key, not a credential of ours
+    expired_at: 2027-03-01

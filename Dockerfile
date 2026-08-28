@@ -37,6 +37,14 @@ COPY --from=wheel /wheel/*.whl /tmp/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install --python /app/.venv/bin/python --no-deps /tmp/*.whl && rm /tmp/*.whl
 
+# basedpyright runs its language server with `node`; the npm bundled beside that node is
+# never invoked, and its own dependencies are most of the image's CVE count. The `test`
+# fails the build if the layout moves, so this can never quietly delete nothing.
+RUN set -eu; \
+    node_dir="$(echo /app/.venv/lib/python3.*/site-packages/nodejs_wheel)"; \
+    test -x "$node_dir/bin/node"; \
+    rm -rf "$node_dir/lib/node_modules/npm" "$node_dir/bin/npm" "$node_dir/bin/npx"
+
 ENV PATH="/app/.venv/bin:$PATH" \
     DRILLION_ROOT=/data \
     DRILLION_HOST=0.0.0.0 \
