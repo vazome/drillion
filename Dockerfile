@@ -6,7 +6,8 @@ COPY web/ ./
 RUN pnpm build
 
 FROM python:3.13-slim AS wheel
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/
+# v0.12.7
+COPY --from=ghcr.io/astral-sh/uv@sha256:95f2aa1fe59274951cfe9b0cbc7972e879ff1004bc8945d130a32eb0dbd85945 /uv /usr/local/bin/
 WORKDIR /build
 COPY pyproject.toml README.md ./
 COPY src/ ./src/
@@ -16,10 +17,12 @@ RUN uv build --wheel -o /wheel
 
 FROM python:3.13-slim
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+# v0.12.7
+COPY --from=ghcr.io/astral-sh/uv@sha256:95f2aa1fe59274951cfe9b0cbc7972e879ff1004bc8945d130a32eb0dbd85945 /uv /uvx /usr/local/bin/
 
 WORKDIR /app
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+# UV_NO_CACHE: the image runs as drillion, so a wheel cache under /root only adds weight
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_NO_CACHE=1
 
 # no src/ reaches this stage: the project comes from the wheel above, not the lock
 COPY pyproject.toml uv.lock README.md ./

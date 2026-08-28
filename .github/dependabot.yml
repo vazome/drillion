@@ -23,3 +23,11 @@ updates:
     groups:
       web:
         patterns: ["*"]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      images:
+        patterns: ["*"]
