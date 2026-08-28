@@ -12,7 +12,12 @@ from .catalogue import tasks
 from .region import _solve, cut, splice, stub
 from .settings import settings
 
-_TASK_LINE = re.compile(r"[\w./\\-]*task\.py:(\d+)")
+_TASK_LINE = re.compile(r"[\w./-]*task\.py:(\d+)")
+# pytest renders paths with the platform separator, so on Windows every path it prints
+# arrives with backslashes. Normalising the .py paths once, on the way in, keeps both the
+# panel and the slug parsing platform-blind — and leaves a learner's own backslashes
+# (a regex, an escape in a failed assertion) alone, which a blanket replace would not
+_PY_PATH = re.compile(r"[\w.\\/-]*\.py")
 # every task.py is called task.py, so pytest must name modules by path, not basename
 # `--color=no` because FORCE_COLOR or PY_COLORS in the environment turns colour on
 # regardless of the tty, and the escapes land in the learner's output panel
@@ -76,8 +81,14 @@ def run_tests(path, seed):
     return r.returncode == 0, r.stdout
 
 
+def _posix(out):
+    """Every .py path in pytest's output with "/" separators, whatever printed it."""
+    return _PY_PATH.sub(lambda m: m.group(0).replace("\\", "/"), out)
+
+
 def summarise(out, marker_line):
     """pytest output for the browser: the assertion lines, in editor coordinates."""
+    out = _posix(out)
 
     def editor_line(m):
         n = int(m.group(1))
@@ -91,6 +102,20 @@ def summarise(out, marker_line):
         or [ln for ln in lines if ln.startswith(("FAILED", "ERROR"))][:6],
         "output": text[-8192:],
     }
+
+
+def _failed_slugs(out):
+    """The task folders named by pytest's `FAILED`/`ERROR` summary lines.
+
+    Splitting on whitespace drops the `FAILED ` prefix, which the old `/`-only split
+    used to eat by accident and kept on Windows."""
+    return sorted(
+        {
+            Path(ln.split(maxsplit=1)[1].split("::")[0]).parent.name
+            for ln in _posix(out).split("\n")
+            if ln.startswith(("FAILED", "ERROR")) and "_selfcheck.py" in ln
+        }
+    )
 
 
 def _reference_call(body):
@@ -125,13 +150,7 @@ def selfcheck():
     finally:
         for path in made:
             path.unlink(missing_ok=True)
-    failed = sorted(
-        {
-            ln.split("_selfcheck.py")[0].rstrip("/\\").split("/")[-1]
-            for ln in r.stdout.split("\n")
-            if ln.startswith(("FAILED", "ERROR"))
-        }
-    )
+    failed = _failed_slugs(r.stdout)
     if r.returncode and not failed:
         print(r.stdout[-2000:].strip() or "pytest did not run")
         return 1

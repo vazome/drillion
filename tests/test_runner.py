@@ -2,6 +2,8 @@
 
 import shutil
 
+import pytest
+
 from drillion import runner
 from drillion.settings import settings
 
@@ -139,3 +141,35 @@ def test_selfcheck_solves_each_task_with_its_own_reference(
     )
     assert runner.selfcheck() == 1
     assert "FAILED 001_fstrings" in capsys.readouterr().out
+
+
+WINDOWS_OUT = (
+    "..\\tasks\\001_fstrings\\task.py:9: AssertionError\n"
+    "=========================== short test summary info ===========================\n"
+    "FAILED ..\\tasks\\001_fstrings\\task.py::test_solve - assert 1 == 2\n"
+)
+
+
+def test_a_windows_path_reaches_the_panel_the_same_way_a_posix_one_does():
+    """pytest prints the platform separator; the panel speaks `/` on every platform."""
+    text = runner.summarise(WINDOWS_OUT, marker_line=1)["output"]
+    assert "../tasks/001_fstrings/task.py:9" in text
+    assert "\\" not in text
+
+
+def test_a_learners_own_backslashes_survive_the_panel():
+    """The panel carries the learner's failed assertion, escapes and all."""
+    out = "E   AssertionError: assert 'a\\nb' == re.compile(r'\\d+')\n"
+    assert runner.summarise(out, marker_line=1)["output"] == out
+
+
+@pytest.mark.parametrize("sep", ["/", "\\"])
+def test_a_failed_line_names_the_task_folder_and_nothing_else(sep):
+    """The slug, not the `FAILED ` in front of it and not the path around it."""
+    line = f"FAILED ..{sep}tasks{sep}001_fstrings{sep}_selfcheck.py::test_solve - boom"
+    collected = f"ERROR ..{sep}tasks{sep}002_slicing{sep}_selfcheck.py"
+    noise = "FAILED some/other/thing.py::test_x - not ours"
+    assert runner._failed_slugs(f"{line}\n{collected}\n{noise}\n") == [
+        "001_fstrings",
+        "002_slicing",
+    ]
