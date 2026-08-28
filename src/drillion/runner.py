@@ -33,7 +33,7 @@ _PYTEST = [
 def _run_pytest(args, timeout=None, **env):
     """pytest in a subprocess, sandboxed: cwd a scratch dir that is also the child's `HOME`
     and the only place it may write, and `tasks/` on PYTHONPATH so `from _lib import rng`
-    works from any root. `sandbox.confine` decides everything else about the child."""
+    works from any root. `sandbox.run` decides everything else about the child."""
     with tempfile.TemporaryDirectory(
         dir=settings.root, ignore_cleanup_errors=True
     ) as scratch:
@@ -43,19 +43,12 @@ def _run_pytest(args, timeout=None, **env):
         # `root` or pytest reports failures with no filename in them.
         ini = Path(scratch, "pytest.ini")
         ini.write_text("[pytest]\n", encoding="utf-8")
-        return subprocess.run(
-            **sandbox.confine(
-                ["-c", str(ini), f"--rootdir={settings.root}", *args, *_PYTEST],
-                scratch,
-                timeout,
-                PYTHONPATH=str(settings.tasks_dir),
-                **env,
-            ),
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            check=False,
-            timeout=timeout,
+        return sandbox.run(
+            ["-c", str(ini), f"--rootdir={settings.root}", *args, *_PYTEST],
+            scratch,
+            timeout,
+            PYTHONPATH=str(settings.tasks_dir),
+            **env,
         )
 
 
