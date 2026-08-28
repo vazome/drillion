@@ -4,7 +4,7 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
-## 0.4.5 — 2026-08-28
+## 0.4.6 — 2026-08-28
 
 - Code you submit no longer runs with your account's reach. A graded task used to be able to
   read `~/.aws/credentials`, write anywhere you can, see every environment variable your shell
@@ -37,6 +37,8 @@ task-folder format. The version is declared once, in `pyproject.toml`.
   the published image on every push and weekly, the image no longer ships an npm it never runs
   or a uv cache, and it is built for arm64 as well as amd64 with an SBOM attached. Releases are
   cut from this file automatically on tag, and can only publish from `main`.
+- There is no 0.4.5. It was tagged from a commit that was never on `main`, the release gate
+  refused to publish it, and version tags here are immutable — so this is 0.4.6.
 
 ## 0.4.0 — 2026-08-27
 
