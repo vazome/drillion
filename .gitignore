@@ -35,3 +35,6 @@ progress.json.bak
 # agent worktrees: real checkouts of other branches, so every repo-wide tool
 # (ruff, pytest, doctor) walks into them and reports another branch's files
 .claude/
+
+# IDE settings: one contributor's editor, not the project's opinion
+.idea/
