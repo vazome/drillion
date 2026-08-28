@@ -1,5 +1,40 @@
 # What a well-run repo has that drillion doesn't
 
+> **Amended 2026-08-28. Read this as a snapshot of 2026-08-26, not as current.** Two days after it
+> was written drillion went public under MIT and shipped 0.4.0 to PyPI and GHCR, which invalidates
+> §1's verdict ("private and unlicensed") and closes §2.2 outright. The body below is left exactly
+> as it was written — no verdict is edited in place — because its value is the reasoning of that
+> day. What the pivot broke:
+>
+> - **Reversed in practice, and now in the tree.** Provenance attestations (`actions/attest` in
+>   `release.yml`, `push-to-registry: true`), PyPI publishing with Trusted Publishing
+>   (`pypa/gh-action-pypi-publish`, `environment: pypi`, `id-token: write`), the GHCR publish
+>   workflow (`release.yml` pushes `ghcr.io/vazome/drillion`), `docker/build-push-action` with
+>   buildx and `cache-from/to: type=gha` in `ci.yml` and `security.yml`, and
+>   `package-ecosystem: docker` in Dependabot (#115, landed in #120 — the row's premise, "nothing
+>   to bump until a major Python or Node release", was disproved by base-image CVEs in the
+>   published 0.4.0 image).
+> - **CodeQL: reversed, but not by a workflow file.** CodeQL analysis runs through GitHub's
+>   **default setup**, configured in repository settings rather than in `.github/workflows/` —
+>   default query suite, remote threat model, weekly, over actions, python and
+>   javascript-typescript (`gh api repos/vazome/drillion/code-scanning/default-setup` →
+>   `"state": "configured"`). Grepping `.github/` for `codeql` finds only
+>   `codeql-action/upload-sarif`, which is Trivy's SARIF upload path and is **not** evidence that
+>   CodeQL is absent. The row's premise ("unavailable on a private personal repo on Free") died
+>   with the visibility flip.
+> - **Premise gone, not yet done — open questions now, not settled noes.** SBOM (#125), the
+>   OS/Python test matrix (#127), and OpenSSF Scorecard (#126). Each was rejected on a fact about
+>   distribution ("nothing is published", "one runner *is* the supported environment") that
+>   `pip install drillion` and `docker run ghcr.io/vazome/drillion` have made false.
+> - **Still rejected, unchanged, do not re-litigate.** Coverage gates, `.pre-commit-config.yaml`,
+>   `.github/CODEOWNERS`, release-please/semantic-release, and required PR reviews on `main`.
+>   These were argued on facts the pivot did not touch — one maintainer, no reviewer, no coverage
+>   gate to enforce — and those facts still hold.
+>
+> One row is done rather than reversed: the pull request template, added as
+> `.github/pull_request_template.md` in the same change as this note (#132), on the grounds the
+> row itself named — an outside PR can now arrive.
+
 Research note, 2026-08-26. Scope: `vazome/drillion` GitHub setup — CI hardening,
 dependency automation, supply chain, release/publish, contributor surface.
 Every recommendation is judged against AGENTS.md: categorical pragmatism, YAGNI,
