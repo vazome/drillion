@@ -4,6 +4,37 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.5.0 — 2026-08-28
+
+- `progress.json` now says which format it is. Every file drillion writes carries a `version`,
+  and a build refuses to open a file written by a newer drillion rather than rewriting it: it
+  says so, tells you to upgrade, and leaves the file exactly as it found it. Nothing changes for
+  a file written before this release — no version means version 1, and it loads as it always
+  did. The reason to add it now is that the option expires. drillion ships on PyPI, on ghcr and
+  as a clone, those three do not move in step, and `pip install drillion==0.5` beside a file a
+  0.6 wrote is an ordinary Tuesday. `CONTRIBUTING.md` has promised a schema contract since 0.4;
+  this is the number behind it.
+- Task 033 can be passed on Windows. It shelled out to `echo`, `true` and `false`, which are
+  `cmd` builtins rather than programs, so your solution *and* the grader's own reference both
+  raised `FileNotFoundError` — the task was unpassable on any Windows account that did not
+  happen to have Git's unix tools on `PATH`. CI had them, which is why CI never saw it. It now
+  runs a Python child on every platform and still grades exit code, captured stdout, captured
+  stderr and `check=False`.
+- An asset request can no longer leave the task's own `assets/` folder. The guard was a list of
+  forbidden characters, and a symlink contains none of them — so a symlink inside `assets/` was
+  followed and served, including one pointing at the task's `task.py` with its reference
+  solution in it. The route now checks that the resolved path is still inside the folder, which
+  does not depend on guessing what to forbid. A Windows drive-relative name such as
+  `C:progress.json` was the other way past the old list and closes with the same change.
+- The published image has no known fixable vulnerability left in it. OpenSSL is current, the
+  base images are pinned by digest so the image you pull is the image that was scanned, and the
+  interpreter's own `pip` is gone — drillion runs from a `uv`-built virtualenv and never invoked
+  it, but the packages it vendored were still counted against the image.
+- Internals, for anyone building on this: the release workflow no longer leaves a credential on
+  disk or trusts a cache a pull request could have written, the test suite and all 171 graded
+  tasks now run nightly against freshly resolved dependencies instead of only when someone
+  pushes, and the workflow audit fails the build rather than filing a report nobody reads.
+
 ## 0.4.6 — 2026-08-28
 
 - Code you submit no longer runs with your account's reach. A graded task used to be able to
