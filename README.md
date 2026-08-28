@@ -15,10 +15,6 @@ concept it drills so you can go straight at whatever you're worst at. No login, 
 account, no server except the one on your laptop. Tasks are folders of Markdown and
 Python. Your progress is a single JSON file.
 
-Graded code is confined by the kernel, not by a promise — Landlock on Linux,
-`sandbox-exec` on macOS, a restricted token on Windows. **What running it does to your
-machine**, further down, says what that does and does not cover.
-
 | | Light | Dark |
 | --- | --- | --- |
 | **The editor**<br><sub>the editor completing a list method</sub> | [![The editor, light](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/completions-light.png)](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/completions-light.png) | [![The editor, dark](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/completions-dark.png)](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/completions-dark.png) |
@@ -40,13 +36,37 @@ chat about it with peers.
 I took heavy inspiration from Exercism, HackerRank and — surprisingly — Anki, and built
 it from scratch.
 
-Core ideas:
+Core ideas, and the reason each one is there:
 
-- A clean UI that does not gate the task.
-- Categorisation that is convenient and easy to navigate.
-- Anki-like progression: a task comes back before you forget it.
-- An editor that behaves like an IDE without the complexity of one, with non-AI
-  autocomplete that works.
+- **A clean UI that does not gate the task.** Nothing stands between opening drillion and
+  writing code. No modal, no tour, no "complete your profile".
+- **Categorisation you can actually navigate.** Every task is tagged with the concept it
+  drills, and a tag spans many tasks, so you can go straight at the thing you are worst at
+  instead of grinding a track in order.
+- **Anki-like progression.** A task comes back before you forget it, with a daily cap so a
+  backlog cannot bury you. When one topic keeps beating you, Today names it rather than
+  leaving you to notice.
+- **An editor that behaves like an IDE without the complexity of one.** Every `solve()` is
+  typed, so completions, signatures and inline type errors are real — they come from a
+  language server running next to the grader, on your machine. Nothing writes the answer
+  for you. The point is to know it, not to accept it.
+- **Hints unlock; they are not free.** Three per task, escalating from a nudge to the same
+  idea worked through on different data, and they open on attempts and time spent. After
+  half an hour with no submission, drillion suggests taking one — you cannot brute-force
+  something you are unaware of.
+- **Grading is the real thing.** Your code is spliced into the task's own pytest file and
+  run. No string matching, no hidden judge, and `drillion selfcheck` proves all 171 tasks
+  still pass against their own reference solutions.
+- **Your progress is yours.** One JSON file on your disk. drillion stamps it with a schema
+  version and refuses to rewrite a file a newer version wrote, rather than quietly
+  mangling it. It is the only thing here you cannot redo.
+- **It is free, and it stays free.** No tier, no voucher, no account, no telemetry. If I
+  stop working on it tomorrow, the copy you cloned still runs.
+
+One consequence worth stating plainly: 171 tasks ship as executable Python, and `task.py`
+runs on import. So the sandbox is not a badge I bolted on to look serious — it is the
+price of shipping tasks as code, and it is why graded code is confined by the kernel
+rather than by my word. **What running it does to your machine**, below, is the detail.
 
 ## Install
 
