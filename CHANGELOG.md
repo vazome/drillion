@@ -4,6 +4,40 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.4.5 — 2026-08-28
+
+- Code you submit no longer runs with your account's reach. A graded task used to be able to
+  read `~/.aws/credentials`, write anywhere you can, see every environment variable your shell
+  exported and open a socket — and still be graded as a pass. It is now confined by the kernel
+  where the kernel can do it: Landlock on Linux, an `sandbox-exec` profile on macOS, a restricted
+  token at Low integrity in a job object on Windows. On Linux and macOS reads are limited to the
+  interpreter, the system libraries, `tasks/` and a scratch directory, writes to that scratch
+  directory alone, and TCP is refused. Windows confines the writes and caps memory but not the
+  reads or the network — integrity levels are write-only protection, and the one tier that would
+  block reads needs every path the interpreter reads ACLed at install and re-checked every run.
+  `SECURITY.md` says which half is the kernel's. Underneath, on every platform, `HOME` and
+  `TMPDIR` point at the scratch directory, the environment is an allowlist, and resource limits
+  cap file size, memory and CPU. `drillion doctor` names the tier you actually got, read back
+  from a process that tried it rather than assumed.
+- Spawning a subprocess stays legal, because task 033 grades `subprocess.run`. What it cannot do
+  is escape: a Landlock domain is inherited, so anything a task starts is bound by the same
+  rules. Where no kernel tier exists — an older Linux, a container that blocks `prctl` — an audit
+  hook stands in, and on Windows it rides along with the token for the network the token does not
+  cover. That is a speed bump, not a boundary, and `SECURITY.md` says so.
+- drillion works on Windows. It did not before: every `task.py` contains a `═`, task files were
+  read with the locale encoding, and on a cp1252 console that raised — which the catalogue
+  reported as "is not valid UTF-8", leaving an empty catalogue and all 171 tasks falsely
+  accused. Text is now read and written as UTF-8 everywhere, failures name the task the same way
+  on every platform, and CI runs on Windows and macOS as well as Linux, plus Python 3.14.
+- The server refuses a request from a page it did not serve, so a website you happen to have open
+  cannot drive your local drillion.
+- Every task that takes arguments now says what it takes. The 18 left bare at 0.4.0 are done,
+  apart from one rate-limiter callback that has no honest type to give it.
+- Supply chain: the 18 Dependabot alerts are cleared, Trivy scans the source, the workflows and
+  the published image on every push and weekly, the image no longer ships an npm it never runs
+  or a uv cache, and it is built for arm64 as well as amd64 with an SBOM attached. Releases are
+  cut from this file automatically on tag, and can only publish from `main`.
+
 ## 0.4.0 — 2026-08-27
 
 - The editor knows what your code means. Typing `rows.` offers the methods that value actually
