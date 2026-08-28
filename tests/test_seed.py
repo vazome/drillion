@@ -17,8 +17,8 @@ def _seeding(fn):
     packaged = cli.TASKS_TEMPLATE
     template, root = tmp / "template", tmp / "root"
     (template / "001_fstrings").mkdir(parents=True)
-    (template / "001_fstrings" / "task.py").write_text("packaged\n")
-    (template / "_lib.py").write_text("packaged lib\n")
+    (template / "001_fstrings" / "task.py").write_text("packaged\n", encoding="utf-8")
+    (template / "_lib.py").write_text("packaged lib\n", encoding="utf-8")
     try:
         settings.root = root
         cli.TASKS_TEMPLATE = template
@@ -34,7 +34,9 @@ def test_an_empty_root_is_seeded_from_the_package():
 
     def check(root, _template):
         cli.seed()
-        assert (root / "tasks" / "001_fstrings" / "task.py").read_text() == "packaged\n"
+        assert (root / "tasks" / "001_fstrings" / "task.py").read_text(
+            encoding="utf-8"
+        ) == "packaged\n"
         assert (root / "tasks" / "_lib.py").is_file()
 
     _seeding(check)
@@ -45,9 +47,13 @@ def test_seeding_never_overwrites_saved_code():
 
     def check(root, _template):
         (root / "tasks" / "001_fstrings").mkdir(parents=True)
-        (root / "tasks" / "001_fstrings" / "task.py").write_text("mine\n")
+        (root / "tasks" / "001_fstrings" / "task.py").write_text(
+            "mine\n", encoding="utf-8"
+        )
         cli.seed()
-        assert (root / "tasks" / "001_fstrings" / "task.py").read_text() == "mine\n"
+        assert (root / "tasks" / "001_fstrings" / "task.py").read_text(
+            encoding="utf-8"
+        ) == "mine\n"
 
     _seeding(check)
 

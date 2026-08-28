@@ -84,7 +84,7 @@ def _read(folder):
         out.append("task.py: missing")
     else:
         try:
-            text = src.read_text()
+            text = src.read_text(encoding="utf-8")
             bounds(text)  # no marker line, no task
             region = cut(text)
             _solve(ast.parse(region.body))
@@ -105,7 +105,7 @@ def _read(folder):
     if not readme.is_file():
         return None, [*out, "README.md: missing"]
     try:
-        meta, md = frontmatter(readme.read_text())
+        meta, md = frontmatter(readme.read_text(encoding="utf-8"))
     except UnicodeDecodeError:
         return None, [*out, "README.md: is not valid UTF-8"]
     except ValueError as err:

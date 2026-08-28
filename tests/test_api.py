@@ -34,7 +34,7 @@ def _api(flow, extra=()):
         shutil.copytree(TASKS / slug, taskdir / slug)
     shutil.copy(TASKS / "_lib.py", taskdir / "_lib.py")
     (taskdir / SLUG / "assets").mkdir()
-    (taskdir / SLUG / "assets" / "shape.svg").write_text("<svg/>")
+    (taskdir / SLUG / "assets" / "shape.svg").write_text("<svg/>", encoding="utf-8")
     settings.root = tmp  # tasks/ and progress.json move together
 
     async def drive():
@@ -91,7 +91,7 @@ async def _stub_to_pass(api, path):
     put = await api.put(
         f"/api/task/{SLUG}", json={"code": drafted, "etag": run["etag"]}
     )
-    assert put.status_code == 200 and "  return ''" in path.read_text()
+    assert put.status_code == 200 and "  return ''" in path.read_text(encoding="utf-8")
 
     stale = await api.put(
         f"/api/task/{SLUG}", json={"code": drafted, "etag": run["etag"]}
@@ -121,7 +121,7 @@ async def _stub_to_pass(api, path):
     assert run["reason"] == "the runs it took"  # the cause, never par's number
     assert run["reference"].startswith("def _reference(")  # passing is what opens it
     assert run["next"] == NEXT_SLUG  # what to sit down with now this card is cleared
-    body = region.cut(path.read_text()).body
+    body = region.cut(path.read_text(encoding="utf-8")).body
     assert region.stub(body) == body  # passing puts the stub back on disk
 
     st = state.load()
@@ -202,8 +202,8 @@ async def _guards(api, path):
         json={"code": "def solve(rows):\n    return 1 1", "etag": task["etag"]},
     )
     assert broken.status_code == 400 and broken.json()["line"] == 2
-    assert (
-        "raise NotImplementedError" in path.read_text()
+    assert "raise NotImplementedError" in path.read_text(
+        encoding="utf-8"
     )  # a rejected edit never lands
 
     cheat = await api.put(
@@ -347,16 +347,16 @@ async def _the_reference_needs_the_peek_not_just_its_price(api, _path):
 async def _abandon_needs_an_attempt_like_every_other_route(api, path):
     """Abandon answers 409 with nothing open, like every other acting route, rather than
     stubbing the file and filing the work as given up."""
-    src = path.read_text()
+    src = path.read_text(encoding="utf-8")
     work = region.splice(
         src, region.cut(src).body.replace("raise NotImplementedError", PASSING)
     )
-    path.write_text(work)  # real work on disk, and nothing open
+    path.write_text(work, encoding="utf-8")  # real work on disk, and nothing open
     etag = (await api.get(f"/api/task/{SLUG}")).json()["etag"]
 
     res = await api.post(f"/api/task/{SLUG}/abandon", json={"etag": etag})
     assert res.status_code == 409
-    assert path.read_text() == work  # the work is still there
+    assert path.read_text(encoding="utf-8") == work  # the work is still there
     assert state.load()["archive"].get(SLUG) is None  # and not filed as given up
 
 

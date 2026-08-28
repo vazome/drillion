@@ -84,7 +84,9 @@ def test_a_broken_folder_is_skipped_instead_of_breaking_the_menu():
                 "README.md": README.encode() + b"\xff",
                 "task.py": TASK,
             },
-            "042_Thing": {"README.md": README, "task.py": TASK},
+            # a capital letter is the rule being tested; the number must differ from
+            # 042_thing too, or the two folders are one on a case-insensitive filesystem
+            "053_Thing": {"README.md": README, "task.py": TASK},
             "049_notier": {
                 "README.md": README.replace("tier: core\n", ""),
                 "task.py": TASK,
@@ -105,7 +107,7 @@ def test_a_broken_folder_is_skipped_instead_of_breaking_the_menu():
         ]
         assert reasons["051_notutf8"] == ["task.py: is not valid UTF-8"]
         assert reasons["052_readmenotutf8"] == ["README.md: is not valid UTF-8"]
-        assert reasons["042_Thing"][0].startswith("folder name is not")
+        assert reasons["053_Thing"][0].startswith("folder name is not")
     finally:
         settings.root = keep
         shutil.rmtree(tmp)
@@ -121,7 +123,9 @@ def test_the_scan_is_cached_but_an_edited_task_is_re_read():
         first = catalogue.tasks()
         assert catalogue.tasks() is first  # same folders, same mtimes
         task = tmp / "tasks" / "001_a" / "task.py"
-        task.write_text(TASK.replace("def solve(x):", "def solve(x, y):"))
+        task.write_text(
+            TASK.replace("def solve(x):", "def solve(x, y):"), encoding="utf-8"
+        )
         os.utime(task, (0, 0))  # a same-nanosecond edit is still an edit
         assert catalogue.tasks() is not first
         (tmp / "tasks" / "002_b").mkdir()

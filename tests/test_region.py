@@ -11,7 +11,7 @@ from drillion import region, state
 from drillion.settings import settings
 
 FILES = sorted(settings.tasks_dir.glob("*/task.py"))
-SRC = (settings.tasks_dir / "001_fstrings" / "task.py").read_text()
+SRC = (settings.tasks_dir / "001_fstrings" / "task.py").read_text(encoding="utf-8")
 
 
 def _solved(src=SRC, code="return ''"):
@@ -24,20 +24,20 @@ def _solved(src=SRC, code="return ''"):
 def test_the_marker_opens_the_machinery_of_every_task():
     assert len(FILES) >= 104
     for f in FILES:
-        src = f.read_text()
+        src = f.read_text(encoding="utf-8")
         line = region.bounds(src)
         assert src.split("\n")[line - 1] == region.MARKER, f.parent.name
 
 
 def test_splice_puts_every_file_back_exactly():
     for f in FILES:
-        src = f.read_text()
+        src = f.read_text(encoding="utf-8")
         assert region.splice(src, region.cut(src).body) == src, f.parent.name
 
 
 def test_the_region_holds_solve_and_the_tail_holds_the_machinery():
     for f in FILES:
-        body, tail = region.cut(f.read_text())
+        body, tail = region.cut(f.read_text(encoding="utf-8"))
         assert region._solve(ast.parse(body)) is not None, f.parent.name
         assert "def _reference(" in tail and "_reference" not in body, f.parent.name
         assert "from _lib import rng" in tail, f.parent.name
@@ -48,7 +48,7 @@ def test_stub_is_identity_on_pristine_files():
     for f in FILES:
         if f.parent.name in drafts:
             continue
-        body = region.cut(f.read_text()).body
+        body = region.cut(f.read_text(encoding="utf-8")).body
         assert region.stub(body) == body, f.parent.name
 
 
@@ -58,7 +58,9 @@ def test_stub_keeps_given_code_and_decorators():
         ("041_customexc", "class ConfigError"),
         ("084_fixtures", "@pytest.fixture"),
     ):
-        body = region.cut((settings.tasks_dir / name / "task.py").read_text()).body
+        body = region.cut(
+            (settings.tasks_dir / name / "task.py").read_text(encoding="utf-8")
+        ).body
         stubbed = region.stub(body.replace("raise NotImplementedError", "return {}"))
         assert needle in stubbed and "return {}" not in stubbed, name
         assert stubbed.endswith("    raise NotImplementedError"), name
@@ -71,7 +73,9 @@ def test_stub_refuses_a_one_line_body():
 
 def test_has_given_spots_code_above_solve():
     assert region.has_given(
-        region.cut((settings.tasks_dir / "034_env" / "task.py").read_text()).body
+        region.cut(
+            (settings.tasks_dir / "034_env" / "task.py").read_text(encoding="utf-8")
+        ).body
     )
     assert not region.has_given(region.cut(SRC).body)
 
@@ -129,9 +133,9 @@ def test_write_region_is_atomic():
     tmp = Path(tempfile.mkdtemp())
     try:
         path = tmp / "task.py"
-        path.write_text(SRC)
+        path.write_text(SRC, encoding="utf-8")
         region.write_region(path, _solved())
-        assert "return ''" in path.read_text()
+        assert "return ''" in path.read_text(encoding="utf-8")
         assert not list(tmp.glob("*.tmp"))
     finally:
         shutil.rmtree(tmp)

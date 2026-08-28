@@ -4,6 +4,7 @@ import argparse
 import logging
 import shutil
 import subprocess
+import sys
 import threading
 import webbrowser
 from pathlib import Path
@@ -83,6 +84,10 @@ def serve():
 
 
 def main(argv=None):
+    # everything we print is UTF-8; a redirected stdout is locale-encoded on Windows
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(
         prog="drillion", description="Spaced-repetition Python tasks."
     )

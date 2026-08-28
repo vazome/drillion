@@ -75,7 +75,7 @@ def test_an_existing_progress_file_upgrades_untouched():
     }
 
     def check(_tmp):
-        settings.state_path.write_text(json.dumps(stored))
+        settings.state_path.write_text(json.dumps(stored), encoding="utf-8")
         assert state.load() == {**stored, "notes": {}}
         with state.writing() as st:
             st["focus"] = None

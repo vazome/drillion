@@ -39,5 +39,7 @@ def test_pyproject_is_the_only_declaration():
     """A stale editable install is the drift this catches: bump pyproject and the
     installed metadata is behind until the next `uv sync`."""
     pyproject = Path(__file__).resolve().parent.parent / "pyproject.toml"
-    declared = tomllib.loads(pyproject.read_text())["project"]["version"]
+    declared = tomllib.loads(pyproject.read_text(encoding="utf-8"))["project"][
+        "version"
+    ]
     assert declared == version("drillion")

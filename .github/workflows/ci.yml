@@ -13,7 +13,45 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # the README sells uvx / uv tool install / pip on "Python 3.13 or newer", so Windows and
+  # macOS are advertised platforms: settings._data_home() picks where progress.json lives
+  # from sys.platform, and only its Linux branch had ever been executed
   check:
+    name: check (${{ matrix.os }}, py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # three OS on the pinned interpreter plus one cell on the next series; a full 3x2
+        # buys little, because uv.lock carries no python_full_version markers and so
+        # resolves the same packages on both
+        include:
+          - os: ubuntu-latest
+            python: "3.13"
+          - os: windows-latest
+            python: "3.13"
+          - os: macos-latest
+            python: "3.13"
+          - os: ubuntu-latest
+            python: "3.14"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python }} # sets UV_PYTHON, which wins over .python-version
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest tests -q
+      - run: uv run drillion selfcheck
+
+  # Linux-only on purpose: this builds the client and checks the sdist, neither of which
+  # is what the install paths above promise per-OS
+  web:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -23,11 +61,6 @@ jobs:
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
-      - run: uv sync --locked
-      - run: uv run ruff check .
-      - run: uv run ruff format --check .
-      - run: uv run pytest tests -q
-      - run: uv run drillion selfcheck
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
@@ -177,3 +210,20 @@ jobs:
           test "$(curl -fsS http://127.0.0.1:8765/api/health | jq .tasks)" = 171
           curl -fsS -o /dev/null http://127.0.0.1:8765/
           curl -fsS -o /dev/null -X POST http://127.0.0.1:8765/api/task/001_fstrings/open
+
+  # the single context branch protection requires: one name that survives the matrix
+  # growing a cell or a job being renamed, so the ruleset never goes stale again
+  gate:
+    if: always()
+    needs: [check, web, screens, image]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: every job above succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "$RESULTS"
+          case "$RESULTS" in
+            *failure*|*cancelled*|*skipped*) exit 1 ;;
+          esac

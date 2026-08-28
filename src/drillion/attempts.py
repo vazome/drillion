@@ -176,7 +176,7 @@ def unlock_solution(st, slug):
 
 def solution_text(path):
     """The reference answer, read from disk. The gate is the caller's line above."""
-    txt = path.read_text()
+    txt = path.read_text(encoding="utf-8")
     marker = "def _reference("
     return txt[txt.index(marker) :].split("\ndef test_")[0].strip()
 
