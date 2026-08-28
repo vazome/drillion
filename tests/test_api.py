@@ -4,7 +4,7 @@ import asyncio
 import shutil
 import tempfile
 from datetime import date, timedelta
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 import httpx
 import pytest
@@ -383,7 +383,7 @@ async def _your_own_answer_is_an_answer(api, _path):
     assert state.load()["open"][SLUG]["solution_shown"] is True  # and it is marked
 
 
-async def _assets(api, _path):
+async def _assets(api, path):
     """Images and clips a README points at — a filename, never a path."""
     ok = await api.get(f"/api/task/{SLUG}/assets/shape.svg")
     assert ok.status_code == 200 and ok.text == "<svg/>"
@@ -392,6 +392,23 @@ async def _assets(api, _path):
             name
         )
     assert (await api.get("/api/task/999_nope/assets/shape.svg")).status_code == 404
+    # a drive-relative name carries no slash, no backslash and no `..`, yet the join
+    # keeps only the right side — the reason the guard checks containment instead
+    assets = PureWindowsPath("tasks", SLUG, "assets")
+    assert not (assets / "C:progress.json").is_relative_to(assets)
+    assert (
+        await api.get(f"/api/task/{SLUG}/assets/C:progress.json")
+    ).status_code == 404
+    try:
+        (path.parent / "assets" / "escape.svg").symlink_to(path)
+    except OSError:  # Windows without the symlink privilege
+        return
+    out = await api.get(f"/api/task/{SLUG}/assets/escape.svg")
+    assert out.status_code == 404 and "def solve" not in out.text
+    (path.parent / "assets" / "escape.svg").unlink()
+    # the refusal and a plain miss are the same answer: neither says which one happened
+    gone = await api.get(f"/api/task/{SLUG}/assets/escape.svg")
+    assert (out.status_code, out.content) == (gone.status_code, gone.content)
 
 
 async def _health(api, _path):
