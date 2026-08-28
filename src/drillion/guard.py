@@ -49,7 +49,8 @@ def _outside(path):
     if not isinstance(path, (str, bytes, os.PathLike)):
         return False
     try:
-        real = os.path.realpath(path)
+        # fsdecode first: a bytes path would otherwise reach commonpath beside a str
+        real = os.path.realpath(os.fsdecode(path))
         return real != os.path.realpath(os.devnull) and (
             os.path.commonpath([real, SCRATCH]) != SCRATCH
         )

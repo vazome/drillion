@@ -32,8 +32,8 @@ from pathlib import Path
 
 from .settings import settings
 
-if sys.platform != "win32":
-    import resource
+# imported where it is used, not here: on Windows there is no `resource` module at all,
+# and a module-level guard leaves every use site conditionally bound
 
 # ── the floor: every platform ────────────────────────────────────────────────────
 
@@ -98,6 +98,8 @@ def environ(scratch, **extra):
 def _limits(cpu):
     """[(resource, (soft, hard))] — the POSIX floor, computed here so the child only calls
     syscalls. `cpu` tracks the caller's wall-clock timeout; without one there is no cap."""
+    import resource
+
     out = [
         (resource.RLIMIT_FSIZE, MAX_FILE),
         (resource.RLIMIT_AS, ADDRESS_SPACE),
@@ -112,6 +114,8 @@ def _limits(cpu):
 
 def _clamp(what, value):
     """Never raise a limit, and never ask for more than the hard limit already allows."""
+    import resource
+
     soft, hard = resource.getrlimit(what)
     if hard != resource.RLIM_INFINITY:
         value = min(value, hard)
@@ -503,6 +507,8 @@ def preexec(scratch, targets, cpu):
     sandbox the server, the language server and every future request, irreversibly."""
     if sys.platform == "win32":
         return None
+    import resource
+
     limits = _limits(cpu)
     plan = _plan(scratch, targets) if _landlock_works() else None
 

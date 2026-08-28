@@ -5,6 +5,8 @@ here is the bridge's own behaviour when the other end misbehaves — not the typ
 
 import asyncio
 import json
+import shutil
+import subprocess
 import sys
 
 import pytest
@@ -123,3 +125,34 @@ def test_the_running_servers_are_capped():
         )  # try again later, and nothing spawned
     finally:
         lsp._live = 0
+
+
+def test_the_repos_own_type_config_cannot_reach_a_learners_task(tmp_path):
+    """`tasks/pyrightconfig.json` is what stops it.
+
+    In a git-clone install `settings.tasks_dir` sits one directory below the repo's
+    `pyproject.toml`, and basedpyright walks up until it finds a config. Without a nearer
+    one the learner's editor would silently adopt whatever mode drillion checks *itself*
+    with — measured: the four warnings on a bare `def solve(a)` become zero under the
+    repo's own `standard`. The severities a learner sees are not ours to set from there."""
+    (tmp_path / "pyproject.toml").write_text(
+        '[tool.basedpyright]\ntypeCheckingMode = "strict"\n', encoding="utf-8"
+    )
+    tasks = tmp_path / "tasks"
+    tasks.mkdir()
+    shutil.copy(settings.tasks_dir / "pyrightconfig.json", tasks)
+    (tasks / "task.py").write_text("def solve(a):\n    return a\n", encoding="utf-8")
+
+    done = subprocess.run(
+        [sys.executable, "-m", "basedpyright", "--outputjson", "task.py"],
+        cwd=tasks,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,  # a non-zero exit is what a diagnostic looks like
+    )
+    severities = {d["severity"] for d in json.loads(done.stdout)["generalDiagnostics"]}
+    assert severities == {"warning"}, done.stdout
+    # a key pyright does not know is not an error, it is a diagnostic in the learner's
+    # editor — and it never reaches --outputjson, only stderr
+    assert "unrecognized" not in done.stderr.lower(), done.stderr
