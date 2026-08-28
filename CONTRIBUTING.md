@@ -165,6 +165,14 @@ release, with the wheel and sdist attached and the changelog entry verbatim as i
 with no matching `## <version>` section in the changelog fails rather than publishing a release
 with nothing in it.
 
+Every artifact is attested where it lands, and the release carries its own copy of the wheel and
+sdist provenance so a download can be checked without trusting an index or a registry:
+
+```bash
+gh attestation verify drillion-<version>-py3-none-any.whl --repo vazome/drillion
+gh attestation verify oci://ghcr.io/vazome/drillion:<version> --repo vazome/drillion
+```
+
 When a publish dies for a reason that is not the code — a network blip, a `pypi` approval that
 arrives after the job timed out — rerun it from **Actions → release → Run workflow**, choosing the
 tag rather than a branch.
