@@ -8,6 +8,7 @@ sandbox removed, because a probe that is simply broken also reads as a pass."""
 
 import ctypes
 import os
+import subprocess
 import sys
 
 import pytest
@@ -104,6 +105,9 @@ def test_the_probe_escapes_when_the_sandbox_is_taken_away(tmp_path, monkeypatch)
     that the sandbox works."""
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "hunter2")
     monkeypatch.setattr(sandbox, "confine", unconfined)
+    # `run` reads the tier to decide whether the child needs CreateProcessAsUser; forced to
+    # the floor it takes the plain `subprocess.run` path, which is what "before" means here
+    monkeypatch.setattr(sandbox, "status", lambda: ("floor", "forced by a test"))
     passed, out = grade(tmp_path, monkeypatch, ESCAPED)
     assert passed, out
 
@@ -169,7 +173,7 @@ def test_grading_survives_a_machine_with_no_kernel_tier(tmp_path, monkeypatch):
 
 def test_status_names_the_tier_and_why_a_stronger_one_is_missing():
     tier, why = sandbox.status()
-    assert tier in ("landlock", "sandbox-exec", "guard", "floor")
+    assert tier in ("landlock", "sandbox-exec", "restricted-token", "guard", "floor")
     assert why
     if tier != "landlock" and sys.platform == "linux":
         assert "Landlock" in why
@@ -239,3 +243,45 @@ def test_the_resource_limits_never_raise_what_the_machine_already_allows():
             assert soft <= before_hard
     assert any(what == resource.RLIMIT_CPU for what, _ in sandbox._limits(60))
     assert not any(what == resource.RLIMIT_CPU for what, _ in sandbox._limits(None))
+
+
+# ── the Windows tier ─────────────────────────────────────────────────────────────
+
+windows_only = pytest.mark.skipif(
+    sys.platform != "win32", reason="the restricted token is a Windows tier"
+)
+
+
+@windows_only
+def test_a_low_integrity_child_actually_comes_up_at_low_integrity():
+    """The tier is claimed only when a child has read its own integrity SID back out of its
+    own token — `IsProcessInJob` is no evidence, since WSL and PowerShell already use one."""
+    from drillion import winsandbox
+
+    assert winsandbox.works()
+
+
+@windows_only
+def test_the_windows_child_reports_its_exit_code_and_its_output(tmp_path):
+    """`CreateProcessAsUser` means the wait, the exit code and the decoding are ours rather
+    than `subprocess`'s, so they get their own check."""
+    from drillion import winsandbox
+
+    done = winsandbox.run(
+        [sys.executable, "-c", "import sys; print('hi'); sys.exit(3)"],
+        tmp_path,
+        timeout=60,
+    )
+    assert (done.returncode, done.stdout.strip()) == (3, "hi")
+
+
+@windows_only
+def test_a_windows_child_that_runs_long_is_killed_and_raises(tmp_path):
+    from drillion import winsandbox
+
+    with pytest.raises(subprocess.TimeoutExpired):
+        winsandbox.run(
+            [sys.executable, "-c", "import time; time.sleep(30)"],
+            tmp_path,
+            timeout=2,
+        )

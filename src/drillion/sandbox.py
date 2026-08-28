@@ -5,19 +5,24 @@ nothing else. Landlock especially: it is irreversible and inherited by every chi
 is applied in the forked child from `preexec()` and never in the server process, which
 would sandbox the app — and the language server with it — for the rest of its life.
 
-Four tiers, strongest first, with `status()` saying which one is actually in force — read
+Five tiers, strongest first, with `status()` saying which one is actually in force — read
 back from a child that tried it, never from intent:
 
 - **landlock** (Linux) — the kernel decides. Reads are confined to the interpreter, the
   system libraries, `tasks/` and the scratch directory; writes to the scratch directory;
   TCP is denied outright.
 - **sandbox-exec** (macOS) — the same shape expressed as an SBPL profile.
-- **guard** — `drillion.guard`, a PEP 578 audit hook in the graded process. Not the Windows
-  tier: it is what stands in wherever no kernel tier reaches, an old kernel without Landlock
-  and a container that blocks `prctl` as much as Windows. A speed bump, not a boundary.
+- **restricted-token** (Windows) — `drillion.winsandbox`: a restricted token at Low
+  integrity in a job object. Writes are confined and memory is capped, but reads and the
+  network are not — the weakest of the three kernel tiers, and the only one Windows offers
+  without ACLing the interpreter's whole tree.
+- **guard** — `drillion.guard`, a PEP 578 audit hook in the graded process. What stands in
+  wherever no kernel tier reaches: an old kernel without Landlock, a container that blocks
+  `prctl`, a Windows machine where the token could not be built. A speed bump, not a
+  boundary.
 - **floor** — what is left when even that fails.
 
-Underneath all four, on every platform, sits the floor itself: an allowlisted environment,
+Underneath all five, on every platform, sits the floor itself: an allowlisted environment,
 a `HOME` and `TMPDIR` pointed at the scratch directory, and POSIX resource limits.
 """
 
@@ -447,6 +452,16 @@ def _guard_works():
 # ── what is actually in force ────────────────────────────────────────────────────
 
 
+def _restricted_token_works():
+    """Windows only, and asked of a child that came up: `winsandbox.works()` reads the
+    integrity SID back out of a process it started."""
+    if sys.platform != "win32":
+        return False
+    from . import winsandbox
+
+    return winsandbox.works()
+
+
 def _no_kernel_tier():
     """Why the kernel is not doing this, in one clause — the half of `status()` that keeps
     a weaker tier from reading as a choice."""
@@ -484,6 +499,14 @@ def status():
         return "sandbox-exec", (
             "SBPL profile: reads confined to the interpreter, system frameworks, tasks/ "
             "and a scratch HOME; writes to scratch only; network denied"
+        )
+    if _restricted_token_works():
+        return "restricted-token", (
+            "a restricted token at Low integrity in a job object: writes confined to the "
+            "scratch directory, memory capped, and anything left running killed with the "
+            "job. Reads are NOT restricted — Windows has no unprivileged tier that does, "
+            "and AppContainer would need every path the interpreter reads ACLed for a "
+            "package SID. The audit hook rides along for the network, as a speed bump"
         )
     if _guard_works():
         return "guard", (
@@ -526,6 +549,25 @@ def preexec(scratch, targets, cpu):
     return child
 
 
+def run(args, scratch, cpu, **env):
+    """Grade pytest `args` under the strongest tier this machine has, and hand back what
+    `subprocess.run` would have. The one entry point the runner calls: Windows needs
+    `CreateProcessAsUser` for a restricted token, so it cannot go through `subprocess`."""
+    plan = confine(args, scratch, cpu, **env)
+    if status()[0] == "restricted-token":
+        from . import winsandbox
+
+        return winsandbox.run(plan["args"], scratch, timeout=cpu, **env)
+    return subprocess.run(
+        **plan,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+        timeout=cpu,
+    )
+
+
 def confine(args, scratch, cpu, **env):
     """What `subprocess.run` needs to grade pytest `args` under the strongest tier this
     machine has. `cpu` is the caller's wall-clock timeout, reused as the CPU limit."""
@@ -539,9 +581,10 @@ def confine(args, scratch, cpu, **env):
         }
     )
     cmd = [sys.executable, "-m", "pytest", *args]
-    if tier == "guard":
+    if tier in ("guard", "restricted-token"):
         # `-p` plugins load before pytest imports any task module, and `_PYTEST` already
-        # passes `-p no:cacheprovider`, so this needs no new mechanism
+        # passes `-p no:cacheprovider`, so this needs no new mechanism. Windows loads it
+        # too: Low integrity denies the writes but says nothing about the network
         cmd += ["-p", "drillion.guard"]
     if tier == "sandbox-exec":
         cmd = [SANDBOX_EXEC, "-p", _sbpl(scratch, targets), *cmd]

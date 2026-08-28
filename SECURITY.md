@@ -66,12 +66,38 @@ claimed if that succeeded. **This tier has not been executed on a Mac** — it i
 the documented dialect and gated behind that self-check; a Mac CI cell is what will confirm
 it.
 
+### `restricted-token` — Windows, kernel-enforced
+
+`src/drillion/winsandbox.py`, also `ctypes` and no new dependency: the pytest process is
+started with `CreateProcessAsUser` on a copy of your own token with every privilege dropped
+and the integrity label set to Low, inside a job object.
+
+- **Writes** are confined to the scratch directory, which is labelled Low first (`icacls
+  /setintegritylevel`) so the child can write there at all. Everything else on the machine is
+  Medium or above, and Windows refuses a write up.
+- **Reads are not restricted, and neither is the network.** Integrity levels are write-only
+  protection. The audit hook is loaded here too and refuses non-loopback connections, but
+  that is a speed bump inside the process, not the kernel saying no.
+- **Memory** is capped by the job, and `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE` kills anything
+  the task left running when the run ends.
+- **Subprocesses are contained, not forbidden**, as on Linux: the child inherits the Low
+  token, and a process cap would break both task 033 and a `uv` virtualenv, whose
+  `python.exe` is a trampoline that starts the real interpreter.
+
+**AppContainer would block reads and is deliberately not used.** Access there is the
+intersection of the user SID and the package SID, so every path the interpreter reads would
+have to be ACLed for the package at install time and re-checked every run — one
+`pip install -U` or a recreated venv silently invalidates it. Neither Chromium nor Firefox
+uses AppContainer for its hostile-content process either; their renderers read nothing,
+because the broker hands them open handles. pytest cannot work that way.
+
 ### `guard` — the in-process floor, wherever no kernel tier reaches
 
 `src/drillion/guard.py`, a PEP 578 audit hook loaded into the graded process as
-`-p drillion.guard`. It stands in on Windows, which has no unprivileged sandbox, and equally
-on an old Linux kernel without Landlock or in a container that blocks `prctl`. It refuses
-writes outside the scratch directory and connections to anything but loopback.
+`-p drillion.guard`. It stands in on an old Linux kernel without Landlock, in a container
+that blocks `prctl`, and on a Windows machine where the restricted token could not be built;
+on Windows it also rides along with the tier above, for the network it does not cover. It
+refuses writes outside the scratch directory and connections to anything but loopback.
 
 **This is not a security boundary and must not be described as one.** Task code shares the
 interpreter with the hook, and `subprocess` stays open because task 033 grades it, so a
