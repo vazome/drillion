@@ -1,0 +1,3 @@
+# Trivy reads this file from the working directory on its own, and `.trivyignore.yaml` only
+# when pointed at it — which is the whole reason this file exists. Measured on Trivy 0.71.2.
+ignorefile: .trivyignore.yaml
