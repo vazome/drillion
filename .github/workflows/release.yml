@@ -51,7 +51,11 @@ jobs:
   image:
     needs: gate
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # v0.4.0 built and pushed amd64 alone in 61s. The arm64 half below runs under QEMU on an
+    # amd64 runner, so the ceiling is emulation, not the build. If a release ever approaches this,
+    # issue #128's other route — native ubuntu-24.04-arm builds merged with `buildx imagetools
+    # create` — is the fix.
+    timeout-minutes: 45
     outputs:
       digest: ${{ steps.push.outputs.digest }}
     permissions:
@@ -61,6 +65,8 @@ jobs:
       attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # binfmt handlers for the arm64 half; hosted runners carry none
+      - uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
@@ -77,11 +83,18 @@ jobs:
         with:
           context: .
           push: true
+          # the README sells Docker as the path that needs nothing else, and on Apple Silicon that
+          # path was QEMU emulating pytest on every graded submission
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           # on, and BuildKit pushes a second unsigned provenance wrapped in an index, which
-          # shows on the package page as a phantom unknown/unknown architecture
+          # shows on the package page as a phantom unknown/unknown architecture. The index the
+          # two platforms above produce is the genuine kind and lists exactly those two.
           provenance: false
+      # multi-platform makes this an index digest, which is the right subject: `gh attestation
+      # verify oci://…:<tag>` resolves a tag with `remote.Get`, so it asks about the index, not
+      # either child. Attesting a child instead would verify for nobody.
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-name: ghcr.io/${{ github.repository }}
@@ -89,7 +102,8 @@ jobs:
           push-to-registry: true
       # provenance above says where the image came from; this says what is inside it. Read off the
       # pushed digest, so it lists the vendored trees — nodejs_wheel's npm above all — that appear
-      # in no manifest we own and that no scanner of ours publishes.
+      # in no manifest we own and that no scanner of ours publishes. Trivy resolves the index to
+      # the runner's own arch, so this lists amd64's build of a package set both arches share.
       - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
