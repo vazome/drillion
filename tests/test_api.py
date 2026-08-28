@@ -774,3 +774,19 @@ def test_the_language_server_socket_refuses_a_page_this_server_did_not_serve(
 @pytest.mark.parametrize("host", ["127.0.0.1", "localhost"])
 def test_the_language_server_socket_still_serves_the_editor(host, monkeypatch):
     assert _socket(f"http://{host}:{settings.port}", monkeypatch) is None
+
+
+def test_a_progress_file_from_a_newer_drillion_answers_409_not_500():
+    """state.TooNew is refused politely: the page's {"error": ...} shape, not a traceback."""
+
+    async def flow(api, path):
+        settings.state_path.write_text(
+            f'{{"version": {state.SCHEMA + 1}}}', encoding="utf-8"
+        )
+        before = settings.state_path.read_bytes()
+        reply = await api.get("/api/progress")
+        assert reply.status_code == 409
+        assert "upgrade drillion" in reply.json()["error"]
+        assert settings.state_path.read_bytes() == before
+
+    _api(flow)

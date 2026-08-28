@@ -57,7 +57,7 @@ from .scheduler import (
     stuck,
 )
 from .settings import settings
-from .state import card, own, reading, today, writing
+from .state import TooNew, card, own, reading, today, writing
 
 log = logging.getLogger(__name__)
 MAX_BODY = 256 * 1024
@@ -90,6 +90,12 @@ class Note(BaseModel):
 async def _rejected(_request, exc):
     """A refused edit is the learner's problem, not a crash: 400 with the line."""
     return JSONResponse({"error": exc.msg, "line": exc.line}, 400)
+
+
+@app.exception_handler(TooNew)
+async def _too_new(_request, exc):
+    """A progress file from a newer drillion: say so on the page, do not 500 the log."""
+    return JSONResponse({"error": str(exc)}, 409)
 
 
 @app.exception_handler(NoAttempt)
