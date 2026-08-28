@@ -140,11 +140,17 @@ the `progress.json` schema, and the task-folder format:
   drills is not a breaking change.
 - **PATCH** — fixes, no new surface.
 
-Releasing: bump `pyproject.toml`, add the entry to [CHANGELOG.md](CHANGELOG.md), tag the commit
-`v<version>`. The tag is the whole trigger — CI fails one whose name disagrees with the declared
-version, then publishes to PyPI and ghcr and cuts the GitHub release, whose notes are that
-changelog entry verbatim. A tag with no matching `## <version>` section in the changelog fails
+Releasing: bump `pyproject.toml`, add the entry to [CHANGELOG.md](CHANGELOG.md), merge that to
+`main`, then tag the commit `v<version>`. The tag is the whole trigger — the `gate` job fails a
+tag whose name disagrees with the declared version, and fails a commit that is not on `main`,
+because the `main` ruleset is what proves the commit went green. Past the gate it publishes to
+PyPI and ghcr and cuts the GitHub release, with the wheel and sdist attached and the changelog
+entry verbatim as its notes. A tag with no matching `## <version>` section in the changelog fails
 rather than publishing a release with nothing in it.
+
+When a publish dies for a reason that is not the code — a network blip, a `pypi` approval that
+arrives after the job timed out — rerun it from **Actions → release → Run workflow**, choosing the
+tag rather than a branch. Never move a published tag.
 
 ## Code style
 
