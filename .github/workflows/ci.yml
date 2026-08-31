@@ -257,12 +257,21 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
+          LABEL: nightly-failure
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          # the label is the dedupe key. It is an exact match that survives somebody retitling
+          # the issue, where a title phrase is full text and stops matching the moment it is
+          # edited -- and one missed match is an issue per night, which is the pile this job
+          # exists to prevent. `--force` makes the create idempotent, so the label never has to
+          # exist by hand first. Author stays in the lookup so a person who reaches for the same
+          # label never has their own issue's body overwritten by the bot.
+          gh label create "$LABEL" -R "$REPO" --force \
+            -c B60205 -d "a scheduled ci.yml run failed"
           ISSUE=$(gh issue list -R "$REPO" --state open -A "github-actions[bot]" \
-            --search '"nightly CI run failed" in:title' --json number -q '.[0].number')
+            -l "$LABEL" --json number -q '.[0].number')
           if [ -z "$ISSUE" ]; then
-            gh issue create -R "$REPO" -t "nightly CI run failed" \
+            gh issue create -R "$REPO" -t "nightly CI run failed" -l "$LABEL" \
               -b "The scheduled run of ci.yml failed: $RUN_URL"
           else
             gh issue edit -R "$REPO" "$ISSUE" -b "The scheduled run of ci.yml failed again: $RUN_URL"
