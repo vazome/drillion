@@ -148,3 +148,58 @@ def test_the_repo_does_not_ship_anybody_s_progress():
     if tracked.returncode:
         return  # not a git checkout: nothing to ship
     assert tracked.stdout == ""
+
+
+SCHEMA_DIR = Path(__file__).resolve().parent / "schema"
+
+
+def _frozen(name, tmp):
+    """Lay a frozen historical progress.json down in the throwaway root. Always a copy: a
+    load can rewrite the file, and a fixture that gets rewritten stops being frozen."""
+    shutil.copyfile(SCHEMA_DIR / name, settings.state_path)
+    return settings.state_path
+
+
+@pytest.mark.parametrize("frozen", ["unversioned.json", "v1.json"])
+def test_a_progress_file_from_every_shipped_drillion_still_opens(frozen):
+    """The files real people already have. These are bytes captured from a build that shipped,
+    not a dict this test builds from today's defaults — a fixture generated from `state` moves
+    when `state` moves and proves nothing about the file on somebody's disk."""
+
+    def check(tmp):
+        _frozen(frozen, tmp)
+        st = state.load()
+        assert st["focus"] == "class-inheritance"
+        assert st["cards"]["008_sortkey"] == {
+            "box": 3,
+            "due": "2026-09-01",
+            "seen": 4,
+            "lapses": 0,
+            "buried": "",
+        }
+        assert st["open"]["021_sets"]["attempts"] == 2
+        assert st["log"][0]["slug"] == "008_sortkey"
+        assert st["archive"]["008_sortkey"][0]["grade"] == "pass"
+        assert st["notes"]["008_sortkey"] == "sort by the key, not the value"
+
+    _root(check)
+
+
+@pytest.mark.parametrize("frozen", ["unversioned.json", "v1.json"])
+def test_an_upgraded_progress_file_is_restamped_by_the_build_that_wrote_it(
+    monkeypatch, frozen
+):
+    """A file carries the schema of the build that last wrote it, not the one that created it.
+    Without this the stamp is sticky: a newer drillion writes its own shape into an older
+    person's file and leaves the old number on it, so the rollback refusal in `load()` never
+    fires for the only people who have progress to lose."""
+
+    def check(tmp):
+        _frozen(frozen, tmp)
+        monkeypatch.setattr(state, "SCHEMA", state.SCHEMA + 1)
+        with state.writing() as st:
+            st["focus"] = None
+        stored = json.loads(settings.state_path.read_text(encoding="utf-8"))
+        assert stored["version"] == state.SCHEMA
+
+    _root(check)

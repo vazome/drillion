@@ -30,7 +30,6 @@ def load():
             f"v{SCHEMA}). Your progress is intact and untouched — upgrade drillion to open it."
         )
     return {
-        "version": SCHEMA,
         "focus": None,
         "cards": {},
         "open": {},
@@ -38,6 +37,10 @@ def load():
         "archive": {},
         "notes": {},
         **st,
+        # last, so it wins over the stamp already in the file: whatever writes next writes this
+        # build's shape, and a stamp left at the file's original version would tell a rollback
+        # it can read a file it cannot.
+        "version": SCHEMA,
     }
 
 
