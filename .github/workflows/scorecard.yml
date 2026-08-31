@@ -2,10 +2,13 @@ name: scorecard
 
 # separate from `security`: Scorecard scores the repository, not a commit, so it cannot run on a
 # pull request — it needs the default branch and an OIDC identity to publish under.
+# and not on push either: a score is not a property of a commit, so a run per merge re-measured
+# an unchanged repository. `schedule` is the supported publishing trigger and it is what keeps
+# the badge current; the score moves on a clock, not on a commit.
 on:
-  push:
-    branches: [main]
-  # the score moves when the rules do, and Branch-Protection is one of the checks
+  # the score moves when the rules do, and Branch-Protection is one of the checks. Best effort:
+  # upstream lists only `push` and `schedule` as supported, so treat a failure here as noise and
+  # read the weekly run instead.
   branch_protection_rule:
   schedule:
     - cron: "41 6 * * 1"

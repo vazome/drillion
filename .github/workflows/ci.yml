@@ -21,10 +21,46 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # a prose commit does not need three operating systems, a Playwright suite and a container
+  # build to prove it is still prose. Four of the last thirteen merged PRs changed nothing but
+  # documentation and each ran the lot, twice -- once on the PR and once on the merge.
+  #
+  # The filter is a deny-list inverted on purpose: anything this does not recognise as prose is
+  # code, so a new directory runs the full matrix until someone decides otherwise. Note
+  # `README.md$` is anchored, because `tasks/*/README.md` is a task definition the catalogue and
+  # doctor suites validate -- it is content, not documentation.
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.f.outputs.code }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # both ends of the diff have to be in the clone
+      - id: f
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          docs='^(docs/|\.github/ISSUE_TEMPLATE/|\.github/pull_request_template\.md$'
+          docs="$docs"'|README\.md$|CONTRIBUTING\.md$|CHANGELOG\.md$|AGENTS\.md$|CLAUDE\.md$'
+          docs="$docs"'|CONTEXT\.md$|DESIGN\.md$|SECURITY\.md$|NOTICE$|LICENSE$)'
+          # no BASE means this is not a pull request -- a push or the nightly always runs everything
+          if [ -z "$BASE" ] || git diff --name-only "$BASE" "$HEAD" | grep -qvE "$docs"; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+            echo "documentation only: skipping the matrix, the client and the image" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   # the README sells uvx / uv tool install / pip on "Python 3.13 or newer", so Windows and
   # macOS are advertised platforms: settings._data_home() picks where progress.json lives
   # from sys.platform, and only its Linux branch had ever been executed
   check:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: check (${{ matrix.os }}, py${{ matrix.python }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
@@ -67,6 +103,8 @@ jobs:
   # Linux-only on purpose: this builds the client and checks the sdist, neither of which
   # is what the install paths above promise per-OS
   web:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -119,6 +157,8 @@ jobs:
         working-directory: web
 
   screens:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # this image tag and web/package.json's @playwright/test pin are one version, bumped together
@@ -154,9 +194,19 @@ jobs:
           name: client-traces
           path: web/test-results/
 
+  # builds the image once and is the only place that does. Everything that needs the built
+  # image -- the smoke tests below and the vulnerability scan that used to live in
+  # security.yml -- hangs off this one build, because two workflows each spending a minute
+  # building the same Dockerfile from the same commit bought nothing but a second copy.
   image:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      # the scan below publishes to code scanning
+      security-events: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -169,6 +219,35 @@ jobs:
           tags: drillion:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # the OS layer and everything vendored into the venv: the surface nothing else looks at.
+      # Ahead of the smoke tests on purpose -- a broken image is still an image whose CVEs we
+      # want on record, and a failing smoke test below must not swallow the upload.
+      - name: scan the image we would publish
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: drillion:ci
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-image.sarif
+          exit-code: 0
+      - uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-image
+      # reports, does not gate: the database moves, so the same commit goes green and red on
+      # different days. Flip exit-code to 1 once the baseline is agreed and driven down.
+      - name: the fixable CRITICAL and HIGH in the image today
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: drillion:ci
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          exit-code: 0
+          skip-setup-trivy: true
+
       - name: start the image
         run: >
           docker run -d --name drillion
@@ -230,17 +309,23 @@ jobs:
   # growing a cell or a job being renamed, so the ruleset never goes stale again
   gate:
     if: always()
-    needs: [check, web, screens, image]
+    # `changes` is in here so that a filter that fails takes the gate down with it, rather than
+    # skipping every job below it and reporting a green nobody earned
+    needs: [changes, check, web, screens, image]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: every job above succeeded
+      - name: nothing above failed
         env:
           RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |
           echo "$RESULTS"
+          # `skipped` is a pass now, and it has to be: the jobs above are skipped deliberately on
+          # a documentation-only change, and a required check that goes red for that would block
+          # every prose PR. None of them has any other `needs`, so the only thing that can skip
+          # one is the `if:` written above it -- revisit this if that stops being true.
           case "$RESULTS" in
-            *failure*|*cancelled*|*skipped*) exit 1 ;;
+            *failure*|*cancelled*) exit 1 ;;
           esac
 
   # a cron nobody watches is worth little to a solo maintainer: turn a red nightly into one
