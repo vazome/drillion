@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM node:24-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e AS web
+FROM node:26-slim@sha256:c0753125a3789977aefe869cbebccf70e3cfd7ea84ca48547458f02e4f1d7146 AS web
 WORKDIR /build
 COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml ./
 # node images no longer bundle corepack. It stays the mechanism because it reads the pnpm version
@@ -11,7 +11,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 COPY web/ ./
 RUN pnpm build
 
-FROM python:3.13-slim@sha256:7ce4b6dfe35e55397b7cda544f8a13f191b7ae28dc5aad71fe664dbc9bc2623f AS wheel
+FROM python:3.14-slim@sha256:cad9a2c871761c413caa6fdd6441c783451e740a48aaeba60ae62a8b53525ef6 AS wheel
 # v0.12.7
 COPY --from=ghcr.io/astral-sh/uv@sha256:95f2aa1fe59274951cfe9b0cbc7972e879ff1004bc8945d130a32eb0dbd85945 /uv /usr/local/bin/
 ENV UV_LINK_MODE=copy
@@ -22,7 +22,7 @@ COPY tasks/ ./tasks/
 COPY --from=web /build/dist ./web/dist
 RUN --mount=type=cache,target=/root/.cache/uv uv build --wheel -o /wheel
 
-FROM python:3.13-slim@sha256:7ce4b6dfe35e55397b7cda544f8a13f191b7ae28dc5aad71fe664dbc9bc2623f
+FROM python:3.14-slim@sha256:cad9a2c871761c413caa6fdd6441c783451e740a48aaeba60ae62a8b53525ef6
 
 # v0.12.7
 COPY --from=ghcr.io/astral-sh/uv@sha256:95f2aa1fe59274951cfe9b0cbc7972e879ff1004bc8945d130a32eb0dbd85945 /uv /uvx /usr/local/bin/
