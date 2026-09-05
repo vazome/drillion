@@ -2,7 +2,6 @@
 title: testing — what to actually test in an ops script
 difficulty: easy
 tier: core
-track: rsample
 minutes: 8
 prereqs: []
 tags: [testing]

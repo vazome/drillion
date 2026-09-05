@@ -2,7 +2,6 @@
 title: context managers — @contextmanager with guaranteed exit
 difficulty: medium
 tier: core
-track: rsample
 minutes: 12
 prereqs: [7, 20, 36]
 tags: [context-managers]

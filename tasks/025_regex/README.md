@@ -2,7 +2,6 @@
 title: re — named groups on log lines
 difficulty: medium
 tier: core
-track: rsample
 minutes: 15
 prereqs: [5]
 tags: [files-text]

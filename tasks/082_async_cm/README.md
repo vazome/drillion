@@ -1,15 +1,14 @@
 ---
-title: async context manager — your own FakePool
+title: async context manager — build a FakePool
 difficulty: hard
 tier: advanced
-track: rsample
 minutes: 25
 prereqs: [21, 37, 53]
 tags: [concurrency, asyncio]
 ---
-# async context manager — your own FakePool
+# async context manager — build a FakePool
 
-*Build the FakePool yourself — an async context manager around a semaphore.*
+*Build a FakePool yourself — an async context manager around a semaphore.*
 
 ## Read first
 - [Using the async with Statement / Creating Custom Context Managers](https://realpython.com/python-with-statement/) — `__enter__`/`__exit__` first, then the async twins
@@ -17,7 +16,7 @@ tags: [concurrency, asyncio]
 - [contextlib.asynccontextmanager](https://devdocs.io/python~3.14/library/contextlib#contextlib.asynccontextmanager) — the shorter way: one async generator with a single `yield`
 
 ## Why
-In the take-home tests you could not use a real Postgres. You wrote a FakePool class so that `async with pool.acquire() as conn:` in the endpoint kept working unchanged, but behind it was a Semaphore and a canned list of rows. An interviewer will point at `__aenter__` and `__aexit__` and ask what they are and why the slot is given back even when the body raises. This task makes you build it from nothing.
+A test suite that must run without a real Postgres still has to let `async with pool.acquire() as conn:` in the endpoint work unchanged. The usual answer is a FakePool: a Semaphore for the slots and a canned list of rows behind the same two methods asyncpg's pool exposes. That means knowing what `__aenter__` and `__aexit__` are, and why the slot is given back even when the body raises. This task builds one from nothing.
 
 ## You get
 nothing to start — you return a CLASS. The test builds it as `FakePool(rows, max_size)` where:
@@ -49,4 +48,4 @@ Why `*exc` in `__aexit__`: Python passes three values (exception type, value, tr
 ### Hint 3
 **Say it in the interview:**
 
-> async with calls __aenter__ to take the resource and __aexit__ to give it back, and __aexit__ runs whether the body returned or raised — it is the async version of try/finally. My FakePool used a Semaphore so max_size callers can hold a slot at once; that is enough to reproduce the pool-starvation bug in a test without a database.
+> async with calls __aenter__ to take the resource and __aexit__ to give it back, and __aexit__ runs whether the body returned or raised — it is the async version of try/finally. A FakePool built on a Semaphore lets max_size callers hold a slot at once, which is enough to reproduce pool starvation in a test with no database.

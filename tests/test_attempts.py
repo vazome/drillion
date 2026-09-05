@@ -21,16 +21,16 @@ def _solved(src=SRC, code="return ''"):
 
 
 def _exs():
-    """A tiny catalogue: 002_b needs 001_a, which is not in the rsample track."""
+    """A tiny catalogue: 002_b needs 001_a, which is not in the demo track."""
     return {
         "001_a": {"topic": 1, "minutes": 5, "prereqs": [], "tags": ["core"]},
         "002_b": {
             "topic": 2,
             "minutes": 5,
             "prereqs": [1],
-            "tags": ["core", "rsample"],
+            "tags": ["core", "demo"],
         },
-        "003_c": {"topic": 3, "minutes": 5, "prereqs": [], "tags": ["rsample"]},
+        "003_c": {"topic": 3, "minutes": 5, "prereqs": [], "tags": ["demo"]},
     }
 
 

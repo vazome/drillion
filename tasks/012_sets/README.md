@@ -2,7 +2,6 @@
 title: set — second-highest distinct value
 difficulty: easy
 tier: core
-track: rsample
 minutes: 8
 prereqs: [4]
 tags: [sets]

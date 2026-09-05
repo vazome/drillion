@@ -1,15 +1,14 @@
 ---
-title: lazy init under a lock — why db.py has asyncio.Lock
+title: lazy init under a lock — create the pool exactly once
 difficulty: medium
 tier: advanced
-track: rsample
 minutes: 20
 prereqs: [81]
 tags: [concurrency, asyncio]
 ---
-# lazy init under a lock — why db.py has asyncio.Lock
+# lazy init under a lock — create the pool exactly once
 
-*app/db.py explained — create the pool once, even when 50 requests arrive together.*
+*Create the pool once, even when 50 requests arrive together.*
 
 ## Read first
 - [asyncio.Lock](https://devdocs.io/python~3.14/library/asyncio-sync#asyncio.Lock) — one holder at a time; `async with lock:` is the whole API you need
@@ -17,7 +16,7 @@ tags: [concurrency, asyncio]
 - [Async IO Explained](https://realpython.com/async-io-python/) — why an `await` is a gap where another request can sneak in between your `if` and your assignment
 
 ## Why
-The take-home's `app/db.py` created the connection pool lazily — on the first request, not at import — and guarded that creation with an `asyncio.Lock`. You did not write that file, but you shipped it, and an interviewer will ask "why is the lock there, and why is `_pool is None` checked twice?" The answer: `await create_pool()` pauses. In that pause the other 49 first-arrivers each see `_pool is None` too and each create their own pool — 50 pools, 250 connections, on a server allowed 100.
+A web app that creates its connection pool lazily — on the first request, not at import — guards that creation with an `asyncio.Lock`, and checks `_pool is None` twice around it. Both are load-bearing, and reviewers ask why. The answer: `await create_pool()` pauses. In that pause the other 49 first-arrivers each see `_pool is None` too and each create their own pool — 50 pools, 250 connections, on a server allowed 100.
 
 ## You get
 nothing to start — you return an async function. The test calls it as `await get_pool(create)` from many coroutines at once, where:

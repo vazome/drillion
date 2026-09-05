@@ -2,7 +2,6 @@
 title: asyncio — gather, don't queue
 difficulty: medium
 tier: advanced
-track: rsample
 minutes: 20
 prereqs: [52]
 tags: [concurrency, asyncio]

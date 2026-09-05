@@ -2,7 +2,6 @@
 title: sorted — sorted with key=
 difficulty: easy
 tier: core
-track: rsample
 minutes: 10
 prereqs: []
 tags: [sorted]

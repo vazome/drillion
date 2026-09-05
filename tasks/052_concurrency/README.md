@@ -2,7 +2,6 @@
 title: threads vs processes vs async — pick one, say why
 difficulty: easy
 tier: advanced
-track: rsample
 minutes: 8
 prereqs: []
 tags: [concurrency]

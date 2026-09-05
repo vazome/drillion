@@ -2,7 +2,6 @@
 title: decorators — record every call, pass everything through
 difficulty: medium
 tier: advanced
-track: rsample
 minutes: 12
 prereqs: [6, 9, 17]
 tags: [decorators]

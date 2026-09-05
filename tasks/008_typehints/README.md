@@ -2,7 +2,6 @@
 title: type hints — read a signature with get_type_hints
 difficulty: medium
 tier: core
-track: rsample
 minutes: 22
 prereqs: [4]
 tags: [type-hints]
