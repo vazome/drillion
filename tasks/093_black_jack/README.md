@@ -246,22 +246,22 @@ True
 False
 ```
 
-[arithmetic conversions]: https://devdocs.io/python~3.14/reference/expressions?highlight=number%20conversion#arithmetic-conversions
+[arithmetic conversions]: https://devdocs.io/python~3.14/reference/expressions#arithmetic-conversions
 [boolean operations]: https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not
 [complex numbers]: https://devdocs.io/python~3.14/library/functions#complex
 [decimal numbers]: https://devdocs.io/python~3.14/library/decimal
-[hex]: https://devdocs.io/python~3.14/library/functions?highlight=hex#hex
+[hex]: https://devdocs.io/python~3.14/library/functions#hex
 [id function]: https://devdocs.io/python~3.14/library/functions#id
 [lexographic order]: https://en.wikipedia.org/wiki/Lexicographic_order
 [object identity]: https://devdocs.io/python~3.14/reference/datamodel
-[octal]: https://devdocs.io/python~3.14/library/functions?#oct
+[octal]: https://devdocs.io/python~3.14/library/functions#oct
 [ord]: https://devdocs.io/python~3.14/library/functions#ord
 [pep8 programming recommendations]: https://pep8.org/#programming-recommendations
 [rational numbers]: https://devdocs.io/python~3.14/library/fractions
 [rich comparisons]: https://devdocs.io/python~3.14/reference/datamodel#object.__lt__
 [three way boolean comparison]: https://en.wikipedia.org/wiki/Three-way_comparison
-[value comparisons none]: https://devdocs.io/python~3.14/reference/expressions?highlight=none#value-comparisons
-[value comparisons]: https://devdocs.io/python~3.14/reference/expressions?highlight=nan#value-comparisons
+[value comparisons none]: https://devdocs.io/python~3.14/reference/expressions#value-comparisons
+[value comparisons]: https://devdocs.io/python~3.14/reference/expressions#value-comparisons
 
 ## Instructions
 In this exercise you are going to implement some rules of [Blackjack][blackjack],

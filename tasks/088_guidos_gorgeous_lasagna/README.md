@@ -454,7 +454,7 @@ Nobody bakes past the cookbook time, so `bake_time_remaining` never has to deal 
 - Clearly [commenting][comments] and [documenting][docstrings] your code according to [PEP257][pep257] is always recommended.
 - Some examples of Google-style docstrings can be found in the Sphinx documentation for the [napoleon module][napoleon].
 
-[assignment]: https://devdocs.io/python~3.14/reference/simple_stmts#grammar-token-assignment-stmt
+[assignment]: https://devdocs.io/python~3.14/reference/simple_stmts#assignment-statements
 [comments]: https://realpython.com/python-comments-guide/
 [constants]: https://stackoverflow.com/a/2682752
 [defining functions]: https://devdocs.io/python~3.14/tutorial/controlflow#defining-functions
@@ -471,7 +471,7 @@ Nobody bakes past the cookbook time, so `bake_time_remaining` never has to deal 
 
 ## Hints
 ### Hint 1
-Two numbers in this recipe never change: 40 and 2. [Name](https://realpython.com/python-variables/) each one and [assign](https://devdocs.io/python~3.14/reference/simple_stmts#grammar-token-assignment-stmt) it an integer value once, above the functions, and let the functions read those names — that is how you avoid a ["magic number"](https://en.wikipedia.org/wiki/Magic_number_(programming)) sitting in the middle of your arithmetic. The third function does not need to redo the per-layer arithmetic: remember, you can always *call* a function you have defined previously.
+Two numbers in this recipe never change: 40 and 2. [Name](https://realpython.com/python-variables/) each one and [assign](https://devdocs.io/python~3.14/reference/simple_stmts#assignment-statements) it an integer value once, above the functions, and let the functions read those names — that is how you avoid a ["magic number"](https://en.wikipedia.org/wiki/Magic_number_(programming)) sitting in the middle of your arithmetic. The third function does not need to redo the per-layer arithmetic: remember, you can always *call* a function you have defined previously.
 ### Hint 2
 Shape of the work: define the two constants, then define the three functions, then build the dict that maps each key string to the matching function.
 

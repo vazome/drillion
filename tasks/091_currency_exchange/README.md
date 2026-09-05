@@ -16,7 +16,7 @@ source: exercism/python concept/currency-exchange (MIT, adapted)
 - [integers](https://devdocs.io/python~3.14/library/functions#int) — `int()` truncates towards zero, which is NOT the same thing as rounding
 - [floats](https://devdocs.io/python~3.14/library/functions#float) — mixing int and float in one expression: `//` on a float still hands back a float, so the type you get out depends on what you put in
 - [Operator Precedence](https://devdocs.io/python~3.14/reference/expressions#operator-precedence) — `*` and `/` before `+`, so the spread needs its own parentheses or its own line
-- [Decimals](https://devdocs.io/python~3.14/library/decimal#module-decimal) — the grown-up answer to money arithmetic
+- [Decimals](https://devdocs.io/python~3.14/library/decimal#decimal-decimal-fixed-point-and-floating-point-arithmetic) — the grown-up answer to money arithmetic
 - [fractions](https://devdocs.io/python~3.14/library/fractions) — exact rational arithmetic
 - [Python's numerical and mathematical modules](https://devdocs.io/python~3.14/library/numeric) — the wider shelf
 

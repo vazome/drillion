@@ -17,7 +17,7 @@ source: exercism/python concept/currency-exchange (MIT, adapted)
 - [integers](https://devdocs.io/python~3.14/library/functions#int) — `int()`, whole numbers of arbitrary precision
 - [floats](https://devdocs.io/python~3.14/library/functions#float) — `float()`, and the 15-digits-of-precision caveat
 - [Operator Precedence](https://devdocs.io/python~3.14/reference/expressions#operator-precedence) — which part of a long expression happens first
-- [Decimals](https://devdocs.io/python~3.14/library/decimal#module-decimal) — what you reach for when float rounding is not acceptable (real money, later)
+- [Decimals](https://devdocs.io/python~3.14/library/decimal#decimal-decimal-fixed-point-and-floating-point-arithmetic) — what you reach for when float rounding is not acceptable (real money, later)
 - [fractions](https://devdocs.io/python~3.14/library/fractions) — exact rational arithmetic
 - [Python's numerical and mathematical modules](https://devdocs.io/python~3.14/library/numeric) — the wider shelf
 

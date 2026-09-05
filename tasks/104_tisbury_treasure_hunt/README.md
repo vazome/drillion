@@ -18,7 +18,7 @@ source: exercism/python concept/tisbury-treasure-hunt (MIT, adapted)
 - [Ned Batchelder: Lists vs Tuples](https://nedbatchelder.com/blog/201608/lists_vs_tuples.html) — the useful mental model: a list is a collection, a tuple is a record
 - [Stack Overflow: what's the difference between lists and tuples?](https://stackoverflow.com/a/626871) — the short answer
 - [James Tauber: tuples are not just constant lists](https://jtauber.com/blog/2006/04/15/python_tuples_are_not_just_constant_lists/) — why position means something in a tuple and nothing in a list
-- [hashable](https://devdocs.io/python~3.14/glossary#hashable) — the property that lets a tuple be a dict key when a list cannot be
+- [hashable](https://devdocs.io/python~3.14/glossary#term-hashable) — the property that lets a tuple be a dict key when a list cannot be
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

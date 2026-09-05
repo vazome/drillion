@@ -142,7 +142,7 @@ Just the place for a Snark! I have said it thrice:
 [The Hunting of the Snark]: https://www.poetryfoundation.org/poems/43909/the-hunting-of-the-snark
 [codecs]: https://devdocs.io/python~3.14/library/codecs
 [common sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#text-sequence-type-str
-[locale]: https://devdocs.io/python~3.14/library/locale#module-locale
+[locale]: https://devdocs.io/python~3.14/library/locale#locale-internationalization-services
 [str methods]: https://devdocs.io/python~3.14/library/stdtypes#string-methods
 [str-endswith]: https://devdocs.io/python~3.14/library/stdtypes#str.endswith
 [str-replace]: https://devdocs.io/python~3.14/library/stdtypes#str.replace

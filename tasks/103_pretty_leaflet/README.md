@@ -104,7 +104,7 @@ Example of format specifiers, [more examples at the end of this page][summary-st
 [ascii-conversion]: https://www.w3resource.com/python/built-in-function/ascii.php
 [format-specifiers]: https://www.python.org/dev/peps/pep-3101/#standard-format-specifiers
 [summary-string-format]: https://www.w3schools.com/python/ref_string_format.asp
-[template-string]: https://devdocs.io/python~3.14/library/string#template-strings
+[template-string]: https://devdocs.io/python~3.14/library/string#template-strings-strings
 [gnu-gettext-api]: https://devdocs.io/python~3.14/library/gettext
 
 ## Instructions

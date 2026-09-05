@@ -147,14 +147,14 @@ ________
 
 
 [collections.counter]: https://devdocs.io/python~3.14/library/collections#collections.Counter
-[collections]: https://devdocs.io/python~3.14/library/collections#module-collections
+[collections]: https://devdocs.io/python~3.14/library/collections#collections-container-datatypes
 [comprehensions]: https://treyhunner.com/2015/12/python-list-comprehensions-now-in-color/
 [dict.setdefault]: https://devdocs.io/python~3.14/library/stdtypes#dict.setdefault
 [dict]: https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict
 [generator expressions]: https://dbader.org/blog/python-generator-expressions
-[re.findall]: https://devdocs.io/python~3.14/library/re?highlight=re#re.findall
-[re.sub]: https://devdocs.io/python~3.14/library/re?highlight=re#re.sub
-[re]: https://devdocs.io/python~3.14/library/re?highlight=re#module-re
+[re.findall]: https://devdocs.io/python~3.14/library/re#re.findall
+[re.sub]: https://devdocs.io/python~3.14/library/re#re.sub
+[re]: https://devdocs.io/python~3.14/library/re#re-regular-expression-operations
 [regex101]: https://regex101.com/
 [str.lower]: https://devdocs.io/python~3.14/library/stdtypes#str.lower
 [str.replace]: https://devdocs.io/python~3.14/library/stdtypes#str.replace

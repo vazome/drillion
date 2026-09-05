@@ -12,7 +12,7 @@ source: exercism/python concept/meltdown-mitigation (MIT, adapted)
 *if / elif / else — three reactor decisions, each a different shape of branch.*
 
 ## Read first
-- [Python Docs: Control flow tools](https://devdocs.io/python~3.14/tutorial/controlflow#more-control-flow-tools) — if / elif / else: the first branch whose test is `True` wins, and the rest are never even evaluated
+- [Python Docs: Control flow tools](https://devdocs.io/python~3.14/tutorial/controlflow#tut-morecontrol) — if / elif / else: the first branch whose test is `True` wins, and the rest are never even evaluated
 - [Real Python: Conditional statements in Python](https://realpython.com/python-conditional-statements/) — chained comparisons (`0 <= x < 10`) and when a ladder of `elif` beats a pile of separate `if`s
 - [Python Docs: Truth value testing](https://devdocs.io/python~3.14/library/stdtypes#truth-value-testing) — what counts as `True` when the test is not a comparison
 - [Python Docs: Standard types — boolean operations](https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not) — `and` / `or` / `not` inside a condition
@@ -103,7 +103,7 @@ else:
 
 [boolean operations]: https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not
 [comparisons]: https://devdocs.io/python~3.14/library/stdtypes#comparisons
-[control flow tools]: https://devdocs.io/python~3.14/tutorial/controlflow#more-control-flow-tools
+[control flow tools]: https://devdocs.io/python~3.14/tutorial/controlflow#tut-morecontrol
 [if statement]: https://devdocs.io/python~3.14/reference/compound_stmts#the-if-statement
 [truth value testing]: https://devdocs.io/python~3.14/library/stdtypes#truth-value-testing
 

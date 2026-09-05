@@ -453,7 +453,7 @@ There's four activities in the assignment, each with a set of text or words to w
 
 
 [common sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#text-sequence-type-str
-[python-str-doc]: https://devdocs.io/python~3.14/tutorial/introduction#strings
+[python-str-doc]: https://devdocs.io/python~3.14/tutorial/introduction#tut-strings
 [str-join]: https://devdocs.io/python~3.14/library/stdtypes#str.join
 [str-split]: https://devdocs.io/python~3.14/library/stdtypes#str.split
 
