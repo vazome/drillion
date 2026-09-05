@@ -21,14 +21,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # a prose commit does not need three operating systems, a Playwright suite and a container
-  # build to prove it is still prose. Four of the last thirteen merged PRs changed nothing but
-  # documentation and each ran the lot, twice -- once on the PR and once on the merge.
-  #
-  # The filter is a deny-list inverted on purpose: anything this does not recognise as prose is
-  # code, so a new directory runs the full matrix until someone decides otherwise. Note
-  # `README.md$` is anchored, because `tasks/*/README.md` is a task definition the catalogue and
-  # doctor suites validate -- it is content, not documentation.
+  # Only known prose/assets may skip checks. README.md and tasks/*/README.md are
+  # packaging/curriculum inputs; unknown paths and unavailable diffs run everything.
   changes:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -41,17 +35,29 @@ jobs:
           fetch-depth: 0 # both ends of the diff have to be in the clone
       - id: f
         env:
-          BASE: ${{ github.event.pull_request.base.sha }}
-          HEAD: ${{ github.event.pull_request.head.sha }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          docs='^(docs/|\.github/ISSUE_TEMPLATE/|\.github/pull_request_template\.md$'
-          docs="$docs"'|README\.md$|CONTRIBUTING\.md$|CHANGELOG\.md$|AGENTS\.md$|CLAUDE\.md$'
-          docs="$docs"'|CONTEXT\.md$|DESIGN\.md$|SECURITY\.md$|NOTICE$|LICENSE$)'
-          # no BASE means this is not a pull request -- a push or the nightly always runs everything
-          if [ -z "$BASE" ] || git diff --name-only "$BASE" "$HEAD" | grep -qvE "$docs"; then
-            echo "code=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "code=false" >> "$GITHUB_OUTPUT"
+          code=true
+          files="$RUNNER_TEMP/ci-changed-files"
+          # Capture the diff first: pipeline/grep errors must never turn into a skip.
+          # --no-renames includes both sides of a move; NULs preserve unusual filenames.
+          if [ -n "$BASE" ] && [ -n "$HEAD" ] &&
+             git diff --no-renames --name-only -z "$BASE" "$HEAD" -- > "$files" &&
+             [ -s "$files" ]; then
+            code=false
+            while IFS= read -r -d '' file; do
+              case "$file" in
+                docs/*.md|docs/images/*.png|docs/images/*.jpg|docs/images/*.svg|\
+                .github/ISSUE_TEMPLATE/*|.github/pull_request_template.md|\
+                CONTRIBUTING.md|CHANGELOG.md|AGENTS.md|CLAUDE.md|\
+                CONTEXT.md|DESIGN.md|SECURITY.md) ;;
+                *) code=true; break ;;
+              esac
+            done < "$files"
+          fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          if [ "$code" = false ]; then
             echo "documentation only: skipping the matrix, the client and the image" >> "$GITHUB_STEP_SUMMARY"
           fi
 
@@ -220,90 +226,57 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # the OS layer and everything vendored into the venv: the surface nothing else looks at.
-      # Ahead of the smoke tests on purpose -- a broken image is still an image whose CVEs we
-      # want on record, and a failing smoke test below must not swallow the upload.
+      # Both consumers use the loaded image on this runner. Collect smoke's status
+      # after publishing scan reports, so a failing smoke test cannot swallow SARIF.
+      - name: start image smoke tests
+        id: smoke
+        run: |
+          nohup bash -c '
+            status=0
+            bash .github/scripts/image-smoke.sh || status=$?
+            echo "$status" > "$RUNNER_TEMP/image-smoke.status"
+          ' > "$RUNNER_TEMP/image-smoke.log" 2>&1 < /dev/null &
+          echo "pid=$!" >> "$GITHUB_OUTPUT"
+
+      # Keep vulnerability AND secret scanning, all severities, and reporting-only findings.
       - name: scan the image we would publish
+        id: scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
           image-ref: drillion:ci
+          scanners: vuln,secret
           ignore-unfixed: true
-          format: sarif
-          output: trivy-image.sarif
+          format: json
+          output: trivy-image.json
           exit-code: 0
+      - name: convert the image scan to SARIF
+        id: sarif
+        run: trivy convert --format sarif --output trivy-image.sarif trivy-image.json
       - uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        if: ${{ !cancelled() && steps.sarif.outcome == 'success' }}
         with:
           sarif_file: trivy-image.sarif
           category: trivy-image
-      # reports, does not gate: the database moves, so the same commit goes green and red on
-      # different days. Flip exit-code to 1 once the baseline is agreed and driven down.
       - name: the fixable CRITICAL and HIGH in the image today
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          scan-type: image
-          image-ref: drillion:ci
-          ignore-unfixed: true
-          severity: CRITICAL,HIGH
-          exit-code: 0
-          skip-setup-trivy: true
+        if: ${{ !cancelled() && steps.scan.outcome == 'success' }}
+        run: trivy convert --format table --severity CRITICAL,HIGH --exit-code 0 trivy-image.json
 
-      - name: start the image
-        run: >
-          docker run -d --name drillion
-          --user "$(id -u):$(id -g)"
-          -v "$PWD:/data"
-          -p 127.0.0.1:8765:8765
-          drillion:ci
-      - name: wait for healthy
+      - name: collect image smoke tests
+        if: ${{ !cancelled() && steps.smoke.outcome == 'success' }}
+        timeout-minutes: 15
+        env:
+          SMOKE_PID: ${{ steps.smoke.outputs.pid }}
         run: |
-          for _ in $(seq 30); do
-            case "$(docker inspect -f '{{.State.Health.Status}}' drillion)" in
-              healthy) exit 0 ;;
-              unhealthy) break ;;
-            esac
-            sleep 2
+          trap 'cat "$RUNNER_TEMP/image-smoke.log"' EXIT
+          while [ ! -s "$RUNNER_TEMP/image-smoke.status" ]; do
+            if ! kill -0 "$SMOKE_PID" 2>/dev/null; then
+              echo "::error::image smoke tests exited without a result"
+              exit 1
+            fi
+            sleep 1
           done
-          echo "::error::the container never reported healthy"
-          docker logs drillion
-          exit 1
-      - run: docker exec drillion drillion selfcheck
-      # selfcheck never opens /lsp, so nothing else here would notice a language server that
-      # cannot start — which is exactly what trimming the image could break
-      - name: the editor's language server answers on /lsp
-        run: |
-          docker exec -i drillion python - <<'PY'
-          import json
-          from websockets.sync.client import connect
-
-          # the origin the page itself would send; api._allowed_origins() refuses any other
-          with connect("ws://127.0.0.1:8765/lsp", origin="http://127.0.0.1:8765") as ws:
-              ws.send(json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize",
-                                  "params": {"processId": None, "rootUri": None,
-                                             "capabilities": {}}}))
-              for _ in range(50):  # the server logs a few notifications before it answers
-                  reply = json.loads(ws.recv(timeout=120))
-                  if reply.get("id") == 1:
-                      break
-              else:
-                  raise SystemExit("::error::no reply to the LSP initialize")
-          assert "capabilities" in reply.get("result", {}), reply
-          print("lsp initialize ok:", reply["result"].get("serverInfo"))
-          PY
-      - name: start it again with nothing but a volume
-        run: |
-          docker rm -f drillion
-          docker run -d --name seeded -v drillion-data:/data -p 127.0.0.1:8765:8765 drillion:ci
-          for _ in $(seq 30); do
-            case "$(docker inspect -f '{{.State.Health.Status}}' seeded)" in
-              healthy) break ;;
-              unhealthy) docker logs seeded; exit 1 ;;
-            esac
-            sleep 2
-          done
-          test "$(curl -fsS http://127.0.0.1:8765/api/health | jq .tasks)" = 170
-          curl -fsS -o /dev/null http://127.0.0.1:8765/
-          curl -fsS -o /dev/null -X POST http://127.0.0.1:8765/api/task/017_fstrings/open
+          exit "$(cat "$RUNNER_TEMP/image-smoke.status")"
 
   # the single context branch protection requires: one name that survives the matrix
   # growing a cell or a job being renamed, so the ruleset never goes stale again
