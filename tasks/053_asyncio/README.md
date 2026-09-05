@@ -2,7 +2,6 @@
 title: asyncio — gather, don't queue
 difficulty: medium
 tier: advanced
-track: rsample
 minutes: 20
 prereqs: [52]
 tags: [concurrency, asyncio]
@@ -14,9 +13,6 @@ tags: [concurrency, asyncio]
 ## Read first
 - [Async IO in Python: a complete walkthrough](https://realpython.com/async-io-python/) — THE asyncio walkthrough; read 'Async IO Explained' and 'The asyncio Package' before anything below
 - [asyncio.gather](https://devdocs.io/python~3.14/library/asyncio-task#asyncio.gather) — hand it many awaitables; it runs them concurrently and keeps argument order
-
-> [!NOTE]
-> **Take-home:** `loadtest.py`, your concurrency test
 
 ## Why
 A status page must fetch the state of a dozen services before it can render. Each fetch is mostly waiting on the network. If the code waits for service 1 to answer before it even asks service 2, the page takes the sum of all the waits; asking everyone at once and then collecting the answers takes only the slowest single wait. The team's code is written in Python's async style, and you are asked to write the "ask everyone at once, collect the answers in order" helper.

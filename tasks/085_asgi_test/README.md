@@ -2,7 +2,6 @@
 title: ASGITransport — hit the endpoint without a server
 difficulty: medium
 tier: packages
-track: rsample
 minutes: 20
 prereqs: [84]
 tags: [testing, asyncio, fastapi]
@@ -13,15 +12,12 @@ tags: [testing, asyncio, fastapi]
 
 ## Read first
 - [Testing](https://fastapi.tiangolo.com/tutorial/testing/) — the basic idea: call the app from a test
-- [Async Tests](https://fastapi.tiangolo.com/advanced/async-tests/) — the exact pattern you used: `AsyncClient(transport=ASGITransport(app=app), base_url="http://test")`
+- [Async Tests](https://fastapi.tiangolo.com/advanced/async-tests/) — the pattern itself: `AsyncClient(transport=ASGITransport(app=app), base_url="http://test")`
 - [Transports — ASGITransport](https://www.python-httpx.org/advanced/transports/) — the client talks to the app object in-process; no port, no socket, no uvicorn
 - [Query Parameters](https://fastapi.tiangolo.com/tutorial/query-params/) — why `q` is required and what 422 means
 
-> [!NOTE]
-> **Take-home:** `httpx.ASGITransport(app=app)`
-
 ## Why
-The take-home said "tests must run with pytest alone: no running server, no Docker". Your tests did that with `httpx.ASGITransport`, and an interviewer will ask how that works. An ASGI app like FastAPI is just a Python callable that takes a request and produces a response; uvicorn normally feeds it bytes from a socket. ASGITransport feeds it the same request object straight from the test, in the same process, so you get real routing, real validation and real JSON without a port.
+"Tests must run with pytest alone: no running server, no Docker" is a common rule, and `httpx.ASGITransport` is how it is met. An ASGI app like FastAPI is just a Python callable that takes a request and produces a response; uvicorn normally feeds it bytes from a socket. ASGITransport feeds it the same request object straight from the test, in the same process, so you get real routing, real validation and real JSON without a port.
 
 ## You get
 nothing to start — you return an async function. The test calls it as `await call(app, params)` where:

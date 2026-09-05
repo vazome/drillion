@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-# ── the "app" under test: a tiny copy of the take-home's main.py ─────────
+# ── the "app" under test: a tiny search endpoint over a pooled database ──
 # You do not edit anything in this block. Your fixture swaps the two
 # module-level names `embed_query` and `get_pool` for fakes.
 

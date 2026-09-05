@@ -24,13 +24,13 @@ not count — 14 tasks `import pytest` down there for `pytest.approx` alone and 
 **difficulty** — how hard the task is to get **right the first time**: `easy`, `medium` or
 `hard`. It is not how long the task takes. Thirty minutes of unsurprising typing is `easy`; six
 lines you can only write once you have seen the trick is `hard`. Anchor the call on the task's
-`## Rules` — rules are where the traps live — and grade a new task against the rubric all 171
+`## Rules` — rules are where the traps live — and grade a new task against the rubric all 170
 were graded against: [difficulty-rubric.md](difficulty-rubric.md).
-Today: 36 easy · 108 medium · 27 hard.
+Today: 35 easy · 108 medium · 27 hard.
 
 **track** — optional, at most one per task: a themed run through the catalogue that cuts across
-tiers. `rsample` (18 tasks) is a RAG take-home broken into steps. Leave the key out unless the
-task belongs to such a run.
+tiers, for a sequence meant to be practised in order. No track is defined today. Leave the key
+out unless the task belongs to such a run.
 
 **tags** — what Python you practise. Lowercase, kebab-case, 1–3 per task, and one rule decides
 every one of them:
@@ -42,22 +42,22 @@ could sit down and get better at, and something a *future* task could also be ta
 `flatten-array`, `phone-screens` and `take-home-task-2` are not. They name one task and could
 never name another.
 
-A tag on a single task is fine — 37 of the 76 are, because 171 tasks cannot cover every concept
+A tag on a single task is fine — 37 of the 76 are, because 170 tasks cannot cover every concept
 twice. The test is not "does more than one task have it?" but "**could** another task have it?".
 So reach for an existing tag before minting a synonym — `sets` not `set`, `strings` not
 `str-stuff` — and when nothing fits, name the concept, not the task. `GET /api/catalogue`
 returns the whole vocabulary under `tags`.
 
 **focus** in `progress.json` is a single string, and the scheduler matches it against a task's
-tier, track and tags alike (`scheduler.py:_facets`): `advanced`, `rsample` and `recursion` are
-all valid. It restricts which *new* tasks are offered — reviews and the open catalogue ignore
+tier, track and tags alike (`scheduler.py:_facets`): `advanced` and `recursion` are both
+valid. It restricts which *new* tasks are offered — reviews and the open catalogue ignore
 it — and `POST /api/focus` sets it.
 
 ## The folder
 
 One folder per task, `tasks/<NNN>_<name>/`; copy the shape of an existing one.
 
-`<NNN>` is a contiguous incremental id, `001`–`171`, so the next task you add is `172`. It is an
+`<NNN>` is an ascending id, `001`–`171` with `087` retired, so the next task you add is `172`. It is an
 identity and nothing else: it encodes no difficulty, no section and no provenance. Append, never
 insert — `prereqs:` points at these numbers, so renumbering means rewriting other people's
 frontmatter.
@@ -69,7 +69,7 @@ frontmatter.
 title: Counter — top N by frequency   # the concept first, then what you build with it
 difficulty: medium                    # easy | medium | hard
 tier: core                            # core | advanced | packages
-track: rsample                        # optional, omit it unless the task is part of a run
+track: async-pools                    # optional, omit it unless the task is part of a run
 minutes: 12                           # par time — the grader's input, never shown to the learner
 prereqs: [18]                         # task numbers that gate it; [] when nothing does
 tags: [counter, sorted]               # Python concepts, lowercase kebab-case
@@ -130,7 +130,7 @@ Run `uv run drillion doctor` — it reports every rule the folder breaks, not ju
 
 `uv run drillion selfcheck` splices `_reference` into every file and runs the tests; it must be
 green before a task is trusted. But it only counts tasks the catalogue already accepted, so if it
-still says `171/171` after you added one, `doctor` is where to look.
+still says `170/170` after you added one, `doctor` is where to look.
 
 ## Retired tags
 
@@ -141,5 +141,5 @@ Six were retired when the vocabulary landed. If an old branch or an old note sti
 | `exercism` | `source:` — provenance is a field, not a concept you can practise (84 tasks carry one) |
 | `core`, `data-structures` | `tier:` — the coarse grouping is its own key now |
 | `whole-task` | `difficulty:` — it marked size, and size is not difficulty |
-| `rsample` | `track:` |
+| `rsample` | retired with the track it named |
 | `basics` | `functions` — the concept the tasks actually taught |

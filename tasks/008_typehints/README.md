@@ -2,7 +2,6 @@
 title: type hints — read a signature with get_type_hints
 difficulty: medium
 tier: core
-track: rsample
 minutes: 22
 prereqs: [4]
 tags: [type-hints]
@@ -12,15 +11,12 @@ tags: [type-hints]
 *Most of the type hints you meet are ones you read, not ones you wrote.*
 
 ## Read first
-- [Python Type Checking (Guide)](https://realpython.com/python-type-checking/) — the take-home REQUIRED annotations on every signature
+- [Python Type Checking (Guide)](https://realpython.com/python-type-checking/) — why annotations are worth writing, and what a checker does with them
 - [typing — support for type hints](https://devdocs.io/python~3.14/library/typing) — reference, only for lookup
 - [Dictionaries (Python tutorial)](https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries) — dicts: read, add, remove, loop over
 - [Dictionaries in Python](https://realpython.com/python-dicts/) — same, longer; 'Building a Dictionary Incrementally' and 'Dictionary Methods' (`.items()`, `.pop()`) are the 70% of this task
 - [typing.get_type_hints](https://devdocs.io/python~3.14/library/typing#typing.get_type_hints) — the one call that reads the hints
 - [typing.get_args](https://devdocs.io/python~3.14/library/typing#typing.get_args) — split `str | None` into its parts
-
-> [!NOTE]
-> **Take-home:** required on every signature
 
 ## Why
 You inherit a library of infrastructure functions written by someone who left. Before calling one at 3am you want to know what it expects: the names of its inputs, which ones might be empty (None), and what comes back. The answers are written in the function's own signature as type hints, but stored as plain text. You need to read that text back into something you can check in code, an automated form of reading the docs.

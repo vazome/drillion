@@ -2,7 +2,6 @@
 title: semaphore — at most N in flight
 difficulty: hard
 tier: advanced
-track: rsample
 minutes: 20
 prereqs: [53]
 tags: [concurrency, asyncio]
@@ -16,11 +15,8 @@ tags: [concurrency, asyncio]
 - [asyncio.Semaphore](https://devdocs.io/python~3.14/library/asyncio-sync#asyncio.Semaphore) — the 6-line reference
 - [asyncio.gather](https://devdocs.io/python~3.14/library/asyncio-task#asyncio.gather) — start everything, collect in order
 
-> [!NOTE]
-> **Take-home:** why `FakePool` is a `Semaphore(max_size)`
-
 ## Why
-A connection pool is exactly this idea: N slots, and the (N+1)th caller waits until someone gives one back. Your take-home test built a FakePool with `asyncio.Semaphore(max_size)` for that reason — to imitate a pool of 2 without a database. The same tool is what you reach for when a vendor API says "no more than 5 requests at a time" or when 500 hosts must be pinged without opening 500 sockets.
+A connection pool is exactly this idea: N slots, and the (N+1)th caller waits until someone gives one back. It is also how a test imitates a pool of 2 without a database: a FakePool built on `asyncio.Semaphore(max_size)`. The same tool is what you reach for when a vendor API says "no more than 5 requests at a time" or when 500 hosts must be pinged without opening 500 sockets.
 
 ## You get
 nothing to start — you return an async function. The test calls it as `await run_all(fn, items, limit)`, where:
@@ -45,4 +41,4 @@ Why the semaphore must wrap the await and not just the call: `async with sem` ta
 ### Hint 3
 **Say it in the interview:**
 
-> A semaphore is a counter of free slots. acquire takes one or waits; release gives it back. Wrapping each job in async with sem bounds how many are in flight while gather still launches them all and returns results in order. That is the same mechanism as a connection pool, which is why my FakePool in the tests was a Semaphore(max_size).
+> A semaphore is a counter of free slots. acquire takes one or waits; release gives it back. Wrapping each job in async with sem bounds how many are in flight while gather still launches them all and returns results in order. That is the same mechanism as a connection pool, which is why a fake pool in a test is just a Semaphore(max_size).

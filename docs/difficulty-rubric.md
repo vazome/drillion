@@ -1,6 +1,6 @@
 # Difficulty rubric
 
-How `difficulty:` is decided in a task's frontmatter. All 171 tasks in the catalogue were graded
+How `difficulty:` is decided in a task's frontmatter. All 170 tasks in the catalogue were graded
 against this rubric; grade a new one against it too, so the levels keep meaning the same thing.
 
 You are grading how hard a task is to **solve correctly the first time**, for someone learning

@@ -146,8 +146,8 @@ jobs:
               print(f"::error::the sdist contains {len(banned)} files it should not, e.g. {banned[:3]}")
               sys.exit(1)
           tasks = {n.split("/")[2] for n in names if "/tasks/" in n and n.count("/") > 2}
-          if len(tasks) != 171:
-              print(f"::error::the sdist carries {len(tasks)} task folders, expected 171")
+          if len(tasks) != 170:
+              print(f"::error::the sdist carries {len(tasks)} task folders, expected 170")
               sys.exit(1)
           if not any("/web/dist/" in n for n in names):
               print("::error::the sdist has no web/dist, so a wheel built from it serves no page")
@@ -301,7 +301,7 @@ jobs:
             esac
             sleep 2
           done
-          test "$(curl -fsS http://127.0.0.1:8765/api/health | jq .tasks)" = 171
+          test "$(curl -fsS http://127.0.0.1:8765/api/health | jq .tasks)" = 170
           curl -fsS -o /dev/null http://127.0.0.1:8765/
           curl -fsS -o /dev/null -X POST http://127.0.0.1:8765/api/task/017_fstrings/open
 

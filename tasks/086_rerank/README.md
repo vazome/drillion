@@ -1,15 +1,14 @@
 ---
-title: take-home Task 2 — rerank the candidate pool
+title: rerank — retrieve wide, then score narrow
 difficulty: medium
 tier: core
-track: rsample
 minutes: 20
 prereqs: [12, 18, 25]
 tags: [sets, sorted]
 ---
-# take-home Task 2 — rerank the candidate pool
+# rerank — retrieve wide, then score narrow
 
-*Take-home Task 2 — retrieve wide, then rerank: fraction-of-query-words score, stable top-k.*
+*Retrieve wide, then rerank: fraction-of-query-words score, stable top-k.*
 
 ## Read first
 - [Rerankers](https://www.pinecone.io/learn/series/rag/rerankers/) — read the first half: why a cheap wide first stage + an expensive narrow second stage beats either alone
@@ -17,11 +16,8 @@ tags: [sets, sorted]
 - [Sorting HOW TO](https://devdocs.io/python~3.14/howto/sorting) — `key=`, `reverse=True`, and 'Sort Stability': equal scores keep their incoming order, which is how ties stay in vector order
 - [set](https://devdocs.io/python~3.14/library/stdtypes#set) — `&` gives the words in both sets
 
-> [!NOTE]
-> **Take-home:** Task 2 + the "fraction, not count" upgrade
-
 ## Why
-Vector search returned the 5 geometrically nearest chunks, and they were often not the 5 best answers — two chunks can sit close in embedding space while only one actually contains the words the user typed. The fix was two stages: ask the database for 20 (cheap, wide, recall) and re-score those 20 against the query with a second function (narrow, precision), keeping the top 5. Your submission scored by raw count of overlapping words; here you use the FRACTION of the query's words found, which is the same idea but comparable across queries and bounded 0..1 — the improvement you would name in the interview.
+Vector search returned the 5 geometrically nearest chunks, and they were often not the 5 best answers — two chunks can sit close in embedding space while only one actually contains the words the user typed. The fix was two stages: ask the database for 20 (cheap, wide, recall) and re-score those 20 against the query with a second function (narrow, precision), keeping the top 5. Scoring by raw count of overlapping words works but is not comparable across queries; here you use the FRACTION of the query's words found, the same idea bounded 0..1.
 
 ## You get
 - `query` — the user's text, e.g. `"Storage best-practices"`
@@ -49,7 +45,7 @@ solve(query, rows, k=2)
 ### Hint 1
 Write `_tokens(text)` first: `set(re.sub(r'[^\w\s]', '', text.lower()).split())`. Then score = `len(q & c) / len(q)` with a guard for an empty q. Then `sorted(rows, key=lambda r: score(...), reverse=True)[:k]`.
 ### Hint 2
-Why `sorted(..., reverse=True)` keeps ties in order: Python's sort is stable, and `reverse=True` still preserves the original order among equal keys (it is not the same as sorting then reversing). That is why the 'all scores equal' test in your take-home came back in vector order.
+Why `sorted(..., reverse=True)` keeps ties in order: Python's sort is stable, and `reverse=True` still preserves the original order among equal keys (it is not the same as sorting then reversing). That is why an 'all scores equal' case comes back in vector order.
 ### Hint 3
 **Say it in the interview:**
 

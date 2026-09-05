@@ -6,7 +6,7 @@ from drillion import scheduler, state
 
 
 def _exs():
-    """A tiny catalogue: 002_b needs 001_a, which is not in the rsample track."""
+    """A tiny catalogue: 002_b needs 001_a, which is not in the demo track."""
     return {
         "001_a": {
             "topic": 1,
@@ -20,7 +20,7 @@ def _exs():
             "minutes": 5,
             "prereqs": [1],
             "tier": "core",
-            "track": "rsample",
+            "track": "demo",
             "tags": ["loops"],
         },
         "003_c": {
@@ -28,7 +28,7 @@ def _exs():
             "minutes": 5,
             "prereqs": [],
             "tier": "advanced",
-            "track": "rsample",
+            "track": "demo",
             "tags": ["llm"],
         },
     }
@@ -161,7 +161,7 @@ def test_unseen_respects_prereqs():
 
 
 def test_focus_ignores_out_of_focus_prereqs():
-    assert scheduler.unseen(_st(focus="rsample"), _exs()) == [
+    assert scheduler.unseen(_st(focus="demo"), _exs()) == [
         "002_b",
         "003_c",
     ]  # a track
