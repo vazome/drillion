@@ -117,6 +117,9 @@ filterwarnings = [
     # that one message only, so starlette's next deprecation still stops the build; dies
     # when we move off httpx 0.28 + TestClient, which starlette is asking us to
     "ignore:Using `httpx` with `starlette.testclient` is deprecated:starlette.exceptions.StarletteDeprecationWarning",
+    # starlette.testclient still imports the deprecated anyio.abc.BlockingPortal alias;
+    # dies once starlette moves to anyio.from_thread.BlockingPortal upstream
+    "ignore:The anyio.abc.BlockingPortal alias is deprecated:DeprecationWarning",
 ]
 
 # aimed at src/ only. `tasks/` is untyped on purpose, and the learner's editor resolves its
