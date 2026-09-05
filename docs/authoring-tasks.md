@@ -10,7 +10,7 @@ a difficulty, a track or a tag, and what the folder has to contain.
 
 | tier | what belongs in it | today |
 |---|---|---|
-| `core` | the language and its standard library, and every coder needs it: syntax, data structures, files and text, errors, `itertools`, `pathlib` | 139 |
+| `core` | the language and its standard library, and every coder needs it: syntax, data structures, files and text, errors, `itertools`, `pathlib` | 142 |
 | `advanced` | still the standard library, but you can work a long while without it: `asyncio`, concurrency, generators, decorators, closures, `functools` | 17 |
 | `packages` | solving it needs something `pip` installs: `requests`, `responses`, `boto3`, `moto`, `pytest`, `fastapi`, `langchain` | 15 |
 
@@ -24,9 +24,9 @@ not count — 14 tasks `import pytest` down there for `pytest.approx` alone and 
 **difficulty** — how hard the task is to get **right the first time**: `easy`, `medium` or
 `hard`. It is not how long the task takes. Thirty minutes of unsurprising typing is `easy`; six
 lines you can only write once you have seen the trick is `hard`. Anchor the call on the task's
-`## Rules` — rules are where the traps live — and grade a new task against the rubric all 170
+`## Rules` — rules are where the traps live — and grade a new task against the rubric all 174
 were graded against: [difficulty-rubric.md](difficulty-rubric.md).
-Today: 35 easy · 108 medium · 27 hard.
+Today: 36 easy · 111 medium · 27 hard.
 
 **track** — optional, at most one per task: a themed run through the catalogue that cuts across
 tiers, for a sequence meant to be practised in order. No track is defined today. Leave the key
@@ -42,7 +42,7 @@ could sit down and get better at, and something a *future* task could also be ta
 `flatten-array`, `phone-screens` and `take-home-task-2` are not. They name one task and could
 never name another.
 
-A tag on a single task is fine — 37 of the 76 are, because 170 tasks cannot cover every concept
+A tag on a single task is fine — 40 of the 80 are, because 174 tasks cannot cover every concept
 twice. The test is not "does more than one task have it?" but "**could** another task have it?".
 So reach for an existing tag before minting a synonym — `sets` not `set`, `strings` not
 `str-stuff` — and when nothing fits, name the concept, not the task. `GET /api/catalogue`
@@ -57,7 +57,7 @@ it — and `POST /api/focus` sets it.
 
 One folder per task, `tasks/<NNN>_<name>/`; copy the shape of an existing one.
 
-`<NNN>` is an ascending id, `001`–`171` with `087` retired, so the next task you add is `172`. It is an
+`<NNN>` is an ascending id, `001`–`175` with `087` retired, so the next task you add is `176`. It is an
 identity and nothing else: it encodes no difficulty, no section and no provenance. Append, never
 insert — `prereqs:` points at these numbers, so renumbering means rewriting other people's
 frontmatter.
@@ -69,7 +69,7 @@ frontmatter.
 title: Counter — top N by frequency   # the concept first, then what you build with it
 difficulty: medium                    # easy | medium | hard
 tier: core                            # core | advanced | packages
-track: async-pools                    # optional, omit it unless the task is part of a run
+track: <run-name>                     # optional, omit it unless the task is part of a run
 minutes: 12                           # par time — the grader's input, never shown to the learner
 prereqs: [18]                         # task numbers that gate it; [] when nothing does
 tags: [counter, sorted]               # Python concepts, lowercase kebab-case
@@ -118,7 +118,7 @@ defines `_reference`/`_gen`/`test_*` or names `_reference` is refused.
 ## When a new task does not show up
 
 A folder the catalogue cannot read is **skipped**, not reported: a half-written task must never
-break the menu for the other 170. That makes a mistake look like a task that simply is not there.
+break the menu for the other 173. That makes a mistake look like a task that simply is not there.
 Run `uv run drillion doctor` — it reports every rule the folder breaks, not just the first:
 
 - a required key missing, empty, or misspelt (`tags: []` counts as missing);
@@ -130,7 +130,7 @@ Run `uv run drillion doctor` — it reports every rule the folder breaks, not ju
 
 `uv run drillion selfcheck` splices `_reference` into every file and runs the tests; it must be
 green before a task is trusted. But it only counts tasks the catalogue already accepted, so if it
-still says `170/170` after you added one, `doctor` is where to look.
+still says `174/174` after you added one, `doctor` is where to look.
 
 ## Retired tags
 
