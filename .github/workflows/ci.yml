@@ -260,7 +260,7 @@ jobs:
           category: trivy-image
       - name: the fixable CRITICAL and HIGH in the image today
         if: ${{ !cancelled() && steps.scan.outcome == 'success' }}
-        run: trivy convert --format table --severity CRITICAL,HIGH --exit-code 0 trivy-image.json
+        run: trivy convert --format table --scanners vuln,secret --severity CRITICAL,HIGH --exit-code 0 trivy-image.json
 
       - name: collect image smoke tests
         if: ${{ !cancelled() && steps.smoke.outcome == 'success' }}
