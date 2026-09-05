@@ -3,7 +3,7 @@ title: class-composition — a time-of-day class that wraps around midnight
 difficulty: hard
 tier: core
 minutes: 20
-prereqs: [29, 115]
+prereqs: [35, 65]
 tags: [class-composition, rich-comparisons, string-formatting]
 source: exercism/python practice/clock (MIT, adapted)
 ---

@@ -3,7 +3,7 @@ title: recursion — unpack the nested boxes into one flat list
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [101]
+prereqs: [18]
 tags: [recursion, lists]
 source: exercism/python practice/flatten-array (MIT, adapted)
 ---

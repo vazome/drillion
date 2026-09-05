@@ -16,8 +16,8 @@ def _seeding(fn):
     tmp, keep = Path(tempfile.mkdtemp(prefix="drillion_seed_")), settings.root
     packaged = cli.TASKS_TEMPLATE
     template, root = tmp / "template", tmp / "root"
-    (template / "017_fstrings").mkdir(parents=True)
-    (template / "017_fstrings" / "task.py").write_text("packaged\n", encoding="utf-8")
+    (template / "009_fstrings").mkdir(parents=True)
+    (template / "009_fstrings" / "task.py").write_text("packaged\n", encoding="utf-8")
     (template / "_lib.py").write_text("packaged lib\n", encoding="utf-8")
     try:
         settings.root = root
@@ -34,7 +34,7 @@ def test_an_empty_root_is_seeded_from_the_package():
 
     def check(root, _template):
         cli.seed()
-        assert (root / "tasks" / "017_fstrings" / "task.py").read_text(
+        assert (root / "tasks" / "009_fstrings" / "task.py").read_text(
             encoding="utf-8"
         ) == "packaged\n"
         assert (root / "tasks" / "_lib.py").is_file()
@@ -46,12 +46,12 @@ def test_seeding_never_overwrites_saved_code():
     """The upgrade case: a task file under root holds whatever the learner last saved."""
 
     def check(root, _template):
-        (root / "tasks" / "017_fstrings").mkdir(parents=True)
-        (root / "tasks" / "017_fstrings" / "task.py").write_text(
+        (root / "tasks" / "009_fstrings").mkdir(parents=True)
+        (root / "tasks" / "009_fstrings" / "task.py").write_text(
             "mine\n", encoding="utf-8"
         )
         cli.seed()
-        assert (root / "tasks" / "017_fstrings" / "task.py").read_text(
+        assert (root / "tasks" / "009_fstrings" / "task.py").read_text(
             encoding="utf-8"
         ) == "mine\n"
 
@@ -62,7 +62,7 @@ def test_a_root_that_has_tasks_is_left_alone():
     """Nothing is added either — not `_lib.py`, not a folder only the package has."""
 
     def check(root, _template):
-        (root / "tasks" / "017_fstrings").mkdir(parents=True)
+        (root / "tasks" / "009_fstrings").mkdir(parents=True)
         before = sorted(p.relative_to(root) for p in root.rglob("*"))
         cli.seed()
         assert sorted(p.relative_to(root) for p in root.rglob("*")) == before

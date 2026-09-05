@@ -3,7 +3,7 @@ title: loops — hand back the fewest coins that add up
 difficulty: hard
 tier: core
 minutes: 25
-prereqs: [90, 101]
+prereqs: [3, 18]
 tags: [loops]
 source: exercism/python practice/change (MIT, adapted)
 ---

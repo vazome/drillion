@@ -3,7 +3,7 @@ title: regular-expressions — squeeze a long name down to its initials
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [96, 101]
+prereqs: [11, 18]
 tags: [regular-expressions, files-text]
 source: exercism/python practice/acronym (MIT, adapted)
 ---

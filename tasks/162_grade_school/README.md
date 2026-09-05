@@ -3,7 +3,7 @@ title: collections — a roster that stays sorted by grade, then by name
 difficulty: hard
 tier: core
 minutes: 20
-prereqs: [115]
+prereqs: [35]
 tags: [collections, dict-methods]
 source: exercism/python practice/grade-school (MIT, adapted)
 ---

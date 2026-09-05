@@ -3,7 +3,7 @@ title: strings — is this book number real, or a typo?
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [95]
+prereqs: [10]
 tags: [strings]
 source: exercism/python practice/isbn-verifier (MIT, adapted)
 ---

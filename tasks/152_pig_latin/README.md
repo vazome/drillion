@@ -3,7 +3,7 @@ title: conditionals — translate English into a children's code
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [18, 92]
+prereqs: [5, 8]
 tags: [conditionals]
 source: exercism/python practice/pig-latin (MIT, adapted)
 ---

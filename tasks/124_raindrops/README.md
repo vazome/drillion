@@ -3,7 +3,7 @@ title: conditionals — sounds for the factors 3, 5 and 7
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [90, 92]
+prereqs: [3, 5]
 tags: [conditionals]
 source: exercism/python practice/raindrops (MIT, adapted)
 ---

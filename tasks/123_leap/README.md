@@ -3,7 +3,7 @@ title: bools — does this year have a 29 February?
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [89, 90]
+prereqs: [2, 3]
 tags: [bools]
 source: exercism/python practice/leap (MIT, adapted)
 ---

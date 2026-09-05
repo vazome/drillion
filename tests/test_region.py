@@ -11,7 +11,7 @@ from drillion import region, state
 from drillion.settings import settings
 
 FILES = sorted(settings.tasks_dir.glob("*/task.py"))
-SRC = (settings.tasks_dir / "017_fstrings" / "task.py").read_text(encoding="utf-8")
+SRC = (settings.tasks_dir / "009_fstrings" / "task.py").read_text(encoding="utf-8")
 
 
 def _solved(src=SRC, code="return ''"):
@@ -54,9 +54,9 @@ def test_stub_is_identity_on_pristine_files():
 
 def test_stub_keeps_given_code_and_decorators():
     for name, needle in (
-        ("032_env", "TRUTHY = {"),
-        ("041_customexc", "class ConfigError"),
-        ("084_fixtures", "@pytest.fixture"),
+        ("068_env", "TRUTHY = {"),
+        ("077_customexc", "class ConfigError"),
+        ("120_fixtures", "@pytest.fixture"),
     ):
         body = region.cut(
             (settings.tasks_dir / name / "task.py").read_text(encoding="utf-8")
@@ -74,7 +74,7 @@ def test_stub_refuses_a_one_line_body():
 def test_has_given_spots_code_above_solve():
     assert region.has_given(
         region.cut(
-            (settings.tasks_dir / "032_env" / "task.py").read_text(encoding="utf-8")
+            (settings.tasks_dir / "068_env" / "task.py").read_text(encoding="utf-8")
         ).body
     )
     assert not region.has_given(region.cut(SRC).body)

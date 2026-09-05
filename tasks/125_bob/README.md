@@ -3,7 +3,7 @@ title: conditionals — classify a message into one of five replies
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [92]
+prereqs: [5]
 tags: [conditionals]
 source: exercism/python practice/bob (MIT, adapted)
 ---

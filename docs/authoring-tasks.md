@@ -19,7 +19,7 @@ an `asyncio` task that stands up a FastAPI app to have something to await is `pa
 `advanced`. The test is what **the solution** needs: a library the learner's own code imports,
 or that the task is plainly about. Imports below the machinery marker are the grader's and do
 not count — 14 tasks `import pytest` down there for `pytest.approx` alone and are `core`, while
-`084_fixtures` is `packages` because its `@pytest.fixture` is in the learner's region.
+`120_fixtures` is `packages` because its `@pytest.fixture` is in the learner's region.
 
 **difficulty** — how hard the task is to get **right the first time**: `easy`, `medium` or
 `hard`. It is not how long the task takes. Thirty minutes of unsurprising typing is `easy`; six
@@ -57,10 +57,11 @@ it — and `POST /api/focus` sets it.
 
 One folder per task, `tasks/<NNN>_<name>/`; copy the shape of an existing one.
 
-`<NNN>` is an ascending id, `001`–`183` with `087` retired, so the next task you add is `184`. It is an
-identity and nothing else: it encodes no difficulty, no section and no provenance. Append, never
-insert — `prereqs:` points at these numbers, so renumbering means rewriting other people's
-frontmatter.
+`<NNN>` is the task's place in the curriculum, `001`–`182` with no gaps, so the next task you add is
+`183`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
+always numbers below its own, and `doctor` will not let that stop being true. Append, never insert —
+inserting means rewriting every number after it, and [ADR-0006](adr/0006-the-fundamentals-come-first.md)
+says the two renumberings drillion has had are the last two.
 
 **`README.md`** — YAML frontmatter, then GitHub-flavoured Markdown:
 

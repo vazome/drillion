@@ -13,10 +13,10 @@ DIRS = sorted(p for p in settings.tasks_dir.iterdir() if (p / "task.py").exists(
 def test_every_task_folder_is_read():
     all_tasks = catalogue.tasks()
     assert len(all_tasks) == len(DIRS) >= 104
-    m = all_tasks["017_fstrings"]
-    assert m["topic"] == 17 and m["minutes"] == 10 and len(m["hints"]) == 3
-    assert m["path"] == settings.tasks_dir / "017_fstrings" / "task.py"
-    assert m["dir"].name == "017_fstrings" and isinstance(m["tags"], list)
+    m = all_tasks["009_fstrings"]
+    assert m["topic"] == 9 and m["minutes"] == 10 and len(m["hints"]) == 3
+    assert m["path"] == settings.tasks_dir / "009_fstrings" / "task.py"
+    assert m["dir"].name == "009_fstrings" and isinstance(m["tags"], list)
     assert m["spec_md"].startswith("# ") and "## Why" in m["spec_md"]
     assert "## Hints" not in m["spec_md"]  # hints are never in the spec
     assert set(catalogue.public(m)) <= set(catalogue.BROWSER)  # no paths, hints or spec

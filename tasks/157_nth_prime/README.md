@@ -3,7 +3,7 @@ title: generators — produce primes on demand and take the nth one
 difficulty: hard
 tier: advanced
 minutes: 15
-prereqs: [7, 90, 101]
+prereqs: [3, 18, 46]
 tags: [generators]
 source: exercism/python practice/nth-prime (MIT, adapted)
 ---
