@@ -3,7 +3,7 @@ title: slicing — decode an RNA strand until the stop signal
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [96, 101]
+prereqs: [11, 18]
 tags: [slicing, dicts]
 source: exercism/python practice/protein-translation (MIT, adapted)
 ---

@@ -3,7 +3,7 @@ title: sequences — read the text back to front
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [95]
+prereqs: [10]
 tags: [sequences]
 source: exercism/python practice/reverse-string (MIT, adapted)
 ---

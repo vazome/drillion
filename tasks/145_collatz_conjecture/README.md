@@ -3,7 +3,7 @@ title: numbers — count the steps down to 1
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [90]
+prereqs: [3]
 tags: [numbers]
 source: exercism/python practice/collatz-conjecture (MIT, adapted)
 ---

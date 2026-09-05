@@ -3,7 +3,7 @@ title: dicts — reshape the score table from one-to-many to one-to-one
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [106]
+prereqs: [25]
 tags: [dicts]
 source: exercism/python practice/etl (MIT, adapted)
 ---

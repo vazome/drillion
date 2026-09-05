@@ -3,7 +3,7 @@ title: bools — equilateral, isosceles or scalene
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [9, 89, 90]
+prereqs: [2, 3, 48]
 tags: [bools]
 source: exercism/python practice/triangle (MIT, adapted)
 ---

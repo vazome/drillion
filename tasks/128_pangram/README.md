@@ -3,7 +3,7 @@ title: strings — a sentence that uses every letter
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [12, 95]
+prereqs: [10, 51]
 tags: [strings]
 source: exercism/python practice/pangram (MIT, adapted)
 ---

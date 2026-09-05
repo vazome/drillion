@@ -3,7 +3,7 @@ title: raising-and-handling-errors — clean a NANP number or say exactly why yo
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [96, 115]
+prereqs: [11, 35]
 tags: [raising-and-handling-errors, string-formatting, errors]
 source: exercism/python practice/phone-number (MIT, adapted)
 ---

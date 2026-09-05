@@ -2,7 +2,7 @@
  "version": 1,
  "focus": "class-inheritance",
  "cards": {
-  "004_sortkey": {
+  "012_sortkey": {
    "box": 3,
    "due": "2026-09-01",
    "seen": 4,
@@ -11,7 +11,7 @@
   }
  },
  "open": {
-  "012_sets": {
+  "051_sets": {
    "attempts": 2,
    "hints": 1,
    "active": 640,
@@ -23,7 +23,7 @@
  "log": [
   {
    "date": "2026-08-20",
-   "slug": "004_sortkey",
+   "slug": "012_sortkey",
    "grade": "pass",
    "attempts": 1,
    "secs": 300,
@@ -31,7 +31,7 @@
   }
  ],
  "archive": {
-  "004_sortkey": [
+  "012_sortkey": [
    {
     "date": "2026-08-20",
     "grade": "pass",
@@ -40,6 +40,6 @@
   ]
  },
  "notes": {
-  "004_sortkey": "sort by the key, not the value"
+  "012_sortkey": "sort by the key, not the value"
  }
 }

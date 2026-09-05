@@ -3,7 +3,7 @@ title: loops — find the cells that win their row and lose their column
 difficulty: medium
 tier: core
 minutes: 20
-prereqs: [112]
+prereqs: [32]
 tags: [loops]
 source: exercism/python practice/saddle-points (MIT, adapted)
 ---

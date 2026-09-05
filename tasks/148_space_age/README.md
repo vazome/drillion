@@ -3,7 +3,7 @@ title: dicts — your age in years on any planet
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [106]
+prereqs: [25]
 tags: [dicts]
 source: exercism/python practice/space-age (MIT, adapted)
 ---

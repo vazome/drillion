@@ -3,7 +3,7 @@ title: dicts — tally the words in a subtitle
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [10, 25, 96, 106]
+prereqs: [11, 25, 49, 61]
 tags: [dicts]
 source: exercism/python practice/word-count (MIT, adapted)
 ---

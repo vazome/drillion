@@ -3,7 +3,7 @@ title: string-methods — mirror the alphabet, then cut into five-letter blocks
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [96, 101]
+prereqs: [11, 18]
 tags: [string-methods]
 source: exercism/python practice/atbash-cipher (MIT, adapted)
 ---

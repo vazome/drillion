@@ -3,7 +3,7 @@ title: tuples — tally a league table and print it
 difficulty: medium
 tier: core
 minutes: 25
-prereqs: [96, 106]
+prereqs: [11, 25]
 tags: [tuples]
 source: exercism/python practice/tournament (MIT, adapted)
 ---

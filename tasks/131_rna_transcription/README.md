@@ -3,7 +3,7 @@ title: string-methods — turn a DNA strand into its RNA partner
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [96, 101]
+prereqs: [11, 18]
 tags: [string-methods]
 source: exercism/python practice/rna-transcription (MIT, adapted)
 ---

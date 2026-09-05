@@ -79,6 +79,9 @@ def _set_problems(metas):
                     out.append((name, f"{key} lists the task itself"))
                 elif n not in topics:
                     out.append((name, f"{key} names task {n}, which does not exist"))
+                elif key == "prereqs" and mine and n > int(mine.group(1)):
+                    # the number is the curriculum position, so what gates a task precedes it
+                    out.append((name, f"prereqs names task {n}, which comes later"))
     graph = {
         t: [n for n in _refs(metas[name], "prereqs") if n in topics]
         for t, name in topics.items()

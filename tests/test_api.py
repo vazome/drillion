@@ -17,9 +17,9 @@ from drillion.api import MAX_BODY, _recent, app
 from drillion.catalogue import tasks
 from drillion.settings import settings
 
-SLUG = "017_fstrings"
-NEXT_SLUG = "018_slicing"  # what the scheduler offers once 017 is cleared
-PREREQ, GATED = "009_dictget", "010_counter"  # 010 waits on topic 9
+SLUG = "009_fstrings"
+NEXT_SLUG = "008_slicing"  # what the scheduler offers once 017 is cleared
+PREREQ, GATED = "048_dictget", "049_counter"  # 010 waits on topic 9
 TASKS = settings.tasks_dir  # the real ones — `_api()` repoints settings.root at a copy
 PASSING = 'return "\\n".join(f"{name:<14}{value:>12,.2f}" for name, value in rows)'
 
@@ -71,7 +71,7 @@ async def _stub_to_pass(api, path):
     assert (
         "## Hints" not in task["spec_md"] and "spec" not in task
     )  # guidance is Markdown now
-    assert task["meta"]["topic"] == 17 and "spec_md" not in task["meta"]
+    assert task["meta"]["topic"] == 9 and "spec_md" not in task["meta"]
     assert (
         "raise NotImplementedError" in task["code"] and "_reference" not in task["code"]
     )

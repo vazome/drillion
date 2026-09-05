@@ -3,7 +3,7 @@ title: iteration — compress runs, and put them back
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [13, 90, 96, 101]
+prereqs: [3, 11, 18, 52]
 tags: [iteration, regular-expressions]
 source: exercism/python practice/run-length-encoding (MIT, adapted)
 ---
