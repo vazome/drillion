@@ -3,13 +3,28 @@ title: basics — Guido's lasagna kitchen timer
 difficulty: easy
 tier: core
 minutes: 12
-prereqs: []
+prereqs: [36]
 tags: [functions]
 source: exercism/python concept/guidos-gorgeous-lasagna (MIT, adapted)
 ---
 # basics — Guido's lasagna kitchen timer
 
 *Constants and small functions — the shape every Python module has.*
+
+## Read first
+- [Defining functions](https://docs.python.org/3/tutorial/controlflow.html#defining-functions) — `def`, parameters, `return`, and what a function hands back when you forget to return anything
+- [Reuven Lerner: Understanding Python Assignment](https://lerner.co.il/2019/06/18/understanding-python-assignment/) — what `name = value` actually binds, and why `SCREAMING_SNAKE_CASE` is a promise to yourself, not a lock
+- [Real Python: Commenting vs Documenting Code](https://realpython.com/documenting-python-code/#commenting-vs-documenting-code) — comments explain why, docstrings explain what
+- [Python Morsels: Everything is an Object](https://www.pythonmorsels.com/everything-is-an-object/) — including functions, which is why one fits in a dict
+- [Eli Bendersky: Python internals: how callables work](https://eli.thegreenplace.net/2012/03/23/python-internals-how-callables-work/) — what actually happens at `f()`
+- [Sentdex (YouTube): Python 3 Programming Tutorial — Functions](https://www.youtube.com/watch?v=owglNL1KQf0) — the same material, spoken
+- [dynamic typing and strong typing](https://stackoverflow.com/questions/11328920/is-python-strongly-typed) — why Python lets you rebind a name to another type but will not add an `int` to a `str`
+- [type hints](https://docs.python.org/3/library/typing.html) — optional annotations, ignored at runtime
+- [significant indentation](https://docs.python.org/3/reference/lexical_analysis.html#indentation) — the block rule that bites everyone once
+- [DigitalOcean: How to Write Doctests in Python](https://www.digitalocean.com/community/tutorials/how-to-write-doctests-in-python) — docstrings that are also tests
+- [Ned Batchelder: Is Python Interpreted or Compiled? Yes.](https://nedbatchelder.com/blog/201803/is_python_interpreted_or_compiled_yes.html) — what runs when you run a `.py`
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 You are writing the kitchen timer for a recipe app. The cook opens the lasagna recipe, tells the app how many layers they are building and how long the dish has already been in the oven, and the app has to answer two questions: "how much longer does it bake?" and "how long have I been at this?". The cookbook numbers never change — 40 minutes in the oven, 2 minutes of work per layer — so they belong in named constants at the top of the file, not copy-pasted into every calculation. That is the whole habit this task is about.
@@ -453,21 +468,6 @@ Nobody bakes past the cookbook time, so `bake_time_remaining` never has to deal 
 [python as a calculator]: https://docs.python.org/3/tutorial/introduction.html#using-python-as-a-calculator
 [return]: https://docs.python.org/3/reference/simple_stmts.html#return
 [the python tutorial]: https://docs.python.org/3/tutorial/introduction.html
-
-## Read first
-- [Defining functions](https://docs.python.org/3/tutorial/controlflow.html#defining-functions) — `def`, parameters, `return`, and what a function hands back when you forget to return anything
-- [Reuven Lerner: Understanding Python Assignment](https://lerner.co.il/2019/06/18/understanding-python-assignment/) — what `name = value` actually binds, and why `SCREAMING_SNAKE_CASE` is a promise to yourself, not a lock
-- [Real Python: Commenting vs Documenting Code](https://realpython.com/documenting-python-code/#commenting-vs-documenting-code) — comments explain why, docstrings explain what
-- [Python Morsels: Everything is an Object](https://www.pythonmorsels.com/everything-is-an-object/) — including functions, which is why one fits in a dict
-- [Eli Bendersky: Python internals: how callables work](https://eli.thegreenplace.net/2012/03/23/python-internals-how-callables-work/) — what actually happens at `f()`
-- [Sentdex (YouTube): Python 3 Programming Tutorial — Functions](https://www.youtube.com/watch?v=owglNL1KQf0) — the same material, spoken
-- [dynamic typing and strong typing](https://stackoverflow.com/questions/11328920/is-python-strongly-typed) — why Python lets you rebind a name to another type but will not add an `int` to a `str`
-- [type hints](https://docs.python.org/3/library/typing.html) — optional annotations, ignored at runtime
-- [significant indentation](https://docs.python.org/3/reference/lexical_analysis.html#indentation) — the block rule that bites everyone once
-- [DigitalOcean: How to Write Doctests in Python](https://www.digitalocean.com/community/tutorials/how-to-write-doctests-in-python) — docstrings that are also tests
-- [Ned Batchelder: Is Python Interpreted or Compiled? Yes.](https://nedbatchelder.com/blog/201803/is_python_interpreted_or_compiled_yes.html) — what runs when you run a `.py`
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

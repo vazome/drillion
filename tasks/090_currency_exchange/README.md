@@ -11,6 +11,18 @@ source: exercism/python concept/currency-exchange (MIT, adapted)
 
 *Arithmetic operators — the three sums a currency desk does before anything else.*
 
+## Read first
+- [Arithmetic Operations](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex) — the arithmetic operators table: `+ - * / // %` and what each returns
+- [The Python Numbers tutorial](https://docs.python.org/3/tutorial/introduction.html#numbers) — the five-minute tour: `/` always hands back a float, even when the division comes out even
+- [integers](https://docs.python.org/3/library/functions.html#int) — `int()`, whole numbers of arbitrary precision
+- [floats](https://docs.python.org/3/library/functions.html#float) — `float()`, and the 15-digits-of-precision caveat
+- [Operator Precedence](https://docs.python.org/3/reference/expressions.html#operator-precedence) — which part of a long expression happens first
+- [Decimals](https://docs.python.org/3/library/decimal.html#module-decimal) — what you reach for when float rounding is not acceptable (real money, later)
+- [fractions](https://docs.python.org/3/library/fractions.html) — exact rational arithmetic
+- [Python's numerical and mathematical modules](https://docs.python.org/3/library/numeric.html) — the wider shelf
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+
 ## Why
 Your friend Chandler is going travelling and is convinced every exchange booth is out to cheat him. He wants a pocket calculator that shows him, before he hands over any cash, exactly what he should get back. This first version does the three plainest sums a booth does: how much foreign currency his money buys, how much of his own money he still has afterwards, and what a stack of bills is worth. Get these right and the fee arithmetic in the next task is just these three, chained.
 
@@ -259,18 +271,6 @@ desk["get_value_of_bills"](5, 128)     # -> 640      (128 bills of 5)
 [python-numbers-tutorial]: https://docs.python.org/3/tutorial/introduction.html#numbers
 [python-numeric-types]: https://docs.python.org/3.9/library/stdtypes.html#numeric-types-int-float-complex
 [subtraction-operator]: https://docs.python.org/3/tutorial/introduction.html#numbers
-
-## Read first
-- [Arithmetic Operations](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex) — the arithmetic operators table: `+ - * / // %` and what each returns
-- [The Python Numbers tutorial](https://docs.python.org/3/tutorial/introduction.html#numbers) — the five-minute tour: `/` always hands back a float, even when the division comes out even
-- [integers](https://docs.python.org/3/library/functions.html#int) — `int()`, whole numbers of arbitrary precision
-- [floats](https://docs.python.org/3/library/functions.html#float) — `float()`, and the 15-digits-of-precision caveat
-- [Operator Precedence](https://docs.python.org/3/reference/expressions.html#operator-precedence) — which part of a long expression happens first
-- [Decimals](https://docs.python.org/3/library/decimal.html#module-decimal) — what you reach for when float rounding is not acceptable (real money, later)
-- [fractions](https://docs.python.org/3/library/fractions.html) — exact rational arithmetic
-- [Python's numerical and mathematical modules](https://docs.python.org/3/library/numeric.html) — the wider shelf
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

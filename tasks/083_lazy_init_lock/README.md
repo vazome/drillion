@@ -4,12 +4,20 @@ difficulty: medium
 tier: advanced
 track: rsample
 minutes: 20
-prereqs: [53, 81]
+prereqs: [81]
 tags: [concurrency, asyncio]
 ---
 # lazy init under a lock — why db.py has asyncio.Lock
 
 *app/db.py explained — create the pool once, even when 50 requests arrive together.*
+
+## Read first
+- [asyncio.Lock](https://docs.python.org/3/library/asyncio-sync.html#asyncio.Lock) — one holder at a time; `async with lock:` is the whole API you need
+- [Double-checked locking](https://en.wikipedia.org/wiki/Double-checked_locking) — read only 'Motivation and original pattern': check, lock, check again. (Ignore the Java memory-model parts.)
+- [Async IO Explained](https://realpython.com/async-io-python/) — why an `await` is a gap where another request can sneak in between your `if` and your assignment
+
+> [!NOTE]
+> **Take-home:** `app/db.py` (given — you must explain it)
 
 ## Why
 The take-home's `app/db.py` created the connection pool lazily — on the first request, not at import — and guarded that creation with an `asyncio.Lock`. You did not write that file, but you shipped it, and an interviewer will ask "why is the lock there, and why is `_pool is None` checked twice?" The answer: `await create_pool()` pauses. In that pause the other 49 first-arrivers each see `_pool is None` too and each create their own pool — 50 pools, 250 connections, on a server allowed 100.
@@ -27,14 +35,6 @@ nothing to start — you return an async function. The test calls it as `await g
 - Every caller gets the identical object (`is`, not just `==`).
 - Keep the state inside `solve()` (variables the inner function closes over, with `nonlocal`), so each `solve()` call starts fresh.
 - Use `asyncio.Lock()`; check `pool is None` before taking the lock AND again inside it. The first check skips the lock on the fast path; the second stops the callers who were queued behind the winner from creating a second pool.
-
-## Read first
-- [asyncio.Lock](https://docs.python.org/3/library/asyncio-sync.html#asyncio.Lock) — one holder at a time; `async with lock:` is the whole API you need
-- [Double-checked locking](https://en.wikipedia.org/wiki/Double-checked_locking) — read only 'Motivation and original pattern': check, lock, check again. (Ignore the Java memory-model parts.)
-- [Async IO Explained](https://realpython.com/async-io-python/) — why an `await` is a gap where another request can sneak in between your `if` and your assignment
-
-> [!NOTE]
-> **Take-home:** `app/db.py` (given — you must explain it)
 
 ## Hints
 ### Hint 1

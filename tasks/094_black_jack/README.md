@@ -3,13 +3,24 @@ title: comparisons — blackjack hand decisions
 difficulty: easy
 tier: core
 minutes: 15
-prereqs: [88, 89, 92, 93]
+prereqs: [93]
 tags: [comparisons]
 source: exercism/python concept/black-jack (MIT, adapted)
 ---
 # comparisons — blackjack hand decisions
 
 *Chained comparisons and `in` — the three decisions a blackjack player makes.*
+
+## Read first
+- [Comparisons in Python (language reference)](https://docs.python.org/3/reference/expressions.html#comparisons) — comparisons CHAIN: `8 < total < 12` is one expression, and the middle is evaluated once
+- [Membership test operations](https://docs.python.org/3/reference/expressions.html#membership-test-operations) — `in` asks "is this a member of that", which reads better than a pile of `==` joined by `or`
+- [Value comparisons](https://docs.python.org/3/reference/expressions.html#value-comparisons) — every comparison hands back `True` or `False`, so a function whose whole body is one comparison can simply return it; no `if` statement is needed
+- [Comparisons in Python (stdtypes)](https://docs.python.org/3/library/stdtypes.html#comparisons) — the operator table
+- [Sequence types](https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range) — a tuple is the cheapest thing to ask `in` about
+- [Conditional expressions](https://docs.python.org/3/reference/expressions.html#conditional-expressions) — `a if test else b`, for when a branch really is needed
+- [Python basic operators (Tutorials Point)](https://www.tutorialspoint.com/python/python_basic_operators.htm) — a worked list with output
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 The scoring half of the casino's blackjack table is done — card values and rankings work. Now the table has to answer the three questions a player asks the moment their first two cards land: is this an instant win, may I split these into two hands, and may I double my bet? Each is a rule from the casino's rulebook, each is one line of comparisons, and each is the kind of rule that gets written wrong by summing when it should be checking membership.
@@ -462,17 +473,6 @@ hand["can_double_down"]('10', '2')  # -> False  (12 is one too many)
 [int constructor]: https://docs.python.org/3/library/functions.html#int
 [python comparisons examples]: https://www.tutorialspoint.com/python/comparison_operators_example.htm
 [python comparisons tutorial]: https://docs.python.org/3/reference/expressions.html#comparisons
-
-## Read first
-- [Comparisons in Python (language reference)](https://docs.python.org/3/reference/expressions.html#comparisons) — comparisons CHAIN: `8 < total < 12` is one expression, and the middle is evaluated once
-- [Membership test operations](https://docs.python.org/3/reference/expressions.html#membership-test-operations) — `in` asks "is this a member of that", which reads better than a pile of `==` joined by `or`
-- [Value comparisons](https://docs.python.org/3/reference/expressions.html#value-comparisons) — every comparison hands back `True` or `False`, so a function whose whole body is one comparison can simply return it; no `if` statement is needed
-- [Comparisons in Python (stdtypes)](https://docs.python.org/3/library/stdtypes.html#comparisons) — the operator table
-- [Sequence types](https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range) — a tuple is the cheapest thing to ask `in` about
-- [Conditional expressions](https://docs.python.org/3/reference/expressions.html#conditional-expressions) — `a if test else b`, for when a branch really is needed
-- [Python basic operators (Tutorials Point)](https://www.tutorialspoint.com/python/python_basic_operators.htm) — a worked list with output
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

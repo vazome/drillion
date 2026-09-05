@@ -3,7 +3,7 @@ title: idempotency — apply desired state, safe to re-run
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [40]
+prereqs: [4, 36]
 tags: [errors]
 ---
 # idempotency — apply desired state, safe to re-run

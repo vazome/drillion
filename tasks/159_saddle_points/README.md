@@ -3,13 +3,22 @@ title: loops — find the cells that win their row and lose their column
 difficulty: medium
 tier: core
 minutes: 20
-prereqs: [88, 92, 97, 99, 101, 112]
+prereqs: [112]
 tags: [loops]
 source: exercism/python practice/saddle-points (MIT, adapted)
 ---
 # loops — find the cells that win their row and lose their column
 
 *saddle-points — two aggregates computed once, then one pass over the grid.*
+
+## Read first
+- [zip()](https://docs.python.org/3/library/functions.html#zip) — `zip(*matrix)` hands you the columns, which is how you get the column minima without a second nested loop
+- [max() and min()](https://docs.python.org/3/library/functions.html#max) — one call per row and per column, computed once and reused
+- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — indexes alongside values, so the `+ 1` for one-based numbering happens in one place
+- [any()](https://docs.python.org/3/library/functions.html#any) — the irregularity check is one `any` over the row lengths
+- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — the guard clauses at the top of the function
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A grid of numbers arrives — latency per host per hour, cost per team per month — and someone asks for the cells that are extreme in two directions at once. The obvious code recomputes the row maximum and the column minimum inside the innermost loop, which is why the report that was instant on the test fixture takes a minute on real data. Computing each aggregate once and then looking it up is the fix, and it is the same fix as caching a per-group total instead of re-querying it per row. The second half of the task is the other half of the job: refusing input that is not actually a rectangle, loudly, before you index into it.
@@ -108,15 +117,6 @@ solve([[3, 2, 1], [0, 1], [2, 1, 0]])      # raises ValueError("irregular matrix
 
 > [!WARNING]
 > The message is compared character for character: `irregular matrix`, lower case, no full stop. And `[]` is *not* irregular — an empty matrix is a valid input that returns `[]`, so the emptiness check has to come first or your indexing of `matrix[0]` will raise `IndexError` instead.
-
-## Read first
-- [zip()](https://docs.python.org/3/library/functions.html#zip) — `zip(*matrix)` hands you the columns, which is how you get the column minima without a second nested loop
-- [max() and min()](https://docs.python.org/3/library/functions.html#max) — one call per row and per column, computed once and reused
-- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — indexes alongside values, so the `+ 1` for one-based numbering happens in one place
-- [any()](https://docs.python.org/3/library/functions.html#any) — the irregularity check is one `any` over the row lengths
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — the guard clauses at the top of the function
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

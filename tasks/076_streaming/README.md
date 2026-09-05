@@ -3,7 +3,7 @@ title: streaming — accumulate tokens, stop at a sentinel
 difficulty: medium
 tier: packages
 minutes: 15
-prereqs: [10]
+prereqs: [7]
 tags: [llm, langchain]
 ---
 # streaming — accumulate tokens, stop at a sentinel

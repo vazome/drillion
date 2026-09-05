@@ -3,7 +3,7 @@ title: concurrency — health-check a URL list in parallel
 difficulty: medium
 tier: advanced
 minutes: 25
-prereqs: [40]
+prereqs: [37]
 tags: [concurrency]
 ---
 # concurrency — health-check a URL list in parallel

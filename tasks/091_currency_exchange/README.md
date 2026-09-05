@@ -3,13 +3,24 @@ title: numbers — whole bills, leftovers and the booth's cut
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [88, 90]
+prereqs: [90]
 tags: [numbers]
 source: exercism/python concept/currency-exchange (MIT, adapted)
 ---
 # numbers — whole bills, leftovers and the booth's cut
 
 *Floor division and modulo — whole bills out, the booth keeps the remainder.*
+
+## Read first
+- [Arithmetic Operations](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex) — the operator table again, this time for `//` (floor division) and `%` (remainder)
+- [integers](https://docs.python.org/3/library/functions.html#int) — `int()` truncates towards zero, which is NOT the same thing as rounding
+- [floats](https://docs.python.org/3/library/functions.html#float) — mixing int and float in one expression: `//` on a float still hands back a float, so the type you get out depends on what you put in
+- [Operator Precedence](https://docs.python.org/3/reference/expressions.html#operator-precedence) — `*` and `/` before `+`, so the spread needs its own parentheses or its own line
+- [Decimals](https://docs.python.org/3/library/decimal.html#module-decimal) — the grown-up answer to money arithmetic
+- [fractions](https://docs.python.org/3/library/fractions.html) — exact rational arithmetic
+- [Python's numerical and mathematical modules](https://docs.python.org/3/library/numeric.html) — the wider shelf
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Chandler's exchange calculator now has to face the counter clerk. A booth pays out in notes, not in exact amounts: ask for 127.50 in 20s and you get six notes — 120 — and the booth quietly keeps the 7.50. On top of that the booth adds a "spread", a percentage on the exchange rate that is its fee. Chandler wants to see, before he hands over any cash, exactly how many notes come back, exactly how much the booth pockets, and the final figure once the spread is in. Everything below is floor division and remainders, which is the same arithmetic as pagination, batch sizes and disk blocks.
@@ -267,17 +278,6 @@ The spread is a percentage OF THE RATE, added to it: rate 1.20 with a spread of 
 [python-numbers-tutorial]: https://docs.python.org/3/tutorial/introduction.html#numbers
 [python-numeric-types]: https://docs.python.org/3.9/library/stdtypes.html#numeric-types-int-float-complex
 [subtraction-operator]: https://docs.python.org/3/tutorial/introduction.html#numbers
-
-## Read first
-- [Arithmetic Operations](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex) — the operator table again, this time for `//` (floor division) and `%` (remainder)
-- [integers](https://docs.python.org/3/library/functions.html#int) — `int()` truncates towards zero, which is NOT the same thing as rounding
-- [floats](https://docs.python.org/3/library/functions.html#float) — mixing int and float in one expression: `//` on a float still hands back a float, so the type you get out depends on what you put in
-- [Operator Precedence](https://docs.python.org/3/reference/expressions.html#operator-precedence) — `*` and `/` before `+`, so the spread needs its own parentheses or its own line
-- [Decimals](https://docs.python.org/3/library/decimal.html#module-decimal) — the grown-up answer to money arithmetic
-- [fractions](https://docs.python.org/3/library/fractions.html) — exact rational arithmetic
-- [Python's numerical and mathematical modules](https://docs.python.org/3/library/numeric.html) — the wider shelf
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

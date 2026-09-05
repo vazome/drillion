@@ -3,13 +3,21 @@ title: strings — a sentence that uses every letter
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [88, 89, 92, 95]
+prereqs: [12, 95]
 tags: [strings]
 source: exercism/python practice/pangram (MIT, adapted)
 ---
 # strings — a sentence that uses every letter
 
 *pangram — does the sentence use all 26 letters? A subset check, not 26 ifs.*
+
+## Read first
+- [set](https://docs.python.org/3/library/stdtypes.html#set) — sets, and `<=` / `issubset`: "is everything I need in there?"
+- [string.ascii_lowercase](https://docs.python.org/3/library/string.html#string.ascii_lowercase) — the alphabet as a ready-made constant, so you never type it out
+- [all()](https://docs.python.org/3/library/functions.html#all) — `all()`, the other way to say the same thing
+- [str.lower()](https://docs.python.org/3/library/stdtypes.html#str.lower) — folding the case before you compare
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A shop that sells fonts wants a different sample sentence each time someone previews a typeface, and every sample has to show off all 26 letters — otherwise a customer never sees what the font's "q" looks like. Sentences are crowdsourced, so submissions need screening. The check itself ("does this thing contain everything on my required list?") is the same one you run against required config keys or required IAM permissions.
@@ -58,14 +66,6 @@ solve("abcdefghijklm ABCDEFGHIJKLM")                   # -> False  (13 letters t
 
 > [!WARNING]
 > The tests use `is True` / `is False`, so return the booleans themselves, not a truthy set or count.
-
-## Read first
-- [set](https://docs.python.org/3/library/stdtypes.html#set) — sets, and `<=` / `issubset`: "is everything I need in there?"
-- [string.ascii_lowercase](https://docs.python.org/3/library/string.html#string.ascii_lowercase) — the alphabet as a ready-made constant, so you never type it out
-- [all()](https://docs.python.org/3/library/functions.html#all) — `all()`, the other way to say the same thing
-- [str.lower()](https://docs.python.org/3/library/stdtypes.html#str.lower) — folding the case before you compare
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

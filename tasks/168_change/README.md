@@ -3,13 +3,20 @@ title: loops — hand back the fewest coins that add up
 difficulty: hard
 tier: core
 minutes: 25
-prereqs: [88, 89, 90, 92, 97, 99, 101]
+prereqs: [90, 101]
 tags: [loops]
 source: exercism/python practice/change (MIT, adapted)
 ---
 # loops — hand back the fewest coins that add up
 
 *change — the greedy answer is the wrong answer; build up from the small amounts instead.*
+
+## Read first
+- [`range()`](https://docs.python.org/3/library/functions.html#func-range) — walking `1` up to `target` in order, so that every smaller amount is already answered by the time you need it
+- [`min()`](https://docs.python.org/3/library/functions.html#min) — the smallest of several candidates, and the `key=` argument for when "smallest" means "shortest list"
+- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("…")`, and why the message has to match exactly
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A till, a vending machine, a payouts service, a scheduler handing out quota in fixed chunks — all of them have to hit an exact total out of fixed denominations, and all of them want to hand over as few pieces as possible. The instinct is to grab the biggest denomination that still fits and repeat. That works for the coins in your pocket, because those were designed so it would, and it quietly fails everywhere else: with 1, 10 and 11 available, the greedy answer for 20 is 11 plus nine 1s, and the right answer is two 10s. In a payout system that is real money, and it is invisible until somebody audits it.
@@ -88,13 +95,6 @@ solve([1, 5, 10, 21, 25], 0)    # -> []
 
 > [!WARNING]
 > "Take the biggest coin that still fits, then repeat" is wrong, and the tests are chosen to prove it. On `[1, 10, 11]` with a target of 20 it pays ten coins where two will do, and on `[2, 5, 10, 20, 50]` with a target of 21 it takes the 20 and then strands itself with 1 left and nothing small enough to pay it.
-
-## Read first
-- [`range()`](https://docs.python.org/3/library/functions.html#func-range) — walking `1` up to `target` in order, so that every smaller amount is already answered by the time you need it
-- [`min()`](https://docs.python.org/3/library/functions.html#min) — the smallest of several candidates, and the `key=` argument for when "smallest" means "shortest list"
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("…")`, and why the message has to match exactly
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

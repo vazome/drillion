@@ -3,13 +3,21 @@ title: generator-expressions — how many positions do two strands differ in?
 difficulty: medium
 tier: advanced
 minutes: 10
-prereqs: [88, 90, 92, 97, 101]
+prereqs: [90, 101]
 tags: [generator-expressions, raising-and-handling-errors, sequences]
 source: exercism/python practice/hamming (MIT, adapted)
 ---
 # generator-expressions — how many positions do two strands differ in?
 
 *hamming — count differing positions, and refuse the comparison that makes no sense.*
+
+## Read first
+- [zip()](https://docs.python.org/3/library/functions.html#zip) — `zip()` walks two sequences side by side and stops at the shorter one (which is why you must check lengths yourself)
+- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise`, and why the message matters as much as the exception type
+- [Generator expressions](https://docs.python.org/3/reference/expressions.html#generator-expressions) — the `(x for y in z)` form you can hand straight to `sum()`
+- [Built-in exceptions](https://docs.python.org/3/library/exceptions.html#base-classes) — picking the type that says what actually went wrong
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 When a cell divides, its DNA is copied, and copies pick up mistakes. Lay two strands side by side, count the positions where the letters disagree, and you have measured how many mistakes crept in — the Hamming distance. The same count is used far outside biology: how many bits of a checksum differ, how many fields drifted between two config versions. The second half of the job matters just as much: comparing strands of different lengths is not a small answer, it is a bug in whoever called you, so it has to fail loudly instead of quietly measuring the overlap.
@@ -83,14 +91,6 @@ solve("AATG", "AAA")                     # -> raises ValueError
 
 > [!WARNING]
 > The test matches the message text, full stop included: `Strands must be of equal length.` A `ValueError` with any other wording still fails.
-
-## Read first
-- [zip()](https://docs.python.org/3/library/functions.html#zip) — `zip()` walks two sequences side by side and stops at the shorter one (which is why you must check lengths yourself)
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise`, and why the message matters as much as the exception type
-- [Generator expressions](https://docs.python.org/3/reference/expressions.html#generator-expressions) — the `(x for y in z)` form you can hand straight to `sum()`
-- [Built-in exceptions](https://docs.python.org/3/library/exceptions.html#base-classes) — picking the type that says what actually went wrong
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

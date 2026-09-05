@@ -3,13 +3,21 @@ title: sequences — every window of n digits, in order
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [88, 90, 92, 95, 97, 101]
+prereqs: [90, 101]
 tags: [sequences]
 source: exercism/python practice/series (MIT, adapted)
 ---
 # sequences — every window of n digits, in order
 
 *series — the sliding window, plus four error messages that must be exact.*
+
+## Read first
+- [Sequence slicing](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — `series[start:start + length]` never raises, it just gives you a shorter piece, which is why the guard clauses have to do the rejecting
+- [range()](https://docs.python.org/3/library/functions.html#func-range) — the exact set of start positions is a `range`, and getting its end right is the whole off-by-one
+- [List comprehensions](https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions) — one line once the range is right
+- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("message")` for the four rejected cases
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A sliding window is the shape behind "the last five minutes of latency", "any three consecutive failed health checks", "every 4-byte frame in this payload". Getting the count of windows right — and it is `len - n + 1`, not `len // n` and not `len - n` — is the kind of off-by-one that ships. The other half of this task is the guard clauses: four impossible inputs, four exact messages, checked before any work is done.
@@ -89,14 +97,6 @@ solve("12345", 42)  # raises ValueError("slice length cannot be greater than ser
 
 > [!WARNING]
 > The messages are compared character for character, lower case and without a full stop. Order matters as well: `solve("", 1)` must say `series cannot be empty`, so the empty-series check comes first.
-
-## Read first
-- [Sequence slicing](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — `series[start:start + length]` never raises, it just gives you a shorter piece, which is why the guard clauses have to do the rejecting
-- [range()](https://docs.python.org/3/library/functions.html#func-range) — the exact set of start positions is a `range`, and getting its end right is the whole off-by-one
-- [List comprehensions](https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions) — one line once the range is right
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("message")` for the four rejected cases
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

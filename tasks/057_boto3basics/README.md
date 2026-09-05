@@ -3,7 +3,7 @@ title: boto3 — client vs resource, and paginators
 difficulty: medium
 tier: packages
 minutes: 20
-prereqs: []
+prereqs: [2, 9]
 tags: [cloud, boto3]
 ---
 # boto3 — client vs resource, and paginators

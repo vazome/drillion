@@ -3,13 +3,20 @@ title: loops — find a value in a sorted list by halving
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [88, 89, 92, 95, 96, 97, 99, 101]
+prereqs: [96, 101]
 tags: [loops]
 source: exercism/python practice/binary-search (MIT, adapted)
 ---
 # loops — find a value in a sorted list by halving
 
 *binary-search — two bounds closing in, and the index you hand back is the one you were standing on.*
+
+## Read first
+- [The `while` statement](https://docs.python.org/3/reference/compound_stmts.html#the-while-statement) — loop while the two bounds have not yet crossed
+- [Floor division `//`](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex) — the midpoint of two indices, rounded down to a real index
+- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("…")` with the exact message
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Every lookup against a sorted index is this loop: a database walking a B-tree, a log reader seeking to a timestamp, `bisect` in the standard library. Writing it once by hand is how the off-by-one stops being frightening — the bug is never the halving, it is the bound you forgot to move, and then the loop either spins forever or stops one place short of the answer.
@@ -90,13 +97,6 @@ solve([1, 3, 4, 6, 8, 9, 11], 6)  # -> 3
 solve([1, 3, 4, 6, 8, 9, 11], 1)  # -> 0
 solve([6], 6)                     # -> 0
 ```
-
-## Read first
-- [The `while` statement](https://docs.python.org/3/reference/compound_stmts.html#the-while-statement) — loop while the two bounds have not yet crossed
-- [Floor division `//`](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex) — the midpoint of two indices, rounded down to a real index
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("…")` with the exact message
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

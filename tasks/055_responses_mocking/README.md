@@ -3,7 +3,7 @@ title: responses — mock the HTTP the code under test will make
 difficulty: medium
 tier: packages
 minutes: 20
-prereqs: [45]
+prereqs: [12, 37, 45]
 tags: [testing, requests]
 ---
 # responses — mock the HTTP the code under test will make

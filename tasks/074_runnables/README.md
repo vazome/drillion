@@ -3,7 +3,7 @@ title: runnables — build a chain with |
 difficulty: medium
 tier: packages
 minutes: 15
-prereqs: []
+prereqs: [17]
 tags: [llm, langchain]
 ---
 # runnables — build a chain with |

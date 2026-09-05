@@ -3,13 +3,21 @@ title: unpacking-and-multiple-assignment — turn the rows of a block of text in
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [88, 89, 90, 92, 95, 96, 97, 99, 101, 110]
+prereqs: [96, 110]
 tags: [unpacking-and-multiple-assignment]
 source: exercism/python practice/transpose (MIT, adapted)
 ---
 # unpacking-and-multiple-assignment — turn the rows of a block of text into its columns
 
 *transpose — rotate a ragged block of text, padding on the left but never on the right.*
+
+## Read first
+- [str.splitlines()](https://docs.python.org/3/library/stdtypes.html#str.splitlines) — cut the block into rows; note how it treats the empty string
+- [zip()](https://docs.python.org/3/library/functions.html#zip) — `zip(*rows)` is the transpose itself, once the rows are the right length
+- [Unpacking argument lists](https://docs.python.org/3/tutorial/controlflow.html#unpacking-argument-lists) — what the `*` in `zip(*rows)` actually does
+- [str.ljust()](https://docs.python.org/3/library/stdtypes.html#str.ljust) — pads on the right to a given width, which is how you make rows equal length
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Rotating a table is a daily chore: a metrics export arrives with one row per host and one column per day, and the dashboard wants it the other way round; a CSV has to be pivoted before it can be joined; a fixed-width report needs reading down instead of across. `zip(*rows)` does the easy half in one expression. The interesting half is what happens when the rows are not all the same length — and that is where this task lives, because the rule is deliberately asymmetric: pad on the left, never on the right.
@@ -123,14 +131,6 @@ The asymmetry is easier to see on the triangle:
 
 > [!WARNING]
 > Padding every row to the width of the longest one and transposing is *almost* right, but it adds trailing spaces to the output rows. `"ABC\nDE"` must give `"AD\nBE\nC"` — three characters on the last row would be wrong, and so would `"C "`.
-
-## Read first
-- [str.splitlines()](https://docs.python.org/3/library/stdtypes.html#str.splitlines) — cut the block into rows; note how it treats the empty string
-- [zip()](https://docs.python.org/3/library/functions.html#zip) — `zip(*rows)` is the transpose itself, once the rows are the right length
-- [Unpacking argument lists](https://docs.python.org/3/tutorial/controlflow.html#unpacking-argument-lists) — what the `*` in `zip(*rows)` actually does
-- [str.ljust()](https://docs.python.org/3/library/stdtypes.html#str.ljust) — pads on the right to a given width, which is how you make rows equal length
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

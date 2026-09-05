@@ -3,7 +3,7 @@ title: boto3 — audit EC2 instances for missing tags
 difficulty: medium
 tier: packages
 minutes: 25
-prereqs: [57]
+prereqs: [4, 57]
 tags: [cloud, boto3]
 ---
 # boto3 — audit EC2 instances for missing tags

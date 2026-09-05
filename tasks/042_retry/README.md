@@ -3,7 +3,7 @@ title: retry — exponential backoff with jitter, by hand
 difficulty: medium
 tier: core
 minutes: 20
-prereqs: [40]
+prereqs: [36]
 tags: [errors]
 ---
 # retry — exponential backoff with jitter, by hand

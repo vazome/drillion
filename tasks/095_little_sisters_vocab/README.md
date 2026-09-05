@@ -3,13 +3,26 @@ title: strings — prefixes, suffixes and slices
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [88, 92]
+prereqs: [18, 19, 92]
 tags: [strings]
 source: exercism/python concept/little-sisters-vocab (MIT, adapted)
 ---
 # strings — prefixes, suffixes and slices
 
 *Concatenation, `join`, slicing and `split` — four word transforms and not one loop.*
+
+## Read first
+- [text sequence type — `str`](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str) — a string is an immutable sequence, so every "change" here really returns a new string
+- [string methods](https://docs.python.org/3/library/stdtypes.html#string-methods) — the full menu; `join` and `split` are the two this task lives on
+- [common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — indexing and slicing, shared by `str`, `list` and `tuple`
+- [`str.join()`](https://docs.python.org/3/library/stdtypes.html#str.join) — the separator is the string you call it *on*, and it lands between elements, never at the ends
+- [`str.split()`](https://docs.python.org/3/library/stdtypes.html#str.split) — with no argument it splits on any run of whitespace and hands back a list
+- [strings and character data in Python (Real Python)](https://realpython.com/python-strings/) — a long worked tour of the same methods
+- [string formatting best practices (Real Python)](https://realpython.com/python-string-formatting/) — where `+` stops being the right tool
+- [`string` — common string operations](https://docs.python.org/3/library/string.html) — the module beside the type, constants such as `ascii_lowercase` included
+- [The absolute minimum every developer must know about Unicode (Joel Spolsky)](https://www.joelonsoftware.com/2003/10/08/the-absolute-minimum-every-software-developer-absolutely-positively-must-know-about-unicode-and-character-sets-no-excuses/) — why "character" is a slippery word
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Almost every name you touch in operations is a string with something bolted on the front, something to chop off the end, or one field buried in the middle: `prod-api-gateway`, `access.log.2026-08-25`, `arn:aws:s3:::bucket/key`. Your little sister's vocabulary homework is those same four moves in a friendlier costume — add a prefix to a word, stamp a prefix onto a whole list of words at once, strip a suffix off and repair the spelling underneath it, and pull one word out of a sentence by position. The interesting constraint is that none of the four needs a loop: the string methods already loop for you, and reaching for `for` here is the tell that you have not met `join` and `split` yet.
@@ -443,19 +456,6 @@ There's four activities in the assignment, each with a set of text or words to w
 [python-str-doc]: https://docs.python.org/3/tutorial/introduction.html#strings
 [str-join]: https://docs.python.org/3/library/stdtypes.html#str.join
 [str-split]: https://docs.python.org/3/library/stdtypes.html#str.split
-
-## Read first
-- [text sequence type — `str`](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str) — a string is an immutable sequence, so every "change" here really returns a new string
-- [string methods](https://docs.python.org/3/library/stdtypes.html#string-methods) — the full menu; `join` and `split` are the two this task lives on
-- [common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — indexing and slicing, shared by `str`, `list` and `tuple`
-- [`str.join()`](https://docs.python.org/3/library/stdtypes.html#str.join) — the separator is the string you call it *on*, and it lands between elements, never at the ends
-- [`str.split()`](https://docs.python.org/3/library/stdtypes.html#str.split) — with no argument it splits on any run of whitespace and hands back a list
-- [strings and character data in Python (Real Python)](https://realpython.com/python-strings/) — a long worked tour of the same methods
-- [string formatting best practices (Real Python)](https://realpython.com/python-string-formatting/) — where `+` stops being the right tool
-- [`string` — common string operations](https://docs.python.org/3/library/string.html) — the module beside the type, constants such as `ascii_lowercase` included
-- [The absolute minimum every developer must know about Unicode (Joel Spolsky)](https://www.joelonsoftware.com/2003/10/08/the-absolute-minimum-every-software-developer-absolutely-positively-must-know-about-unicode-and-character-sets-no-excuses/) — why "character" is a slippery word
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

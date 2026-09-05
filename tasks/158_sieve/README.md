@@ -3,13 +3,21 @@ title: sets — find every prime up to a limit by crossing out multiples
 difficulty: medium
 tier: core
 minutes: 20
-prereqs: [88, 90, 92, 97, 99, 101, 112]
+prereqs: [112]
 tags: [sets]
 source: exercism/python practice/sieve (MIT, adapted)
 ---
 # sets — find every prime up to a limit by crossing out multiples
 
 *sieve — mark what cannot be, instead of testing what might be.*
+
+## Read first
+- [Sets](https://docs.python.org/3/tutorial/datastructures.html#sets) — a set of "already crossed out" numbers is one natural way to hold the marks
+- [range() with a step](https://docs.python.org/3/library/stdtypes.html#range) — `range(p * p, limit + 1, p)` is every multiple of `p`, produced by addition
+- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — pairs a flag with the number it belongs to when you collect the survivors
+- [Set difference](https://docs.python.org/3/library/stdtypes.html#frozenset.difference) — "everything from 2 to the limit, minus the crossed-out ones", in one expression
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 There are two ways to filter a big list: ask a question about every item, or mark the items you already know are out and keep the rest. The second is usually far cheaper, and it is the shape behind bloom filters, blocklists, bitmap indexes and "which of these million IDs have we already processed?". The Sieve of Eratosthenes is the oldest example of it — two thousand years old, still the fastest simple way to get all the primes below a limit — and it is short enough that you can feel exactly where the saving comes from.
@@ -156,14 +164,6 @@ solve(30)  # -> [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
 
 > [!WARNING]
 > `solve(0)` and `solve(1)` must not blow up. A sieve that starts by writing `marked[0] = marked[1] = False` into a list sized `limit + 1` raises `IndexError` when `limit` is 0 — handle the small limits before you build anything.
-
-## Read first
-- [Sets](https://docs.python.org/3/tutorial/datastructures.html#sets) — a set of "already crossed out" numbers is one natural way to hold the marks
-- [range() with a step](https://docs.python.org/3/library/stdtypes.html#range) — `range(p * p, limit + 1, p)` is every multiple of `p`, produced by addition
-- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — pairs a flag with the number it belongs to when you collect the survivors
-- [Set difference](https://docs.python.org/3/library/stdtypes.html#frozenset.difference) — "everything from 2 to the limit, minus the crossed-out ones", in one expression
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

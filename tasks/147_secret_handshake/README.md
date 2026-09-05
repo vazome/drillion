@@ -3,13 +3,21 @@ title: list-methods — turn a five-bit code into a list of actions
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [88, 89, 90, 92, 95, 96, 97, 99, 101]
+prereqs: [90, 96, 101]
 tags: [list-methods]
 source: exercism/python practice/secret-handshake (MIT, adapted)
 ---
 # list-methods — turn a five-bit code into a list of actions
 
 *secret-handshake — each bit switches one action on, and the top bit reverses the lot.*
+
+## Read first
+- [Data structure: lists](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — `append`, `reverse`, and the difference between reversing in place and returning a reversed copy
+- [Common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — `[::-1]`, which reads a sequence backwards without touching it
+- [zip()](https://docs.python.org/3/library/functions.html#zip) — walking two sequences side by side, here bits and the actions they stand for
+- [String indexing and slicing](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str) — `binary_str[-1]` is the rightmost character; negative indices count from the end
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A bitmask is how a system packs a set of yes/no options into one small value: Linux file permissions, feature flags in a config integer, the status word a device driver hands back, the `flags` column somebody added to a table instead of six booleans. Decoding one is always the same job — walk the bits from the least significant end, and for each bit that is set, add the thing it stands for. The twist here is a bit that does not name an action but changes how the others are assembled, which is exactly how a real protocol grows a "reverse order" or "negate" flag. Once you have done this by hand, `chmod 0755` stops being a magic number.
@@ -117,14 +125,6 @@ solve("10000")  # -> []
 
 > [!WARNING]
 > The order is a list order, not a set: `["wink", "double blink"]` and `["double blink", "wink"]` are different answers and only one is right for a given code.
-
-## Read first
-- [Data structure: lists](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — `append`, `reverse`, and the difference between reversing in place and returning a reversed copy
-- [Common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — `[::-1]`, which reads a sequence backwards without touching it
-- [zip()](https://docs.python.org/3/library/functions.html#zip) — walking two sequences side by side, here bits and the actions they stand for
-- [String indexing and slicing](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str) — `binary_str[-1]` is the rightmost character; negative indices count from the end
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

@@ -3,13 +3,23 @@ title: class-composition — a time-of-day class that wraps around midnight
 difficulty: hard
 tier: core
 minutes: 20
-prereqs: [88, 90, 95, 115]
+prereqs: [29, 115]
 tags: [class-composition, rich-comparisons, string-formatting]
 source: exercism/python practice/clock (MIT, adapted)
 ---
 # class-composition — a time-of-day class that wraps around midnight
 
 *clock — normalise once in the constructor, and every other method becomes one line.*
+
+## Read first
+- [A first look at classes](https://docs.python.org/3/tutorial/classes.html#a-first-look-at-classes) — `__init__`, `self`, and what a method actually is
+- [`object.__repr__` and `object.__str__`](https://docs.python.org/3/reference/datamodel.html#object.__repr__) — the two string forms: one for developers, one for humans
+- [`object.__eq__`](https://docs.python.org/3/reference/datamodel.html#object.__eq__) — define `==` and Python derives `!=` from it for free
+- [`object.__add__`](https://docs.python.org/3/reference/datamodel.html#object.__add__) — how `a + b` reaches your class
+- [`divmod()`](https://docs.python.org/3/library/functions.html#divmod) — quotient and remainder in one call, and it floors, so negatives behave
+- [Format specification mini-language](https://docs.python.org/3/library/string.html#format-specification-mini-language) — `02d` is "two digits, pad with zeros"
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Quiet hours, rota shifts, cron windows, "the batch runs 22:50 plus twenty minutes": plenty of real values are a time of day with no date attached, and all of them eventually have to wrap around midnight. The bug everybody ships once is fixing up the numbers at the moment of display instead of at the moment of construction — so `22:80` and `23:20` are the same instant to a human but two different objects to the code, the equality check says no, and the alert that should have fired at 00:10 never fires. This task is the small, sharp version of that: one class, one normalisation, and five special methods that all get trivial once the normalisation happens in the right place.
@@ -151,16 +161,6 @@ str(Clock(0, 3) - 4)    # -> "23:59"
 
 > [!WARNING]
 > The grader adds to a clock and then asks that clock for its own time again. If `+` edits `self` instead of building a new instance, that check fails even though every Exercism case still passes.
-
-## Read first
-- [A first look at classes](https://docs.python.org/3/tutorial/classes.html#a-first-look-at-classes) — `__init__`, `self`, and what a method actually is
-- [`object.__repr__` and `object.__str__`](https://docs.python.org/3/reference/datamodel.html#object.__repr__) — the two string forms: one for developers, one for humans
-- [`object.__eq__`](https://docs.python.org/3/reference/datamodel.html#object.__eq__) — define `==` and Python derives `!=` from it for free
-- [`object.__add__`](https://docs.python.org/3/reference/datamodel.html#object.__add__) — how `a + b` reaches your class
-- [`divmod()`](https://docs.python.org/3/library/functions.html#divmod) — quotient and remainder in one call, and it floors, so negatives behave
-- [Format specification mini-language](https://docs.python.org/3/library/string.html#format-specification-mini-language) — `02d` is "two digits, pad with zeros"
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

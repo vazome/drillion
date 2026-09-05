@@ -3,13 +3,26 @@ title: loops — rounding and counting exam scores
 difficulty: medium
 tier: core
 minutes: 12
-prereqs: [88, 93, 95, 97, 99]
+prereqs: [93, 99]
 tags: [loops]
 source: exercism/python concept/making-the-grade (MIT, adapted)
 ---
 # loops — rounding and counting exam scores
 
 *A `while` that drains a list, and two `for` loops — one that counts, one that collects.*
+
+## Read first
+- [`for` statements (Python tutorial)](https://docs.python.org/3/tutorial/controlflow.html#for-statements) — the `for each` loop, which is what Python's `for` really is
+- [the `while` statement](https://docs.python.org/3/reference/compound_stmts.html#the-while-statement) — keeps going while its test is truthy; an empty list is falsy
+- [truth value testing](https://docs.python.org/3/library/stdtypes.html#truth-value-testing) — why `while student_scores:` is a complete stopping condition
+- [`round()`](https://docs.python.org/3/library/functions.html#round) — one argument gives you an `int`; two give you a `float`
+- [more on lists](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — `append()` and `pop()`, the two methods these three loops are built from
+- [Loop Like a Native (Ned Batchelder)](https://nedbatchelder.com/text/iter.html) — the talk that explains why you almost never need an index
+- [`for` loops in Python (Real Python)](https://realpython.com/python-for-loop/) — the long version, with `range()`
+- [`while` loops in Python (Real Python)](https://realpython.com/python-while-loop/) — including the ways they fail to terminate
+- [control flow for loops](https://docs.python.org/3/tutorial/controlflow.html#break-and-continue-statements-and-else-clauses-on-loops) — `break`, `continue` and the loop `else`, used properly in the next task
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 You are the teaching assistant with a pile of exam scores, and the three things you do with them are the three things every loop you write at work does: transform every item, count the items that match a rule, and collect the items that match a rule. Write them once as explicit loops with an explicit counter and an explicit results list, and you will recognise them instantly later — when they show up as a comprehension over a list of pods, a `sum()` over invoices, or a filter over a week of latency samples. This is the vocabulary task that makes those shorthands readable.
@@ -411,19 +424,6 @@ Also being familiar with the following can help with completing the tasks:
 [round]: https://docs.python.org/3/library/functions.html#round
 [str]: https://docs.python.org/3/library/stdtypes.html#str
 [while-loops]: https://docs.python.org/3/reference/compound_stmts.html#the-while-statement
-
-## Read first
-- [`for` statements (Python tutorial)](https://docs.python.org/3/tutorial/controlflow.html#for-statements) — the `for each` loop, which is what Python's `for` really is
-- [the `while` statement](https://docs.python.org/3/reference/compound_stmts.html#the-while-statement) — keeps going while its test is truthy; an empty list is falsy
-- [truth value testing](https://docs.python.org/3/library/stdtypes.html#truth-value-testing) — why `while student_scores:` is a complete stopping condition
-- [`round()`](https://docs.python.org/3/library/functions.html#round) — one argument gives you an `int`; two give you a `float`
-- [more on lists](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — `append()` and `pop()`, the two methods these three loops are built from
-- [Loop Like a Native (Ned Batchelder)](https://nedbatchelder.com/text/iter.html) — the talk that explains why you almost never need an index
-- [`for` loops in Python (Real Python)](https://realpython.com/python-for-loop/) — the long version, with `range()`
-- [`while` loops in Python (Real Python)](https://realpython.com/python-while-loop/) — including the ways they fail to terminate
-- [control flow for loops](https://docs.python.org/3/tutorial/controlflow.html#break-and-continue-statements-and-else-clauses-on-loops) — `break`, `continue` and the loop `else`, used properly in the next task
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

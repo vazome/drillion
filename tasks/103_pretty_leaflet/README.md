@@ -3,13 +3,24 @@ title: string-formatting — Erin's event leaflet
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [95, 97, 101]
+prereqs: [101]
 tags: [string-formatting]
 source: exercism/python concept/pretty-leaflet (MIT, adapted)
 ---
 # string-formatting — Erin's event leaflet
 
 *f-strings and format specs — centring, padding and a 20-column box.*
+
+## Read first
+- [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#f-strings) — the `f'...'` prefix and what is allowed between the braces
+- [str.format()](https://docs.python.org/3/library/stdtypes.html#str.format) — the same formatting as a method call, for when the template itself is data
+- [Format specification mini-language](https://docs.python.org/3/library/string.html#format-specification-mini-language) — everything after the `:`: fill character, alignment (`<` `^` `>`), width, precision
+- [PEP 3101: standard format specifiers](https://www.python.org/dev/peps/pep-3101/#standard-format-specifiers) — the specifier table from the PEP that introduced `.format()`
+- [Real Python: formatted output](https://realpython.com/python-formatted-output/) — a complete tour with the output printed for every example
+- [str.capitalize()](https://docs.python.org/3/library/stdtypes.html#str.capitalize) — first letter up, the rest down, which is exactly task 1
+- [calendar.month_name](https://docs.python.org/3/library/calendar.html#calendar.month_name) — English month names indexed 1–12, so you need not type them out
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Erin is printing thousands of handbills for a season of events, and the layout has to come out of code rather than out of a designer's hands: the same narrow box every time, the event name centred, the date under it, then one line per performer with their instrument icon lined up on the right. Every piece of that is a formatting decision — capitalise this, spell out that month number, centre inside 18 columns, keep the name in 11. This is the same skill that produces a readable `--help` screen, a status table in a CLI, or an aligned log line: get the format specs right once and the template prints a thousand leaflets.
@@ -259,17 +270,6 @@ Use only f-strings or the `format()` method to build a leaflet containing basic 
 [str-f-strings-docs]: https://docs.python.org/3/reference/lexical_analysis.html#f-strings
 [realpython-article]: https://realpython.com/python-formatted-output/
 [formatspec-docs]: https://docs.python.org/3/library/string.html#formatspec
-
-## Read first
-- [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#f-strings) — the `f'...'` prefix and what is allowed between the braces
-- [str.format()](https://docs.python.org/3/library/stdtypes.html#str.format) — the same formatting as a method call, for when the template itself is data
-- [Format specification mini-language](https://docs.python.org/3/library/string.html#format-specification-mini-language) — everything after the `:`: fill character, alignment (`<` `^` `>`), width, precision
-- [PEP 3101: standard format specifiers](https://www.python.org/dev/peps/pep-3101/#standard-format-specifiers) — the specifier table from the PEP that introduced `.format()`
-- [Real Python: formatted output](https://realpython.com/python-formatted-output/) — a complete tour with the output printed for every example
-- [str.capitalize()](https://docs.python.org/3/library/stdtypes.html#str.capitalize) — first letter up, the rest down, which is exactly task 1
-- [calendar.month_name](https://docs.python.org/3/library/calendar.html#calendar.month_name) — English month names indexed 1–12, so you need not type them out
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

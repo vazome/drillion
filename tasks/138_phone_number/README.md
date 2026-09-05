@@ -3,13 +3,22 @@ title: raising-and-handling-errors — clean a NANP number or say exactly why yo
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [88, 90, 95, 96, 97, 101, 115]
+prereqs: [96, 115]
 tags: [raising-and-handling-errors, string-formatting, errors]
 source: exercism/python practice/phone-number (MIT, adapted)
 ---
 # raising-and-handling-errors — clean a NANP number or say exactly why you cannot
 
 *phone-number — normalise the input, and fail with a message that names the problem.*
+
+## Read first
+- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("message")`, and why the message is the useful part
+- [Built-in exceptions](https://docs.python.org/3/library/exceptions.html#ValueError) — when `ValueError` is the right class to pick
+- [Classes tutorial](https://docs.python.org/3/tutorial/classes.html) — `__init__` runs during construction, so raising there means the object never exists
+- [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#f-strings) — assembling `pretty()` from three slices
+- [str.isdigit()](https://docs.python.org/3/library/stdtypes.html#str.isdigit) and [str.isalpha()](https://docs.python.org/3/library/stdtypes.html#str.isalpha) — the two questions that separate "letters" from "punctuation"
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Any system that accepts a phone number gets it in fifteen shapes: with dots, with brackets, with a country code, with a letter someone fat-fingered. Downstream — the SMS gateway, the CRM, the deduplication job — wants one shape and nothing else. So the boundary of your system does two things: it normalises what it can, and it rejects what it cannot with a message precise enough for the caller to fix the input without opening a ticket. "Invalid phone number" is a bad error. "area code cannot start with zero" is a good one.
@@ -152,15 +161,6 @@ PhoneNumber("523-abc-7890")              # raises ValueError("letters not permit
 
 > [!WARNING]
 > The messages are compared character for character — lower case, no full stop, and `punctuations` is plural. The order matters too: `"523-abc-7890"` has only seven digits, and the expected message is still `letters not permitted`, so the character checks must come before the length checks.
-
-## Read first
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("message")`, and why the message is the useful part
-- [Built-in exceptions](https://docs.python.org/3/library/exceptions.html#ValueError) — when `ValueError` is the right class to pick
-- [Classes tutorial](https://docs.python.org/3/tutorial/classes.html) — `__init__` runs during construction, so raising there means the object never exists
-- [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#f-strings) — assembling `pretty()` from three slices
-- [str.isdigit()](https://docs.python.org/3/library/stdtypes.html#str.isdigit) and [str.isalpha()](https://docs.python.org/3/library/stdtypes.html#str.isalpha) — the two questions that separate "letters" from "punctuation"
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

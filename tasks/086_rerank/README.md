@@ -4,12 +4,21 @@ difficulty: medium
 tier: core
 track: rsample
 minutes: 20
-prereqs: [8, 21, 27]
+prereqs: [12, 18, 25]
 tags: [sets, sorted]
 ---
 # take-home Task 2 — rerank the candidate pool
 
 *Take-home Task 2 — retrieve wide, then rerank: fraction-of-query-words score, stable top-k.*
+
+## Read first
+- [Rerankers](https://www.pinecone.io/learn/series/rag/rerankers/) — read the first half: why a cheap wide first stage + an expensive narrow second stage beats either alone
+- [Precision and recall](https://en.wikipedia.org/wiki/Precision_and_recall) — just the intro: recall = "did we fetch all the relevant ones", precision = "is what we show actually relevant"
+- [Sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — `key=`, `reverse=True`, and 'Sort Stability': equal scores keep their incoming order, which is how ties stay in vector order
+- [set](https://docs.python.org/3/library/stdtypes.html#set) — `&` gives the words in both sets
+
+> [!NOTE]
+> **Take-home:** Task 2 + the "fraction, not count" upgrade
 
 ## Why
 Vector search returned the 5 geometrically nearest chunks, and they were often not the 5 best answers — two chunks can sit close in embedding space while only one actually contains the words the user typed. The fix was two stages: ask the database for 20 (cheap, wide, recall) and re-score those 20 against the query with a second function (narrow, precision), keeping the top 5. Your submission scored by raw count of overlapping words; here you use the FRACTION of the query's words found, which is the same idea but comparable across queries and bounded 0..1 — the improvement you would name in the interview.
@@ -35,15 +44,6 @@ rows = [{"id": 1, "content": "billing setup"},
 solve(query, rows, k=2)
 # -> [row 2 (score 1.0), row 3 (score 1/3)]
 ```
-
-## Read first
-- [Rerankers](https://www.pinecone.io/learn/series/rag/rerankers/) — read the first half: why a cheap wide first stage + an expensive narrow second stage beats either alone
-- [Precision and recall](https://en.wikipedia.org/wiki/Precision_and_recall) — just the intro: recall = "did we fetch all the relevant ones", precision = "is what we show actually relevant"
-- [Sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — `key=`, `reverse=True`, and 'Sort Stability': equal scores keep their incoming order, which is how ties stay in vector order
-- [set](https://docs.python.org/3/library/stdtypes.html#set) — `&` gives the words in both sets
-
-> [!NOTE]
-> **Take-home:** Task 2 + the "fraction, not count" upgrade
 
 ## Hints
 ### Hint 1

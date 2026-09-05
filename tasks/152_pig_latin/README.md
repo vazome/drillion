@@ -3,13 +3,21 @@ title: conditionals — translate English into a children's code
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [88, 89, 92]
+prereqs: [18, 92]
 tags: [conditionals]
 source: exercism/python practice/pig-latin (MIT, adapted)
 ---
 # conditionals — translate English into a children's code
 
 *pig-latin — four rewrite rules, applied in the right order, to every word in a line.*
+
+## Read first
+- [str.split() and str.join()](https://docs.python.org/3/library/stdtypes.html#str.split) — the "split, map, join" shape that every line-of-words task uses
+- [str.startswith()](https://docs.python.org/3/library/stdtypes.html#str.startswith) — accepts a tuple, so one call can test several prefixes
+- [Slicing](https://docs.python.org/3/reference/expressions.html#slicings) — `word[n:] + word[:n]` is the whole of rule 2 once you know `n`
+- [re.match()](https://docs.python.org/3/library/re.html#re.match) — optional: one anchored pattern with alternatives can express the ordering directly
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 This is a rewrite engine in miniature, and rewrite engines are everywhere in operations: nginx rewrite rules, log scrubbers that mask secrets, slug generators that turn a title into a URL. They all share the same failure mode — several rules match the same input, and the answer depends entirely on which one you let win. Here the rules are small enough to hold in your head, so you can practise the part that actually bites: reading a specification as an ordered list of cases, and writing code where the order is visible instead of accidental.
@@ -115,14 +123,6 @@ solve("school")   # -> "oolschay"
 
 > [!WARNING]
 > Checking "is the first letter a vowel?" before checking `xr`/`yt` is fine, but checking the plain consonant run before the `qu` rule is not: `square` would become `uaresqay` instead of `aresquay`. The `qu` case has to be tested first.
-
-## Read first
-- [str.split() and str.join()](https://docs.python.org/3/library/stdtypes.html#str.split) — the "split, map, join" shape that every line-of-words task uses
-- [str.startswith()](https://docs.python.org/3/library/stdtypes.html#str.startswith) — accepts a tuple, so one call can test several prefixes
-- [Slicing](https://docs.python.org/3/reference/expressions.html#slicings) — `word[n:] + word[:n]` is the whole of rule 2 once you know `n`
-- [re.match()](https://docs.python.org/3/library/re.html#re.match) — optional: one anchored pattern with alternatives can express the ordering directly
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

@@ -3,7 +3,7 @@ title: ThreadPoolExecutor — fan out, keep the order
 difficulty: medium
 tier: advanced
 minutes: 12
-prereqs: []
+prereqs: [4, 37]
 tags: [concurrency]
 ---
 # ThreadPoolExecutor — fan out, keep the order

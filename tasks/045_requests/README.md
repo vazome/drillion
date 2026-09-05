@@ -3,7 +3,7 @@ title: requests — params, auth header, timeout, raise_for_status
 difficulty: medium
 tier: packages
 minutes: 18
-prereqs: []
+prereqs: [9]
 tags: [http, requests]
 ---
 # requests — params, auth header, timeout, raise_for_status

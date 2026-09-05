@@ -3,13 +3,27 @@ title: loops — grade bands, rankings and the first perfect score
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [88, 93, 95, 97, 99, 101]
+prereqs: [101]
 tags: [loops]
 source: exercism/python concept/making-the-grade (MIT, adapted)
 ---
 # loops — grade bands, rankings and the first perfect score
 
 *`range()` with a step, `enumerate()`, and the `break` that stops at the first hit.*
+
+## Read first
+- [`enumerate()`](https://docs.python.org/3/library/functions.html#enumerate) — `(index, value)` pairs, and the `start=` argument that lets you count from 1
+- [the `range()` function](https://docs.python.org/3/tutorial/controlflow.html#the-range-function) — `start`, `stop` (exclusive) and `step`
+- [`range()` is not an iterator (Trey Hunner)](https://treyhunner.com/2018/02/python-range-is-not-an-iterator/) — what a lazy sequence actually is
+- [`break`, `continue` and loop `else`](https://docs.python.org/3/tutorial/controlflow.html#break-and-continue-statements-and-else-clauses-on-loops) — leaving a loop early, and the clause that runs when you did not
+- [`round()`](https://docs.python.org/3/library/functions.html#round) — one argument gives an `int`, which is what keeps the band width whole
+- [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#formatted-string-literals) — assembling `'1. Joci: 100'` in one expression
+- [`for` statements (Python tutorial)](https://docs.python.org/3/tutorial/controlflow.html#for-statements) — the loop all three tasks are built on
+- [`enumerate()` in Python (Real Python)](https://realpython.com/python-enumerate/) — the long version, including when *not* to use it
+- [Loop Like a Native (Ned Batchelder)](https://nedbatchelder.com/text/iter.html) — why indexing a list inside a loop is usually a smell
+- [`StopIteration`](https://docs.python.org/3/library/exceptions.html#StopIteration) — the exception a `for` loop catches for you every time it ends
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 The same pile of exam scores, three harder questions. Grade bands are a counted loop with a computed step — the same arithmetic as bucketing latencies or sizing the ticks on a chart. The ranking is two lists that line up by position, which is `enumerate()`'s entire reason to exist and the thing you reach for whenever names and values arrive from two different places. And "did anyone score 100?" is the search that has to stop the moment it finds one, and still has a sensible answer when it finds nothing — the shape of every "is any host down?" check you will ever write.
@@ -413,20 +427,6 @@ Also being familiar with the following can help with completing the tasks:
 [round]: https://docs.python.org/3/library/functions.html#round
 [str]: https://docs.python.org/3/library/stdtypes.html#str
 [while-loops]: https://docs.python.org/3/reference/compound_stmts.html#the-while-statement
-
-## Read first
-- [`enumerate()`](https://docs.python.org/3/library/functions.html#enumerate) — `(index, value)` pairs, and the `start=` argument that lets you count from 1
-- [the `range()` function](https://docs.python.org/3/tutorial/controlflow.html#the-range-function) — `start`, `stop` (exclusive) and `step`
-- [`range()` is not an iterator (Trey Hunner)](https://treyhunner.com/2018/02/python-range-is-not-an-iterator/) — what a lazy sequence actually is
-- [`break`, `continue` and loop `else`](https://docs.python.org/3/tutorial/controlflow.html#break-and-continue-statements-and-else-clauses-on-loops) — leaving a loop early, and the clause that runs when you did not
-- [`round()`](https://docs.python.org/3/library/functions.html#round) — one argument gives an `int`, which is what keeps the band width whole
-- [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#formatted-string-literals) — assembling `'1. Joci: 100'` in one expression
-- [`for` statements (Python tutorial)](https://docs.python.org/3/tutorial/controlflow.html#for-statements) — the loop all three tasks are built on
-- [`enumerate()` in Python (Real Python)](https://realpython.com/python-enumerate/) — the long version, including when *not* to use it
-- [Loop Like a Native (Ned Batchelder)](https://nedbatchelder.com/text/iter.html) — why indexing a list inside a loop is usually a smell
-- [`StopIteration`](https://docs.python.org/3/library/exceptions.html#StopIteration) — the exception a `for` loop catches for you every time it ends
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

@@ -3,13 +3,22 @@ title: sets — dedupe the recipes, build the shopping list
 difficulty: easy
 tier: core
 minutes: 14
-prereqs: [88, 97, 101, 104, 106]
+prereqs: [12, 106]
 tags: [sets]
 source: exercism/python concept/cater-waiter (MIT, adapted)
 ---
 # sets — dedupe the recipes, build the shopping list
 
 *Sets — the constructor, `union`, and `difference`, on a catering menu.*
+
+## Read first
+- [Set types — set, frozenset](https://docs.python.org/3/library/stdtypes.html#set) — the full method table, and the line that matters here: the `set()` constructor accepts any iterable
+- [set.union()](https://docs.python.org/3/library/stdtypes.html#frozenset.union) — merge many collections into one set; the operator form is `|`
+- [set.difference()](https://docs.python.org/3/library/stdtypes.html#frozenset.difference) — everything in the first set that is not in the others; the operator form is `-`
+- [Real Python: Sets in Python](https://realpython.com/python-sets/) — a walk through the operations with pictures of the overlaps
+- [Set and logic symbols cheat sheet](http://notes.imt-decal.org/sets/cheat-sheet.html) — the maths notation the method names come from
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A small catering firm has agreed to run an evening for a cooking club, and the recipes came in from a dozen different sources. The same ingredient is listed three times in one recipe, twice in another, and the shopping list is built by hand from all of them — so the firm buys three bags of chickpeas and forgets the cilantro. Three chores in this task are the whole of that problem: strip the duplicates out of one recipe, merge every recipe into one master shopping list, and take the tray-passed appetizers back out of the list of dishes that get plated. Each one is a single set operation. The same three moves show up whenever you merge config files, collect the unique hosts out of a log, or subtract an exclusion list from a target list.
@@ -659,15 +668,6 @@ kitchen["separate_appetizers"](["Barley Risotto", "Asparagus Puffs", "Barley Ris
 [hashable]: https://docs.python.org/3.7/glossary.html#term-hashable
 [iterable]: https://docs.python.org/3/glossary.html#term-iterable
 [sets]: https://docs.python.org/3/tutorial/datastructures.html#sets
-
-## Read first
-- [Set types — set, frozenset](https://docs.python.org/3/library/stdtypes.html#set) — the full method table, and the line that matters here: the `set()` constructor accepts any iterable
-- [set.union()](https://docs.python.org/3/library/stdtypes.html#frozenset.union) — merge many collections into one set; the operator form is `|`
-- [set.difference()](https://docs.python.org/3/library/stdtypes.html#frozenset.difference) — everything in the first set that is not in the others; the operator form is `-`
-- [Real Python: Sets in Python](https://realpython.com/python-sets/) — a walk through the operations with pictures of the overlaps
-- [Set and logic symbols cheat sheet](http://notes.imt-decal.org/sets/cheat-sheet.html) — the maths notation the method names come from
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

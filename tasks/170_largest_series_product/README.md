@@ -3,13 +3,20 @@ title: generators — the biggest product of adjacent digits
 difficulty: medium
 tier: advanced
 minutes: 25
-prereqs: [88, 90, 92, 97, 99, 101]
+prereqs: [90, 101]
 tags: [generators]
 source: exercism/python practice/largest-series-product (MIT, adapted)
 ---
 # generators — the biggest product of adjacent digits
 
 *largest-series-product — slide a fixed window along the digits and keep the best product.*
+
+## Read first
+- [`str.isdigit()`](https://docs.python.org/3/library/stdtypes.html#str.isdigit) — true when every character is a digit, so it answers for a whole string in one call
+- [`math.prod()`](https://docs.python.org/3/library/math.html#math.prod) — multiply an iterable of numbers together, the way `sum()` adds them
+- [Slicing](https://docs.python.org/3/reference/expressions.html#slicings) — `digits[start:start + span]` *is* the window; the only real question is how many starts there are
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A fixed window sliding along a stream is one of the three or four shapes that turn up constantly in monitoring: the five-minute rolling error rate, the busiest hour in a day of traffic, the worst run of latency in a trace. The sliding itself is easy. What actually breaks in production is the boundaries — a window wider than the data you have, a window width that arrived as a negative number out of a config file, an empty stream on the first morning. This task is a sliding window with every one of those questions asked out loud and given an exact answer, which is more than most of the code you will inherit does.
@@ -94,13 +101,6 @@ solve("", 0)            # -> 1
 
 > [!WARNING]
 > Because the character check comes last, `solve("12a", 4)` complains about the span, not about the `a`. Reorder the guards and you change which message comes out, which the grader notices even though the input was bad either way.
-
-## Read first
-- [`str.isdigit()`](https://docs.python.org/3/library/stdtypes.html#str.isdigit) — true when every character is a digit, so it answers for a whole string in one call
-- [`math.prod()`](https://docs.python.org/3/library/math.html#math.prod) — multiply an iterable of numbers together, the way `sum()` adds them
-- [Slicing](https://docs.python.org/3/reference/expressions.html#slicings) — `digits[start:start + span]` *is* the window; the only real question is how many starts there are
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

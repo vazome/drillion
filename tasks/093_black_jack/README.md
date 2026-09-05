@@ -3,13 +3,25 @@ title: comparisons — blackjack card values
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [88, 89, 92]
+prereqs: [21, 92]
 tags: [comparisons]
 source: exercism/python concept/black-jack (MIT, adapted)
 ---
 # comparisons — blackjack card values
 
 *Comparison operators — scoring and ranking blackjack cards.*
+
+## Read first
+- [Value comparisons](https://docs.python.org/3/reference/expressions.html#value-comparisons) — `<` `>` `==` and what "compare by value" means once the two sides are not the same type
+- [Comparisons in Python](https://docs.python.org/3/library/stdtypes.html#comparisons) — the full operator table, including `in` (containment) and `is` (identity), which are NOT the same test
+- [Comparisons in Python (language reference)](https://docs.python.org/3/reference/expressions.html#comparisons) — they all share one precedence level, above `and` / `or` / `not`
+- [Identity comparisons](https://docs.python.org/3/reference/expressions.html#is-not) — `is` / `is not`, and why they belong to `None`, not to cards
+- [Numeric types](https://docs.python.org/3/library/stdtypes.html#typesnumeric) — the ints your card values become
+- [Sequence types](https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range) — the tuple the tie case returns
+- [Python basic operators (Tutorials Point)](https://www.tutorialspoint.com/python/python_basic_operators.htm) — a worked list with output
+- [Python Object Model](https://docs.python.org/3/reference/datamodel.html#objects) — what identity actually is
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 You are building the scoring half of a blackjack table for a casino app. Cards arrive from the dealer as short strings — '2', '10', 'K', 'A' — and before any rule about the game can be written, something has to turn those strings into numbers and compare them. The awkward one is the ace: it is worth 1 or 11, and which one depends on what is already on the table. So this task is three steps in order — score one card, rank two cards, then make the ace decision that needs both.
@@ -462,18 +474,6 @@ table["value_of_ace"]('6', 'K')  # -> 1    (6 + 10 + 11 = 27, bust)
 [int constructor]: https://docs.python.org/3/library/functions.html#int
 [python comparisons examples]: https://www.tutorialspoint.com/python/comparison_operators_example.htm
 [python comparisons tutorial]: https://docs.python.org/3/reference/expressions.html#comparisons
-
-## Read first
-- [Value comparisons](https://docs.python.org/3/reference/expressions.html#value-comparisons) — `<` `>` `==` and what "compare by value" means once the two sides are not the same type
-- [Comparisons in Python](https://docs.python.org/3/library/stdtypes.html#comparisons) — the full operator table, including `in` (containment) and `is` (identity), which are NOT the same test
-- [Comparisons in Python (language reference)](https://docs.python.org/3/reference/expressions.html#comparisons) — they all share one precedence level, above `and` / `or` / `not`
-- [Identity comparisons](https://docs.python.org/3/reference/expressions.html#is-not) — `is` / `is not`, and why they belong to `None`, not to cards
-- [Numeric types](https://docs.python.org/3/library/stdtypes.html#typesnumeric) — the ints your card values become
-- [Sequence types](https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range) — the tuple the tie case returns
-- [Python basic operators (Tutorials Point)](https://www.tutorialspoint.com/python/python_basic_operators.htm) — a worked list with output
-- [Python Object Model](https://docs.python.org/3/reference/datamodel.html#objects) — what identity actually is
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

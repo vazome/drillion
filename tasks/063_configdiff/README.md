@@ -3,7 +3,7 @@ title: recursion — recursive diff of two nested configs
 difficulty: medium
 tier: core
 minutes: 30
-prereqs: [17]
+prereqs: [2, 9]
 tags: [recursion]
 ---
 # recursion — recursive diff of two nested configs

@@ -3,13 +3,21 @@ title: classes — a score list that answers three questions
 difficulty: medium
 tier: core
 minutes: 20
-prereqs: [88, 97, 99, 115]
+prereqs: [115]
 tags: [classes]
 source: exercism/python practice/high-scores (MIT, adapted)
 ---
 # classes — a score list that answers three questions
 
 *high-scores — keep the raw series in the order it arrived, and answer questions with copies of it.*
+
+## Read first
+- [Sorting techniques](https://docs.python.org/3/howto/sorting.html) — `sorted(...)` hands back a new list; `.sort()` rewrites the one you already have
+- [`max()`](https://docs.python.org/3/library/functions.html#max) — the highest score without sorting anything
+- [Lists](https://docs.python.org/3/tutorial/introduction.html#lists) — negative indexing for "the last one", and slicing that is happy to be asked for more items than exist
+- [A first look at classes](https://docs.python.org/3/tutorial/classes.html#a-first-look-at-classes) — `__init__`, `self`, and storing state on the instance
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 This is every metrics object you will ever write: something collects a series of numbers in the order they happened — request latencies, deploy durations, daily error counts — and the rest of the program asks it a small set of questions. What was the last one? What is the worst? Show me the top three. The trap is not the questions, it is that the easiest way to answer the third one is to sort, and if you sort the list you were handed, the *order it arrived in* is gone forever and the "last one" answer silently starts lying. Answering a question must not damage the data it was asked about.
@@ -71,14 +79,6 @@ HighScores([40]).personal_top_three()         # -> [40]
 
 > [!WARNING]
 > The grader calls `personal_top_three()` **first** and then asks the same object for `.scores` and `.latest()`. Sorting the stored list in place passes the top-three check and fails both of the others.
-
-## Read first
-- [Sorting techniques](https://docs.python.org/3/howto/sorting.html) — `sorted(...)` hands back a new list; `.sort()` rewrites the one you already have
-- [`max()`](https://docs.python.org/3/library/functions.html#max) — the highest score without sorting anything
-- [Lists](https://docs.python.org/3/tutorial/introduction.html#lists) — negative indexing for "the last one", and slicing that is happy to be asked for more items than exist
-- [A first look at classes](https://docs.python.org/3/tutorial/classes.html#a-first-look-at-classes) — `__init__`, `self`, and storing state on the instance
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

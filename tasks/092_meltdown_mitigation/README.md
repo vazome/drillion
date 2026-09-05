@@ -3,13 +3,22 @@ title: conditionals — reactor meltdown control
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [88, 89]
+prereqs: [17, 89]
 tags: [conditionals]
 source: exercism/python concept/meltdown-mitigation (MIT, adapted)
 ---
 # conditionals — reactor meltdown control
 
 *if / elif / else — three reactor decisions, each a different shape of branch.*
+
+## Read first
+- [Python Docs: Control flow tools](https://docs.python.org/3/tutorial/controlflow.html#more-control-flow-tools) — if / elif / else: the first branch whose test is `True` wins, and the rest are never even evaluated
+- [Real Python: Conditional statements in Python](https://realpython.com/python-conditional-statements/) — chained comparisons (`0 <= x < 10`) and when a ladder of `elif` beats a pile of separate `if`s
+- [Python Docs: Truth value testing](https://docs.python.org/3/library/stdtypes.html#truth-value-testing) — what counts as `True` when the test is not a comparison
+- [Python Docs: Standard types — boolean operations](https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not) — `and` / `or` / `not` inside a condition
+- [Python Docs: Comparisons](https://docs.python.org/3/library/stdtypes.html#comparisons) — the `<` / `<=` table this whole task turns on
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 You are writing the control software for a nuclear reactor. A reactor only produces power while it sits in a narrow band called criticality: below it the core gets damaged, above it you get a meltdown. The sensors feed you raw numbers — temperature, neutron count, voltage, current — and the control room needs three plain answers off them: is the core balanced right now, how efficiently is it running, and should the rods go in or out. Each answer is a different shape of decision: one yes/no, one four-way band, one three-way band. Getting the `<` versus `<=` right is the entire job; on this machine an off-by-one boundary is not a cosmetic bug.
@@ -267,15 +276,6 @@ reactor["fail_safe"](10, 1101, 10000)            # -> 'DANGER'  (110.1%, over th
 [python booleans]: https://realpython.com/python-boolean/
 [python comparisons examples]: https://www.tutorialspoint.com/python/comparison_operators_example.htm
 [real python conditionals]: https://realpython.com/python-conditional-statements/
-
-## Read first
-- [Python Docs: Control flow tools](https://docs.python.org/3/tutorial/controlflow.html#more-control-flow-tools) — if / elif / else: the first branch whose test is `True` wins, and the rest are never even evaluated
-- [Real Python: Conditional statements in Python](https://realpython.com/python-conditional-statements/) — chained comparisons (`0 <= x < 10`) and when a ladder of `elif` beats a pile of separate `if`s
-- [Python Docs: Truth value testing](https://docs.python.org/3/library/stdtypes.html#truth-value-testing) — what counts as `True` when the test is not a comparison
-- [Python Docs: Standard types — boolean operations](https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not) — `and` / `or` / `not` inside a condition
-- [Python Docs: Comparisons](https://docs.python.org/3/library/stdtypes.html#comparisons) — the `<` / `<=` table this whole task turns on
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

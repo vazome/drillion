@@ -3,13 +3,21 @@ title: conditionals — are the brackets balanced and nested right?
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [88, 89, 92, 95, 97, 99, 101]
+prereqs: [101]
 tags: [conditionals]
 source: exercism/python practice/matching-brackets (MIT, adapted)
 ---
 # conditionals — are the brackets balanced and nested right?
 
 *matching-brackets — the stack, in its smallest useful form.*
+
+## Read first
+- [Using lists as stacks](https://docs.python.org/3/tutorial/datastructures.html#using-lists-as-stacks) — `append()` and `pop()` are push and pop; that is the entire data structure
+- [list.pop()](https://docs.python.org/3/library/stdtypes.html#mutable-sequence-types) — with no argument it removes and returns the **last** item, which is exactly "most recently opened"
+- [Mapping types: dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — one small dict maps each closer to the opener it expects, so there is no three-branch `if`
+- [Truth value testing](https://docs.python.org/3/library/stdtypes.html#truth-value-testing) — an empty list is falsey, which makes "is anything still open?" a one-liner
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Your editor greys out a mismatched brace, your JSON parser says "unexpected end of input", your shell complains about an unterminated quote — all of them are running this check. It is also the smallest honest example of a stack: a problem where you must remember what you opened, in order, and match the most recent one first. Counting alone cannot do it, and finding out *why* counting fails is the point of the task.
@@ -61,14 +69,6 @@ solve("")              # -> True
 
 > [!WARNING]
 > Counting openers and closers is not enough: `[({]})` has one of each and is still wrong, and `)(` has one of each and is wrong too. You need the *order*, which means remembering what you opened.
-
-## Read first
-- [Using lists as stacks](https://docs.python.org/3/tutorial/datastructures.html#using-lists-as-stacks) — `append()` and `pop()` are push and pop; that is the entire data structure
-- [list.pop()](https://docs.python.org/3/library/stdtypes.html#mutable-sequence-types) — with no argument it removes and returns the **last** item, which is exactly "most recently opened"
-- [Mapping types: dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — one small dict maps each closer to the opener it expects, so there is no three-branch `if`
-- [Truth value testing](https://docs.python.org/3/library/stdtypes.html#truth-value-testing) — an empty list is falsey, which makes "is anything still open?" a one-liner
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

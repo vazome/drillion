@@ -3,13 +3,25 @@ title: dict-methods — sorting the cart and updating the shelves
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [106, 108]
+prereqs: [108]
 tags: [dict-methods]
 source: exercism/python concept/mecha-munch-management (MIT, adapted)
 ---
 # dict-methods — sorting the cart and updating the shelves
 
 *Dict views, `sorted()`, and why insertion order is the answer.*
+
+## Read first
+- [Mapping types — dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — every method in one table; worth skimming end to end once
+- [dict.setdefault()](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) — insert-if-missing and return, in one call
+- [dict.fromkeys()](https://docs.python.org/3/library/stdtypes.html#dict.fromkeys) — build a whole dict from an iterable of keys sharing one default value
+- [dict.update()](https://docs.python.org/3/library/stdtypes.html#dict.update) — merge in another mapping *or* an iterable of pairs, in place
+- [Dictionary view objects](https://docs.python.org/3/library/stdtypes.html#dict-views) — `.keys()`, `.values()` and `.items()` are live views, not copies
+- [Sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — `sorted()`, `key=` and `reverse=`
+- [Real Python: dictionaries in Python](https://realpython.com/python-dicts/) — the long-form tour
+- [David Beazley: Built-in Super Heroes (video)](https://www.youtube.com/watch?v=lyDLAutA88s) — why the plain built-in dict is usually the right answer
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 The cart works; now the app has to talk to the shop. Customers want their cart alphabetised so they can spot the "Potato" they already added as "potatoes". The pickers in the store want the same cart in reverse order with the aisle number and whether the item needs refrigeration attached. And the store's own stock has to come down by whatever just went out of the door, with anything that hits zero marked out of stock rather than left as a bare `0`. Three tasks, all of them about reading a dictionary through its views and rebuilding it in the order somebody else needs.
@@ -461,18 +473,6 @@ The dictionary section of the [official tutorial][dicts-docs] and the mapping ty
 [mvp]: https://en.wikipedia.org/wiki/Minimum_viable_product
 [set-default]: https://docs.python.org/3/library/stdtypes.html#dict.setdefault
 [update]: https://docs.python.org/3/library/stdtypes.html#dict.update
-
-## Read first
-- [Mapping types — dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — every method in one table; worth skimming end to end once
-- [dict.setdefault()](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) — insert-if-missing and return, in one call
-- [dict.fromkeys()](https://docs.python.org/3/library/stdtypes.html#dict.fromkeys) — build a whole dict from an iterable of keys sharing one default value
-- [dict.update()](https://docs.python.org/3/library/stdtypes.html#dict.update) — merge in another mapping *or* an iterable of pairs, in place
-- [Dictionary view objects](https://docs.python.org/3/library/stdtypes.html#dict-views) — `.keys()`, `.values()` and `.items()` are live views, not copies
-- [Sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — `sorted()`, `key=` and `reverse=`
-- [Real Python: dictionaries in Python](https://realpython.com/python-dicts/) — the long-form tour
-- [David Beazley: Built-in Super Heroes (video)](https://www.youtube.com/watch?v=lyDLAutA88s) — why the plain built-in dict is usually the right answer
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

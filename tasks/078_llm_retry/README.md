@@ -3,7 +3,7 @@ title: LLM retry — back off on rate limits, fail fast on bad requests
 difficulty: hard
 tier: packages
 minutes: 20
-prereqs: [42]
+prereqs: [21, 38, 42]
 tags: [llm, langchain]
 ---
 # LLM retry — back off on rate limits, fail fast on bad requests

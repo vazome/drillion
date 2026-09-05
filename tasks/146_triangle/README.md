@@ -3,13 +3,22 @@ title: bools — equilateral, isosceles or scalene
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [88, 89, 90]
+prereqs: [9, 89, 90]
 tags: [bools]
 source: exercism/python practice/triangle (MIT, adapted)
 ---
 # bools — equilateral, isosceles or scalene
 
 *triangle — three predicates that all share one validity check.*
+
+## Read first
+- [Boolean values](https://docs.python.org/3/library/stdtypes.html#bltin-boolean-values) — `True` and `False` are the objects the grader compares against by identity
+- [Boolean operations: and, or, not](https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not) — and the fact that `and` returns an operand, not always a `bool`
+- [Truth value testing](https://docs.python.org/3/library/stdtypes.html#truth) — why "truthy" and "is `True`" are different questions
+- [all() and any()](https://docs.python.org/3/library/functions.html#all) — three comparisons collapsed into one call, and both do return real bools
+- [sorted()](https://docs.python.org/3/library/functions.html#sorted) — put the sides in order once and the inequality check stops needing three cases
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Three questions, one shared precondition — that is the pattern here, and it is everywhere. Is this deployment production? Is it canary? Is it rollback? None of those questions has an answer at all if the manifest is malformed, so every one of them has to run the same validation first. The lazy version duplicates the check three times and drifts; the version worth writing pulls it into one helper that all three call. The classification itself is a good task in reading a definition literally: "at least two sides equal" is not the same as "exactly two", and the difference decides whether an equilateral triangle is also isosceles.
@@ -85,15 +94,6 @@ shapes["scalene"]([4, 3, 3])      # -> False
 
 > [!WARNING]
 > Return real `True` / `False`, not something merely truthy. The grader compares with `is`, so `1`, `0`, `[]` and `None` all fail even where they would "work" in an `if`.
-
-## Read first
-- [Boolean values](https://docs.python.org/3/library/stdtypes.html#bltin-boolean-values) — `True` and `False` are the objects the grader compares against by identity
-- [Boolean operations: and, or, not](https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not) — and the fact that `and` returns an operand, not always a `bool`
-- [Truth value testing](https://docs.python.org/3/library/stdtypes.html#truth) — why "truthy" and "is `True`" are different questions
-- [all() and any()](https://docs.python.org/3/library/functions.html#all) — three comparisons collapsed into one call, and both do return real bools
-- [sorted()](https://docs.python.org/3/library/functions.html#sorted) — put the sides in order once and the inequality check stops needing three cases
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

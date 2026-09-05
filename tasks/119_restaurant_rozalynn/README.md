@@ -3,13 +3,23 @@ title: none — lay the dining room out with empty seats
 difficulty: medium
 tier: core
 minutes: 13
-prereqs: [89, 92, 99, 101, 108]
+prereqs: [108]
 tags: [none]
 source: exercism/python concept/restaurant-rozalynn (MIT, adapted)
 ---
 # none — lay the dining room out with empty seats
 
 *`None` — the placeholder value, and the safe default argument.*
+
+## Read first
+- [None (the standard type hierarchy)](https://docs.python.org/3/library/stdtypes.html#the-null-object) — there is exactly one `None` object in a running program, which is why `is` is the way to test for it
+- [Default argument values](https://docs.python.org/3/tutorial/controlflow.html#default-argument-values) — including the warning about mutable defaults, which is the reason `None` is used here
+- [Real Python: Null in Python](https://realpython.com/null-in-python/) — `None` compared with `NULL`, `nil` and friends, and what it is *not*
+- [Dict comprehensions](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — `{key: value for ...}`, the shortest way to lay out a chart
+- [range()](https://docs.python.org/3/library/functions.html#func-range) — off by one lives here: `range(1, size + 1)` is the seats you want
+- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — walk a guest list and get the position alongside each name
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 The maître d' needs tonight's seating chart before a single guest walks in: twenty-two seats, all of them empty, each one ready to be given a name. "Empty" has to be a value you can actually store — not a missing key, not an empty string that later gets printed on a place card. That value is `None`, and this is the job it exists for. The second half of the task is the other place `None` earns its keep: as the default for an argument that might not be given, so `arrange_reservations()` with no reservation list still hands back a valid chart instead of blowing up.
@@ -210,16 +220,6 @@ Remember, you will need to create an empty dictionary first. Next, fill the dict
 ### 6. Empty the Seats
 
 - Given the seating chart `dict`, and a `list` of seat numbers, you'll want to indicate the seat is now available for another guest by replacing their name with a placeholder. Looping through the seat number list and looking for those seats in the dictionary might be helpful here.
-
-## Read first
-- [None (the standard type hierarchy)](https://docs.python.org/3/library/stdtypes.html#the-null-object) — there is exactly one `None` object in a running program, which is why `is` is the way to test for it
-- [Default argument values](https://docs.python.org/3/tutorial/controlflow.html#default-argument-values) — including the warning about mutable defaults, which is the reason `None` is used here
-- [Real Python: Null in Python](https://realpython.com/null-in-python/) — `None` compared with `NULL`, `nil` and friends, and what it is *not*
-- [Dict comprehensions](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — `{key: value for ...}`, the shortest way to lay out a chart
-- [range()](https://docs.python.org/3/library/functions.html#func-range) — off by one lives here: `range(1, size + 1)` is the seats you want
-- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — walk a guest list and get the position alongside each name
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

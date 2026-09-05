@@ -11,6 +11,13 @@ tags: [concurrency]
 
 *Reaching for threads on CPU work is the wrong answer that ends a phone screen.*
 
+## Read first
+- [Speed up your Python program with concurrency](https://realpython.com/python-concurrency/) — threads vs processes vs asyncio, when each wins
+- [Concurrent execution — the stdlib index](https://docs.python.org/3/library/concurrency.html) — the modules themselves: threading, multiprocessing, concurrent.futures, asyncio
+
+> [!NOTE]
+> **Take-home:** "why async here?"
+
 ## Why
 A colleague brings you a list of jobs they want to speed up: resize 8 images, call 40 APIs, poll 5000 sensors. Python has three ways to do several things at once, and picking the wrong one makes a job no faster or even slower. The team wants one simple rule written down so everyone picks consistently: heavy calculation gets separate processes, a modest number of network waits gets threads, a huge number of waits gets async. Interviewers ask for this rule and the reasons behind it.
 
@@ -52,13 +59,6 @@ CPU work goes to processes because the GIL lets only one thread run Python bytec
 I/O work suits threads because a thread blocked on a socket holds the GIL for none of that time. Everything you already have works unchanged: requests, boto3, psycopg, all of it.
 
 Past a hundred or so concurrent operations, threads stop being cheap — each one is a real OS thread with its own stack, and the scheduler starts costing more than the work. An event loop runs thousands of waits on one thread. The catch is that every library in the path has to be async-aware; one blocking call inside a coroutine freezes the whole loop, which is why "just use async" is not automatically the right answer.
-
-## Read first
-- [Speed up your Python program with concurrency](https://realpython.com/python-concurrency/) — threads vs processes vs asyncio, when each wins
-- [Concurrent execution — the stdlib index](https://docs.python.org/3/library/concurrency.html) — the modules themselves: threading, multiprocessing, concurrent.futures, asyncio
-
-> [!NOTE]
-> **Take-home:** "why async here?"
 
 ## Hints
 ### Hint 1

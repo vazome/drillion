@@ -3,7 +3,7 @@ title: argparse — mini-grep with argparse flags
 difficulty: medium
 tier: core
 minutes: 25
-prereqs: [27]
+prereqs: [18, 25]
 tags: [argparse]
 ---
 # argparse — mini-grep with argparse flags

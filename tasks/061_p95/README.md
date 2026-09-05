@@ -3,7 +3,7 @@ title: log analysis — nginx log -> top IPs, status mix, p95
 difficulty: medium
 tier: core
 minutes: 30
-prereqs: [18, 26]
+prereqs: [4, 10, 16]
 tags: [log-analysis]
 ---
 # log analysis — nginx log -> top IPs, status mix, p95

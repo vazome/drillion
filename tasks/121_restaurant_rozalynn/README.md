@@ -3,13 +3,23 @@ title: none — seat the walk-ins, clear the tables
 difficulty: medium
 tier: core
 minutes: 13
-prereqs: [89, 92, 99, 101, 108, 120]
+prereqs: [120]
 tags: [none]
 source: exercism/python concept/restaurant-rozalynn (MIT, adapted)
 ---
 # none — seat the walk-ins, clear the tables
 
 *`None` — writing the placeholder back, and the all-or-nothing update.*
+
+## Read first
+- [None (the standard type hierarchy)](https://docs.python.org/3/library/stdtypes.html#the-null-object) — the placeholder you write back into a seat
+- [`is` and `is not`](https://docs.python.org/3/reference/expressions.html#is-not) — how to spot an empty seat without tripping over `0` or `""`
+- [dict.items()](https://docs.python.org/3/library/stdtypes.html#dict.items) — walking keys and values together to find the empty ones
+- [Assigning into a dict](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — `chart[seat] = name` adds or overwrites in place; the dict you were handed is the dict the caller sees
+- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — pairing each guest with a position so you can index into the list of empty seats
+- [len()](https://docs.python.org/3/library/functions.html#len) — the comparison that decides whether anybody sits down
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Four people walk in without a reservation. Either the room can take all four or it can take none of them — you do not seat two and leave the couple standing, so the check has to happen before a single name goes on the chart. And when a table finishes, its seats have to go back to being genuinely empty, which means writing `None` over the names rather than deleting the keys, so the chart keeps its shape and the seat still exists to be given away again. Check-then-write, and reset-to-placeholder: the same two moves as a stock reservation in an ordering system, or releasing a lease back into a pool.
@@ -210,16 +220,6 @@ Remember, you will need to create an empty dictionary first. Next, fill the dict
 ### 6. Empty the Seats
 
 - Given the seating chart `dict`, and a `list` of seat numbers, you'll want to indicate the seat is now available for another guest by replacing their name with a placeholder. Looping through the seat number list and looking for those seats in the dictionary might be helpful here.
-
-## Read first
-- [None (the standard type hierarchy)](https://docs.python.org/3/library/stdtypes.html#the-null-object) — the placeholder you write back into a seat
-- [`is` and `is not`](https://docs.python.org/3/reference/expressions.html#is-not) — how to spot an empty seat without tripping over `0` or `""`
-- [dict.items()](https://docs.python.org/3/library/stdtypes.html#dict.items) — walking keys and values together to find the empty ones
-- [Assigning into a dict](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — `chart[seat] = name` adds or overwrites in place; the dict you were handed is the dict the caller sees
-- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — pairing each guest with a position so you can index into the list of empty seats
-- [len()](https://docs.python.org/3/library/functions.html#len) — the comparison that decides whether anybody sits down
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

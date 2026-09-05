@@ -3,13 +3,22 @@ title: classes — the checksum that catches a mistyped card number
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [88, 89, 90, 92, 95, 96, 97, 99, 101, 115]
+prereqs: [96, 115]
 tags: [classes]
 source: exercism/python practice/luhn (MIT, adapted)
 ---
 # classes — the checksum that catches a mistyped card number
 
 *luhn — double every second digit from the right, and mind which digits those are.*
+
+## Read first
+- [Classes tutorial](https://docs.python.org/3/tutorial/classes.html) — `__init__`, `self`, and where instance state lives
+- [str.replace()](https://docs.python.org/3/library/stdtypes.html#str.replace) — removing the spaces in one call
+- [str.isdigit()](https://docs.python.org/3/library/stdtypes.html#str.isdigit) — asks the "is this all digits?" question about a whole string, not just one character
+- [reversed()](https://docs.python.org/3/library/functions.html#reversed) — walk from the right so "every second digit from the right" needs no length arithmetic
+- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — position and character together, which is how you know whether to double
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Before a payment form talks to a bank, before an IMEI reaches a carrier, before a national insurance number hits a database, a two-line check catches most typos and every single-digit slip — for free, offline, in microseconds. That is what a checksum buys: cheap rejection of nonsense at the edge, so the expensive system downstream only sees plausible input. Validating early and locally is a habit worth having, and Luhn is the cleanest example of it.
@@ -130,15 +139,6 @@ Luhn(" 0").valid()           # -> False   one digit after stripping
 
 > [!WARNING]
 > The grader compares with `is True` / `is False`, so return the booleans themselves. It also calls `valid()` **twice on the same object** and expects the same answer both times — do not consume or mutate the digits inside `valid()`.
-
-## Read first
-- [Classes tutorial](https://docs.python.org/3/tutorial/classes.html) — `__init__`, `self`, and where instance state lives
-- [str.replace()](https://docs.python.org/3/library/stdtypes.html#str.replace) — removing the spaces in one call
-- [str.isdigit()](https://docs.python.org/3/library/stdtypes.html#str.isdigit) — asks the "is this all digits?" question about a whole string, not just one character
-- [reversed()](https://docs.python.org/3/library/functions.html#reversed) — walk from the right so "every second digit from the right" needs no length arithmetic
-- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — position and character together, which is how you know whether to double
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

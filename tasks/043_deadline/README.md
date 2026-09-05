@@ -3,7 +3,7 @@ title: deadlines — poll until ready or time out
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [40]
+prereqs: [36]
 tags: [errors]
 ---
 # deadlines — poll until ready or time out

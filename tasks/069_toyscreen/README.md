@@ -3,7 +3,7 @@ title: phone screens — palindrome, anagram, top-N words
 difficulty: medium
 tier: core
 minutes: 30
-prereqs: [18]
+prereqs: [4, 10, 18]
 tags: [strings, counter]
 ---
 # phone screens — palindrome, anagram, top-N words

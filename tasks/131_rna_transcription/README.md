@@ -3,13 +3,21 @@ title: string-methods — turn a DNA strand into its RNA partner
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [88, 89, 92, 95, 96, 101]
+prereqs: [96, 101]
 tags: [string-methods]
 source: exercism/python practice/rna-transcription (MIT, adapted)
 ---
 # string-methods — turn a DNA strand into its RNA partner
 
 *rna-transcription — a one-to-one character swap, and why four .replace() calls fail.*
+
+## Read first
+- [str.translate()](https://docs.python.org/3/library/stdtypes.html#str.translate) — `str.maketrans` and `translate`: build the mapping once, apply it in one pass
+- [str.join()](https://docs.python.org/3/library/stdtypes.html#str.join) — `"".join` over a generator, the readable way to build a string character by character
+- [str.replace()](https://docs.python.org/3/library/stdtypes.html#str.replace) — read this one to see the trap: each `replace()` runs over the result of the previous one
+- [Mapping types — dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — the four-entry lookup table, if you prefer a dict to `maketrans`
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A bioengineering team designs a molecule that switches off one misbehaving protein. To build it they need the RNA strand that pairs with a given piece of DNA, which means swapping every letter for its partner. One wrong letter and the molecule binds to something else entirely. Underneath the biology it is the most common string job there is — a fixed, one-to-one character mapping — and it hides the classic bug where you translate a letter and then translate your own output by mistake.
@@ -74,14 +82,6 @@ solve("C")             # -> "G"
 solve("ACGTGGTCTTAA")  # -> "UGCACCAGAAUU"
 solve("")              # -> ""
 ```
-
-## Read first
-- [str.translate()](https://docs.python.org/3/library/stdtypes.html#str.translate) — `str.maketrans` and `translate`: build the mapping once, apply it in one pass
-- [str.join()](https://docs.python.org/3/library/stdtypes.html#str.join) — `"".join` over a generator, the readable way to build a string character by character
-- [str.replace()](https://docs.python.org/3/library/stdtypes.html#str.replace) — read this one to see the trap: each `replace()` runs over the result of the previous one
-- [Mapping types — dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — the four-entry lookup table, if you prefer a dict to `maketrans`
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

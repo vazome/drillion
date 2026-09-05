@@ -3,7 +3,7 @@ title: requests.Session — shared headers, reused connection
 difficulty: medium
 tier: packages
 minutes: 15
-prereqs: [45]
+prereqs: [17, 45]
 tags: [http, requests]
 ---
 # requests.Session — shared headers, reused connection

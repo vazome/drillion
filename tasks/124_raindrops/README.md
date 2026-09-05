@@ -3,13 +3,22 @@ title: conditionals — sounds for the factors 3, 5 and 7
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [88, 89, 90, 92]
+prereqs: [90, 92]
 tags: [conditionals]
 source: exercism/python practice/raindrops (MIT, adapted)
 ---
 # conditionals — sounds for the factors 3, 5 and 7
 
 *raindrops — build a string from the factors a number has, with a fallback.*
+
+## Read first
+- [if statements](https://docs.python.org/3/tutorial/controlflow.html#if-statements) — `if` / `elif` / `else`, and why three separate `if`s are not the same thing as one `if`/`elif` chain
+- [Truth value testing](https://docs.python.org/3/library/stdtypes.html#truth-value-testing) — an empty string is falsy: that is how you ask "did I add anything?"
+- [divmod()](https://docs.python.org/3/library/functions.html#divmod) — `%` and `divmod`, the two ways to ask for a remainder
+- [operator.mod()](https://docs.python.org/3/library/operator.html#operator.mod) — the same `%` as a function
+- [str()](https://docs.python.org/3/library/stdtypes.html#str) — turning the number into the fallback answer
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 This is FizzBuzz in a raincoat, and interviewers still hand it out because most candidates trip on the same two things: that several rules can fire for the same number (so it is three questions, not one choice of three), and that the fallback only applies when none of them fired. Picture a rain gauge whose display plays a chime per factor and only prints the raw reading when there is nothing to chime about.
@@ -87,15 +96,6 @@ solve(34)   # -> "34"               (none of them)
 
 > [!WARNING]
 > The words are concatenated in the fixed order Pling, Plang, Plong — not in the order you happened to test the factors — and the fallback is `"34"`, the string, never the number `34`.
-
-## Read first
-- [if statements](https://docs.python.org/3/tutorial/controlflow.html#if-statements) — `if` / `elif` / `else`, and why three separate `if`s are not the same thing as one `if`/`elif` chain
-- [Truth value testing](https://docs.python.org/3/library/stdtypes.html#truth-value-testing) — an empty string is falsy: that is how you ask "did I add anything?"
-- [divmod()](https://docs.python.org/3/library/functions.html#divmod) — `%` and `divmod`, the two ways to ask for a remainder
-- [operator.mod()](https://docs.python.org/3/library/operator.html#operator.mod) — the same `%` as a function
-- [str()](https://docs.python.org/3/library/stdtypes.html#str) — turning the number into the fallback answer
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

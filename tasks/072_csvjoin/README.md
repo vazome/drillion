@@ -3,7 +3,7 @@ title: csv — inner-join two CSVs on a shared key
 difficulty: medium
 tier: core
 minutes: 30
-prereqs: [30]
+prereqs: [11, 28]
 tags: [csv]
 ---
 # csv — inner-join two CSVs on a shared key

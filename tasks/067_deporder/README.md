@@ -3,7 +3,7 @@ title: topological sort — start-up order, or the cycle that blocks it
 difficulty: hard
 tier: core
 minutes: 35
-prereqs: [19]
+prereqs: [11, 24]
 tags: [topological-sort]
 ---
 # topological sort — start-up order, or the cycle that blocks it

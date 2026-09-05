@@ -3,7 +3,7 @@ title: custom exceptions — a ConfigError family
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [40]
+prereqs: [21, 36]
 tags: [errors]
 ---
 # custom exceptions — a ConfigError family

@@ -3,13 +3,22 @@ title: strings — is this book number real, or a typo?
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [88, 89, 92, 95]
+prereqs: [95]
 tags: [strings]
 source: exercism/python practice/isbn-verifier (MIT, adapted)
 ---
 # strings — is this book number real, or a typo?
 
 *isbn-verifier — a weighted checksum, and the one character that is not a digit.*
+
+## Read first
+- [str.replace()](https://docs.python.org/3/library/stdtypes.html#str.replace) — dropping the dashes in one call
+- [str.isdigit()](https://docs.python.org/3/library/stdtypes.html#str.isdigit) — the per-character question that decides whether a piece is usable
+- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — position and character together; the position *is* the weight here
+- [zip()](https://docs.python.org/3/library/functions.html#zip) — the other route: pair each character with a weight from `range(10, 0, -1)`
+- [Text sequence type: str](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str) — slicing and indexing a string
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A shop's import job receives ten thousand rows of book data typed by humans and pasted from spreadsheets. Validating the identifier before the row reaches the database turns "mystery record nobody can find" into a rejected line with a reason, at the edge, for free. Every identifier you will meet at work — account numbers, IBANs, VAT numbers, container codes — carries a check digit for exactly this reason, and they all follow the shape below: weight each position, sum, test the total against one modulus.
@@ -91,15 +100,6 @@ solve("00")             # -> False
 
 > [!WARNING]
 > Check the length **and** the characters — both, and independently. `"3132P34035"` is ten characters long and still invalid; `"3598P215088"` has a valid-looking body and is eleven characters long. And the grader compares with `is True` / `is False`, so return the booleans themselves.
-
-## Read first
-- [str.replace()](https://docs.python.org/3/library/stdtypes.html#str.replace) — dropping the dashes in one call
-- [str.isdigit()](https://docs.python.org/3/library/stdtypes.html#str.isdigit) — the per-character question that decides whether a piece is usable
-- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — position and character together; the position *is* the weight here
-- [zip()](https://docs.python.org/3/library/functions.html#zip) — the other route: pair each character with a weight from `range(10, 0, -1)`
-- [Text sequence type: str](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str) — slicing and indexing a string
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

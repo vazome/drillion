@@ -11,6 +11,18 @@ source: exercism/python concept/mecha-munch-management (MIT, adapted)
 
 *`setdefault`, `dict.fromkeys` and `update` — one method per task.*
 
+## Read first
+- [Mapping types — dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — every method in one table; worth skimming end to end once
+- [dict.setdefault()](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) — insert-if-missing and return, in one call
+- [dict.fromkeys()](https://docs.python.org/3/library/stdtypes.html#dict.fromkeys) — build a whole dict from an iterable of keys sharing one default value
+- [dict.update()](https://docs.python.org/3/library/stdtypes.html#dict.update) — merge in another mapping *or* an iterable of pairs, in place
+- [Dictionary view objects](https://docs.python.org/3/library/stdtypes.html#dict-views) — `.keys()`, `.values()` and `.items()` are live views, not copies
+- [Sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — `sorted()`, `key=` and `reverse=`
+- [Real Python: dictionaries in Python](https://realpython.com/python-dicts/) — the long-form tour
+- [David Beazley: Built-in Super Heroes (video)](https://www.youtube.com/watch?v=lyDLAutA88s) — why the plain built-in dict is usually the right answer
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+
 ## Why
 Mecha Munch is a grocery-ordering app, and you have the cart end of the MVP: put things in the cart, start a cart from the list a customer typed into their notes app, and let the content team swap out a whole recipe's ingredients. Three tasks, and each one is really "which `dict` method already does this?". Knowing the method table is what separates a five-line loop with a `KeyError` in it from a one-liner that reads like the sentence in the ticket.
 
@@ -462,18 +474,6 @@ The dictionary section of the [official tutorial][dicts-docs] and the mapping ty
 [mvp]: https://en.wikipedia.org/wiki/Minimum_viable_product
 [set-default]: https://docs.python.org/3/library/stdtypes.html#dict.setdefault
 [update]: https://docs.python.org/3/library/stdtypes.html#dict.update
-
-## Read first
-- [Mapping types — dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — every method in one table; worth skimming end to end once
-- [dict.setdefault()](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) — insert-if-missing and return, in one call
-- [dict.fromkeys()](https://docs.python.org/3/library/stdtypes.html#dict.fromkeys) — build a whole dict from an iterable of keys sharing one default value
-- [dict.update()](https://docs.python.org/3/library/stdtypes.html#dict.update) — merge in another mapping *or* an iterable of pairs, in place
-- [Dictionary view objects](https://docs.python.org/3/library/stdtypes.html#dict-views) — `.keys()`, `.values()` and `.items()` are live views, not copies
-- [Sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — `sorted()`, `key=` and `reverse=`
-- [Real Python: dictionaries in Python](https://realpython.com/python-dicts/) — the long-form tour
-- [David Beazley: Built-in Super Heroes (video)](https://www.youtube.com/watch?v=lyDLAutA88s) — why the plain built-in dict is usually the right answer
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

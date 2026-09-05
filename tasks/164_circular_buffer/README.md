@@ -3,13 +3,22 @@ title: class-inheritance — a fixed-size queue that reuses its own slots
 difficulty: hard
 tier: core
 minutes: 20
-prereqs: [88, 89, 90, 92, 95, 97, 99, 101, 106, 115]
+prereqs: [115]
 tags: [class-inheritance, function-arguments, user-defined-errors]
 source: exercism/python practice/circular-buffer (MIT, adapted)
 ---
 # class-inheritance — a fixed-size queue that reuses its own slots
 
 *circular-buffer — the storage never grows, so the interesting code is what happens at the two edges.*
+
+## Read first
+- [User-defined exceptions](https://docs.python.org/3/tutorial/errors.html#user-defined-exceptions) — why an exception class is usually nothing but a name and a base class
+- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise Something("message")`, and where that message ends up
+- [`BufferError`](https://docs.python.org/3/library/exceptions.html#BufferError) — the built-in base class both given exceptions inherit from
+- [`%` on integers](https://docs.python.org/3/reference/expressions.html#binary-arithmetic-operations) — `(index + 1) % capacity` is how a position walks off the end and reappears at the start
+- [`collections.deque`](https://docs.python.org/3/library/collections.html#collections.deque) — a ready-made double-ended queue, and `maxlen` if you would rather not do the index arithmetic yourself
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A log shipper reads lines faster than the network can send them, so it parks them in a buffer. That buffer cannot be allowed to grow — an agent that swallows memory whenever the network hiccups takes the host down with it, which is worse than losing log lines. So you fix the size up front, reuse the slots as they free up, and then make a decision the caller can actually act on when you hit an edge: refuse the write and say so, or drop the oldest line to make room. Audio buffers, serial ports, ring buffers in a kernel, bounded queues in a worker pool — all the same object. The part people get wrong is never the arithmetic; it is telling "full" apart from "empty" and reporting each one clearly enough that the caller knows which one happened.
@@ -165,15 +174,6 @@ buffer.read()            # -> "5"
 
 > [!WARNING]
 > `overwrite` on a full buffer does not just replace the value in a slot — it also means the item that was dropped is gone from the reading order. After it, the next `read()` must return the item that was *second* oldest, not the one you just wrote.
-
-## Read first
-- [User-defined exceptions](https://docs.python.org/3/tutorial/errors.html#user-defined-exceptions) — why an exception class is usually nothing but a name and a base class
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise Something("message")`, and where that message ends up
-- [`BufferError`](https://docs.python.org/3/library/exceptions.html#BufferError) — the built-in base class both given exceptions inherit from
-- [`%` on integers](https://docs.python.org/3/reference/expressions.html#binary-arithmetic-operations) — `(index + 1) % capacity` is how a position walks off the end and reappears at the start
-- [`collections.deque`](https://docs.python.org/3/library/collections.html#collections.deque) — a ready-made double-ended queue, and `maxlen` if you would rather not do the index arithmetic yourself
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

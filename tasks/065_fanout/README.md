@@ -3,7 +3,7 @@ title: ThreadPoolExecutor — CSV rows fanned out over a thread pool
 difficulty: medium
 tier: core
 minutes: 30
-prereqs: [30]
+prereqs: [28, 37]
 tags: [threadpoolexecutor]
 ---
 # ThreadPoolExecutor — CSV rows fanned out over a thread pool

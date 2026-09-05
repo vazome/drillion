@@ -11,6 +11,18 @@ source: exercism/python concept/ghost-gobble-arcade-game (MIT, adapted)
 
 *and / or / not — four arcade-game rules built from booleans alone.*
 
+## Read first
+- [boolean-operators](https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not) — the three operators, their precedence (`not` binds tightest, then `and`, then `or`)
+- [Truth Value Testing](https://docs.python.org/3/library/stdtypes.html#truth) — why you never need to write `if flag == True`
+- [boolean values](https://docs.python.org/3/library/stdtypes.html#bltin-boolean-values) — `True` and `False`, a subclass of `int`
+- [bool() function](https://docs.python.org/3/library/functions.html#bool) — turning any object into one of the two
+- [Comparisons in Python](https://docs.python.org/3/library/stdtypes.html#comparisons) — the operators that produce bools in the first place
+- [Problem Solving with Python — Boolean Data Type](https://problemsolvingwithpython.com/04-Data-Types-and-Variables/04.02-Boolean-Data-Type/) — a gentler walk-through
+- [Python Anti-Patterns: comparing things to True in the wrong way](https://docs.quantifiedcode.com/python-anti-patterns/readability/comparison_to_true.html) — the `== True` habit and why to drop it
+- [PEP 285 — Adding a bool type](https://www.python.org/dev/peps/pep-0285/) — why `bool` subclasses `int`
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+
 ## Why
 You have taken over the rules engine of an arcade game. The graphics team already worked out where everything is on screen; every frame they hand the rules engine a handful of yes/no facts — is a power pellet active, is the player touching a ghost, has the player eaten the last dot — and the engine has to say what that means for the game: did the player score, did they eat the ghost, did they lose, did they win. Nothing here is arithmetic. It is four sentences of English turned into and / or / not, which is most of what business rules ever are.
 
@@ -148,18 +160,6 @@ rules["win"](True, False, True)   # -> False  (all dots eaten, but lost anyway)
 [Boolean-operators]: https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not
 [boolean]: https://docs.python.org/3/library/stdtypes.html#truth
 [stdlib-bools]: https://docs.python.org/3/library/stdtypes.html#truth-value-testing
-
-## Read first
-- [boolean-operators](https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not) — the three operators, their precedence (`not` binds tightest, then `and`, then `or`)
-- [Truth Value Testing](https://docs.python.org/3/library/stdtypes.html#truth) — why you never need to write `if flag == True`
-- [boolean values](https://docs.python.org/3/library/stdtypes.html#bltin-boolean-values) — `True` and `False`, a subclass of `int`
-- [bool() function](https://docs.python.org/3/library/functions.html#bool) — turning any object into one of the two
-- [Comparisons in Python](https://docs.python.org/3/library/stdtypes.html#comparisons) — the operators that produce bools in the first place
-- [Problem Solving with Python — Boolean Data Type](https://problemsolvingwithpython.com/04-Data-Types-and-Variables/04.02-Boolean-Data-Type/) — a gentler walk-through
-- [Python Anti-Patterns: comparing things to True in the wrong way](https://docs.quantifiedcode.com/python-anti-patterns/readability/comparison_to_true.html) — the `== True` habit and why to drop it
-- [PEP 285 — Adding a bool type](https://www.python.org/dev/peps/pep-0285/) — why `bool` subclasses `int`
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

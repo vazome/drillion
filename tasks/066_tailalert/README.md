@@ -3,7 +3,7 @@ title: file tailing — tail a growing log, alert with context
 difficulty: medium
 tier: core
 minutes: 25
-prereqs: [20]
+prereqs: [19, 24, 25]
 tags: [file-tailing]
 ---
 # file tailing — tail a growing log, alert with context

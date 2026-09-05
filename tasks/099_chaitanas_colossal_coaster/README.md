@@ -3,13 +3,23 @@ title: list-methods — joining the coaster queue
 difficulty: medium
 tier: core
 minutes: 12
-prereqs: [97]
+prereqs: [4, 97]
 tags: [list-methods]
 source: exercism/python concept/chaitanas-colossal-coaster (MIT, adapted)
 ---
 # list-methods — joining the coaster queue
 
 *`append`, `index`, `insert` — three methods that change the list you were handed.*
+
+## Read first
+- [more on lists (Python tutorial)](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — the method-by-method table: `append`, `insert`, `index` and the rest
+- [mutable sequence operations](https://docs.python.org/3/library/stdtypes.html#typesseq-mutable) — the formal definition of what each mutating method does, and what it returns
+- [the `list` type](https://docs.python.org/3/library/stdtypes.html#list) — the reference page for the type itself
+- [`sorted()`](https://docs.python.org/3/library/functions.html#sorted) — the non-mutating counterpart you will meet in the next task
+- [sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — in-place versus copy, spelled out
+- [Timsort](https://en.wikipedia.org/wiki/Timsort) — what Python used to sort lists between 2002 and 2022, for background
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Chaitana's theme park has two queues and a steady stream of people who need putting into the right one, found inside it, or slotted in beside their friends. That is a work queue: jobs appended to the end, a job located by name, an urgent job inserted at a position. The detail that this task actually grades — and that bites people in real code — is that these methods change the list **in place** and hand back `None`, so `queue = queue.append(name)` silently throws your queue away. Building that reflex here costs ten minutes; not having it costs an afternoon.
@@ -490,16 +500,6 @@ park["add_me_with_my_friends"](["Natasha", "Steve", "Wanda"], 1, "Bucky")
 
 [python lists]: https://docs.python.org/3.11/library/stdtypes.html#list
 [more on lists]: https://docs.python.org/3.11/tutorial/datastructures.html#more-on-lists
-
-## Read first
-- [more on lists (Python tutorial)](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — the method-by-method table: `append`, `insert`, `index` and the rest
-- [mutable sequence operations](https://docs.python.org/3/library/stdtypes.html#typesseq-mutable) — the formal definition of what each mutating method does, and what it returns
-- [the `list` type](https://docs.python.org/3/library/stdtypes.html#list) — the reference page for the type itself
-- [`sorted()`](https://docs.python.org/3/library/functions.html#sorted) — the non-mutating counterpart you will meet in the next task
-- [sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — in-place versus copy, spelled out
-- [Timsort](https://en.wikipedia.org/wiki/Timsort) — what Python used to sort lists between 2002 and 2022, for background
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

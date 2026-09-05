@@ -3,13 +3,20 @@ title: comparisons — convert digits from one base to another
 difficulty: medium
 tier: core
 minutes: 25
-prereqs: [88, 89, 90, 92, 93, 97]
+prereqs: [90, 93, 97]
 tags: [comparisons]
 source: exercism/python practice/all-your-base (MIT, adapted)
 ---
 # comparisons — convert digits from one base to another
 
 *all-your-base — collapse the digits into one number, then peel a new set of digits off it.*
+
+## Read first
+- [`divmod()`](https://docs.python.org/3/library/functions.html#divmod) — quotient and remainder in one call: the remainder is the next output digit, the quotient is what is left to convert
+- [`any()`](https://docs.python.org/3/library/functions.html#any) — "is *any* digit out of range?" as a single expression
+- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("…")` with a message that has to match exactly
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Every identifier you have ever copied out of a system is a number in a costume: hex in a stack trace, base32 in a TOTP secret, base58 in a wallet address, base64 in a token. Converting between two of them looks like a solved problem until the library you reached for disagrees with the one on the other side about leading zeros, or about what an empty input means, and you are left staring at two ids that should be the same value. Doing the conversion once by hand — in, then out, with every awkward input given a deliberate answer — is what makes all of those APIs readable afterwards.
@@ -97,13 +104,6 @@ solve(7, [0, 6, 0], 10)           # -> [4, 2]
 solve(2, [], 10)                  # -> [0]
 solve(10, [0, 0, 0], 2)           # -> [0]
 ```
-
-## Read first
-- [`divmod()`](https://docs.python.org/3/library/functions.html#divmod) — quotient and remainder in one call: the remainder is the next output digit, the quotient is what is left to convert
-- [`any()`](https://docs.python.org/3/library/functions.html#any) — "is *any* digit out of range?" as a single expression
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("…")` with a message that has to match exactly
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

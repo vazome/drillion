@@ -3,13 +3,26 @@ title: dicts — removing items and reporting stock
 difficulty: easy
 tier: core
 minutes: 12
-prereqs: [97, 101, 104, 106]
+prereqs: [106]
 tags: [dicts]
 source: exercism/python concept/inventory-management (MIT, adapted)
 ---
 # dicts — removing items and reporting stock
 
 *`pop`, `in`, and turning a dict into a sorted list of pairs.*
+
+## Read first
+- [Mapping types — dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — every dict method in one table
+- [Tutorial: dictionaries](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — the gentle introduction, with a worked counting example
+- [hashable](https://docs.python.org/3/glossary.html#term-hashable) — why a string or a tuple may be a key and a list may not
+- [dict.setdefault()](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) — insert the default only if the key is missing, return the value either way
+- [dict.items()](https://docs.python.org/3/library/stdtypes.html#dict.items) — the `(key, value)` view you loop over
+- [w3schools: Python dictionaries](https://www.w3schools.com/python/python_dictionaries.asp) — quick reference with runnable snippets
+- [collections.Counter](https://docs.python.org/3/library/collections.html#collections.Counter) — what production code reaches for once counting is the whole job
+- [dict.pop()](https://docs.python.org/3/library/stdtypes.html#dict.pop) — remove a key and hand back its value, with an optional default instead of a `KeyError`
+- [sorted()](https://docs.python.org/3/library/functions.html#sorted) — returns a new sorted list and leaves the original alone
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 The warehouse tally exists; now people want to *read* it. Someone discontinues a product and its row has to disappear entirely, not sit at zero. Someone else wants the stock list for the morning meeting — alphabetical, and without the lines that say "none left", because a report full of zeros is noise. Deleting a key safely and turning a mapping into an ordered list of pairs are the two moves behind almost every small report you will write.
@@ -320,19 +333,6 @@ stock["list_inventory"]({"coal": 7, "wood": 11, "diamond": 2, "silver": 0})
 [list]: https://docs.python.org/3/tutorial/introduction.html#lists
 [return-keyword]: https://www.w3schools.com/python/ref_keyword_return.asp
 [tuples]: https://docs.python.org/3/tutorial/datastructures.html#tuples-and-sequences
-
-## Read first
-- [Mapping types — dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — every dict method in one table
-- [Tutorial: dictionaries](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — the gentle introduction, with a worked counting example
-- [hashable](https://docs.python.org/3/glossary.html#term-hashable) — why a string or a tuple may be a key and a list may not
-- [dict.setdefault()](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) — insert the default only if the key is missing, return the value either way
-- [dict.items()](https://docs.python.org/3/library/stdtypes.html#dict.items) — the `(key, value)` view you loop over
-- [w3schools: Python dictionaries](https://www.w3schools.com/python/python_dictionaries.asp) — quick reference with runnable snippets
-- [collections.Counter](https://docs.python.org/3/library/collections.html#collections.Counter) — what production code reaches for once counting is the whole job
-- [dict.pop()](https://docs.python.org/3/library/stdtypes.html#dict.pop) — remove a key and hand back its value, with an optional default instead of a `KeyError`
-- [sorted()](https://docs.python.org/3/library/functions.html#sorted) — returns a new sorted list and leaves the original alone
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

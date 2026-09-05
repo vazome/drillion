@@ -3,7 +3,7 @@ title: webhooks — verify an HMAC signature
 difficulty: medium
 tier: core
 minutes: 12
-prereqs: []
+prereqs: [18]
 tags: [http]
 ---
 # webhooks — verify an HMAC signature

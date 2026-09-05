@@ -3,13 +3,26 @@ title: tuples — matching records and printing the report
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [89, 90, 92, 101, 104]
+prereqs: [104]
 tags: [tuples]
 source: exercism/python concept/tisbury-treasure-hunt (MIT, adapted)
 ---
 # tuples — matching records and printing the report
 
 *Membership, concatenation, and formatting tuples into a report.*
+
+## Read first
+- [tuple](https://docs.python.org/3/library/stdtypes.html#tuple) — the constructor and the literal, and why a one-element tuple needs its trailing comma
+- [Sequence types — list, tuple, range](https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range) — where tuples sit among Python's sequences
+- [Common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — indexing, `in`, `+` and `*`, all shared with strings and lists
+- [Ned Batchelder: Lists vs Tuples](https://nedbatchelder.com/blog/201608/lists_vs_tuples.html) — the useful mental model: a list is a collection, a tuple is a record
+- [Stack Overflow: what's the difference between lists and tuples?](https://stackoverflow.com/a/626871) — the short answer
+- [James Tauber: tuples are not just constant lists](https://jtauber.com/blog/2006/04/15/python_tuples_are_not_just_constant_lists/) — why position means something in a tuple and nothing in a list
+- [hashable](https://docs.python.org/3/glossary.html#hashable) — the property that lets a tuple be a dict key when a list cannot be
+- [Membership test operations](https://docs.python.org/3/reference/expressions.html#membership-test-operations) — what `in` actually checks when the right-hand side is a tuple
+- [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#f-strings) — how a tuple gets rendered when you drop it into `{}`
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Azara's treasures and Rui's locations can now be read in the same shape, so the hunt itself can start: does this treasure sit at that location, and if it does, what does the merged record look like? At the end the pair want one printable report — one line per find, with the duplicated coordinate dropped. That is the tail end of every reconciliation job: compare two feeds, join the rows that agree, and hand a human something readable.
@@ -354,19 +367,6 @@ hunt["clean_up"](
 [str.format]: https://docs.python.org/3/library/stdtypes.html#str.format
 [testing membership]: https://docs.python.org/3/reference/expressions.html#membership-test-operations
 [tuples]: https://docs.python.org/3/tutorial/datastructures.html#tuples-and-sequences
-
-## Read first
-- [tuple](https://docs.python.org/3/library/stdtypes.html#tuple) — the constructor and the literal, and why a one-element tuple needs its trailing comma
-- [Sequence types — list, tuple, range](https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range) — where tuples sit among Python's sequences
-- [Common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — indexing, `in`, `+` and `*`, all shared with strings and lists
-- [Ned Batchelder: Lists vs Tuples](https://nedbatchelder.com/blog/201608/lists_vs_tuples.html) — the useful mental model: a list is a collection, a tuple is a record
-- [Stack Overflow: what's the difference between lists and tuples?](https://stackoverflow.com/a/626871) — the short answer
-- [James Tauber: tuples are not just constant lists](https://jtauber.com/blog/2006/04/15/python_tuples_are_not_just_constant_lists/) — why position means something in a tuple and nothing in a list
-- [hashable](https://docs.python.org/3/glossary.html#hashable) — the property that lets a tuple be a dict key when a list cannot be
-- [Membership test operations](https://docs.python.org/3/reference/expressions.html#membership-test-operations) — what `in` actually checks when the right-hand side is a tuple
-- [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#f-strings) — how a tuple gets rendered when you drop it into `{}`
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

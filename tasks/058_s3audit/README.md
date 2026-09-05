@@ -3,7 +3,7 @@ title: boto3 — audit S3 buckets for public access
 difficulty: hard
 tier: packages
 minutes: 25
-prereqs: [57]
+prereqs: [4, 57]
 tags: [cloud, boto3]
 ---
 # boto3 — audit S3 buckets for public access

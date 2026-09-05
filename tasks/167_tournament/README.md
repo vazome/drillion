@@ -3,13 +3,20 @@ title: tuples — tally a league table and print it
 difficulty: medium
 tier: core
 minutes: 25
-prereqs: [88, 95, 96, 97, 99, 101, 104, 106]
+prereqs: [96, 106]
 tags: [tuples]
 source: exercism/python practice/tournament (MIT, adapted)
 ---
 # tuples — tally a league table and print it
 
 *tournament — fold the results into counters, then sort and pad them into a fixed-width report.*
+
+## Read first
+- [Format specification mini-language](https://docs.python.org/3/library/string.html#format-specification-mini-language) — `{name:30}` left-aligns text in 30 columns, `{n:2}` right-aligns a number in 2; you never count spaces yourself
+- [`dict.setdefault()`](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) — fetch a key's record, creating it the first time you see that key
+- [`sorted()`](https://docs.python.org/3/library/functions.html#sorted) — the `key=` argument, and how a tuple key sorts on its first item and falls back to the second
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Any report that summarises a stream of events is this task wearing a different hat: nightly job outcomes per pipeline, error counts per service, tickets closed per team. You fold the events into per-key counters, then you order and lay out the result. Two things go wrong in practice and both are here. The ordering is compound — best first, with something stable to break ties — because without the tiebreak the same data prints in a different order every run and nobody can diff two reports. And the layout is fixed width, so a column padded by hand drifts the first time a name is longer than you expected.
@@ -119,13 +126,6 @@ solve(["Allegoric Alaskans;Blithering Badgers;win"])
 
 > [!WARNING]
 > Lines are compared character for character. One space too few in a column, or a name padded to 31 instead of 30, fails every case — even though the table still looks fine on screen.
-
-## Read first
-- [Format specification mini-language](https://docs.python.org/3/library/string.html#format-specification-mini-language) — `{name:30}` left-aligns text in 30 columns, `{n:2}` right-aligns a number in 2; you never count spaces yourself
-- [`dict.setdefault()`](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) — fetch a key's record, creating it the first time you see that key
-- [`sorted()`](https://docs.python.org/3/library/functions.html#sorted) — the `key=` argument, and how a tuple key sorts on its first item and falls back to the second
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

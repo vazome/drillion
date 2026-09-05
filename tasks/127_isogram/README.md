@@ -3,13 +3,21 @@ title: strings — a word with no repeated letter
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [95]
+prereqs: [12, 95]
 tags: [strings]
 source: exercism/python practice/isogram (MIT, adapted)
 ---
 # strings — a word with no repeated letter
 
 *isogram — no letter twice: the set-length trick for spotting duplicates.*
+
+## Read first
+- [str.isalpha()](https://docs.python.org/3/library/stdtypes.html#str.isalpha) — `isalpha()` and `lower()`, the two methods that decide which characters count here
+- [set](https://docs.python.org/3/library/stdtypes.html#set) — a set keeps one copy of each item; its length is therefore "how many distinct things did I see"
+- [Real Python: strings](https://realpython.com/python-strings/) — walking a string character by character
+- [len()](https://docs.python.org/3/library/functions.html#len) — the measuring half of the trick
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A crossword setter keeps a list of "non-pattern words" — words in which no letter appears twice — and submissions arrive from the public, so somebody has to screen them. Underneath the word game is the duplicate check you will run for the rest of your career: are these ids unique, did this CSV column repeat a key, did two hosts claim the same address. The measuring trick is always the same one.
@@ -49,14 +57,6 @@ solve("up-to-date")    # -> False  ('t' appears twice)
 
 > [!WARNING]
 > The tests use `is True` / `is False`, so return the booleans themselves, not a truthy count.
-
-## Read first
-- [str.isalpha()](https://docs.python.org/3/library/stdtypes.html#str.isalpha) — `isalpha()` and `lower()`, the two methods that decide which characters count here
-- [set](https://docs.python.org/3/library/stdtypes.html#set) — a set keeps one copy of each item; its length is therefore "how many distinct things did I see"
-- [Real Python: strings](https://realpython.com/python-strings/) — walking a string character by character
-- [len()](https://docs.python.org/3/library/functions.html#len) — the measuring half of the trick
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

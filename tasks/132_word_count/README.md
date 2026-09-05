@@ -3,13 +3,21 @@ title: dicts — tally the words in a subtitle
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [88, 95, 96, 101, 106]
+prereqs: [10, 25, 96, 106]
 tags: [dicts]
 source: exercism/python practice/word-count (MIT, adapted)
 ---
 # dicts — tally the words in a subtitle
 
 *word-count — cut messy text into words, then count them into a dict.*
+
+## Read first
+- [Mapping types: dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — what a dict guarantees and what it costs
+- [collections.Counter](https://docs.python.org/3/library/collections.html#collections.Counter) — a dict subclass built for exactly this tally
+- [re.findall()](https://docs.python.org/3/library/re.html#re.findall) — "give me every piece that looks like this", instead of "split on every separator I can think of"
+- [str.lower()](https://docs.python.org/3/library/stdtypes.html#str.lower) — case folding before you count
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Every "what are people actually saying?" question ends up here: the top terms in a week of support tickets, the most common error phrase in a log file, the words a search index should not bother storing. The counting is trivial — a dict of word to number. The work is deciding what a *word* is when the text is full of commas, tabs, capital letters and apostrophes, and getting that decision written down once instead of re-guessing it in five places.
@@ -153,14 +161,6 @@ ________
 [str.split]: https://docs.python.org/3/library/stdtypes.html#str.split
 [str.strip]: https://docs.python.org/3/library/stdtypes.html#str.strip
 [string]: https://docs.python.org/3/library/string.html
-
-## Read first
-- [Mapping types: dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — what a dict guarantees and what it costs
-- [collections.Counter](https://docs.python.org/3/library/collections.html#collections.Counter) — a dict subclass built for exactly this tally
-- [re.findall()](https://docs.python.org/3/library/re.html#re.findall) — "give me every piece that looks like this", instead of "split on every separator I can think of"
-- [str.lower()](https://docs.python.org/3/library/stdtypes.html#str.lower) — case folding before you count
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

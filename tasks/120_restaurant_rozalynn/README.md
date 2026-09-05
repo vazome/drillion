@@ -3,13 +3,23 @@ title: none — find the empty seats and count them
 difficulty: medium
 tier: core
 minutes: 12
-prereqs: [89, 92, 99, 101, 108, 119]
+prereqs: [119]
 tags: [none]
 source: exercism/python concept/restaurant-rozalynn (MIT, adapted)
 ---
 # none — find the empty seats and count them
 
 *`None` — `is None` as a test, over a dict's keys and values.*
+
+## Read first
+- [None (the standard type hierarchy)](https://docs.python.org/3/library/stdtypes.html#the-null-object) — one `None` object per program, so identity is the right test
+- [`is` and `is not`](https://docs.python.org/3/reference/expressions.html#is-not) — identity, not equality; PEP 8 asks for `is None` specifically
+- [dict.items()](https://docs.python.org/3/library/stdtypes.html#dict.items) — walk keys and values together in one loop
+- [dict.values()](https://docs.python.org/3/library/stdtypes.html#dict.values) — when only the values matter
+- [Real Python: Null in Python](https://realpython.com/null-in-python/) — `None`, falsiness, and the difference between them
+- [List comprehensions](https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions) — the one-line form of "collect the ones that match"
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Walk-in guests are waiting at the door and the maître d' has to answer two questions off the seating chart: which seats are free, and how many. The chart is a dict where a free seat holds `None` and a taken seat holds a name, so both answers come from scanning it for that one placeholder. The point worth carrying away is *how* you test for it: `is None`, never `== None` and never a bare truthiness check, because a guest called `""` or a seat holding `0` would slip through the second one. Every "which of these fields is unset?" report you write later is this loop.
@@ -203,16 +213,6 @@ Remember, you will need to create an empty dictionary first. Next, fill the dict
 ### 6. Empty the Seats
 
 - Given the seating chart `dict`, and a `list` of seat numbers, you'll want to indicate the seat is now available for another guest by replacing their name with a placeholder. Looping through the seat number list and looking for those seats in the dictionary might be helpful here.
-
-## Read first
-- [None (the standard type hierarchy)](https://docs.python.org/3/library/stdtypes.html#the-null-object) — one `None` object per program, so identity is the right test
-- [`is` and `is not`](https://docs.python.org/3/reference/expressions.html#is-not) — identity, not equality; PEP 8 asks for `is None` specifically
-- [dict.items()](https://docs.python.org/3/library/stdtypes.html#dict.items) — walk keys and values together in one loop
-- [dict.values()](https://docs.python.org/3/library/stdtypes.html#dict.values) — when only the values matter
-- [Real Python: Null in Python](https://realpython.com/null-in-python/) — `None`, falsiness, and the difference between them
-- [List comprehensions](https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions) — the one-line form of "collect the ones that match"
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

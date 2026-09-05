@@ -3,13 +3,25 @@ title: string-methods — the essay clean-up pass
 difficulty: medium
 tier: core
 minutes: 12
-prereqs: [88, 95]
+prereqs: [95]
 tags: [string-methods]
 source: exercism/python concept/little-sisters-essay (MIT, adapted)
 ---
 # string-methods — the essay clean-up pass
 
 *`title()`, `endswith()`, `strip()`, `replace()` — four methods, four one-liners.*
+
+## Read first
+- [string methods](https://docs.python.org/3/library/stdtypes.html#string-methods) — the whole list; every task here is one entry from it
+- [`str.title()`](https://docs.python.org/3/library/stdtypes.html#str.title) — capitalises the first letter of each word, and lower-cases the rest
+- [`str.endswith()`](https://docs.python.org/3/library/stdtypes.html#str.endswith) — returns a `bool`, and accepts a tuple of suffixes when you need several
+- [`str.strip()`](https://docs.python.org/3/library/stdtypes.html#str.strip) — with no argument it removes whitespace from both ends; with one it removes *any combination* of the characters you pass
+- [`str.replace()`](https://docs.python.org/3/library/stdtypes.html#str.replace) — every occurrence by default, or the first N if you pass a count
+- [common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — the indexing and slicing that `str` shares with `list` and `tuple`
+- [strings and character data in Python (Real Python)](https://realpython.com/python-strings/) — the same methods with more worked examples
+- [more string operations and functions (Programiz)](https://www.programiz.com/python-programming/string) — a short reference to skim
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 The boring half of every text pipeline is normalisation: trim the whitespace an editor left behind, check that a line really ends the way you assumed, title-case a heading for a report, swap one token for another. Your sister's essay needs exactly that pass before the teacher reads it, and so does every CSV column, every log line and every YAML value you will ever parse. The lesson is not that these are hard — it is that Python already ships all four, so hand-writing a loop to strip spaces is a code review comment waiting to happen.
@@ -255,18 +267,6 @@ essay["replace_word_choice"]("I bake good cakes.", "good", "amazing")
 [strip-method-docs]: https://docs.python.org/3/library/stdtypes.html#str.strip
 [title-method-docs]: https://docs.python.org/3/library/stdtypes.html#str.title
 [tutorial-strings]: https://docs.python.org/3/tutorial/introduction.html#text
-
-## Read first
-- [string methods](https://docs.python.org/3/library/stdtypes.html#string-methods) — the whole list; every task here is one entry from it
-- [`str.title()`](https://docs.python.org/3/library/stdtypes.html#str.title) — capitalises the first letter of each word, and lower-cases the rest
-- [`str.endswith()`](https://docs.python.org/3/library/stdtypes.html#str.endswith) — returns a `bool`, and accepts a tuple of suffixes when you need several
-- [`str.strip()`](https://docs.python.org/3/library/stdtypes.html#str.strip) — with no argument it removes whitespace from both ends; with one it removes *any combination* of the characters you pass
-- [`str.replace()`](https://docs.python.org/3/library/stdtypes.html#str.replace) — every occurrence by default, or the first N if you pass a count
-- [common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — the indexing and slicing that `str` shares with `list` and `tuple`
-- [strings and character data in Python (Real Python)](https://realpython.com/python-strings/) — the same methods with more worked examples
-- [more string operations and functions (Programiz)](https://www.programiz.com/python-programming/string) — a short reference to skim
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

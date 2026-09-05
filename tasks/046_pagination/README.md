@@ -3,7 +3,7 @@ title: pagination — follow the cursor until it runs out
 difficulty: medium
 tier: core
 minutes: 12
-prereqs: []
+prereqs: [21]
 tags: [http]
 ---
 # pagination — follow the cursor until it runs out

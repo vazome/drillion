@@ -3,13 +3,25 @@ title: unpacking-and-multiple-assignment — routes and the wagon depot grid
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [97, 101, 104, 106, 110]
+prereqs: [110]
 tags: [unpacking-and-multiple-assignment]
 source: exercism/python concept/locomotive-engineer (MIT, adapted)
 ---
 # unpacking-and-multiple-assignment — routes and the wagon depot grid
 
 *`**kwargs`, `{**a, **b}` and transposing a grid with `zip(*rows)`.*
+
+## Read first
+- [Trey Hunner: asterisks in Python](https://treyhunner.com/2018/10/asterisks-in-python-what-they-are-and-how-to-use-them/) — the one article that covers every use of `*` and `**`
+- [Trey Hunner: tuple unpacking improves readability](https://treyhunner.com/2018/03/tuple-unpacking-improves-python-code-readability/) — why naming the parts beats indexing them
+- [PEP 3132: extended iterable unpacking](https://peps.python.org/pep-3132/) — the `first, *rest = seq` form and why it exists
+- [PEP 448: additional unpacking generalizations](https://peps.python.org/pep-0448/) — `[*a, *b]` and `{**a, **b}` in literals and calls
+- [Stack Abuse: unpacking beyond parallel assignment](https://stackabuse.com/unpacking-in-python-beyond-parallel-assignment/) — worked examples of each form
+- [Arbitrary argument lists](https://docs.python.org/3/tutorial/controlflow.html#arbitrary-argument-lists) — `*args` and `**kwargs` in a function definition
+- [Dan Bader: nested unpacking](https://dbader.org/blog/python-nested-unpacking) — unpacking a structure that is itself full of structures
+- [zip()](https://docs.python.org/3/library/functions.html#zip) — pairs up the items of several iterables; with `*` in front of a list of rows it transposes them
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Same friend, harder paperwork. The routing records need the intermediate stops folded in — and nobody knows in advance how many stops a route has, so they arrive as keyword arguments. Other routes are missing details that differ from route to route: speed here, temperature there, so the merge has to be generic. And the wagon depot is stored wrong: the rows are grouped by colour when the *columns* should be. All three are the double-star half of unpacking, plus the one line of `zip` that turns rows into columns.
@@ -570,18 +582,6 @@ depot["fix_wagon_depot"]([[(2, 'red'), (4, 'red'), (8, 'red')],
 - To extract data from zipped iterators, you can use a for loop.
 - you can also unpack zipped iterators using `*`.
   `[*content] = zip(iterator_1, iterator_2)` will unzip the `tuple` produced by `zip()` into a `list`.
-
-## Read first
-- [Trey Hunner: asterisks in Python](https://treyhunner.com/2018/10/asterisks-in-python-what-they-are-and-how-to-use-them/) — the one article that covers every use of `*` and `**`
-- [Trey Hunner: tuple unpacking improves readability](https://treyhunner.com/2018/03/tuple-unpacking-improves-python-code-readability/) — why naming the parts beats indexing them
-- [PEP 3132: extended iterable unpacking](https://peps.python.org/pep-3132/) — the `first, *rest = seq` form and why it exists
-- [PEP 448: additional unpacking generalizations](https://peps.python.org/pep-0448/) — `[*a, *b]` and `{**a, **b}` in literals and calls
-- [Stack Abuse: unpacking beyond parallel assignment](https://stackabuse.com/unpacking-in-python-beyond-parallel-assignment/) — worked examples of each form
-- [Arbitrary argument lists](https://docs.python.org/3/tutorial/controlflow.html#arbitrary-argument-lists) — `*args` and `**kwargs` in a function definition
-- [Dan Bader: nested unpacking](https://dbader.org/blog/python-nested-unpacking) — unpacking a structure that is itself full of structures
-- [zip()](https://docs.python.org/3/library/functions.html#zip) — pairs up the items of several iterables; with `*` in front of a list of rows it transposes them
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

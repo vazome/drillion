@@ -3,13 +3,23 @@ title: list-methods — thinning out the coaster queue
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [97, 99]
+prereqs: [99]
 tags: [list-methods]
 source: exercism/python concept/chaitanas-colossal-coaster (MIT, adapted)
 ---
 # list-methods — thinning out the coaster queue
 
 *`remove`, `count`, `pop`, `sort` — and the copy that keeps the original intact.*
+
+## Read first
+- [more on lists (Python tutorial)](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — `remove`, `pop`, `count`, `sort`, `copy`, each with its return value
+- [mutable sequence operations](https://docs.python.org/3/library/stdtypes.html#typesseq-mutable) — the formal table: which methods mutate, and what they hand back
+- [`sorted()`](https://docs.python.org/3/library/functions.html#sorted) — returns a new sorted list from any iterable and never touches the original
+- [`list.sort()`](https://docs.python.org/3/library/stdtypes.html#list.sort) — sorts in place and returns `None`, deliberately, so you cannot use it by accident
+- [sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — `key=`, `reverse=`, and when to prefer which of the two
+- [Timsort](https://en.wikipedia.org/wiki/Timsort) — the algorithm Python used until 3.11, when it switched to Powersort
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 The second half of the queue job is subtraction: eject the troublemaker by name, count how many people called Natasha are in line, take the last person off and hand them a voucher, and print an alphabetical roster for the office. That last one carries the lesson. `sort()` reorders the list you already have; `sorted()` — or a copy — gives you a new one and leaves the original alone. Confuse the two and you have just shuffled a live queue to make a report look tidy, which is the same bug as sorting a caller's list of hosts inside a logging helper.
@@ -494,16 +504,6 @@ park["sorted_names"](["Natasha", "Steve", "Eltran", "Natasha", "Rocket"])
 
 [python lists]: https://docs.python.org/3.11/library/stdtypes.html#list
 [more on lists]: https://docs.python.org/3.11/tutorial/datastructures.html#more-on-lists
-
-## Read first
-- [more on lists (Python tutorial)](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — `remove`, `pop`, `count`, `sort`, `copy`, each with its return value
-- [mutable sequence operations](https://docs.python.org/3/library/stdtypes.html#typesseq-mutable) — the formal table: which methods mutate, and what they hand back
-- [`sorted()`](https://docs.python.org/3/library/functions.html#sorted) — returns a new sorted list from any iterable and never touches the original
-- [`list.sort()`](https://docs.python.org/3/library/stdtypes.html#list.sort) — sorts in place and returns `None`, deliberately, so you cannot use it by accident
-- [sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — `key=`, `reverse=`, and when to prefer which of the two
-- [Timsort](https://en.wikipedia.org/wiki/Timsort) — the algorithm Python used until 3.11, when it switched to Powersort
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

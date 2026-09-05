@@ -3,13 +3,23 @@ title: lists — Black Joe hand averages
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [92, 95, 97]
+prereqs: [97]
 tags: [lists]
 source: exercism/python concept/card-games (MIT, adapted)
 ---
 # lists — Black Joe hand averages
 
 *`sum`, `len`, indexing and a slice with a step — four ways to interrogate a hand.*
+
+## Read first
+- [common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — indexing, `s[i:j:k]` slicing with a step, and `len(s)`
+- [the `list` type](https://docs.python.org/3/library/stdtypes.html#list) — the reference page for the type you are slicing
+- [sequence types — `list`, `tuple`, `range`](https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range) — where negative indexing is defined
+- [`sum()`](https://docs.python.org/3/library/functions.html#sum) — adds an iterable of numbers; the other half of an average
+- [lists (Python tutorial)](https://docs.python.org/3/tutorial/datastructures.html) — the tour, including what mutability means in practice
+- [lists and tuples in Python (Real Python)](https://realpython.com/python-lists-tuples/) — slicing explained slowly, with diagrams
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A "hand" here is a list of numbers, and every question Elyse asks of it is a question you will ask of latency samples, of a batch of billing rows, of a week of daily costs. What is the average? Is the cheap estimate as good as the real one? Do the odd and even positions agree? Does the last item need special treatment? `sum(xs) / len(xs)`, `xs[0]`, `xs[-1]`, `xs[::2]` — four bits of notation that replace most of the loops a beginner writes, plus one reminder that a list is mutable, so changing its last element changes it for whoever handed it to you.
@@ -470,16 +480,6 @@ cards["maybe_double_last"]([5, 9, 10])                  # -> [5, 9, 10]
 [constructed]: https://docs.python.org/3/library/stdtypes.html#list
 [return]: https://www.w3schools.com/python/ref_keyword_return.asp
 [ways to modify `lists`]: https://realpython.com/python-lists-tuples/#lists-are-mutable
-
-## Read first
-- [common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — indexing, `s[i:j:k]` slicing with a step, and `len(s)`
-- [the `list` type](https://docs.python.org/3/library/stdtypes.html#list) — the reference page for the type you are slicing
-- [sequence types — `list`, `tuple`, `range`](https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range) — where negative indexing is defined
-- [`sum()`](https://docs.python.org/3/library/functions.html#sum) — adds an iterable of numbers; the other half of an average
-- [lists (Python tutorial)](https://docs.python.org/3/tutorial/datastructures.html) — the tour, including what mutability means in practice
-- [lists and tuples in Python (Real Python)](https://realpython.com/python-lists-tuples/) — slicing explained slowly, with diagrams
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

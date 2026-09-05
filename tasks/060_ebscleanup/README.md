@@ -3,7 +3,7 @@ title: boto3 — find unattached EBS volumes
 difficulty: easy
 tier: packages
 minutes: 25
-prereqs: [57]
+prereqs: [4, 57]
 tags: [cloud, boto3]
 ---
 # boto3 — find unattached EBS volumes

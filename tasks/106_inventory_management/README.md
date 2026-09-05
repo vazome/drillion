@@ -3,13 +3,24 @@ title: dicts — building and topping up an inventory
 difficulty: medium
 tier: core
 minutes: 14
-prereqs: [97, 101, 104]
+prereqs: [104]
 tags: [dicts]
 source: exercism/python concept/inventory-management (MIT, adapted)
 ---
 # dicts — building and topping up an inventory
 
 *Counting into a dict — `setdefault`, `in`, and never below zero.*
+
+## Read first
+- [Mapping types — dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — every dict method in one table
+- [Tutorial: dictionaries](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — the gentle introduction, with a worked counting example
+- [hashable](https://docs.python.org/3/glossary.html#term-hashable) — why a string or a tuple may be a key and a list may not
+- [dict.setdefault()](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) — insert the default only if the key is missing, return the value either way
+- [dict.items()](https://docs.python.org/3/library/stdtypes.html#dict.items) — the `(key, value)` view you loop over
+- [w3schools: Python dictionaries](https://www.w3schools.com/python/python_dictionaries.asp) — quick reference with runnable snippets
+- [collections.Counter](https://docs.python.org/3/library/collections.html#collections.Counter) — what production code reaches for once counting is the whole job
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A warehouse scanner produces a flat list of what came through the door: `["coal", "wood", "wood", "diamond"]`. Nobody can work with that. What the stock system needs is a count per item name, which is what a dictionary is for — key to number, updated in place as goods arrive and leave. The same shape shows up every time you tally anything: error codes per service, requests per client, files per extension.
@@ -322,17 +333,6 @@ stock["decrement_items"]({"coal": 3, "diamond": 1}, ["diamond", "coal"])
 [list]: https://docs.python.org/3/tutorial/introduction.html#lists
 [return-keyword]: https://www.w3schools.com/python/ref_keyword_return.asp
 [tuples]: https://docs.python.org/3/tutorial/datastructures.html#tuples-and-sequences
-
-## Read first
-- [Mapping types — dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — every dict method in one table
-- [Tutorial: dictionaries](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — the gentle introduction, with a worked counting example
-- [hashable](https://docs.python.org/3/glossary.html#term-hashable) — why a string or a tuple may be a key and a list may not
-- [dict.setdefault()](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) — insert the default only if the key is missing, return the value either way
-- [dict.items()](https://docs.python.org/3/library/stdtypes.html#dict.items) — the `(key, value)` view you loop over
-- [w3schools: Python dictionaries](https://www.w3schools.com/python/python_dictionaries.asp) — quick reference with runnable snippets
-- [collections.Counter](https://docs.python.org/3/library/collections.html#collections.Counter) — what production code reaches for once counting is the whole job
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

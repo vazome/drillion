@@ -3,7 +3,7 @@ title: pathlib — N largest files under a directory tree
 difficulty: medium
 tier: core
 minutes: 25
-prereqs: [25]
+prereqs: [15]
 tags: [pathlib]
 ---
 # pathlib — N largest files under a directory tree

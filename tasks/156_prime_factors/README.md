@@ -3,13 +3,21 @@ title: loops — break a number into the primes it is built from
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [88, 90, 92, 97, 99, 101]
+prereqs: [90, 101]
 tags: [loops, numbers]
 source: exercism/python practice/prime-factors (MIT, adapted)
 ---
 # loops — break a number into the primes it is built from
 
 *prime-factors — divide out each factor as often as it goes in, then move to the next candidate.*
+
+## Read first
+- [while statements](https://docs.python.org/3/reference/compound_stmts.html#the-while-statement) — the outer and inner loops here both run "until it stops working", not a fixed number of times
+- [Floor division and modulo](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex) — `%` asks "does it divide?", `//` does the dividing without turning the number into a float
+- [math.isqrt()](https://docs.python.org/3/library/math.html#math.isqrt) — the exact integer square root, with none of the rounding surprises of `value ** 0.5`
+- [list.append()](https://docs.python.org/3/library/stdtypes.html#mutable-sequence-types) — building the answer as you go
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Two habits come out of this one, and both outlive the maths. The first is the nested loop where the inner loop keeps applying the *same* step until it stops working, and only then does the outer loop move on — the same shape as draining a queue before switching partitions, or retrying one host until it fails permanently. The second is knowing when a search can stop: a straightforward version of this function tests every divisor up to the number itself and takes minutes on a ten-digit input, while the same function with one extra condition finishes instantly. That gap between "correct" and "usable" is what an interviewer is probing when they ask about complexity.
@@ -86,14 +94,6 @@ solve(901255)  # -> [5, 17, 23, 461]
 
 > [!WARNING]
 > One of the graded cases is `solve(93819012551)`, whose largest factor is `894119`. A loop that walks every candidate up to `value` will not finish before the runner gives up. Once no candidate up to the square root of what is left divides it, whatever is left is itself prime — that single check is the difference between a hundred thousand steps and a hundred billion.
-
-## Read first
-- [while statements](https://docs.python.org/3/reference/compound_stmts.html#the-while-statement) — the outer and inner loops here both run "until it stops working", not a fixed number of times
-- [Floor division and modulo](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex) — `%` asks "does it divide?", `//` does the dividing without turning the number into a float
-- [math.isqrt()](https://docs.python.org/3/library/math.html#math.isqrt) — the exact integer square root, with none of the rounding surprises of `value ** 0.5`
-- [list.append()](https://docs.python.org/3/library/stdtypes.html#mutable-sequence-types) — building the answer as you go
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1
