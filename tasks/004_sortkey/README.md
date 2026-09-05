@@ -15,9 +15,6 @@ tags: [sorted]
 - [Sorting Techniques (Python HOWTO)](https://devdocs.io/python~3.14/howto/sorting) — `key=`, `reverse=`, and why Python's sort is 'stable' (ties keep order)
 - [How to Use sorted() and .sort()](https://realpython.com/python-sort/) — same, slower and with pictures
 
-> [!NOTE]
-> **Take-home:** `sorted(rows, key=score)` in main.py
-
 ## Why
 A team lead asks "which services are crashing the most?" You have a list of services and how many times each one restarted this week. They want the list ordered worst-first so the top of the page is where the attention should go. Ordering a list of records by one particular field is the single most common data task in ops reporting.
 

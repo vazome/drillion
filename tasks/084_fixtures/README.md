@@ -17,9 +17,6 @@ tags: [testing, asyncio]
 - [How to use monkeypatch](https://docs.pytest.org/en/stable/how-to/monkeypatch.html) — setattr a fake in, and pytest puts the real thing back after the test, automatically
 - [Teardown / cleanup, aka fixture finalization](https://docs.pytest.org/en/stable/how-to/fixtures.html#teardown-cleanup-aka-fixture-finalization)
 
-> [!NOTE]
-> **Take-home:** what the README asked and you skipped
-
 ## Why
 The take-home README said "use pytest fixtures to set up and tear down mocks". Your six endpoint tests each re-declared `fake_get_pool`, re-applied two `monkeypatch.setattr` lines, and re-built the HTTP client. It works, but a reviewer reads it as "does not know fixtures". A fixture is the one place that setup lives; every test that names it as an argument gets it, and pytest undoes the patching after each test on its own — no cleanup code, no leaking fakes into the next test.
 

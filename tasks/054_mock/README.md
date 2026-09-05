@@ -15,9 +15,6 @@ tags: [testing]
 - [Understanding the Python mock object library](https://realpython.com/python-mock-library/) — swapping a real function for a fake inside a test
 - [unittest.mock.patch](https://devdocs.io/python~3.14/library/unittest.mock#unittest.mock.patch) — the swap that puts the original back for you, plus `patch.object`
 
-> [!NOTE]
-> **Take-home:** `monkeypatch.setattr(...)`
-
 ## Why
 The deploy script has a step that posts an alert to the company chat when a deploy finishes. You need to test that step in CI, but a test that really posts to chat is slow, needs real credentials, and spams colleagues on every test run. Instead you temporarily swap the real "send" function for a stand-in that just records what it was asked to send, run the code, read the recording, and put the real function back. Both functions live at the bottom of this file; you write the test.
 

@@ -15,9 +15,6 @@ tags: [testing]
 - [TestPyramid](https://martinfowler.com/bliki/TestPyramid.html) — many small unit tests, few big end-to-end ones
 - [Effective Python testing with pytest](https://realpython.com/pytest-python-testing/) — the pytest tutorial; 'Fixtures' and 'Marks' sections
 
-> [!NOTE]
-> **Take-home:** Task 3 judgement
-
 ## Why
 Your team has a big ops script and a rule that "everything must have tests". Writing a test for every single function wastes days and produces brittle tests that break on every rename. The tech lead wants a consistent triage: functions that make decisions get tests; thin wrappers around a library call, plain config constants, and straight-line glue code are skipped, unless the glue starts branching, which makes it decision-making again. You encode that rule so the team can apply it to a list of functions.
 

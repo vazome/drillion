@@ -16,9 +16,6 @@ tags: [concurrency, asyncio]
 - [Asynchronous context managers](https://devdocs.io/python~3.14/reference/datamodel#asynchronous-context-managers) — the two methods Python calls: `__aenter__` on the way in, `__aexit__` on the way out (ALWAYS, even on error)
 - [contextlib.asynccontextmanager](https://devdocs.io/python~3.14/library/contextlib#contextlib.asynccontextmanager) — the shorter way: one async generator with a single `yield`
 
-> [!NOTE]
-> **Take-home:** your `tests/test_search.py`
-
 ## Why
 In the take-home tests you could not use a real Postgres. You wrote a FakePool class so that `async with pool.acquire() as conn:` in the endpoint kept working unchanged, but behind it was a Semaphore and a canned list of rows. An interviewer will point at `__aenter__` and `__aexit__` and ask what they are and why the slot is given back even when the body raises. This task makes you build it from nothing.
 

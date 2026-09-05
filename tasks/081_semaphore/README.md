@@ -16,9 +16,6 @@ tags: [concurrency, asyncio]
 - [asyncio.Semaphore](https://devdocs.io/python~3.14/library/asyncio-sync#asyncio.Semaphore) — the 6-line reference
 - [asyncio.gather](https://devdocs.io/python~3.14/library/asyncio-task#asyncio.gather) — start everything, collect in order
 
-> [!NOTE]
-> **Take-home:** why `FakePool` is a `Semaphore(max_size)`
-
 ## Why
 A connection pool is exactly this idea: N slots, and the (N+1)th caller waits until someone gives one back. Your take-home test built a FakePool with `asyncio.Semaphore(max_size)` for that reason — to imitate a pool of 2 without a database. The same tool is what you reach for when a vendor API says "no more than 5 requests at a time" or when 500 hosts must be pinged without opening 500 sockets.
 

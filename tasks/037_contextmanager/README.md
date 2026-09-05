@@ -15,9 +15,6 @@ tags: [context-managers]
 - [Context Managers and Python's with Statement](https://realpython.com/python-with-statement/) — `with` = setup, body, guaranteed cleanup (read the 'async with' section too)
 - [contextlib](https://devdocs.io/python~3.14/library/contextlib) — `@contextmanager`, the short way
 
-> [!NOTE]
-> **Take-home:** the sync half of `async with pool.acquire()`
-
 ## Why
 A deploy script writes "deploy started" and "deploy finished" into a shared event log so the dashboard knows when a deploy is in progress. One day a deploy crashes halfway, the "finished" marker never gets written, and the dashboard shows a deploy stuck for hours. You need a way to guarantee the closing marker is written even when the work in the middle fails, without hiding the failure from whoever ran the script.
 

@@ -23,9 +23,6 @@ These are the ones the questions come from — re-read, then answer from memory.
 - [Rerankers](https://www.pinecone.io/learn/series/rag/rerankers/)
 - [Precision and recall](https://en.wikipedia.org/wiki/Precision_and_recall)
 
-> [!NOTE]
-> **Take-home:** the interview
-
 ## Why
 You submitted this code. The reviewer's job is to find out whether you understand it, and the README said submissions that look AI-written are disqualified. Every question below is one they can ask while pointing at a line of your diff. Pick the answer you would say out loud. No code to write — the test is whether your mental model is right.
 

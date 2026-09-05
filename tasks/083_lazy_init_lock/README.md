@@ -16,9 +16,6 @@ tags: [concurrency, asyncio]
 - [Double-checked locking](https://en.wikipedia.org/wiki/Double-checked_locking) — read only 'Motivation and original pattern': check, lock, check again. (Ignore the Java memory-model parts.)
 - [Async IO Explained](https://realpython.com/async-io-python/) — why an `await` is a gap where another request can sneak in between your `if` and your assignment
 
-> [!NOTE]
-> **Take-home:** `app/db.py` (given — you must explain it)
-
 ## Why
 The take-home's `app/db.py` created the connection pool lazily — on the first request, not at import — and guarded that creation with an `asyncio.Lock`. You did not write that file, but you shipped it, and an interviewer will ask "why is the lock there, and why is `_pool is None` checked twice?" The answer: `await create_pool()` pauses. In that pause the other 49 first-arrivers each see `_pool is None` too and each create their own pool — 50 pools, 250 connections, on a server allowed 100.
 

@@ -13,10 +13,7 @@ tags: [sets]
 
 ## Read first
 - [Sets (Python tutorial)](https://devdocs.io/python~3.14/tutorial/datastructures#sets) — what a set is, `&` `|` `-` operators
-- [Sets in Python](https://realpython.com/python-sets/) — `intersection()` is what the take-home reranker used
-
-> [!NOTE]
-> **Take-home:** `query_words & content_words` in reranker.py
+- [Sets in Python](https://realpython.com/python-sets/) — `intersection()`, `union()` and the operator forms
 
 ## Why
 A performance review ranks people by score and the runner-up gets a bonus. Two people tied for first. The naive "second item of the sorted list" picks the other first-place person, not the real runner-up. The business wants the second-highest distinct value, so duplicates have to be treated as one value before picking. This is a well-known interview trap.

@@ -17,9 +17,6 @@ tags: [sets, sorted]
 - [Sorting HOW TO](https://devdocs.io/python~3.14/howto/sorting) — `key=`, `reverse=True`, and 'Sort Stability': equal scores keep their incoming order, which is how ties stay in vector order
 - [set](https://devdocs.io/python~3.14/library/stdtypes#set) — `&` gives the words in both sets
 
-> [!NOTE]
-> **Take-home:** Task 2 + the "fraction, not count" upgrade
-
 ## Why
 Vector search returned the 5 geometrically nearest chunks, and they were often not the 5 best answers — two chunks can sit close in embedding space while only one actually contains the words the user typed. The fix was two stages: ask the database for 20 (cheap, wide, recall) and re-score those 20 against the query with a second function (narrow, precision), keeping the top 5. Your submission scored by raw count of overlapping words; here you use the FRACTION of the query's words found, which is the same idea but comparable across queries and bounded 0..1 — the improvement you would name in the interview.
 

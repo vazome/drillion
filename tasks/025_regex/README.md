@@ -16,9 +16,6 @@ tags: [files-text]
 - [Regular Expressions: Regexes in Python](https://realpython.com/regex-python/) — `re.sub` / `re.findall` with examples
 - [regex101](https://regex101.com) — paste a pattern, see what it matches, live
 
-> [!NOTE]
-> **Take-home:** `_tokenize` in reranker.py
-
 ## Why
 An application writes its log as free text, one line per event, with fields like `level=`, `host=` and `msg="..."`. Noise lines (stack traces, retry notes) are mixed in between. The incident commander wants a clean table of level, host and message for each real event to paste into the incident report. You pull those fields out of the matching lines and skip everything else.
 
