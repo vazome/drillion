@@ -4,7 +4,7 @@ difficulty: medium
 tier: core
 minutes: 20
 prereqs: [21]
-tags: [classes, inheritance]
+tags: [classes, class-inheritance]
 ---
 # inheritance — one base class, two specialised alerts
 
