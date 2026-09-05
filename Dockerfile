@@ -9,6 +9,9 @@ RUN npm install -g --force corepack@0.35.0 && corepack enable pnpm
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --store-dir /pnpm/store
 COPY web/ ./
+# the install above already ran the lockfile; pnpm 11's pre-run check would re-run it without
+# --store-dir, see a different storeDir in .modules.yaml, and abort trying to purge node_modules
+ENV npm_config_verify_deps_before_run=false
 RUN pnpm build
 
 FROM python:3.14-slim@sha256:cad9a2c871761c413caa6fdd6441c783451e740a48aaeba60ae62a8b53525ef6 AS wheel
