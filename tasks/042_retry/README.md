@@ -3,12 +3,16 @@ title: retry — exponential backoff with jitter, by hand
 difficulty: medium
 tier: core
 minutes: 20
-prereqs: [40]
+prereqs: [36]
 tags: [errors]
 ---
 # retry — exponential backoff with jitter, by hand
 
 *Retry with backoff and jitter — the standard whiteboard ask for SRE screens.*
+
+## Read first
+- [Errors and Exceptions](https://devdocs.io/python~3.14/tutorial/errors) — what you are catching between attempts
+- [time.sleep](https://devdocs.io/python~3.14/library/time#time.sleep) — the backoff itself
 
 ## Why
 You run a nightly job that pushes metrics to a monitoring vendor's API. Their service sometimes refuses a request for a second or two (a restart, a network blip) and is then fine again. If your job gives up on the first failure, the on-call engineer gets paged at 3am for nothing; if it retries instantly and forever, it hammers a struggling service and makes the outage worse. The team lead asks for one helper every script can use: try again, wait a bit longer each time, add a little randomness so a thousand clients do not all retry in the same second, and give up after a fixed number of tries.

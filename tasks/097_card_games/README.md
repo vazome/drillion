@@ -3,13 +3,22 @@ title: lists — the poker round tracker
 difficulty: medium
 tier: core
 minutes: 12
-prereqs: [92, 95]
+prereqs: [95]
 tags: [lists]
 source: exercism/python concept/card-games (MIT, adapted)
 ---
 # lists — the poker round tracker
 
 *Building, concatenating and searching a list — three one-liners and the `in` operator.*
+
+## Read first
+- [lists (Python tutorial)](https://devdocs.io/python~3.14/tutorial/datastructures) — the tour: literals, indexing, and what a list is for
+- [the `list` type](https://devdocs.io/python~3.14/library/stdtypes#list) — the reference page, including the constructor and what it accepts
+- [sequence types — `list`, `tuple`, `range`](https://devdocs.io/python~3.14/library/stdtypes#sequence-types-list-tuple-range) — the operations every sequence shares, `+` and `in` among them
+- [common sequence operations](https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations) — the table with `x in s`, `s + t`, `len(s)` and slicing in it
+- [lists and tuples in Python (Real Python)](https://realpython.com/python-lists-tuples/) — the same ground, slower, with pictures
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Elyse tracks which poker rounds she played. You track which instance IDs you already restarted, which alerts you already paged on, which config keys a deploy touched. Same three questions every time: build a small list from a starting point, stick two lists together when the data arrives in pieces, and ask whether a thing is in there at all. Python answers all three without a loop, and knowing that `number in rounds` *is* the membership test — a complete expression that already evaluates to `True` or `False` — is the difference between three lines and thirteen.
@@ -258,15 +267,15 @@ Blue
 _For a more in-depth explanation, of `loops` and `iterators`, complete the `loops` concept._
 
 [arraylist]: https://beginnersbook.com/2013/12/java-arraylist/
-[common sequence operations]: https://docs.python.org/3/library/stdtypes.html#common-sequence-operations
-[dict]: https://docs.python.org/3/library/stdtypes.html#dict
+[common sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations
+[dict]: https://devdocs.io/python~3.14/library/stdtypes#dict
 [dynamic array]: https://en.wikipedia.org/wiki/Dynamic_array
-[list]: https://docs.python.org/3/library/stdtypes.html#list
-[mutable sequence operations]: https://docs.python.org/3/library/stdtypes.html#typesseq-mutable
-[sequence type]: https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range
-[set]: https://docs.python.org/3/library/stdtypes.html#set
-[slice notation]: https://docs.python.org/3/reference/expressions.html#slicings
-[tuple]: https://docs.python.org/3/library/stdtypes.html#tuple
+[list]: https://devdocs.io/python~3.14/library/stdtypes#list
+[mutable sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#typesseq-mutable
+[sequence type]: https://devdocs.io/python~3.14/library/stdtypes#sequence-types-list-tuple-range
+[set]: https://devdocs.io/python~3.14/library/stdtypes#set
+[slice notation]: https://devdocs.io/python~3.14/reference/expressions#slicings
+[tuple]: https://devdocs.io/python~3.14/library/stdtypes#tuple
 
 ## Instructions
 Elyse is really looking forward to playing some poker (and other card games) during her upcoming trip to Vegas.
@@ -459,23 +468,14 @@ poker["list_contains_round"]([27, 28, 29, 35, 36], 30)   # -> False
 - Python provides a wide range of [ways to modify `lists`][ways to modify `lists`].
 
 
-[common sequence operations]: https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range
-[constructed]: https://docs.python.org/3/library/stdtypes.html#list
+[common sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#sequence-types-list-tuple-range
+[constructed]: https://devdocs.io/python~3.14/library/stdtypes#list
 [return]: https://www.w3schools.com/python/ref_keyword_return.asp
 [ways to modify `lists`]: https://realpython.com/python-lists-tuples/#lists-are-mutable
 
-## Read first
-- [lists (Python tutorial)](https://docs.python.org/3/tutorial/datastructures.html) — the tour: literals, indexing, and what a list is for
-- [the `list` type](https://docs.python.org/3/library/stdtypes.html#list) — the reference page, including the constructor and what it accepts
-- [sequence types — `list`, `tuple`, `range`](https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range) — the operations every sequence shares, `+` and `in` among them
-- [common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — the table with `x in s`, `s + t`, `len(s)` and slicing in it
-- [lists and tuples in Python (Real Python)](https://realpython.com/python-lists-tuples/) — the same ground, slower, with pictures
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
-
 ## Hints
 ### Hint 1
-All three are one line, and none of them needs a loop. Lists can be [constructed](https://docs.python.org/3/library/stdtypes.html#list) in several ways — the simplest is to write the elements out between square brackets, and elements may be *expressions*, not just literals. For the second and third, look at the [common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) table: one operator glues two sequences into a new one, and one operator answers "is this in there?".
+All three are one line, and none of them needs a loop. Lists can be [constructed](https://devdocs.io/python~3.14/library/stdtypes#list) in several ways — the simplest is to write the elements out between square brackets, and elements may be *expressions*, not just literals. For the second and third, look at the [common sequence operations](https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations) table: one operator glues two sequences into a new one, and one operator answers "is this in there?".
 ### Hint 2
 Task 1: you have the current round number and you need three consecutive numbers starting from it. Write the square brackets and put three arithmetic expressions inside them.
 

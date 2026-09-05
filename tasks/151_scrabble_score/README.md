@@ -3,13 +3,22 @@ title: regular-expressions — add up a word's letter values
 difficulty: easy
 tier: core
 minutes: 15
-prereqs: [88, 95, 96, 97, 101, 106]
+prereqs: [96, 106]
 tags: [regular-expressions]
 source: exercism/python practice/scrabble-score (MIT, adapted)
 ---
 # regular-expressions — add up a word's letter values
 
 *scrabble-score — a lookup table, a case fold, and one `sum`.*
+
+## Read first
+- [Mapping types: dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — a letter-to-value table is a dict, and lookup is the operation it is fastest at
+- [sum()](https://devdocs.io/python~3.14/library/functions#sum) — adding up an iterable, including a generator expression, in one call
+- [str.lower()](https://devdocs.io/python~3.14/library/stdtypes#str.lower) — fold the case once at the top rather than at every lookup
+- [dict.get()](https://devdocs.io/python~3.14/library/stdtypes#dict.get) — a default instead of a `KeyError` when a character is not in the table
+- [re.findall()](https://devdocs.io/python~3.14/library/re#re.findall) — the regular-expressions route, if you want to pick out the scoring characters by pattern
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 "Score this thing by summing a per-item weight" is a whole genre: a risk score for a pull request, a cost estimate from a bill of materials, a priority number built from a set of labels, a relevance score for a search hit. The interesting decision is never the addition — it is where the weights live. Written as a chain of `if` statements they are unreadable and unchangeable; written as a table they are data, and data can be swapped for a different language, loaded from a file, or reviewed by someone who does not read Python. This task is the smallest possible version of that choice.
@@ -76,15 +85,6 @@ solve("")                 # -> 0
 
 > [!WARNING]
 > Do not hard-code the seven groups as seven `if` branches. The grader will not catch you, but the whole point of the task is the table — and the version with the table is the one you can still read next month.
-
-## Read first
-- [Mapping types: dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — a letter-to-value table is a dict, and lookup is the operation it is fastest at
-- [sum()](https://docs.python.org/3/library/functions.html#sum) — adding up an iterable, including a generator expression, in one call
-- [str.lower()](https://docs.python.org/3/library/stdtypes.html#str.lower) — fold the case once at the top rather than at every lookup
-- [dict.get()](https://docs.python.org/3/library/stdtypes.html#dict.get) — a default instead of a `KeyError` when a character is not in the table
-- [re.findall()](https://docs.python.org/3/library/re.html#re.findall) — the regular-expressions route, if you want to pick out the scoring characters by pattern
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

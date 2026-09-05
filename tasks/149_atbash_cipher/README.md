@@ -3,13 +3,22 @@ title: string-methods — mirror the alphabet, then cut into five-letter blocks
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [88, 92, 95, 96, 97, 99, 101]
+prereqs: [96, 101]
 tags: [string-methods]
 source: exercism/python practice/atbash-cipher (MIT, adapted)
 ---
 # string-methods — mirror the alphabet, then cut into five-letter blocks
 
 *atbash-cipher — normalise, substitute, group; and decoding is the same walk without the grouping.*
+
+## Read first
+- [String methods](https://devdocs.io/python~3.14/library/stdtypes#string-methods) — `isalnum()`, `lower()` and `join()`, which is most of this task
+- [str.maketrans() and str.translate()](https://devdocs.io/python~3.14/library/stdtypes#str.translate) — a whole substitution table applied in one call
+- [Common sequence operations](https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations) — slicing, including `[::-1]` to build the reversed alphabet
+- [string.ascii_lowercase](https://devdocs.io/python~3.14/library/string#string.ascii_lowercase) — the alphabet, already written down for you
+- [range() with a step](https://devdocs.io/python~3.14/library/functions#func-range) — `range(0, len(text), 5)` is the index of every group's first character
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Two habits come out of this one. The first is normalising input before you transform it: strip what does not matter — case, spaces, punctuation — so the interesting code only ever sees one clean shape, instead of every function re-deciding what to do with a comma. The second is chunking a sequence into fixed-size groups, which you will write again for pagination, for batching API calls, for splitting a long token into readable segments, and for every "insert a space every four digits" card field. The cipher itself is a lookup table; the reusable parts are on either side of it.
@@ -90,15 +99,6 @@ cipher["decode"]("vc vix    r hn")  # -> "exercism"
 
 > [!WARNING]
 > The groups of five are counted over the *cleaned* text, not the original: `"Testing,1 2 3, testing."` encodes to `"gvhgr mt123 gvhgr mt"`, where the digits sit inside a group and the original spaces are gone.
-
-## Read first
-- [String methods](https://docs.python.org/3/library/stdtypes.html#string-methods) — `isalnum()`, `lower()` and `join()`, which is most of this task
-- [str.maketrans() and str.translate()](https://docs.python.org/3/library/stdtypes.html#str.translate) — a whole substitution table applied in one call
-- [Common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — slicing, including `[::-1]` to build the reversed alphabet
-- [string.ascii_lowercase](https://docs.python.org/3/library/string.html#string.ascii_lowercase) — the alphabet, already written down for you
-- [range() with a step](https://docs.python.org/3/library/functions.html#func-range) — `range(0, len(text), 5)` is the index of every group's first character
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

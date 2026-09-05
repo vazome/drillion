@@ -3,13 +3,23 @@ title: list-methods — joining the coaster queue
 difficulty: medium
 tier: core
 minutes: 12
-prereqs: [97]
+prereqs: [4, 97]
 tags: [list-methods]
 source: exercism/python concept/chaitanas-colossal-coaster (MIT, adapted)
 ---
 # list-methods — joining the coaster queue
 
 *`append`, `index`, `insert` — three methods that change the list you were handed.*
+
+## Read first
+- [more on lists (Python tutorial)](https://devdocs.io/python~3.14/tutorial/datastructures#more-on-lists) — the method-by-method table: `append`, `insert`, `index` and the rest
+- [mutable sequence operations](https://devdocs.io/python~3.14/library/stdtypes#typesseq-mutable) — the formal definition of what each mutating method does, and what it returns
+- [the `list` type](https://devdocs.io/python~3.14/library/stdtypes#list) — the reference page for the type itself
+- [`sorted()`](https://devdocs.io/python~3.14/library/functions#sorted) — the non-mutating counterpart you will meet in the next task
+- [sorting HOW TO](https://devdocs.io/python~3.14/howto/sorting) — in-place versus copy, spelled out
+- [Timsort](https://en.wikipedia.org/wiki/Timsort) — what Python used to sort lists between 2002 and 2022, for background
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Chaitana's theme park has two queues and a steady stream of people who need putting into the right one, found inside it, or slotted in beside their friends. That is a work queue: jobs appended to the end, a job located by name, an urgent job inserted at a position. The detail that this task actually grades — and that bites people in real code — is that these methods change the list **in place** and hand back `None`, so `queue = queue.append(name)` silently throws your queue away. Building that reflex here costs ten minutes; not having it costs an afternoon.
@@ -253,18 +263,18 @@ ValueError: 10 is not in list
 3
 ```
 
-[common sequence operations]: https://docs.python.org/3/library/stdtypes.html#common-sequence-operations
-[dict]: https://docs.python.org/3/library/stdtypes.html#dict
-[list-methods]: https://docs.python.org/3/tutorial/datastructures.html#more-on-lists
-[list]: https://docs.python.org/3/library/stdtypes.html#list
-[mutable sequence operations]: https://docs.python.org/3/library/stdtypes.html#typesseq-mutable
-[sequence type]: https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range
-[set]: https://docs.python.org/3/library/stdtypes.html#set
-[slice notation]: https://docs.python.org/3/reference/expressions.html#slicings
-[sort]: https://docs.python.org/3/library/stdtypes.html#list.sort
-[sorted]: https://docs.python.org/3/library/functions.html#sorted
-[sorting how to]: https://docs.python.org/3/howto/sorting.html
-[tuple]: https://docs.python.org/3/library/stdtypes.html#tuple
+[common sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations
+[dict]: https://devdocs.io/python~3.14/library/stdtypes#dict
+[list-methods]: https://devdocs.io/python~3.14/tutorial/datastructures#more-on-lists
+[list]: https://devdocs.io/python~3.14/library/stdtypes#list
+[mutable sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#typesseq-mutable
+[sequence type]: https://devdocs.io/python~3.14/library/stdtypes#sequence-types-list-tuple-range
+[set]: https://devdocs.io/python~3.14/library/stdtypes#set
+[slice notation]: https://devdocs.io/python~3.14/reference/expressions#slicings
+[sort]: https://devdocs.io/python~3.14/library/stdtypes#list.sort
+[sorted]: https://devdocs.io/python~3.14/library/functions#sorted
+[sorting how to]: https://devdocs.io/python~3.14/howto/sorting
+[tuple]: https://devdocs.io/python~3.14/library/stdtypes#tuple
 
 ## Instructions
 Chaitana owns a very popular theme park.
@@ -488,22 +498,12 @@ park["add_me_with_my_friends"](["Natasha", "Steve", "Wanda"], 1, "Bucky")
 - Once you have a `copy()`, `sort()`-ing should be straightforward.
 - We're looking for an _ascending_ sort, or _alphabetical from a-z_.
 
-[python lists]: https://docs.python.org/3.11/library/stdtypes.html#list
-[more on lists]: https://docs.python.org/3.11/tutorial/datastructures.html#more-on-lists
-
-## Read first
-- [more on lists (Python tutorial)](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — the method-by-method table: `append`, `insert`, `index` and the rest
-- [mutable sequence operations](https://docs.python.org/3/library/stdtypes.html#typesseq-mutable) — the formal definition of what each mutating method does, and what it returns
-- [the `list` type](https://docs.python.org/3/library/stdtypes.html#list) — the reference page for the type itself
-- [`sorted()`](https://docs.python.org/3/library/functions.html#sorted) — the non-mutating counterpart you will meet in the next task
-- [sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — in-place versus copy, spelled out
-- [Timsort](https://en.wikipedia.org/wiki/Timsort) — what Python used to sort lists between 2002 and 2022, for background
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+[python lists]: https://devdocs.io/python~3.14/library/stdtypes#list
+[more on lists]: https://devdocs.io/python~3.14/tutorial/datastructures#more-on-lists
 
 ## Hints
 ### Hint 1
-Each of the three is one or two lines, and each is a list method you can find in [more on lists](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists). An `if`/`else` decides which queue you are dealing with in task 1, and then one method puts the person on the end of that queue. For task 2, one method searches a list for a value and gives you back its position. For task 3 you already know the position — one method drops a value in at a given index.
+Each of the three is one or two lines, and each is a list method you can find in [more on lists](https://devdocs.io/python~3.14/tutorial/datastructures#more-on-lists). An `if`/`else` decides which queue you are dealing with in task 1, and then one method puts the person on the end of that queue. For task 2, one method searches a list for a value and gives you back its position. For task 3 you already know the position — one method drops a value in at a given index.
 ### Hint 2
 The three you want are `append()`, `index()` and `insert()`. `insert()` takes the index first and the item second.
 

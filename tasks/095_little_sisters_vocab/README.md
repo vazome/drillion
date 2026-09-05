@@ -3,13 +3,26 @@ title: strings — prefixes, suffixes and slices
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [88, 92]
+prereqs: [18, 19, 92]
 tags: [strings]
 source: exercism/python concept/little-sisters-vocab (MIT, adapted)
 ---
 # strings — prefixes, suffixes and slices
 
 *Concatenation, `join`, slicing and `split` — four word transforms and not one loop.*
+
+## Read first
+- [text sequence type — `str`](https://devdocs.io/python~3.14/library/stdtypes#text-sequence-type-str) — a string is an immutable sequence, so every "change" here really returns a new string
+- [string methods](https://devdocs.io/python~3.14/library/stdtypes#string-methods) — the full menu; `join` and `split` are the two this task lives on
+- [common sequence operations](https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations) — indexing and slicing, shared by `str`, `list` and `tuple`
+- [`str.join()`](https://devdocs.io/python~3.14/library/stdtypes#str.join) — the separator is the string you call it *on*, and it lands between elements, never at the ends
+- [`str.split()`](https://devdocs.io/python~3.14/library/stdtypes#str.split) — with no argument it splits on any run of whitespace and hands back a list
+- [strings and character data in Python (Real Python)](https://realpython.com/python-strings/) — a long worked tour of the same methods
+- [string formatting best practices (Real Python)](https://realpython.com/python-string-formatting/) — where `+` stops being the right tool
+- [`string` — common string operations](https://devdocs.io/python~3.14/library/string) — the module beside the type, constants such as `ascii_lowercase` included
+- [The absolute minimum every developer must know about Unicode (Joel Spolsky)](https://www.joelonsoftware.com/2003/10/08/the-absolute-minimum-every-software-developer-absolutely-positively-must-know-about-unicode-and-character-sets-no-excuses/) — why "character" is a slippery word
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Almost every name you touch in operations is a string with something bolted on the front, something to chop off the end, or one field buried in the middle: `prod-api-gateway`, `access.log.2026-08-25`, `arn:aws:s3:::bucket/key`. Your little sister's vocabulary homework is those same four moves in a friendlier costume — add a prefix to a word, stamp a prefix onto a whole list of words at once, strip a suffix off and repair the spelling underneath it, and pull one word out of a sentence by position. The interesting constraint is that none of the four needs a loop: the string methods already loop for you, and reaching for `for` here is the tell that you have not met `join` and `split` yet.
@@ -264,10 +277,10 @@ Strings support all [common sequence operations][common sequence operations].
 ```
 
 
-[common sequence operations]: https://docs.python.org/3/library/stdtypes.html#common-sequence-operations
-[str-join]: https://docs.python.org/3/library/stdtypes.html#str.join
-[str-split]: https://docs.python.org/3/library/stdtypes.html#str.split
-[text sequence]: https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str
+[common sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations
+[str-join]: https://devdocs.io/python~3.14/library/stdtypes#str.join
+[str-split]: https://devdocs.io/python~3.14/library/stdtypes#str.split
+[text sequence]: https://devdocs.io/python~3.14/library/stdtypes#text-sequence-type-str
 [unicode code points]: https://stackoverflow.com/questions/27331819/whats-the-difference-between-a-character-a-code-point-a-glyph-and-a-grapheme
 
 ## Instructions
@@ -439,33 +452,20 @@ There's four activities in the assignment, each with a set of text or words to w
 - Be careful of punctuation! Periods can be removed via slice: `'dark.'[:-1] == 'dark'`
 
 
-[common sequence operations]: https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str
-[python-str-doc]: https://docs.python.org/3/tutorial/introduction.html#strings
-[str-join]: https://docs.python.org/3/library/stdtypes.html#str.join
-[str-split]: https://docs.python.org/3/library/stdtypes.html#str.split
-
-## Read first
-- [text sequence type — `str`](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str) — a string is an immutable sequence, so every "change" here really returns a new string
-- [string methods](https://docs.python.org/3/library/stdtypes.html#string-methods) — the full menu; `join` and `split` are the two this task lives on
-- [common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — indexing and slicing, shared by `str`, `list` and `tuple`
-- [`str.join()`](https://docs.python.org/3/library/stdtypes.html#str.join) — the separator is the string you call it *on*, and it lands between elements, never at the ends
-- [`str.split()`](https://docs.python.org/3/library/stdtypes.html#str.split) — with no argument it splits on any run of whitespace and hands back a list
-- [strings and character data in Python (Real Python)](https://realpython.com/python-strings/) — a long worked tour of the same methods
-- [string formatting best practices (Real Python)](https://realpython.com/python-string-formatting/) — where `+` stops being the right tool
-- [`string` — common string operations](https://docs.python.org/3/library/string.html) — the module beside the type, constants such as `ascii_lowercase` included
-- [The absolute minimum every developer must know about Unicode (Joel Spolsky)](https://www.joelonsoftware.com/2003/10/08/the-absolute-minimum-every-software-developer-absolutely-positively-must-know-about-unicode-and-character-sets-no-excuses/) — why "character" is a slippery word
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+[common sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#text-sequence-type-str
+[python-str-doc]: https://devdocs.io/python~3.14/tutorial/introduction#tut-strings
+[str-join]: https://devdocs.io/python~3.14/library/stdtypes#str.join
+[str-split]: https://devdocs.io/python~3.14/library/stdtypes#str.split
 
 ## Hints
 ### Hint 1
-Three of the four are one line each and the fourth is two. Small strings concatenate with the `+` operator, so task 1 is over before it starts. For task 2, believe it or not, [`str.join()`](https://docs.python.org/3/library/stdtypes.html#str.join) is all you need — **a loop is not required**, and there is no need to alter the list you were handed if you can work out a good delimiter string.
+Three of the four are one line each and the fourth is two. Small strings concatenate with the `+` operator, so task 1 is over before it starts. For task 2, believe it or not, [`str.join()`](https://devdocs.io/python~3.14/library/stdtypes#str.join) is all you need — **a loop is not required**, and there is no need to alter the list you were handed if you can work out a good delimiter string.
 ### Hint 2
 Remember that a delimiter goes *between* elements and glues them together, and that it can be any string you like — including one you build out of the data itself. Look hard at the shape you have to produce: the prefix appears once, bare, at the front, and then once glued to each following word. What single delimiter, inserted between the untouched list items, produces exactly that?
 
 For task 3, strings slice from the right with negative indices: `'beautiful'[:-3] == 'beauti'`. Chop the suffix off first, then look at the last character of what is left.
 
-For task 4, [`str.split()`](https://docs.python.org/3/library/stdtypes.html#str.split) returns a list and can be indexed straight away — `'Exercism rocks!'.split()[0] == 'Exercism'` — and a negative index works there just as it does on a string. Be careful of punctuation: once you split on whitespace the full stop is part of the word, and the same kind of slice removes it (`'dark.'[:-1] == 'dark'`).
+For task 4, [`str.split()`](https://devdocs.io/python~3.14/library/stdtypes#str.split) returns a list and can be indexed straight away — `'Exercism rocks!'.split()[0] == 'Exercism'` — and a negative index works there just as it does on a string. Be careful of punctuation: once you split on whitespace the full stop is part of the word, and the same kind of slice removes it (`'dark.'[:-1] == 'dark'`).
 ### Hint 3
 Different data, same three moves — turning a config into environment variable names and back:
 

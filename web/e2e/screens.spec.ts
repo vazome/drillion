@@ -7,7 +7,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { repoRoot, scratchRoot } from "../playwright.config";
 
 const SHOTS = join(import.meta.dirname, "..", "screenshots");
-const SLUG = "001_fstrings";
+const SLUG = "017_fstrings";
 /** 001's own `_reference`: the only way to photograph the pass state. */
 const SOLUTION = [
   "def solve(rows):",

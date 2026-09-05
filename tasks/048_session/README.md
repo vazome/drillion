@@ -3,12 +3,15 @@ title: requests.Session — shared headers, reused connection
 difficulty: medium
 tier: packages
 minutes: 15
-prereqs: [45]
+prereqs: [17, 45]
 tags: [http, requests]
 ---
 # requests.Session — shared headers, reused connection
 
 *One Session reuses the connection and carries the auth; ten bare gets do neither.*
+
+## Read first
+- [Requests: session objects](https://requests.readthedocs.io/en/latest/user/advanced/#session-objects) — connection reuse and shared headers
 
 ## Why
 A health-check bot asks an internal status API "how is the api? how is the db? how is the cache?" every minute, one request per service. Every request must carry the same secret token and the same label that names your program (the User-Agent). Done the naive way, each request opens a fresh connection to the server and repeats the headers, which is slow and is exactly where "one call forgot the token" bugs come from. The ask: set up one reusable client with the shared headers configured once, then send all the requests through it.

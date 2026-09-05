@@ -3,12 +3,15 @@ title: streaming — accumulate tokens, stop at a sentinel
 difficulty: medium
 tier: packages
 minutes: 15
-prereqs: [10]
+prereqs: [7]
 tags: [llm, langchain]
 ---
 # streaming — accumulate tokens, stop at a sentinel
 
 *Streaming: tokens arrive one at a time, and you are allowed to stop pulling.*
+
+## Read first
+- [LangChain: streaming](https://python.langchain.com/docs/concepts/streaming/) — `stream` and why it needs a generator all the way down
 
 ## Why
 LangChain is a library for wiring steps together around an AI model. When a chat assistant answers, the text arrives in small pieces (tokens) one after another, not as one finished block; that is why you see an answer "typing itself out". A company paying per token wants to stop reading the moment a special end marker appears, because every piece you never pull is one you never wait for or pay for.

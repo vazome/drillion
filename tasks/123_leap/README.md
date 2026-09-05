@@ -3,13 +3,21 @@ title: bools — does this year have a 29 February?
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [88, 89, 90]
+prereqs: [89, 90]
 tags: [bools]
 source: exercism/python practice/leap (MIT, adapted)
 ---
 # bools — does this year have a 29 February?
 
 *leap — three divisibility rules where the exceptions decide the answer.*
+
+## Read first
+- [boolean operations](https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not) — `and` / `or` / `not`, and the fact that they return a value, not just steer an `if`
+- [boolean values](https://devdocs.io/python~3.14/library/stdtypes#bltin-boolean-values) — `True` and `False` are ordinary values you can return straight out of an expression
+- [binary arithmetic operations](https://devdocs.io/python~3.14/reference/expressions#binary-arithmetic-operations) — `%`, the remainder operator you test divisibility with
+- [Operator precedence](https://devdocs.io/python~3.14/reference/expressions#operator-precedence) — why the `or` in the middle needs its own parentheses
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Anything that plans ahead — a shift rota, a billing cycle, a backup that runs "on the last day of February" — has to know whether the year has 366 days. The rule looks like one line of arithmetic but it is really a rule with an exception and then an exception to the exception, which is exactly the shape people get wrong. 1900 was not a leap year; 2000 was. Software that assumed "every four years" shipped bugs that only surfaced once a century.
@@ -53,14 +61,6 @@ solve(2015)  # -> False   (does not divide by 4 at all)
 
 > [!WARNING]
 > The tests use `is True` / `is False`, so return the booleans themselves — a truthy number like `1` will fail.
-
-## Read first
-- [boolean operations](https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not) — `and` / `or` / `not`, and the fact that they return a value, not just steer an `if`
-- [boolean values](https://docs.python.org/3/library/stdtypes.html#bltin-boolean-values) — `True` and `False` are ordinary values you can return straight out of an expression
-- [binary arithmetic operations](https://docs.python.org/3/reference/expressions.html#binary-arithmetic-operations) — `%`, the remainder operator you test divisibility with
-- [Operator precedence](https://docs.python.org/3/reference/expressions.html#operator-precedence) — why the `or` in the middle needs its own parentheses
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

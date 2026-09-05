@@ -3,13 +3,21 @@ title: numbers — count the steps down to 1
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [88, 90]
+prereqs: [90]
 tags: [numbers]
 source: exercism/python practice/collatz-conjecture (MIT, adapted)
 ---
 # numbers — count the steps down to 1
 
 *collatz-conjecture — a loop whose length nobody can predict, and a guard for the input that would never end.*
+
+## Read first
+- [Integers](https://devdocs.io/python~3.14/library/functions#int) — halving with `//` keeps the value an `int`; `/` turns it into a float
+- [Arithmetic operations](https://devdocs.io/python~3.14/library/stdtypes#numeric-types-int-float-complex) — `%`, `//` and the difference between them
+- [while statements](https://devdocs.io/python~3.14/reference/compound_stmts#the-while-statement) — the loop for "until this is true", when the trip count is unknown
+- [Raising exceptions](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions) — `raise ValueError("message")` before the loop, not inside it
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 This is the shape of every "keep going until it settles" loop you will write: a state, a rule that transforms it, and a counter of how many times you had to apply the rule. Convergence detectors, retry-until-healthy pollers, iterative solvers and back-pressure loops all look like this. The uncomfortable part is that the number of iterations is not something you can compute in advance — 27 takes 111 steps, and 26 takes 10 — so a `for` loop over a known range is the wrong tool and a `while` on the condition is the right one. And because a loop with no exit is the most expensive bug in the category, the input that would never terminate is rejected before the loop starts.
@@ -47,9 +55,9 @@ Given a positive integer, return the number of steps it takes to reach 1 accordi
 
 ### Exception messages
 
-Sometimes it is necessary to [raise an exception](https://docs.python.org/3/tutorial/errors.html#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://docs.python.org/3/library/exceptions.html#base-classes), but should still include a meaningful message.
+Sometimes it is necessary to [raise an exception](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://devdocs.io/python~3.14/library/exceptions#base-classes), but should still include a meaningful message.
 
-The Collatz Conjecture is only concerned with **strictly positive integers**, so this exercise expects you to use the [raise statement](https://docs.python.org/3/reference/simple_stmts.html#the-raise-statement) and "throw" a `ValueError` in your solution if the given value is zero or a negative integer. The tests will only pass if you both `raise` the `exception` and include a message with it.
+The Collatz Conjecture is only concerned with **strictly positive integers**, so this exercise expects you to use the [raise statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement) and "throw" a `ValueError` in your solution if the given value is zero or a negative integer. The tests will only pass if you both `raise` the `exception` and include a message with it.
 
 To raise a `ValueError` with a message, write the message as an argument to the `exception` type:
 
@@ -89,14 +97,6 @@ solve(0)        # raises ValueError("Only positive integers are allowed")
 
 > [!WARNING]
 > The message is compared character for character, capital `O` included: `Only positive integers are allowed`. And you are counting *steps*, not the numbers in the chain — the chain for 12 has ten numbers in it and the answer is 9.
-
-## Read first
-- [Integers](https://docs.python.org/3/library/functions.html#int) — halving with `//` keeps the value an `int`; `/` turns it into a float
-- [Arithmetic operations](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex) — `%`, `//` and the difference between them
-- [while statements](https://docs.python.org/3/reference/compound_stmts.html#the-while-statement) — the loop for "until this is true", when the trip count is unknown
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("message")` before the loop, not inside it
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

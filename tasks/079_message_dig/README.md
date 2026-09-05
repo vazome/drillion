@@ -3,7 +3,7 @@ title: dict traversal — dig tool calls out of a model response
 difficulty: medium
 tier: core
 minutes: 20
-prereqs: [28]
+prereqs: [26]
 tags: [llm]
 ---
 # dict traversal — dig tool calls out of a model response
@@ -11,6 +11,9 @@ tags: [llm]
 *Whole-task task: pull the facts out of a model response without a KeyError.*
 
 Combines topics 30 (nested JSON), 43 (except), 75 (walking nested dicts).
+
+## Read first
+- [LangChain: messages](https://python.langchain.com/docs/concepts/messages/) — the message shape you are digging through
 
 ## Why
 A company pipeline sends a question to an AI chat service and gets back a nested answer record. Sometimes the answer is text; sometimes the model asks for a tool to be run instead and the text field is empty; sometimes the token-usage section is missing because the request was cut short. A script that assumes every field is always there crashes at 3am. Someone needs a function that pulls the useful facts out of any of these shapes without crashing.

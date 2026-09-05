@@ -3,13 +3,20 @@ title: conditionals — classify a message into one of five replies
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [88, 92]
+prereqs: [92]
 tags: [conditionals]
 source: exercism/python practice/bob (MIT, adapted)
 ---
 # conditionals — classify a message into one of five replies
 
 *bob — five canned replies, and the order you test the rules in.*
+
+## Read first
+- [if statements](https://devdocs.io/python~3.14/tutorial/controlflow#if-statements) — if / elif / else: the first branch that matches wins, the rest never run
+- [str.isupper()](https://devdocs.io/python~3.14/library/stdtypes#str.isupper) — `isupper()`, and the detail that decides this task: it is `False` for text containing no letters at all
+- [str.strip()](https://devdocs.io/python~3.14/library/stdtypes#str.strip) — `strip()` and `endswith()`
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 An out-of-hours chat widget answers with one of five canned lines, and picking the right one is pure classification: shouted question, shouted statement, plain question, silence, everything else. The order you ask the questions in *is* the program — ask "is it a question?" before "is it shouted?" and the combined case can never be reached. Every routing rule and every alert filter you write later has this exact shape, so it is worth getting the reflex now.
@@ -74,13 +81,6 @@ solve("\t\t\t")                  # -> "Fine. Be that way!"
 
 > [!WARNING]
 > The replies are compared character for character, full stop and exclamation mark included. `"Sure"` and `"sure."` both fail.
-
-## Read first
-- [if statements](https://docs.python.org/3/tutorial/controlflow.html#if-statements) — if / elif / else: the first branch that matches wins, the rest never run
-- [str.isupper()](https://docs.python.org/3/library/stdtypes.html#str.isupper) — `isupper()`, and the detail that decides this task: it is `False` for text containing no letters at all
-- [str.strip()](https://docs.python.org/3/library/stdtypes.html#str.strip) — `strip()` and `endswith()`
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

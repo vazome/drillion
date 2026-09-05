@@ -3,7 +3,7 @@ title: file tailing — tail a growing log, alert with context
 difficulty: medium
 tier: core
 minutes: 25
-prereqs: [20]
+prereqs: [19, 24, 25]
 tags: [file-tailing]
 ---
 # file tailing — tail a growing log, alert with context
@@ -11,6 +11,9 @@ tags: [file-tailing]
 *Whole-task task: watch a log that never ends and alert with context.*
 
 Combines topics 26 (line iteration), 29 (regex), 21 (deque).
+
+## Read first
+- [collections.deque](https://devdocs.io/python~3.14/library/collections#collections.deque) — `maxlen` gives you the rolling window for free
 
 ## Why
 A service writes a log file that grows all day and never stops. The on-call team wants to be paged every time an ERROR line shows up, and the page must include the few lines just before it so they can see what led up to the error. The log can be huge, so the tool must never try to hold all of it in memory.

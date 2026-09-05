@@ -3,13 +3,22 @@ title: sets — spot the alcohol, tag the allergens
 difficulty: easy
 tier: core
 minutes: 14
-prereqs: [88, 97, 101, 104, 106, 112]
+prereqs: [112]
 tags: [sets]
 source: exercism/python concept/cater-waiter (MIT, adapted)
 ---
 # sets — spot the alcohol, tag the allergens
 
 *Sets — `isdisjoint` and `&`, checking a menu against two reference lists.*
+
+## Read first
+- [Set types — set, frozenset](https://devdocs.io/python~3.14/library/stdtypes#set) — the full method table; note that the *methods* take any iterable while the *operators* need sets on both sides
+- [set.isdisjoint()](https://devdocs.io/python~3.14/library/stdtypes#frozenset.isdisjoint) — "do these two share nothing?", `True` when there is no overlap; there is no operator form
+- [set.intersection()](https://devdocs.io/python~3.14/library/stdtypes#frozenset.intersection) — the shared items themselves; the operator form is `&`
+- [Real Python: Sets in Python](https://realpython.com/python-sets/) — a walk through the operations with pictures of the overlaps
+- [Set and logic symbols cheat sheet](http://notes.imt-decal.org/sets/cheat-sheet.html) — the maths notation the method names come from
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Two questions at a catering event have legal weight rather than culinary weight. Is this drink actually alcohol-free, so it can be handed to the guest who asked for a mocktail? And does this dish contain anything on the allergen list, so it can be labelled before somebody eats it? Both are the same question asked of two collections: does this recipe touch that reference list at all, and if so, which items exactly. Sets answer both in one call each — one for "do these overlap, yes or no", one for "give me the overlap". Same pattern as checking a deployment's IAM actions against a banned-actions list.
@@ -410,12 +419,12 @@ The operator version of this method is  `<set> ^ <other set>`:
 >
 > [symmetric_difference]: https://en.wikipedia.org/wiki/Symmetric_difference
 
-[hashable]: https://docs.python.org/3.7/glossary.html#term-hashable
+[hashable]: https://devdocs.io/python~3.14/glossary#term-hashable
 [intersection]: https://www.mathgoodies.com/lessons/sets/intersection
 [mathematical-sets]: https://en.wikipedia.org/wiki/Set_theory#Basic_concepts_and_notation
 [operator]: https://www.computerhope.com/jargon/o/operator.htm
-[type-frozenset]: https://docs.python.org/3/library/stdtypes.html#frozenset
-[type-set]: https://docs.python.org/3/library/stdtypes.html#set
+[type-frozenset]: https://devdocs.io/python~3.14/library/stdtypes#frozenset
+[type-set]: https://devdocs.io/python~3.14/library/stdtypes#set
 
 ## Instructions
 
@@ -660,18 +669,9 @@ bar["tag_special_ingredients"](("Ginger Glazed Tofu Cutlets",
 - A _symmetric difference_ of more than two `sets` will include elements that are repeated more than two times across the input `sets`.  To remove these cross-set repeated elements, the _intersections_ between set pairs needs to be subtracted from the symmetric difference.
 - Using [concept: loops](/tracks/python/concepts/loops) to iterate through the various dishes might be useful here.
 
-[hashable]: https://docs.python.org/3.7/glossary.html#term-hashable
-[iterable]: https://docs.python.org/3/glossary.html#term-iterable
-[sets]: https://docs.python.org/3/tutorial/datastructures.html#sets
-
-## Read first
-- [Set types — set, frozenset](https://docs.python.org/3/library/stdtypes.html#set) — the full method table; note that the *methods* take any iterable while the *operators* need sets on both sides
-- [set.isdisjoint()](https://docs.python.org/3/library/stdtypes.html#frozenset.isdisjoint) — "do these two share nothing?", `True` when there is no overlap; there is no operator form
-- [set.intersection()](https://docs.python.org/3/library/stdtypes.html#frozenset.intersection) — the shared items themselves; the operator form is `&`
-- [Real Python: Sets in Python](https://realpython.com/python-sets/) — a walk through the operations with pictures of the overlaps
-- [Set and logic symbols cheat sheet](http://notes.imt-decal.org/sets/cheat-sheet.html) — the maths notation the method names come from
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+[hashable]: https://devdocs.io/python~3.14/glossary#term-hashable
+[iterable]: https://devdocs.io/python~3.14/glossary#term-iterable
+[sets]: https://devdocs.io/python~3.14/tutorial/datastructures#sets
 
 ## Hints
 ### Hint 1

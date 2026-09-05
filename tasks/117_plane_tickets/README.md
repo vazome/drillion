@@ -3,13 +3,23 @@ title: generators — seat every passenger on the plane
 difficulty: hard
 tier: advanced
 minutes: 15
-prereqs: [92, 97, 101, 106, 115]
+prereqs: [7, 115]
 tags: [generators]
 source: exercism/python concept/plane-tickets (MIT, adapted)
 ---
 # generators — seat every passenger on the plane
 
 *Generators — `yield`, laziness, and one generator feeding another.*
+
+## Read first
+- [Generators (the Python tutorial)](https://devdocs.io/python~3.14/tutorial/classes#generators) — a function with `yield` in it is a generator; calling it runs none of the body
+- [yield expressions](https://devdocs.io/python~3.14/reference/expressions#yield-expressions) — what `yield` does to the function it appears in
+- [Real Python: Introduction to generators](https://realpython.com/introduction-to-python-generators/) — `yield`, `next()`, and why laziness saves memory
+- [Python Morsels: Iterators & Generators](https://www.pythonmorsels.com/iterators/) — the protocol underneath, in short form
+- [Lazy evaluation (Wikipedia)](https://en.wikipedia.org/wiki/Lazy_evaluation) — the idea, outside Python
+- [inspect.isgenerator()](https://devdocs.io/python~3.14/library/inspect#inspect.isgenerator) — the check the grader runs on three of your four functions
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 An airline runs ten thousand flights a day and still assigns seats by hand. The rule is simple — A, B, C, D across a row, rows counting up, no row 13 because passengers refuse it — but the seating plan must be produced on demand, one seat at a time, not built as a giant list for every aircraft in the fleet. That "produce the next one when asked" shape is exactly what a generator is for, and once the first one exists the rest of the system is generators feeding generators: letters feed seats, seats feed the passenger assignment, assigned seats feed the ticket codes. The same technique reads a 40 GB log file a line at a time, or pages an API without holding every page in memory.
@@ -102,7 +112,7 @@ StopIteration
 > - They cannot be used with the `len()` function, as they have no length.
 > - They can be _finite_ or _infinite_ - be careful when collecting all values from an _infinite_ `generator-iterator`!
 >
-> [iterator]: https://docs.python.org/3.11/glossary.html#term-iterator
+> [iterator]: https://devdocs.io/python~3.14/glossary#term-iterator
 > [iterables]: https://wiki.python.org/moin/Iterator
 > [lazy evaluation]: https://en.wikipedia.org/wiki/Lazy_evaluation
 
@@ -149,10 +159,10 @@ Generators are also very helpful when a process or calculation is _complex_, _ex
 
 Now whenever `__next__()` is called on the `infinite_sequence` object, it will return the _previous number_ + 1.
 
-[generator-iterator]: https://docs.python.org/3.11/glossary.html#term-generator-iterator
-[iterator]: https://docs.python.org/3.11/glossary.html#term-iterator
+[generator-iterator]: https://devdocs.io/python~3.14/glossary#term-generator-iterator
+[iterator]: https://devdocs.io/python~3.14/glossary#term-iterator
 [lazy iterator]: https://en.wikipedia.org/wiki/Lazy_evaluation
-[yield expression]: https://docs.python.org/3.11/reference/expressions.html#yield-expressions
+[yield expression]: https://devdocs.io/python~3.14/reference/expressions#yield-expressions
 
 ## Instructions
 
@@ -317,16 +327,6 @@ list(airline["generate_codes"](["1A", "17D"], "CO1234"))
 
 - You can use `len()` to get the length of a string.
 - You can use `"<string>" * <int>` to repeat a string.
-
-## Read first
-- [Generators (the Python tutorial)](https://docs.python.org/3/tutorial/classes.html#generators) — a function with `yield` in it is a generator; calling it runs none of the body
-- [yield expressions](https://docs.python.org/3.11/reference/expressions.html#yield-expressions) — what `yield` does to the function it appears in
-- [Real Python: Introduction to generators](https://realpython.com/introduction-to-python-generators/) — `yield`, `next()`, and why laziness saves memory
-- [Python Morsels: Iterators & Generators](https://www.pythonmorsels.com/iterators/) — the protocol underneath, in short form
-- [Lazy evaluation (Wikipedia)](https://en.wikipedia.org/wiki/Lazy_evaluation) — the idea, outside Python
-- [inspect.isgenerator()](https://docs.python.org/3/library/inspect.html#inspect.isgenerator) — the check the grader runs on three of your four functions
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

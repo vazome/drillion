@@ -49,9 +49,9 @@ def test_an_existing_progress_file_upgrades_untouched():
     it, and no migration step between the two."""
     stored = {
         "focus": "class-inheritance",
-        "cards": {"008_sortkey": {"box": 3, "due": "2026-09-01", "seen": 4}},
+        "cards": {"004_sortkey": {"box": 3, "due": "2026-09-01", "seen": 4}},
         "open": {
-            "021_sets": {
+            "012_sets": {
                 "attempts": 2,
                 "hints": 1,
                 "active": 640,
@@ -63,7 +63,7 @@ def test_an_existing_progress_file_upgrades_untouched():
         "log": [
             {
                 "date": "2026-08-20",
-                "slug": "008_sortkey",
+                "slug": "004_sortkey",
                 "grade": "pass",
                 "attempts": 1,
                 "secs": 300,
@@ -71,7 +71,7 @@ def test_an_existing_progress_file_upgrades_untouched():
             }
         ],
         "archive": {
-            "008_sortkey": [
+            "004_sortkey": [
                 {"date": "2026-08-20", "grade": "pass", "code": "def solve(): return 1"}
             ]
         },
@@ -170,17 +170,17 @@ def test_a_progress_file_from_every_shipped_drillion_still_opens(frozen):
         _frozen(frozen, tmp)
         st = state.load()
         assert st["focus"] == "class-inheritance"
-        assert st["cards"]["008_sortkey"] == {
+        assert st["cards"]["004_sortkey"] == {
             "box": 3,
             "due": "2026-09-01",
             "seen": 4,
             "lapses": 0,
             "buried": "",
         }
-        assert st["open"]["021_sets"]["attempts"] == 2
-        assert st["log"][0]["slug"] == "008_sortkey"
-        assert st["archive"]["008_sortkey"][0]["grade"] == "pass"
-        assert st["notes"]["008_sortkey"] == "sort by the key, not the value"
+        assert st["open"]["012_sets"]["attempts"] == 2
+        assert st["log"][0]["slug"] == "004_sortkey"
+        assert st["archive"]["004_sortkey"][0]["grade"] == "pass"
+        assert st["notes"]["004_sortkey"] == "sort by the key, not the value"
 
     _root(check)
 

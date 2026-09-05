@@ -3,13 +3,23 @@ title: files-text — search many files at once, with five flags that change the
 difficulty: hard
 tier: core
 minutes: 25
-prereqs: [88, 89, 92, 95, 96, 97, 101, 115]
+prereqs: [38, 96, 115]
 tags: [files-text]
 source: exercism/python practice/grep (MIT, adapted)
 ---
 # files-text — search many files at once, with five flags that change the answer
 
 *grep — sort the flags into "which lines match" and "how they are printed", and the task falls apart into two easy halves.*
+
+## Read first
+- [`str.splitlines()`](https://devdocs.io/python~3.14/library/stdtypes#str.splitlines) — cutting a file's text into lines, and `keepends=True` if you would rather each line kept the newline it came with
+- [`in` on strings](https://devdocs.io/python~3.14/reference/expressions#membership-test-operations) — the substring test this whole task is built on
+- [`str.lower()`](https://devdocs.io/python~3.14/library/stdtypes#str.lower) — one way to make a comparison ignore case: change both sides, not one
+- [`enumerate()`](https://devdocs.io/python~3.14/library/functions#enumerate) — line numbers with `start=1`, because files are numbered from one and Python is not
+- [`str.split()`](https://devdocs.io/python~3.14/library/stdtypes#str.split) — turning `"-n -i -x"` into something you can ask membership questions about
+- [`str.join()`](https://devdocs.io/python~3.14/library/stdtypes#str.join) — gluing the collected output back into the single string you return
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Searching text is the one tool nobody gets to opt out of: you will run some version of `grep` on the day a service starts failing, and the flags you reach for under pressure are exactly these five. Writing it once, by hand, is the fastest way to stop half-remembering them — in particular *why* `-l` silently cancels `-n`, and why the filename suddenly appears in front of every line the moment you search a second file. It is also a small, honest lesson in separating two decisions that beginners reliably tangle together: deciding which records survive a filter, and deciding how the survivors are formatted. Every report, every log query and every export you write later has that same seam in it.
@@ -99,16 +109,6 @@ solve("Gandalf", "-n -l -x -i", files)   # -> ""
 
 > [!WARNING]
 > `-v` inverts the *match*, not the output. Under `-x -v` you keep every line that is not equal to the pattern — which is nearly all of them — rather than every line that does not contain it.
-
-## Read first
-- [`str.splitlines()`](https://docs.python.org/3/library/stdtypes.html#str.splitlines) — cutting a file's text into lines, and `keepends=True` if you would rather each line kept the newline it came with
-- [`in` on strings](https://docs.python.org/3/reference/expressions.html#membership-test-operations) — the substring test this whole task is built on
-- [`str.lower()`](https://docs.python.org/3/library/stdtypes.html#str.lower) — one way to make a comparison ignore case: change both sides, not one
-- [`enumerate()`](https://docs.python.org/3/library/functions.html#enumerate) — line numbers with `start=1`, because files are numbered from one and Python is not
-- [`str.split()`](https://docs.python.org/3/library/stdtypes.html#str.split) — turning `"-n -i -x"` into something you can ask membership questions about
-- [`str.join()`](https://docs.python.org/3/library/stdtypes.html#str.join) — gluing the collected output back into the single string you return
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

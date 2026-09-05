@@ -11,6 +11,21 @@ tags: [concurrency]
 
 *The interview itself — ten questions a reviewer will ask about your take-home.*
 
+## Read first
+These are the ones the questions come from — re-read, then answer from memory.
+
+- [Async IO Explained](https://realpython.com/async-io-python/)
+- [asyncpg connection pools](https://magicstack.github.io/asyncpg/current/usage.html#connection-pools)
+- [asyncio synchronization primitives](https://devdocs.io/python~3.14/library/asyncio-sync) — Lock and Semaphore
+- [Asynchronous context managers](https://devdocs.io/python~3.14/reference/datamodel#asynchronous-context-managers)
+- [pytest fixtures](https://docs.pytest.org/en/stable/how-to/fixtures.html)
+- [FastAPI async tests](https://fastapi.tiangolo.com/advanced/async-tests/)
+- [Rerankers](https://www.pinecone.io/learn/series/rag/rerankers/)
+- [Precision and recall](https://en.wikipedia.org/wiki/Precision_and_recall)
+
+> [!NOTE]
+> **Take-home:** the interview
+
 ## Why
 You submitted this code. The reviewer's job is to find out whether you understand it, and the README said submissions that look AI-written are disqualified. Every question below is one they can ask while pointing at a line of your diff. Pick the answer you would say out loud. No code to write — the test is whether your mental model is right.
 
@@ -110,21 +125,6 @@ Why `httpx.ASGITransport` in the tests?
 - b) it calls the FastAPI app in-process — real routing and validation, no server, port or network — so `pytest` alone runs the suite
 - c) TestClient does not support query parameters
 - d) it mocks the database automatically
-
-## Read first
-These are the ones the questions come from — re-read, then answer from memory.
-
-- [Async IO Explained](https://realpython.com/async-io-python/)
-- [asyncpg connection pools](https://magicstack.github.io/asyncpg/current/usage.html#connection-pools)
-- [asyncio synchronization primitives](https://docs.python.org/3/library/asyncio-sync.html) — Lock and Semaphore
-- [Asynchronous context managers](https://docs.python.org/3/reference/datamodel.html#asynchronous-context-managers)
-- [pytest fixtures](https://docs.pytest.org/en/stable/how-to/fixtures.html)
-- [FastAPI async tests](https://fastapi.tiangolo.com/advanced/async-tests/)
-- [Rerankers](https://www.pinecone.io/learn/series/rag/rerankers/)
-- [Precision and recall](https://en.wikipedia.org/wiki/Precision_and_recall)
-
-> [!NOTE]
-> **Take-home:** the interview
 
 ## Hints
 ### Hint 1

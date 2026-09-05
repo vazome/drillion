@@ -11,6 +11,18 @@ source: exercism/python concept/mecha-munch-management (MIT, adapted)
 
 *`setdefault`, `dict.fromkeys` and `update` — one method per task.*
 
+## Read first
+- [Mapping types — dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — every method in one table; worth skimming end to end once
+- [dict.setdefault()](https://devdocs.io/python~3.14/library/stdtypes#dict.setdefault) — insert-if-missing and return, in one call
+- [dict.fromkeys()](https://devdocs.io/python~3.14/library/stdtypes#dict.fromkeys) — build a whole dict from an iterable of keys sharing one default value
+- [dict.update()](https://devdocs.io/python~3.14/library/stdtypes#dict.update) — merge in another mapping *or* an iterable of pairs, in place
+- [Dictionary view objects](https://devdocs.io/python~3.14/library/stdtypes#dict-views) — `.keys()`, `.values()` and `.items()` are live views, not copies
+- [Sorting HOW TO](https://devdocs.io/python~3.14/howto/sorting) — `sorted()`, `key=` and `reverse=`
+- [Real Python: dictionaries in Python](https://realpython.com/python-dicts/) — the long-form tour
+- [David Beazley: Built-in Super Heroes (video)](https://www.youtube.com/watch?v=lyDLAutA88s) — why the plain built-in dict is usually the right answer
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+
 ## Why
 Mecha Munch is a grocery-ordering app, and you have the cart end of the MVP: put things in the cart, start a cart from the list a customer typed into their notes app, and let the content team swap out a whole recipe's ingredients. Three tasks, and each one is really "which `dict` method already does this?". Knowing the method table is what separates a five-line loop with a `KeyError` in it from a one-liner that reads like the sentence in the ticket.
 
@@ -227,13 +239,13 @@ For a detailed explanation of dictionaries and methods for working with them, th
 
 [Real Python][how-to-dicts] and [Finxter][fi-dict-guide] also have very thorough articles on Python dictionaries.
 
-[dict-methods]: https://docs.python.org/3/library/stdtypes.html#dict
-[dict-views]: https://docs.python.org/3/library/stdtypes.html#dict-views
-[dicts-docs]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
+[dict-methods]: https://devdocs.io/python~3.14/library/stdtypes#dict
+[dict-views]: https://devdocs.io/python~3.14/library/stdtypes#dict-views
+[dicts-docs]: https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries
 [fi-dict-guide]: https://blog.finxter.com/python-dictionary
-[fromkeys]: https://docs.python.org/3/library/stdtypes.html#dict.fromkeys
+[fromkeys]: https://devdocs.io/python~3.14/library/stdtypes#dict.fromkeys
 [how-to-dicts]: https://realpython.com/python-dicts/
-[mapping-types-dict]: https://docs.python.org/3/library/stdtypes.html#mapping-types-dict
+[mapping-types-dict]: https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict
 
 ## Instructions
 Mecha Munch™, a grocery shopping automation company, has just hired you to work on their ordering app.
@@ -453,37 +465,25 @@ The dictionary section of the [official tutorial][dicts-docs] and the mapping ty
 - You can access an item in a _nested tuple_ using _bracket notation_:  `<tuple>[<nested_tuple>][<index_of_value>]`
 - Don't forget to check if an inventory count falls to zero, you'll need to add in the "Out of Stock" message.
 
-[builtins]: https://docs.python.org/3/library/functions.html
-[dicts-docs]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
-[fromkeys]: https://docs.python.org/3/library/stdtypes.html#dict.fromkeys
-[items]: https://docs.python.org/3/library/stdtypes.html#dict.items
-[keys]: https://docs.python.org/3/library/stdtypes.html#dict.keys
-[mapping-types-dict]: https://docs.python.org/3/library/stdtypes.html#mapping-types-dict
+[builtins]: https://devdocs.io/python~3.14/library/functions
+[dicts-docs]: https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries
+[fromkeys]: https://devdocs.io/python~3.14/library/stdtypes#dict.fromkeys
+[items]: https://devdocs.io/python~3.14/library/stdtypes#dict.items
+[keys]: https://devdocs.io/python~3.14/library/stdtypes#dict.keys
+[mapping-types-dict]: https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict
 [mvp]: https://en.wikipedia.org/wiki/Minimum_viable_product
-[set-default]: https://docs.python.org/3/library/stdtypes.html#dict.setdefault
-[update]: https://docs.python.org/3/library/stdtypes.html#dict.update
-
-## Read first
-- [Mapping types — dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — every method in one table; worth skimming end to end once
-- [dict.setdefault()](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) — insert-if-missing and return, in one call
-- [dict.fromkeys()](https://docs.python.org/3/library/stdtypes.html#dict.fromkeys) — build a whole dict from an iterable of keys sharing one default value
-- [dict.update()](https://docs.python.org/3/library/stdtypes.html#dict.update) — merge in another mapping *or* an iterable of pairs, in place
-- [Dictionary view objects](https://docs.python.org/3/library/stdtypes.html#dict-views) — `.keys()`, `.values()` and `.items()` are live views, not copies
-- [Sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — `sorted()`, `key=` and `reverse=`
-- [Real Python: dictionaries in Python](https://realpython.com/python-dicts/) — the long-form tour
-- [David Beazley: Built-in Super Heroes (video)](https://www.youtube.com/watch?v=lyDLAutA88s) — why the plain built-in dict is usually the right answer
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+[set-default]: https://devdocs.io/python~3.14/library/stdtypes#dict.setdefault
+[update]: https://devdocs.io/python~3.14/library/stdtypes#dict.update
 
 ## Hints
 ### Hint 1
-Roughly one `dict` method per task. Task 1 is a loop with [`setdefault(item, 0)`](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) in it, so a brand-new product does not raise `KeyError` before you add 1 to it. Task 2 needs no loop at all: there is a *classmethod* that builds an entire dictionary from an iterable of keys with one shared default value. Task 3 is famously a single call — the key word in the task title is *update*.
+Roughly one `dict` method per task. Task 1 is a loop with [`setdefault(item, 0)`](https://devdocs.io/python~3.14/library/stdtypes#dict.setdefault) in it, so a brand-new product does not raise `KeyError` before you add 1 to it. Task 2 needs no loop at all: there is a *classmethod* that builds an entire dictionary from an iterable of keys with one shared default value. Task 3 is famously a single call — the key word in the task title is *update*.
 ### Hint 2
 For task 1, quantity is repeats, so one pass over the iterable adding 1 each time is exactly right; write the loop against *any* iterable rather than assuming a list, because the tests pass tuples too.
 
-For task 2, the default value matters: [`dict.fromkeys(keys)`](https://docs.python.org/3/library/stdtypes.html#dict.fromkeys) with no second argument fills every value with `None`, and the app wants `1`.
+For task 2, the default value matters: [`dict.fromkeys(keys)`](https://devdocs.io/python~3.14/library/stdtypes#dict.fromkeys) with no second argument fills every value with `None`, and the app wants `1`.
 
-For task 3, remember that [`dict.update()`](https://docs.python.org/3/library/stdtypes.html#dict.update) accepts an iterable of `(key, value)` pairs, not only another dict — which is precisely the shape the recipe updates arrive in. Each pair replaces the whole value under that key, or adds the key when it is new. Then return the dict you updated.
+For task 3, remember that [`dict.update()`](https://devdocs.io/python~3.14/library/stdtypes#dict.update) accepts an iterable of `(key, value)` pairs, not only another dict — which is precisely the shape the recipe updates arrive in. Each pair replaces the whole value under that key, or adds the key when it is new. Then return the dict you updated.
 ### Hint 3
 Different data, same shape. A permissions table and a region health map:
 

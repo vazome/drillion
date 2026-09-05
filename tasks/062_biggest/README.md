@@ -3,7 +3,7 @@ title: pathlib — N largest files under a directory tree
 difficulty: medium
 tier: core
 minutes: 25
-prereqs: [25]
+prereqs: [15]
 tags: [pathlib]
 ---
 # pathlib — N largest files under a directory tree
@@ -11,6 +11,9 @@ tags: [pathlib]
 *Whole-task task: the disk is full and someone wants the top offenders now.*
 
 Combines topics 27 (pathlib), 9 (sort key), 40 (tempfile).
+
+## Read first
+- [pathlib](https://devdocs.io/python~3.14/library/pathlib) — `rglob` and `stat().st_size`
 
 ## Why
 A server's disk is almost full and the on-call engineer needs to know, right now, which files are eating the space so they can delete or move the biggest ones. "Show me the five largest files under /var" is the question. A list sorted biggest-first is what they act on.

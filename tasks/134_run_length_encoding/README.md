@@ -3,13 +3,21 @@ title: iteration — compress runs, and put them back
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [88, 89, 90, 92, 95, 96, 97, 99, 101]
+prereqs: [13, 90, 96, 101]
 tags: [iteration, regular-expressions]
 source: exercism/python practice/run-length-encoding (MIT, adapted)
 ---
 # iteration — compress runs, and put them back
 
 *run-length-encoding — a pair of functions that must undo each other exactly.*
+
+## Read first
+- [itertools.groupby()](https://devdocs.io/python~3.14/library/itertools#itertools.groupby) — hands you consecutive runs of equal items, which is the whole of `encode`
+- [re.sub() with a function](https://devdocs.io/python~3.14/library/re#re.sub) — when the replacement is computed from the match, pass a function instead of a string
+- [str.isdigit()](https://devdocs.io/python~3.14/library/stdtypes#str.isdigit) — the manual route for `decode`: accumulate digits until a non-digit arrives
+- [Sequence operations](https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations) — `"W" * 12` is the other half of `decode`
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Run-length encoding is the compression you meet before you meet compression: it is how fax machines, old bitmap formats and plenty of wire protocols shrink long stretches of the same value. The reason it is worth an hour is not the algorithm, it is the shape — two functions that have to be exact inverses. Serialise/deserialise, encrypt/decrypt, marshal/unmarshal: whenever you write one of a pair, the round trip is the test that finds the bug, and it finds it on the boring case (a run of length one) rather than the clever one.
@@ -75,14 +83,6 @@ codec["decode"]("12WB12W3B24WB")
 
 > [!WARNING]
 > The grader round-trips your own output: `decode(encode(text)) == text` for randomly generated text. A `decode` that reads counts one digit at a time passes the small examples and fails the moment a run is ten or longer.
-
-## Read first
-- [itertools.groupby()](https://docs.python.org/3/library/itertools.html#itertools.groupby) — hands you consecutive runs of equal items, which is the whole of `encode`
-- [re.sub() with a function](https://docs.python.org/3/library/re.html#re.sub) — when the replacement is computed from the match, pass a function instead of a string
-- [str.isdigit()](https://docs.python.org/3/library/stdtypes.html#str.isdigit) — the manual route for `decode`: accumulate digits until a non-digit arrives
-- [Sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — `"W" * 12` is the other half of `decode`
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

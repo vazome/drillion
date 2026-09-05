@@ -3,13 +3,21 @@ title: recursion — unpack the nested boxes into one flat list
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [88, 92, 95, 97, 99, 101]
+prereqs: [101]
 tags: [recursion, lists]
 source: exercism/python practice/flatten-array (MIT, adapted)
 ---
 # recursion — unpack the nested boxes into one flat list
 
 *flatten-array — one list out, whatever the depth in, and no `None` survives.*
+
+## Read first
+- [Recursion in the Python tutorial](https://devdocs.io/python~3.14/tutorial/controlflow#defining-functions) — a function is free to call itself; the nested case is just a smaller version of the same problem
+- [isinstance()](https://devdocs.io/python~3.14/library/functions#isinstance) — "is this item a list, or a plain value?"
+- [list.extend() vs list.append()](https://devdocs.io/python~3.14/tutorial/datastructures#more-on-lists) — `extend` pours a list in, `append` puts the list itself in as one item
+- [The `is` operator](https://devdocs.io/python~3.14/reference/expressions#is-not) — identity, and why `None` is always tested with it
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Nested data arrives from everywhere: a JSON API that wraps results in results, a config file where a group can contain groups, a Terraform output whose lists hold lists. The consumer almost never wants the shape — it wants the items, in order, ready to iterate once. Flattening is also where "unknown depth" first bites: you cannot write two `for` loops when tomorrow's payload has four levels. Getting comfortable with a function that calls itself for the nested case is worth more than this task, because directory trees, org charts and dependency graphs all have the same shape.
@@ -74,14 +82,6 @@ solve([0, 2, [[2, 3], 8, 100, 4, [[[50]]]], -2])  # -> [0, 2, 2, 3, 8, 100, 4, 5
 
 > [!WARNING]
 > `0` is falsy and `None` is falsy, so a filter written as `if item:` throws away the zeros too. Test against `None` by identity — `if item is not None` — not by truthiness.
-
-## Read first
-- [Recursion in the Python tutorial](https://docs.python.org/3/tutorial/controlflow.html#defining-functions) — a function is free to call itself; the nested case is just a smaller version of the same problem
-- [isinstance()](https://docs.python.org/3/library/functions.html#isinstance) — "is this item a list, or a plain value?"
-- [list.extend() vs list.append()](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — `extend` pours a list in, `append` puts the list itself in as one item
-- [The `is` operator](https://docs.python.org/3/reference/expressions.html#is-not) — identity, and why `None` is always tested with it
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

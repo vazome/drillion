@@ -3,13 +3,22 @@ title: conditionals — sounds for the factors 3, 5 and 7
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [88, 89, 90, 92]
+prereqs: [90, 92]
 tags: [conditionals]
 source: exercism/python practice/raindrops (MIT, adapted)
 ---
 # conditionals — sounds for the factors 3, 5 and 7
 
 *raindrops — build a string from the factors a number has, with a fallback.*
+
+## Read first
+- [if statements](https://devdocs.io/python~3.14/tutorial/controlflow#if-statements) — `if` / `elif` / `else`, and why three separate `if`s are not the same thing as one `if`/`elif` chain
+- [Truth value testing](https://devdocs.io/python~3.14/library/stdtypes#truth-value-testing) — an empty string is falsy: that is how you ask "did I add anything?"
+- [divmod()](https://devdocs.io/python~3.14/library/functions#divmod) — `%` and `divmod`, the two ways to ask for a remainder
+- [operator.mod()](https://devdocs.io/python~3.14/library/operator#operator.mod) — the same `%` as a function
+- [str()](https://devdocs.io/python~3.14/library/stdtypes#str) — turning the number into the fallback answer
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 This is FizzBuzz in a raincoat, and interviewers still hand it out because most candidates trip on the same two things: that several rules can fire for the same number (so it is three questions, not one choice of three), and that the fallback only applies when none of them fired. Picture a rain gauge whose display plays a chime per factor and only prints the raw reading when there is nothing to chime about.
@@ -52,12 +61,12 @@ While we encourage you to get familiar with these methods, neither of these will
 
 The built-in function [`divmod()`][divmod] will also give a remainder than matches `%` if used with two positive integers, but returns a `tuple` that needs to be unpacked.
 
-[divmod]: https://docs.python.org/3/library/functions.html#divmod
-[fmod]: https://docs.python.org/3/library/math.html#math.fmod
-[math-module]: https://docs.python.org/3/library/math.html
+[divmod]: https://devdocs.io/python~3.14/library/functions#divmod
+[fmod]: https://devdocs.io/python~3.14/library/math#math.fmod
+[math-module]: https://devdocs.io/python~3.14/library/math
 [modulo]: https://www.programiz.com/python-programming/operators#arithmetic
-[operator-mod]: https://docs.python.org/3/library/operator.html#operator.mod
-[remainder]: https://docs.python.org/3/library/math.html#math.remainder
+[operator-mod]: https://devdocs.io/python~3.14/library/operator#operator.mod
+[remainder]: https://devdocs.io/python~3.14/library/math#math.remainder
 
 ## You get
 `number` — a positive whole number, e.g. `28`.
@@ -87,15 +96,6 @@ solve(34)   # -> "34"               (none of them)
 
 > [!WARNING]
 > The words are concatenated in the fixed order Pling, Plang, Plong — not in the order you happened to test the factors — and the fallback is `"34"`, the string, never the number `34`.
-
-## Read first
-- [if statements](https://docs.python.org/3/tutorial/controlflow.html#if-statements) — `if` / `elif` / `else`, and why three separate `if`s are not the same thing as one `if`/`elif` chain
-- [Truth value testing](https://docs.python.org/3/library/stdtypes.html#truth-value-testing) — an empty string is falsy: that is how you ask "did I add anything?"
-- [divmod()](https://docs.python.org/3/library/functions.html#divmod) — `%` and `divmod`, the two ways to ask for a remainder
-- [operator.mod()](https://docs.python.org/3/library/operator.html#operator.mod) — the same `%` as a function
-- [str()](https://docs.python.org/3/library/stdtypes.html#str) — turning the number into the fallback answer
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

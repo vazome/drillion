@@ -3,12 +3,15 @@ title: boto3 — audit EC2 instances for missing tags
 difficulty: medium
 tier: packages
 minutes: 25
-prereqs: [57]
+prereqs: [4, 57]
 tags: [cloud, boto3]
 ---
 # boto3 — audit EC2 instances for missing tags
 
 *Untagged instances are the ones nobody can bill, page, or safely delete.*
+
+## Read first
+- [boto3 documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) — paginators — tag listings are paginated
 
 ## Why
 Every server in the cloud account is supposed to carry labels (tags) like Owner and CostCenter, so finance can bill the right team and on-call knows who to wake. Servers launched without them are the ones nobody can bill, page, or safely delete. The platform team asks for an audit: for each mandatory label, which servers are missing it. A label that is present but set to an empty value counts as missing, since "Owner: " helps nobody.

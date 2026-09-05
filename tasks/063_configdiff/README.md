@@ -3,7 +3,7 @@ title: recursion — recursive diff of two nested configs
 difficulty: medium
 tier: core
 minutes: 30
-prereqs: [17]
+prereqs: [2, 9]
 tags: [recursion]
 ---
 # recursion — recursive diff of two nested configs
@@ -11,6 +11,9 @@ tags: [recursion]
 *Whole-task task: what changed between two configs, at any depth.*
 
 Combines topics 30 (nested dicts from JSON), 18 (dict lookups), 25 (copy).
+
+## Read first
+- [Mapping Types — dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — the operations a recursive walk leans on
 
 ## Why
 The staging environment works and production does not. Both were deployed from a config file, and someone on the platform team asks "what exactly is different between the two?" Reading two long files side by side by eye is slow and error-prone; a short list of added, removed and changed settings is what they want.

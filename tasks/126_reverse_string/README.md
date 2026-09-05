@@ -3,13 +3,21 @@ title: sequences — read the text back to front
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [88, 89, 92, 95]
+prereqs: [95]
 tags: [sequences]
 source: exercism/python practice/reverse-string (MIT, adapted)
 ---
 # sequences — read the text back to front
 
 *reverse-string — the slice everyone half-remembers, on real characters.*
+
+## Read first
+- [Common sequence operations](https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations) — strings are sequences: everything that works on a list works here too
+- [Slicings](https://devdocs.io/python~3.14/reference/expressions#slicings) — the three-part slice `[start:stop:step]` and what it does when you leave parts out
+- [Real Python: strings](https://realpython.com/python-strings/) — indexing and slicing strings, with pictures
+- [reversed()](https://devdocs.io/python~3.14/library/functions#reversed) — the other route, an iterator you have to `join` back together
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Reading a string right-to-left comes up far more often than it sounds: DNA reads have to be checked against their reverse, tail-style log viewers show the newest line first, and palindrome checks are one reversal plus one comparison. It is also the fastest way to find out whether someone actually knows Python's slicing or just pattern-matches on `for` loops — which is why it turns up in phone screens.
@@ -47,14 +55,6 @@ solve("racecar")      # -> "racecar"
 solve("")             # -> ""
 solve("子猫")          # -> "猫子"
 ```
-
-## Read first
-- [Common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — strings are sequences: everything that works on a list works here too
-- [Slicings](https://docs.python.org/3/reference/expressions.html#slicings) — the three-part slice `[start:stop:step]` and what it does when you leave parts out
-- [Real Python: strings](https://realpython.com/python-strings/) — indexing and slicing strings, with pictures
-- [reversed()](https://docs.python.org/3/library/functions.html#reversed) — the other route, an iterator you have to `join` back together
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

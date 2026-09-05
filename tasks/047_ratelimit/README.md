@@ -10,6 +10,10 @@ tags: [http]
 
 *A 429 is the server asking you to slow down; ignoring it is how you get an IP ban.*
 
+## Read first
+- [429 Too Many Requests (MDN)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/429) — what the server is telling you, and `Retry-After`
+- [time.monotonic](https://devdocs.io/python~3.14/library/time#time.monotonic) — the clock to measure the window with
+
 ## Why
 A cleanup script calls a vendor's API hundreds of times in a row. The vendor caps how many calls per minute you may make; go over and it answers with status 429, which means "too many requests, come back in N seconds", instead of doing the work. A script that ignores that and keeps firing gets the whole company's API key blocked. The team lead wants a helper that waits exactly as long as the server asks, uses a sensible default when the server names no time, and stops after a fixed number of tries. It must NOT retry other errors: a 500 or a 403 will not get better by waiting.
 

@@ -3,13 +3,23 @@ title: lists — Black Joe hand averages
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [92, 95, 97]
+prereqs: [97]
 tags: [lists]
 source: exercism/python concept/card-games (MIT, adapted)
 ---
 # lists — Black Joe hand averages
 
 *`sum`, `len`, indexing and a slice with a step — four ways to interrogate a hand.*
+
+## Read first
+- [common sequence operations](https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations) — indexing, `s[i:j:k]` slicing with a step, and `len(s)`
+- [the `list` type](https://devdocs.io/python~3.14/library/stdtypes#list) — the reference page for the type you are slicing
+- [sequence types — `list`, `tuple`, `range`](https://devdocs.io/python~3.14/library/stdtypes#sequence-types-list-tuple-range) — where negative indexing is defined
+- [`sum()`](https://devdocs.io/python~3.14/library/functions#sum) — adds an iterable of numbers; the other half of an average
+- [lists (Python tutorial)](https://devdocs.io/python~3.14/tutorial/datastructures) — the tour, including what mutability means in practice
+- [lists and tuples in Python (Real Python)](https://realpython.com/python-lists-tuples/) — slicing explained slowly, with diagrams
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A "hand" here is a list of numbers, and every question Elyse asks of it is a question you will ask of latency samples, of a batch of billing rows, of a week of daily costs. What is the average? Is the cheap estimate as good as the real one? Do the odd and even positions agree? Does the last item need special treatment? `sum(xs) / len(xs)`, `xs[0]`, `xs[-1]`, `xs[::2]` — four bits of notation that replace most of the loops a beginner writes, plus one reminder that a list is mutable, so changing its last element changes it for whoever handed it to you.
@@ -258,15 +268,15 @@ Blue
 _For a more in-depth explanation, of `loops` and `iterators`, complete the `loops` concept._
 
 [arraylist]: https://beginnersbook.com/2013/12/java-arraylist/
-[common sequence operations]: https://docs.python.org/3/library/stdtypes.html#common-sequence-operations
-[dict]: https://docs.python.org/3/library/stdtypes.html#dict
+[common sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations
+[dict]: https://devdocs.io/python~3.14/library/stdtypes#dict
 [dynamic array]: https://en.wikipedia.org/wiki/Dynamic_array
-[list]: https://docs.python.org/3/library/stdtypes.html#list
-[mutable sequence operations]: https://docs.python.org/3/library/stdtypes.html#typesseq-mutable
-[sequence type]: https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range
-[set]: https://docs.python.org/3/library/stdtypes.html#set
-[slice notation]: https://docs.python.org/3/reference/expressions.html#slicings
-[tuple]: https://docs.python.org/3/library/stdtypes.html#tuple
+[list]: https://devdocs.io/python~3.14/library/stdtypes#list
+[mutable sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#typesseq-mutable
+[sequence type]: https://devdocs.io/python~3.14/library/stdtypes#sequence-types-list-tuple-range
+[set]: https://devdocs.io/python~3.14/library/stdtypes#set
+[slice notation]: https://devdocs.io/python~3.14/reference/expressions#slicings
+[tuple]: https://devdocs.io/python~3.14/library/stdtypes#tuple
 
 ## Instructions
 Elyse is really looking forward to playing some poker (and other card games) during her upcoming trip to Vegas.
@@ -466,20 +476,10 @@ cards["maybe_double_last"]([5, 9, 10])                  # -> [5, 9, 10]
 - Python provides a wide range of [ways to modify `lists`][ways to modify `lists`].
 
 
-[common sequence operations]: https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range
-[constructed]: https://docs.python.org/3/library/stdtypes.html#list
+[common sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#sequence-types-list-tuple-range
+[constructed]: https://devdocs.io/python~3.14/library/stdtypes#list
 [return]: https://www.w3schools.com/python/ref_keyword_return.asp
 [ways to modify `lists`]: https://realpython.com/python-lists-tuples/#lists-are-mutable
-
-## Read first
-- [common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — indexing, `s[i:j:k]` slicing with a step, and `len(s)`
-- [the `list` type](https://docs.python.org/3/library/stdtypes.html#list) — the reference page for the type you are slicing
-- [sequence types — `list`, `tuple`, `range`](https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range) — where negative indexing is defined
-- [`sum()`](https://docs.python.org/3/library/functions.html#sum) — adds an iterable of numbers; the other half of an average
-- [lists (Python tutorial)](https://docs.python.org/3/tutorial/datastructures.html) — the tour, including what mutability means in practice
-- [lists and tuples in Python (Real Python)](https://realpython.com/python-lists-tuples/) — slicing explained slowly, with diagrams
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

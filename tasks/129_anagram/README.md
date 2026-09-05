@@ -3,13 +3,21 @@ title: list-methods — pick the rearrangements out of a word list
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [88, 89, 92, 95, 96, 97, 99, 101]
+prereqs: [10, 96, 101]
 tags: [list-methods]
 source: exercism/python practice/anagram (MIT, adapted)
 ---
 # list-methods — pick the rearrangements out of a word list
 
 *anagram — same letters, different order: fingerprint a word and compare.*
+
+## Read first
+- [Sorting HOW TO](https://devdocs.io/python~3.14/howto/sorting) — `sorted()`, which turns any iterable into a list in a fixed order — including a string, character by character
+- [More on lists](https://devdocs.io/python~3.14/tutorial/datastructures#more-on-lists) — list methods and list comprehensions, the shape this answer wants
+- [collections.Counter](https://devdocs.io/python~3.14/library/collections#collections.Counter) — the other fingerprint: how many of each item
+- [str.lower()](https://devdocs.io/python~3.14/library/stdtypes#str.lower) — the case fold that makes "Seton" comparable with "stone"
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A daily word game ships a target word and a pile of guesses, and the server has to say which guesses are true rearrangements of it. Two rules trip people up: the comparison ignores capitals ("Silent" counts for "LISTEN") but the answer must give the guess back spelled exactly as it arrived, and a word is never an anagram of itself no matter how it is capitalised. The general skill is turning a value into a comparable fingerprint — the same move behind deduplicating records and grouping like with like.
@@ -65,14 +73,6 @@ solve("BANANA", ["Banana"])
 
 > [!WARNING]
 > The result is compared with `==` against a list, so order matters: keep the candidates in the order they arrived, and return their original spelling, not the lower-cased one you compared with.
-
-## Read first
-- [Sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — `sorted()`, which turns any iterable into a list in a fixed order — including a string, character by character
-- [More on lists](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — list methods and list comprehensions, the shape this answer wants
-- [collections.Counter](https://docs.python.org/3/library/collections.html#collections.Counter) — the other fingerprint: how many of each item
-- [str.lower()](https://docs.python.org/3/library/stdtypes.html#str.lower) — the case fold that makes "Seton" comparable with "stone"
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

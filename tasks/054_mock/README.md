@@ -4,12 +4,19 @@ difficulty: medium
 tier: core
 track: rsample
 minutes: 20
-prereqs: []
+prereqs: [37]
 tags: [testing]
 ---
 # mocking — patch where it is used, then read the calls
 
 *Tests that hit the real webhook are slow, flaky, and occasionally page a colleague.*
+
+## Read first
+- [Understanding the Python mock object library](https://realpython.com/python-mock-library/) — swapping a real function for a fake inside a test
+- [unittest.mock.patch](https://devdocs.io/python~3.14/library/unittest.mock#unittest.mock.patch) — the swap that puts the original back for you, plus `patch.object`
+
+> [!NOTE]
+> **Take-home:** `monkeypatch.setattr(...)`
 
 ## Why
 The deploy script has a step that posts an alert to the company chat when a deploy finishes. You need to test that step in CI, but a test that really posts to chat is slow, needs real credentials, and spams colleagues on every test run. Instead you temporarily swap the real "send" function for a stand-in that just records what it was asked to send, run the code, read the recording, and put the real function back. Both functions live at the bottom of this file; you write the test.
@@ -57,13 +64,6 @@ solve("v2.1.0", "hooks.internal:443")
 > The rule people get wrong: patch the name in the module that USES it, not the module that defines it. If `run_deploy` had done `from alerts import send_alert`, then this module owns its own reference called `send_alert`, and patching `"alerts.send_alert"` changes a name nobody looks at any more. Here both live in one file. This module is `sys.modules[__name__]`, so `patch.object(sys.modules[__name__], "send_alert")` is how you spell that target — the dotted-string form `patch("pkg.send_alert")` cannot name a module whose folder starts with a digit.
 
 Constraint: no imports beyond `unittest.mock` and `sys` (`sys` is already imported for you at the top of the file).
-
-## Read first
-- [Understanding the Python mock object library](https://realpython.com/python-mock-library/) — swapping a real function for a fake inside a test
-- [unittest.mock.patch](https://docs.python.org/3/library/unittest.mock.html#unittest.mock.patch) — the swap that puts the original back for you, plus `patch.object`
-
-> [!NOTE]
-> **Take-home:** `monkeypatch.setattr(...)`
 
 ## Hints
 ### Hint 1

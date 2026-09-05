@@ -11,6 +11,14 @@ source: exercism/python practice/etl (MIT, adapted)
 
 *etl — invert a "group → members" dict into a "member → group" dict.*
 
+## Read first
+- [Mapping types: dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — what a dict guarantees, and why the lookup is the point
+- [Docs: dicts](https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries) — the tutorial section, including dict comprehensions
+- [dict.items()](https://devdocs.io/python~3.14/library/stdtypes#dict.items) — walking keys and values together instead of keys then lookups
+- [str.lower()](https://devdocs.io/python~3.14/library/stdtypes#str.lower) — the case fold, applied to each letter
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+
 ## Why
 Configuration is written the way humans like to read it — grouped. "These ten letters are worth one point." "These four users have the admin role." "These three services live in eu-west-1." Code asks the opposite question, one item at a time: what is *this* letter worth, what role does *this* user have, where does *this* service live. Scanning every group on every question is how a fast program becomes a slow one. So you build the inverted lookup once, when the config is loaded, and every later question is a single dict access. That "read one shape, write the other" step is the T in ETL, and it is most of what data plumbing actually is.
 
@@ -82,14 +90,6 @@ solve({1: ["A"]})                      # -> {"a": 1}
 solve({1: ["A", "E"], 2: ["D", "G"]})  # -> {"a": 1, "e": 1, "d": 2, "g": 2}
 solve({4: ["F", "H", "V", "W", "Y"]})  # -> {"f": 4, "h": 4, "v": 4, "w": 4, "y": 4}
 ```
-
-## Read first
-- [Mapping types: dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — what a dict guarantees, and why the lookup is the point
-- [Docs: dicts](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — the tutorial section, including dict comprehensions
-- [dict.items()](https://docs.python.org/3/library/stdtypes.html#dict.items) — walking keys and values together instead of keys then lookups
-- [str.lower()](https://docs.python.org/3/library/stdtypes.html#str.lower) — the case fold, applied to each letter
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

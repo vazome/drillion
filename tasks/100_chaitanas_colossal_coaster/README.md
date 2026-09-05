@@ -3,13 +3,23 @@ title: list-methods — thinning out the coaster queue
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [97, 99]
+prereqs: [99]
 tags: [list-methods]
 source: exercism/python concept/chaitanas-colossal-coaster (MIT, adapted)
 ---
 # list-methods — thinning out the coaster queue
 
 *`remove`, `count`, `pop`, `sort` — and the copy that keeps the original intact.*
+
+## Read first
+- [more on lists (Python tutorial)](https://devdocs.io/python~3.14/tutorial/datastructures#more-on-lists) — `remove`, `pop`, `count`, `sort`, `copy`, each with its return value
+- [mutable sequence operations](https://devdocs.io/python~3.14/library/stdtypes#typesseq-mutable) — the formal table: which methods mutate, and what they hand back
+- [`sorted()`](https://devdocs.io/python~3.14/library/functions#sorted) — returns a new sorted list from any iterable and never touches the original
+- [`list.sort()`](https://devdocs.io/python~3.14/library/stdtypes#list.sort) — sorts in place and returns `None`, deliberately, so you cannot use it by accident
+- [sorting HOW TO](https://devdocs.io/python~3.14/howto/sorting) — `key=`, `reverse=`, and when to prefer which of the two
+- [Timsort](https://en.wikipedia.org/wiki/Timsort) — the algorithm Python used until 3.11, when it switched to Powersort
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 The second half of the queue job is subtraction: eject the troublemaker by name, count how many people called Natasha are in line, take the last person off and hand them a voucher, and print an alphabetical roster for the office. That last one carries the lesson. `sort()` reorders the list you already have; `sorted()` — or a copy — gives you a new one and leaves the original alone. Confuse the two and you have just shuffled a live queue to make a report look tidy, which is the same bug as sorting a caller's list of hosts inside a logging helper.
@@ -253,18 +263,18 @@ ValueError: 10 is not in list
 3
 ```
 
-[common sequence operations]: https://docs.python.org/3/library/stdtypes.html#common-sequence-operations
-[dict]: https://docs.python.org/3/library/stdtypes.html#dict
-[list-methods]: https://docs.python.org/3/tutorial/datastructures.html#more-on-lists
-[list]: https://docs.python.org/3/library/stdtypes.html#list
-[mutable sequence operations]: https://docs.python.org/3/library/stdtypes.html#typesseq-mutable
-[sequence type]: https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range
-[set]: https://docs.python.org/3/library/stdtypes.html#set
-[slice notation]: https://docs.python.org/3/reference/expressions.html#slicings
-[sort]: https://docs.python.org/3/library/stdtypes.html#list.sort
-[sorted]: https://docs.python.org/3/library/functions.html#sorted
-[sorting how to]: https://docs.python.org/3/howto/sorting.html
-[tuple]: https://docs.python.org/3/library/stdtypes.html#tuple
+[common sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations
+[dict]: https://devdocs.io/python~3.14/library/stdtypes#dict
+[list-methods]: https://devdocs.io/python~3.14/tutorial/datastructures#more-on-lists
+[list]: https://devdocs.io/python~3.14/library/stdtypes#list
+[mutable sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#typesseq-mutable
+[sequence type]: https://devdocs.io/python~3.14/library/stdtypes#sequence-types-list-tuple-range
+[set]: https://devdocs.io/python~3.14/library/stdtypes#set
+[slice notation]: https://devdocs.io/python~3.14/reference/expressions#slicings
+[sort]: https://devdocs.io/python~3.14/library/stdtypes#list.sort
+[sorted]: https://devdocs.io/python~3.14/library/functions#sorted
+[sorting how to]: https://devdocs.io/python~3.14/howto/sorting
+[tuple]: https://devdocs.io/python~3.14/library/stdtypes#tuple
 
 ## Instructions
 Chaitana owns a very popular theme park.
@@ -492,18 +502,8 @@ park["sorted_names"](["Natasha", "Steve", "Eltran", "Natasha", "Rocket"])
 - Once you have a `copy()`, `sort()`-ing should be straightforward.
 - We're looking for an _ascending_ sort, or _alphabetical from a-z_.
 
-[python lists]: https://docs.python.org/3.11/library/stdtypes.html#list
-[more on lists]: https://docs.python.org/3.11/tutorial/datastructures.html#more-on-lists
-
-## Read first
-- [more on lists (Python tutorial)](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — `remove`, `pop`, `count`, `sort`, `copy`, each with its return value
-- [mutable sequence operations](https://docs.python.org/3/library/stdtypes.html#typesseq-mutable) — the formal table: which methods mutate, and what they hand back
-- [`sorted()`](https://docs.python.org/3/library/functions.html#sorted) — returns a new sorted list from any iterable and never touches the original
-- [`list.sort()`](https://docs.python.org/3/library/stdtypes.html#list.sort) — sorts in place and returns `None`, deliberately, so you cannot use it by accident
-- [sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — `key=`, `reverse=`, and when to prefer which of the two
-- [Timsort](https://en.wikipedia.org/wiki/Timsort) — the algorithm Python used until 3.11, when it switched to Powersort
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+[python lists]: https://devdocs.io/python~3.14/library/stdtypes#list
+[more on lists]: https://devdocs.io/python~3.14/tutorial/datastructures#more-on-lists
 
 ## Hints
 ### Hint 1

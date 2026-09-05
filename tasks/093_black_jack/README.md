@@ -3,13 +3,25 @@ title: comparisons — blackjack card values
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [88, 89, 92]
+prereqs: [21, 92]
 tags: [comparisons]
 source: exercism/python concept/black-jack (MIT, adapted)
 ---
 # comparisons — blackjack card values
 
 *Comparison operators — scoring and ranking blackjack cards.*
+
+## Read first
+- [Value comparisons](https://devdocs.io/python~3.14/reference/expressions#value-comparisons) — `<` `>` `==` and what "compare by value" means once the two sides are not the same type
+- [Comparisons in Python](https://devdocs.io/python~3.14/library/stdtypes#comparisons) — the full operator table, including `in` (containment) and `is` (identity), which are NOT the same test
+- [Comparisons in Python (language reference)](https://devdocs.io/python~3.14/reference/expressions#comparisons) — they all share one precedence level, above `and` / `or` / `not`
+- [Identity comparisons](https://devdocs.io/python~3.14/reference/expressions#is-not) — `is` / `is not`, and why they belong to `None`, not to cards
+- [Numeric types](https://devdocs.io/python~3.14/library/stdtypes#typesnumeric) — the ints your card values become
+- [Sequence types](https://devdocs.io/python~3.14/library/stdtypes#sequence-types-list-tuple-range) — the tuple the tie case returns
+- [Python basic operators (Tutorials Point)](https://www.tutorialspoint.com/python/python_basic_operators.htm) — a worked list with output
+- [Python Object Model](https://devdocs.io/python~3.14/reference/datamodel#objects) — what identity actually is
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 You are building the scoring half of a blackjack table for a casino app. Cards arrive from the dealer as short strings — '2', '10', 'K', 'A' — and before any rule about the game can be written, something has to turn those strings into numbers and compare them. The awkward one is the ace: it is worth 1 or 11, and which one depends on what is already on the table. So this task is three steps in order — score one card, rank two cards, then make the ace decision that needs both.
@@ -234,22 +246,22 @@ True
 False
 ```
 
-[arithmetic conversions]: https://docs.python.org/3/reference/expressions.html?highlight=number%20conversion#arithmetic-conversions
-[boolean operations]: https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not
-[complex numbers]: https://docs.python.org/3/library/functions.html#complex
-[decimal numbers]: https://docs.python.org/3/library/decimal.html
-[hex]: https://docs.python.org/3/library/functions.html?highlight=hex#hex
-[id function]: https://docs.python.org/3/library/functions.html#id
+[arithmetic conversions]: https://devdocs.io/python~3.14/reference/expressions#arithmetic-conversions
+[boolean operations]: https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not
+[complex numbers]: https://devdocs.io/python~3.14/library/functions#complex
+[decimal numbers]: https://devdocs.io/python~3.14/library/decimal
+[hex]: https://devdocs.io/python~3.14/library/functions#hex
+[id function]: https://devdocs.io/python~3.14/library/functions#id
 [lexographic order]: https://en.wikipedia.org/wiki/Lexicographic_order
-[object identity]: https://docs.python.org/3/reference/datamodel.html
-[octal]: https://docs.python.org/3/library/functions.html?#oct
-[ord]: https://docs.python.org/3/library/functions.html#ord
+[object identity]: https://devdocs.io/python~3.14/reference/datamodel
+[octal]: https://devdocs.io/python~3.14/library/functions#oct
+[ord]: https://devdocs.io/python~3.14/library/functions#ord
 [pep8 programming recommendations]: https://pep8.org/#programming-recommendations
-[rational numbers]: https://docs.python.org/3/library/fractions.html
-[rich comparisons]: https://docs.python.org/3/reference/datamodel.html#object.__lt__
+[rational numbers]: https://devdocs.io/python~3.14/library/fractions
+[rich comparisons]: https://devdocs.io/python~3.14/reference/datamodel#object.__lt__
 [three way boolean comparison]: https://en.wikipedia.org/wiki/Three-way_comparison
-[value comparisons none]: https://docs.python.org/3/reference/expressions.html?highlight=none#value-comparisons
-[value comparisons]: https://docs.python.org/3/reference/expressions.html?highlight=nan#value-comparisons
+[value comparisons none]: https://devdocs.io/python~3.14/reference/expressions#value-comparisons
+[value comparisons]: https://devdocs.io/python~3.14/reference/expressions#value-comparisons
 
 ## Instructions
 In this exercise you are going to implement some rules of [Blackjack][blackjack],
@@ -457,27 +469,15 @@ table["value_of_ace"]('6', 'K')  # -> 1    (6 + 10 + 11 = 27, bust)
 - You can use the [conditional expression][conditional expression] (_sometimes called a "ternary operator"_)
   to shorten simple `if`/`else` statements: `13 if letter == 'M' else 3`.
 
-[conditional expression]: https://docs.python.org/3/reference/expressions.html#conditional-expressions
-[if syntax]: https://docs.python.org/3/tutorial/controlflow.html#if-statements
-[int constructor]: https://docs.python.org/3/library/functions.html#int
+[conditional expression]: https://devdocs.io/python~3.14/reference/expressions#conditional-expressions
+[if syntax]: https://devdocs.io/python~3.14/tutorial/controlflow#if-statements
+[int constructor]: https://devdocs.io/python~3.14/library/functions#int
 [python comparisons examples]: https://www.tutorialspoint.com/python/comparison_operators_example.htm
-[python comparisons tutorial]: https://docs.python.org/3/reference/expressions.html#comparisons
-
-## Read first
-- [Value comparisons](https://docs.python.org/3/reference/expressions.html#value-comparisons) — `<` `>` `==` and what "compare by value" means once the two sides are not the same type
-- [Comparisons in Python](https://docs.python.org/3/library/stdtypes.html#comparisons) — the full operator table, including `in` (containment) and `is` (identity), which are NOT the same test
-- [Comparisons in Python (language reference)](https://docs.python.org/3/reference/expressions.html#comparisons) — they all share one precedence level, above `and` / `or` / `not`
-- [Identity comparisons](https://docs.python.org/3/reference/expressions.html#is-not) — `is` / `is not`, and why they belong to `None`, not to cards
-- [Numeric types](https://docs.python.org/3/library/stdtypes.html#typesnumeric) — the ints your card values become
-- [Sequence types](https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range) — the tuple the tie case returns
-- [Python basic operators (Tutorials Point)](https://www.tutorialspoint.com/python/python_basic_operators.htm) — a worked list with output
-- [Python Object Model](https://docs.python.org/3/reference/datamodel.html#objects) — what identity actually is
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+[python comparisons tutorial]: https://devdocs.io/python~3.14/reference/expressions#comparisons
 
 ## Hints
 ### Hint 1
-Only three cards are special: the three letter cards worth 10, and the ace. Everything else is the string of a number, and the [`int` constructor](https://docs.python.org/3/library/functions.html#int) will turn that into a number for you in one call — `int('13')`. You can use the equality operator to spot the ace (`card == 'A'`) and the containment operator to spot a face card (`'Q' in 'KJQ'`). Write that first function properly and the other two stop being about cards at all — they are about the numbers it gives back.
+Only three cards are special: the three letter cards worth 10, and the ace. Everything else is the string of a number, and the [`int` constructor](https://devdocs.io/python~3.14/library/functions#int) will turn that into a number for you in one call — `int('13')`. You can use the equality operator to spot the ace (`card == 'A'`) and the containment operator to spot a face card (`'Q' in 'KJQ'`). Write that first function properly and the other two stop being about cards at all — they are about the numbers it gives back.
 ### Hint 2
 Once you have defined `value_of_card`, you can call it from the other two functions.
 

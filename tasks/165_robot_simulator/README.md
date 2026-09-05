@@ -3,13 +3,21 @@ title: class-customization — a robot that turns and advances on an infinite gr
 difficulty: medium
 tier: advanced
 minutes: 20
-prereqs: [88, 90, 92, 97, 101, 104, 106, 115]
+prereqs: [115]
 tags: [class-customization, decorators, dict-methods]
 source: exercism/python practice/robot-simulator (MIT, adapted)
 ---
 # class-customization — a robot that turns and advances on an infinite grid
 
 *robot-simulator — keep the facing as a number, and both turns become one line of arithmetic.*
+
+## Read first
+- [A first look at classes](https://devdocs.io/python~3.14/tutorial/classes#a-first-look-at-classes) — `__init__`, `self`, and methods that change the instance rather than return a new one
+- [`property`](https://devdocs.io/python~3.14/library/functions#property) — how `.coordinates` can be computed on access instead of stored and kept in sync
+- [`%` on integers](https://devdocs.io/python~3.14/reference/expressions#binary-arithmetic-operations) — `% 4` keeps a facing inside `0..3`, and Python's `%` gives a non-negative answer even for `-1`
+- [Dictionaries](https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries) — a mapping is a neat stand-in for a chain of `if`s, both for "which letter is this" and for "which way does this facing move"
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Before a warehouse robot is allowed anywhere near a warehouse, the firmware that reads its command stream is replayed against a model of the robot in software: feed in `"RAALAL"`, check it ends up where the plan said. That model has to be cheap enough to run thousands of times in a test suite, so it is not a robot at all — it is a position, a facing, and a rule for what each letter does. Plotters, turtle graphics, CNC paths, the movement code in a game, a cursor walking a document: same object every time. The part worth getting right is the facing, because the obvious representation — four names, or four strings — turns "turn left" into a table of special cases, and the right one turns it into a remainder.
@@ -94,14 +102,6 @@ robot.direction       # -> SOUTH
 
 > [!WARNING]
 > The given constants run **clockwise**: `NORTH, EAST, SOUTH, WEST` is `0, 1, 2, 3`. Turning right is therefore the step that increases the number and turning left the one that decreases it — note that Exercism's stub declares them `EAST, NORTH, WEST, SOUTH`, which runs anticlockwise; the order here is not that.
-
-## Read first
-- [A first look at classes](https://docs.python.org/3/tutorial/classes.html#a-first-look-at-classes) — `__init__`, `self`, and methods that change the instance rather than return a new one
-- [`property`](https://docs.python.org/3/library/functions.html#property) — how `.coordinates` can be computed on access instead of stored and kept in sync
-- [`%` on integers](https://docs.python.org/3/reference/expressions.html#binary-arithmetic-operations) — `% 4` keeps a facing inside `0..3`, and Python's `%` gives a non-negative answer even for `-1`
-- [Dictionaries](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — a mapping is a neat stand-in for a chain of `if`s, both for "which letter is this" and for "which way does this facing move"
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

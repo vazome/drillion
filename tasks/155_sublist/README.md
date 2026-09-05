@@ -3,13 +3,21 @@ title: comparisons — say how two lists relate to each other
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [88, 89, 92, 93, 97]
+prereqs: [93, 97]
 tags: [comparisons]
 source: exercism/python practice/sublist (MIT, adapted)
 ---
 # comparisons — say how two lists relate to each other
 
 *sublist — equal, contains, contained by, or none of the above — decided in that order.*
+
+## Read first
+- [Comparing sequences](https://devdocs.io/python~3.14/tutorial/datastructures#comparing-sequences-and-other-types) — `==` on lists compares element by element, in order
+- [Slicing](https://devdocs.io/python~3.14/reference/expressions#slicings) — `big[i:i + len(small)]` is a candidate window
+- [any()](https://devdocs.io/python~3.14/library/functions#any) — "is there at least one window that matches?" in one expression
+- [range()](https://devdocs.io/python~3.14/library/stdtypes#range) — getting the last valid start index right is the only arithmetic here
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 "Did the expected sequence of steps actually happen?" is a question you ask of logs, of CI pipelines, of deployment histories. You have a list of what happened and a list of what should have happened, and you need one of four answers: identical, the real run contains the expected run, the expected run contains the real one, or they simply disagree. The subtlety is that *contiguous* matters — a rollout that did `pull, migrate, restart` is not the same as one that did `pull, panic, migrate, restart`, even though every expected step is present.
@@ -85,14 +93,6 @@ solve([1, 2, 3], [3, 2, 1])                  # -> UNEQUAL
 
 > [!WARNING]
 > `[1, 2, 5]` inside `[0, 1, 2, 3, 1, 2, 5, 6]` is the case that catches naive scanning: the run starts at index 1, matches `1, 2`, then fails at `3` — and the answer is still `SUBLIST`, because a *later* start works. A single pass with one pointer gives the wrong answer; you must be able to restart.
-
-## Read first
-- [Comparing sequences](https://docs.python.org/3/tutorial/datastructures.html#comparing-sequences-and-other-types) — `==` on lists compares element by element, in order
-- [Slicing](https://docs.python.org/3/reference/expressions.html#slicings) — `big[i:i + len(small)]` is a candidate window
-- [any()](https://docs.python.org/3/library/functions.html#any) — "is there at least one window that matches?" in one expression
-- [range()](https://docs.python.org/3/library/stdtypes.html#range) — getting the last valid start index right is the only arithmetic here
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

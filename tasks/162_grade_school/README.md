@@ -3,13 +3,21 @@ title: collections — a roster that stays sorted by grade, then by name
 difficulty: hard
 tier: core
 minutes: 20
-prereqs: [88, 97, 99, 106, 115]
+prereqs: [115]
 tags: [collections, dict-methods]
 source: exercism/python practice/grade-school (MIT, adapted)
 ---
 # collections — a roster that stays sorted by grade, then by name
 
 *grade-school — store each enrolment once, and let every view do its own sorting on the way out.*
+
+## Read first
+- [A first look at classes](https://devdocs.io/python~3.14/tutorial/classes#a-first-look-at-classes) — `__init__`, `self`, and giving each instance its own storage
+- [`dict`](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — `name in mapping` is the membership test that decides whether an enrolment is refused
+- [`sorted()`](https://devdocs.io/python~3.14/library/functions#sorted) — sorting tuples compares the first item, then the second, which is exactly "grade first, then name"
+- [`collections.defaultdict`](https://devdocs.io/python~3.14/library/collections#collections.defaultdict) — one way to group names under a grade without checking whether the key exists yet
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A school office enrols a child on one screen, and three other screens then ask that same record different questions: who is in year 2, who is enrolled at all, and did that last enrolment actually take. The mistake that costs the office a morning is keeping a separate list behind each screen — a name typed twice lands in two of them, and the printed register stops agreeing with the class list. Keep one fact per student, decide the ordering at the moment you *read*, and the three screens can never disagree. Tenant directories, on-call rotas and feature-flag audiences are all this shape: one write path, several sorted views.
@@ -40,7 +48,7 @@ If a test attempts to add the same student more than once, your implementation s
 The tests for this exercise expect your solution to be implemented as a School `class` in Python.
 If you are unfamiliar with `class`es in Python, [concept:python/classes]() and [`classes` in the official Python documentation][classes in python] are good places to start.
 
-[classes in python]: https://docs.python.org/3/tutorial/classes.html
+[classes in python]: https://devdocs.io/python~3.14/tutorial/classes
 
 ## You get
 Nothing to start — you return a **class**. The grader builds it with no arguments, `School()`, and then drives it with the four members below. Names are plain strings with no spaces, e.g. `"Aimee"`; grades are plain `int`s from `1` upwards, e.g. `2`.
@@ -90,14 +98,6 @@ school.added()    # -> []
 
 > [!WARNING]
 > Sorting as the names arrive is not enough. Insert `Anna` in grade 1 *after* `Jim` in grade 3 and a list you keep in arrival order can never recover — sort when you read, not when you write.
-
-## Read first
-- [A first look at classes](https://docs.python.org/3/tutorial/classes.html#a-first-look-at-classes) — `__init__`, `self`, and giving each instance its own storage
-- [`dict`](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — `name in mapping` is the membership test that decides whether an enrolment is refused
-- [`sorted()`](https://docs.python.org/3/library/functions.html#sorted) — sorting tuples compares the first item, then the second, which is exactly "grade first, then name"
-- [`collections.defaultdict`](https://docs.python.org/3/library/collections.html#collections.defaultdict) — one way to group names under a grade without checking whether the key exists yet
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

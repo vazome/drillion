@@ -3,7 +3,7 @@ title: ThreadPoolExecutor — CSV rows fanned out over a thread pool
 difficulty: medium
 tier: core
 minutes: 30
-prereqs: [30]
+prereqs: [28, 37]
 tags: [threadpoolexecutor]
 ---
 # ThreadPoolExecutor — CSV rows fanned out over a thread pool
@@ -11,6 +11,9 @@ tags: [threadpoolexecutor]
 *Whole-task task: a batch of hosts, a thread pool, and the order kept.*
 
 Combines topics 32 (csv), 54 (ThreadPoolExecutor), 43 (except).
+
+## Read first
+- [ThreadPoolExecutor](https://devdocs.io/python~3.14/library/concurrent.futures#threadpoolexecutor) — fanning work out and collecting it back
 
 ## Why
 An inventory file lists every host in a fleet, and the ops team needs to run one slow network call against each of them, say to fetch its CPU load. Done one at a time, two hundred hosts at two seconds each is almost seven minutes. Done at the same time, it is seconds. The report must still come back in the file's order so it lines up with the inventory, and one unreachable host must not stop the rest.

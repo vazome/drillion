@@ -3,13 +3,20 @@ title: loops — find a value in a sorted list by halving
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [88, 89, 92, 95, 96, 97, 99, 101]
+prereqs: [96, 101]
 tags: [loops]
 source: exercism/python practice/binary-search (MIT, adapted)
 ---
 # loops — find a value in a sorted list by halving
 
 *binary-search — two bounds closing in, and the index you hand back is the one you were standing on.*
+
+## Read first
+- [The `while` statement](https://devdocs.io/python~3.14/reference/compound_stmts#the-while-statement) — loop while the two bounds have not yet crossed
+- [Floor division `//`](https://devdocs.io/python~3.14/library/stdtypes#numeric-types-int-float-complex) — the midpoint of two indices, rounded down to a real index
+- [Raising exceptions](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions) — `raise ValueError("…")` with the exact message
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Every lookup against a sorted index is this loop: a database walking a B-tree, a log reader seeking to a timestamp, `bisect` in the standard library. Writing it once by hand is how the off-by-one stops being frightening — the bug is never the halving, it is the bound you forgot to move, and then the loop either spins forever or stops one place short of the answer.
@@ -57,9 +64,9 @@ Let's say we're looking for the number 23 in the following sorted list: `[4, 8, 
 
 ### Exception messages
 
-Sometimes it is necessary to [raise an exception](https://docs.python.org/3/tutorial/errors.html#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://docs.python.org/3/library/exceptions.html#base-classes), but should still include a meaningful message.
+Sometimes it is necessary to [raise an exception](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://devdocs.io/python~3.14/library/exceptions#base-classes), but should still include a meaningful message.
 
-This particular exercise requires that you use the [raise statement](https://docs.python.org/3/reference/simple_stmts.html#the-raise-statement) to "throw" a `ValueError` when the given value is not found within the array. The tests will only pass if you both `raise` the `exception` and include a message with it.
+This particular exercise requires that you use the [raise statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement) to "throw" a `ValueError` when the given value is not found within the array. The tests will only pass if you both `raise` the `exception` and include a message with it.
 
 To raise a `ValueError` with a message, write the message as an argument to the `exception` type:
 
@@ -90,13 +97,6 @@ solve([1, 3, 4, 6, 8, 9, 11], 6)  # -> 3
 solve([1, 3, 4, 6, 8, 9, 11], 1)  # -> 0
 solve([6], 6)                     # -> 0
 ```
-
-## Read first
-- [The `while` statement](https://docs.python.org/3/reference/compound_stmts.html#the-while-statement) — loop while the two bounds have not yet crossed
-- [Floor division `//`](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex) — the midpoint of two indices, rounded down to a real index
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("…")` with the exact message
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

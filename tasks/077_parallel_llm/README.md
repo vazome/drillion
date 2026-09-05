@@ -3,12 +3,15 @@ title: parallel LLM calls — gather with a per-call timeout
 difficulty: hard
 tier: packages
 minutes: 22
-prereqs: [53]
+prereqs: [36, 53]
 tags: [llm, asyncio, langchain]
 ---
 # parallel LLM calls — gather with a per-call timeout
 
 *Fan out N model calls at once, keep the order, cap what each one may cost you.*
+
+## Read first
+- [LangChain: Runnable interface](https://python.langchain.com/docs/concepts/runnables/) — `abatch` and the async surface
 
 ## Why
 LangChain is a library for wiring steps together around an AI model. A support team wants ten customer tickets summarised by an AI model. Sent one after another, each waits for the previous one to finish; sent all at once they take about as long as the slowest single one. But any single call can hang, so each needs its own time limit, and a call that runs out of time must just be marked as such without spoiling the other answers.

@@ -3,12 +3,15 @@ title: requests — params, auth header, timeout, raise_for_status
 difficulty: medium
 tier: packages
 minutes: 18
-prereqs: []
+prereqs: [9]
 tags: [http, requests]
 ---
 # requests — params, auth header, timeout, raise_for_status
 
 *Half of platform work is one HTTP call to somebody else's API, done properly.*
+
+## Read first
+- [Requests: quickstart](https://requests.readthedocs.io/en/latest/user/quickstart/) — `get`/`post`, `raise_for_status`, `.json()`
 
 ## Why
 The team's deploy dashboard needs the latest deploys from an internal deployment service. That service has a web API: you send a request to a web address with a few filters (which environment, how many) and a secret token that proves who you are, and it answers with data. Platform work is full of this one call, and the usual mistakes cause real outages: no time limit, so a dead server freezes your script forever; ignoring error answers, so a broken server looks like "no deploys today". You are asked to make that one call properly.

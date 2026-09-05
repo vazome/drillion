@@ -3,13 +3,21 @@ title: function-arguments — the bakery's one-for-you line
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [88, 112]
+prereqs: [112]
 tags: [function-arguments]
 source: exercism/python practice/two-fer (MIT, adapted)
 ---
 # function-arguments — the bakery's one-for-you line
 
 *two-fer — one line of dialogue, and the argument the caller often forgets.*
+
+## Read first
+- [Default argument values](https://devdocs.io/python~3.14/tutorial/controlflow#default-argument-values) — a parameter with a default value: what happens when the caller passes nothing
+- [Python Morsels: positional vs keyword arguments](https://www.pythonmorsels.com/positional-vs-keyword-arguments/) — the vocabulary an interviewer uses: positional, keyword, default
+- [Real Python: defining your own Python function](https://realpython.com/defining-your-own-python-function/) — the whole `def` statement
+- [f-strings](https://devdocs.io/python~3.14/reference/lexical_analysis#f-strings) — dropping a value into the middle of a sentence
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A bakery runs a two-for-one offer on cookies, and customers keep handing the free one to the next person in the queue. The till prints a little line for them to say. Sometimes the till knows who the customer is (the loyalty card has a name on it) and sometimes it does not — and the line still has to come out right either way. That "sometimes there is no value" is the whole task: it is the same problem as a config option nobody set, or a CLI flag nobody passed.
@@ -63,14 +71,6 @@ solve("Alice")   # -> "One for Alice, one for me."
 solve("Bohdan")  # -> "One for Bohdan, one for me."
 solve()          # -> "One for you, one for me."
 ```
-
-## Read first
-- [Default argument values](https://docs.python.org/3/tutorial/controlflow.html#default-argument-values) — a parameter with a default value: what happens when the caller passes nothing
-- [Python Morsels: positional vs keyword arguments](https://www.pythonmorsels.com/positional-vs-keyword-arguments/) — the vocabulary an interviewer uses: positional, keyword, default
-- [Real Python: defining your own Python function](https://realpython.com/defining-your-own-python-function/) — the whole `def` statement
-- [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#f-strings) — dropping a value into the middle of a sentence
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

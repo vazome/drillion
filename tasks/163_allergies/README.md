@@ -3,13 +3,21 @@ title: classes — unpack one test score into a list of allergies
 difficulty: medium
 tier: core
 minutes: 20
-prereqs: [88, 90, 92, 101, 106, 115]
+prereqs: [115]
 tags: [classes, bitwise]
 source: exercism/python practice/allergies (MIT, adapted)
 ---
 # classes — unpack one test score into a list of allergies
 
 *allergies — one integer, eight yes/no answers, and the arithmetic that gets each one back out.*
+
+## Read first
+- [Bitwise operations](https://devdocs.io/python~3.14/library/stdtypes#bitwise-operations-on-integer-types) — `&` keeps only the bits both numbers have, `<<` slides a `1` up to the position you want
+- [`bool()`](https://devdocs.io/python~3.14/library/functions#bool) — turning a non-zero number into the actual `True` the grader is comparing against
+- [`enumerate()`](https://devdocs.io/python~3.14/library/functions#enumerate) — pairing each allergen with its position, which is all you need to work out its score
+- [`property`](https://devdocs.io/python~3.14/library/functions#property) — how `.lst` can be computed on access instead of stored
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A lab sends back a single number to say which of eight things a patient reacts to, because one number is cheap to store, cheap to send and impossible to get half-written. Every system that has ever had to record a set of on/off facts in one field does this: Unix file permissions, Linux capability masks, feature flags packed into a bitmask column, the settings byte in a network protocol. Reading such a field is a skill you need long before you ever choose to write one — and the trap is always the same, a number can carry flags your code has never heard of, and it must ignore them rather than guess.
@@ -81,14 +89,6 @@ Allergies(248).lst                     # -> ["strawberries", "tomatoes", "chocol
 
 > [!WARNING]
 > `257` is `256 + 1`. A solution that tests the score by subtracting values largest-first, or by asking "is the score equal to 128?", gets this one wrong. Each allergen has to be answered on its own, without reference to the rest of the number.
-
-## Read first
-- [Bitwise operations](https://docs.python.org/3/library/stdtypes.html#bitwise-operations-on-integer-types) — `&` keeps only the bits both numbers have, `<<` slides a `1` up to the position you want
-- [`bool()`](https://docs.python.org/3/library/functions.html#bool) — turning a non-zero number into the actual `True` the grader is comparing against
-- [`enumerate()`](https://docs.python.org/3/library/functions.html#enumerate) — pairing each allergen with its position, which is all you need to work out its score
-- [`property`](https://docs.python.org/3/library/functions.html#property) — how `.lst` can be computed on access instead of stored
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

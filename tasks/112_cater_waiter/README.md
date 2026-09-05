@@ -3,13 +3,22 @@ title: sets — dedupe the recipes, build the shopping list
 difficulty: easy
 tier: core
 minutes: 14
-prereqs: [88, 97, 101, 104, 106]
+prereqs: [12, 106]
 tags: [sets]
 source: exercism/python concept/cater-waiter (MIT, adapted)
 ---
 # sets — dedupe the recipes, build the shopping list
 
 *Sets — the constructor, `union`, and `difference`, on a catering menu.*
+
+## Read first
+- [Set types — set, frozenset](https://devdocs.io/python~3.14/library/stdtypes#set) — the full method table, and the line that matters here: the `set()` constructor accepts any iterable
+- [set.union()](https://devdocs.io/python~3.14/library/stdtypes#frozenset.union) — merge many collections into one set; the operator form is `|`
+- [set.difference()](https://devdocs.io/python~3.14/library/stdtypes#frozenset.difference) — everything in the first set that is not in the others; the operator form is `-`
+- [Real Python: Sets in Python](https://realpython.com/python-sets/) — a walk through the operations with pictures of the overlaps
+- [Set and logic symbols cheat sheet](http://notes.imt-decal.org/sets/cheat-sheet.html) — the maths notation the method names come from
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A small catering firm has agreed to run an evening for a cooking club, and the recipes came in from a dozen different sources. The same ingredient is listed three times in one recipe, twice in another, and the shopping list is built by hand from all of them — so the firm buys three bags of chickpeas and forgets the cilantro. Three chores in this task are the whole of that problem: strip the duplicates out of one recipe, merge every recipe into one master shopping list, and take the tray-passed appetizers back out of the list of dishes that get plated. Each one is a single set operation. The same three moves show up whenever you merge config files, collect the unique hosts out of a log, or subtract an exclusion list from a target list.
@@ -410,12 +419,12 @@ The operator version of this method is  `<set> ^ <other set>`:
 >
 > [symmetric_difference]: https://en.wikipedia.org/wiki/Symmetric_difference
 
-[hashable]: https://docs.python.org/3.7/glossary.html#term-hashable
+[hashable]: https://devdocs.io/python~3.14/glossary#term-hashable
 [intersection]: https://www.mathgoodies.com/lessons/sets/intersection
 [mathematical-sets]: https://en.wikipedia.org/wiki/Set_theory#Basic_concepts_and_notation
 [operator]: https://www.computerhope.com/jargon/o/operator.htm
-[type-frozenset]: https://docs.python.org/3/library/stdtypes.html#frozenset
-[type-set]: https://docs.python.org/3/library/stdtypes.html#set
+[type-frozenset]: https://devdocs.io/python~3.14/library/stdtypes#frozenset
+[type-set]: https://devdocs.io/python~3.14/library/stdtypes#set
 
 ## Instructions
 
@@ -656,18 +665,9 @@ kitchen["separate_appetizers"](["Barley Risotto", "Asparagus Puffs", "Barley Ris
 - A _symmetric difference_ of more than two `sets` will include elements that are repeated more than two times across the input `sets`.  To remove these cross-set repeated elements, the _intersections_ between set pairs needs to be subtracted from the symmetric difference.
 - Using [concept: loops](/tracks/python/concepts/loops) to iterate through the various dishes might be useful here.
 
-[hashable]: https://docs.python.org/3.7/glossary.html#term-hashable
-[iterable]: https://docs.python.org/3/glossary.html#term-iterable
-[sets]: https://docs.python.org/3/tutorial/datastructures.html#sets
-
-## Read first
-- [Set types — set, frozenset](https://docs.python.org/3/library/stdtypes.html#set) — the full method table, and the line that matters here: the `set()` constructor accepts any iterable
-- [set.union()](https://docs.python.org/3/library/stdtypes.html#frozenset.union) — merge many collections into one set; the operator form is `|`
-- [set.difference()](https://docs.python.org/3/library/stdtypes.html#frozenset.difference) — everything in the first set that is not in the others; the operator form is `-`
-- [Real Python: Sets in Python](https://realpython.com/python-sets/) — a walk through the operations with pictures of the overlaps
-- [Set and logic symbols cheat sheet](http://notes.imt-decal.org/sets/cheat-sheet.html) — the maths notation the method names come from
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+[hashable]: https://devdocs.io/python~3.14/glossary#term-hashable
+[iterable]: https://devdocs.io/python~3.14/glossary#term-iterable
+[sets]: https://devdocs.io/python~3.14/tutorial/datastructures#sets
 
 ## Hints
 ### Hint 1

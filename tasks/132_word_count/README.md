@@ -3,13 +3,21 @@ title: dicts — tally the words in a subtitle
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [88, 95, 96, 101, 106]
+prereqs: [10, 25, 96, 106]
 tags: [dicts]
 source: exercism/python practice/word-count (MIT, adapted)
 ---
 # dicts — tally the words in a subtitle
 
 *word-count — cut messy text into words, then count them into a dict.*
+
+## Read first
+- [Mapping types: dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — what a dict guarantees and what it costs
+- [collections.Counter](https://devdocs.io/python~3.14/library/collections#collections.Counter) — a dict subclass built for exactly this tally
+- [re.findall()](https://devdocs.io/python~3.14/library/re#re.findall) — "give me every piece that looks like this", instead of "split on every separator I can think of"
+- [str.lower()](https://devdocs.io/python~3.14/library/stdtypes#str.lower) — case folding before you count
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Every "what are people actually saying?" question ends up here: the top terms in a week of support tickets, the most common error phrase in a log file, the words a search index should not bother storing. The counting is trivial — a dict of word to number. The work is deciding what a *word* is when the text is full of commas, tabs, capital letters and apostrophes, and getting that decision written down once instead of re-guessing it in five places.
@@ -138,29 +146,21 @@ ________
   Generator expressions are evaluated in a "lazy" fashion, and take up less space in memory than a corresponding list comprehension.
 
 
-[collections.counter]: https://docs.python.org/3/library/collections.html#collections.Counter
-[collections]: https://docs.python.org/3/library/collections.html#module-collections
+[collections.counter]: https://devdocs.io/python~3.14/library/collections#collections.Counter
+[collections]: https://devdocs.io/python~3.14/library/collections#collections-container-datatypes
 [comprehensions]: https://treyhunner.com/2015/12/python-list-comprehensions-now-in-color/
-[dict.setdefault]: https://docs.python.org/3/library/stdtypes.html#dict.setdefault
-[dict]: https://docs.python.org/3/library/stdtypes.html#mapping-types-dict
+[dict.setdefault]: https://devdocs.io/python~3.14/library/stdtypes#dict.setdefault
+[dict]: https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict
 [generator expressions]: https://dbader.org/blog/python-generator-expressions
-[re.findall]: https://docs.python.org/3/library/re.html?highlight=re#re.findall
-[re.sub]: https://docs.python.org/3/library/re.html?highlight=re#re.sub
-[re]: https://docs.python.org/3/library/re.html?highlight=re#module-re
+[re.findall]: https://devdocs.io/python~3.14/library/re#re.findall
+[re.sub]: https://devdocs.io/python~3.14/library/re#re.sub
+[re]: https://devdocs.io/python~3.14/library/re#re-regular-expression-operations
 [regex101]: https://regex101.com/
-[str.lower]: https://docs.python.org/3/library/stdtypes.html#str.lower
-[str.replace]: https://docs.python.org/3/library/stdtypes.html#str.replace
-[str.split]: https://docs.python.org/3/library/stdtypes.html#str.split
-[str.strip]: https://docs.python.org/3/library/stdtypes.html#str.strip
-[string]: https://docs.python.org/3/library/string.html
-
-## Read first
-- [Mapping types: dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — what a dict guarantees and what it costs
-- [collections.Counter](https://docs.python.org/3/library/collections.html#collections.Counter) — a dict subclass built for exactly this tally
-- [re.findall()](https://docs.python.org/3/library/re.html#re.findall) — "give me every piece that looks like this", instead of "split on every separator I can think of"
-- [str.lower()](https://docs.python.org/3/library/stdtypes.html#str.lower) — case folding before you count
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+[str.lower]: https://devdocs.io/python~3.14/library/stdtypes#str.lower
+[str.replace]: https://devdocs.io/python~3.14/library/stdtypes#str.replace
+[str.split]: https://devdocs.io/python~3.14/library/stdtypes#str.split
+[str.strip]: https://devdocs.io/python~3.14/library/stdtypes#str.strip
+[string]: https://devdocs.io/python~3.14/library/string
 
 ## Hints
 ### Hint 1

@@ -17,9 +17,9 @@ from drillion.api import MAX_BODY, _recent, app
 from drillion.catalogue import tasks
 from drillion.settings import settings
 
-SLUG = "001_fstrings"
-NEXT_SLUG = "002_slicing"  # no prereqs: what the scheduler offers once 001 is cleared
-PREREQ, GATED = "011_decorators", "016_functools"  # 016 waits on topic 11
+SLUG = "017_fstrings"
+NEXT_SLUG = "018_slicing"  # what the scheduler offers once 017 is cleared
+PREREQ, GATED = "009_dictget", "010_counter"  # 010 waits on topic 9
 TASKS = settings.tasks_dir  # the real ones — `_api()` repoints settings.root at a copy
 PASSING = 'return "\\n".join(f"{name:<14}{value:>12,.2f}" for name, value in rows)'
 
@@ -71,7 +71,7 @@ async def _stub_to_pass(api, path):
     assert (
         "## Hints" not in task["spec_md"] and "spec" not in task
     )  # guidance is Markdown now
-    assert task["meta"]["topic"] == 1 and "spec_md" not in task["meta"]
+    assert task["meta"]["topic"] == 17 and "spec_md" not in task["meta"]
     assert (
         "raise NotImplementedError" in task["code"] and "_reference" not in task["code"]
     )
@@ -505,7 +505,7 @@ async def _blocked_rows(api, _path):
     """Every unstarted row says what it is waiting for, and it says what the scheduler thinks."""
     cat = (await api.get("/api/catalogue")).json()
     rows = {e["slug"]: e for e in cat["tasks"]}
-    assert rows[GATED]["blocked"] == [PREREQ]  # 016 needs topic 11
+    assert rows[GATED]["blocked"] == [PREREQ]  # 010 needs topic 9
     assert rows[PREREQ]["blocked"] == [] and rows[SLUG]["blocked"] == []
     # the rows waiting for nothing are exactly the ones the scheduler is willing to offer
     assert sorted(e["slug"] for e in cat["tasks"] if not e["blocked"]) == sorted(

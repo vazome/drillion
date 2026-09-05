@@ -3,13 +3,22 @@ title: sets — award energy points for a finished level
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [88, 90, 92, 97, 101, 112]
+prereqs: [112]
 tags: [sets]
 source: exercism/python practice/sum-of-multiples (MIT, adapted)
 ---
 # sets — award energy points for a finished level
 
 *sum-of-multiples — count each number once, however many rules match it.*
+
+## Read first
+- [Sets](https://devdocs.io/python~3.14/library/stdtypes#set) — a set holds one copy of each item, so "collect then sum" deduplicates for free
+- [Set union](https://devdocs.io/python~3.14/library/stdtypes#frozenset.union) — `|` and `update()` merge the multiples of each base value into one collection
+- [any()](https://devdocs.io/python~3.14/library/functions#any) — the other route: for each number, ask whether *any* base value divides it
+- [range() with a step](https://devdocs.io/python~3.14/library/functions#func-range) — `range(base, level, base)` walks a base value's multiples directly, without testing every number
+- [sum()](https://devdocs.io/python~3.14/library/functions#sum) — the last line either way
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 "Sum everything that matches at least one of these rules, but never count anything twice" is a billing question, a scoring question and a reporting question all at once — think of a discount that applies if the customer is in *any* of three campaigns, and must not be applied three times. The moment two rules overlap, the naive "loop over rules, add up their matches" answer is quietly too big. Deduplicating by the *thing* rather than by the *rule* is the fix, and a set is how you say it.
@@ -83,15 +92,6 @@ solve(10000, [])    # -> 0
 
 > [!WARNING]
 > `solve(15, [4, 6])` is `30`, not `42`: 12 is a multiple of both and must be counted once. Any solution that loops over the base values and adds up each one's multiples separately gets this wrong.
-
-## Read first
-- [Sets](https://docs.python.org/3/library/stdtypes.html#set) — a set holds one copy of each item, so "collect then sum" deduplicates for free
-- [Set union](https://docs.python.org/3/library/stdtypes.html#frozenset.union) — `|` and `update()` merge the multiples of each base value into one collection
-- [any()](https://docs.python.org/3/library/functions.html#any) — the other route: for each number, ask whether *any* base value divides it
-- [range() with a step](https://docs.python.org/3/library/functions.html#func-range) — `range(base, level, base)` walks a base value's multiples directly, without testing every number
-- [sum()](https://docs.python.org/3/library/functions.html#sum) — the last line either way
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

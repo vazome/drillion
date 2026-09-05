@@ -3,13 +3,25 @@ title: unpacking-and-multiple-assignment — routes and the wagon depot grid
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [97, 101, 104, 106, 110]
+prereqs: [110]
 tags: [unpacking-and-multiple-assignment]
 source: exercism/python concept/locomotive-engineer (MIT, adapted)
 ---
 # unpacking-and-multiple-assignment — routes and the wagon depot grid
 
 *`**kwargs`, `{**a, **b}` and transposing a grid with `zip(*rows)`.*
+
+## Read first
+- [Trey Hunner: asterisks in Python](https://treyhunner.com/2018/10/asterisks-in-python-what-they-are-and-how-to-use-them/) — the one article that covers every use of `*` and `**`
+- [Trey Hunner: tuple unpacking improves readability](https://treyhunner.com/2018/03/tuple-unpacking-improves-python-code-readability/) — why naming the parts beats indexing them
+- [PEP 3132: extended iterable unpacking](https://peps.python.org/pep-3132/) — the `first, *rest = seq` form and why it exists
+- [PEP 448: additional unpacking generalizations](https://peps.python.org/pep-0448/) — `[*a, *b]` and `{**a, **b}` in literals and calls
+- [Stack Abuse: unpacking beyond parallel assignment](https://stackabuse.com/unpacking-in-python-beyond-parallel-assignment/) — worked examples of each form
+- [Arbitrary argument lists](https://devdocs.io/python~3.14/tutorial/controlflow#arbitrary-argument-lists) — `*args` and `**kwargs` in a function definition
+- [Dan Bader: nested unpacking](https://dbader.org/blog/python-nested-unpacking) — unpacking a structure that is itself full of structures
+- [zip()](https://devdocs.io/python~3.14/library/functions#zip) — pairs up the items of several iterables; with `*` in front of a list of rows it transposes them
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Same friend, harder paperwork. The routing records need the intermediate stops folded in — and nobody knows in advance how many stops a route has, so they arrive as keyword arguments. Other routes are missing details that differ from route to route: speed here, temperature there, so the merge has to be generic. And the wagon depot is stored wrong: the rows are grouped by colour when the *columns* should be. All three are the double-star half of unpacking, plus the one line of `zip` that turns rows into columns.
@@ -370,14 +382,14 @@ The `zip()` function takes multiple iterables and returns a `list` of `tuples` w
 ```
 
 [args and kwargs]: https://www.geeksforgeeks.org/args-kwargs-python/
-[items]: https://docs.python.org/3/library/stdtypes.html#dict.items
+[items]: https://devdocs.io/python~3.14/library/stdtypes#dict.items
 [multiple assignment]: https://www.geeksforgeeks.org/assigning-multiple-variables-in-one-line-in-python/
 [packing and unpacking]: https://www.geeksforgeeks.org/packing-and-unpacking-arguments-in-python/
 [pep-3132]: https://peps.python.org/pep-3132/
 [sorting algorithms]: https://realpython.com/sorting-algorithms-python/
 [unpacking]: https://www.geeksforgeeks.org/unpacking-arguments-in-python/?ref=rp
-[view-objects]: https://docs.python.org/3/library/stdtypes.html#dict-views
-[zip]: https://docs.python.org/3/library/functions.html#zip
+[view-objects]: https://devdocs.io/python~3.14/library/stdtypes#dict-views
+[zip]: https://devdocs.io/python~3.14/library/functions#zip
 
 ## Instructions
 Your friend Linus is a Locomotive Engineer who drives cargo trains between cities.
@@ -571,25 +583,13 @@ depot["fix_wagon_depot"]([[(2, 'red'), (4, 'red'), (8, 'red')],
 - you can also unpack zipped iterators using `*`.
   `[*content] = zip(iterator_1, iterator_2)` will unzip the `tuple` produced by `zip()` into a `list`.
 
-## Read first
-- [Trey Hunner: asterisks in Python](https://treyhunner.com/2018/10/asterisks-in-python-what-they-are-and-how-to-use-them/) — the one article that covers every use of `*` and `**`
-- [Trey Hunner: tuple unpacking improves readability](https://treyhunner.com/2018/03/tuple-unpacking-improves-python-code-readability/) — why naming the parts beats indexing them
-- [PEP 3132: extended iterable unpacking](https://peps.python.org/pep-3132/) — the `first, *rest = seq` form and why it exists
-- [PEP 448: additional unpacking generalizations](https://peps.python.org/pep-0448/) — `[*a, *b]` and `{**a, **b}` in literals and calls
-- [Stack Abuse: unpacking beyond parallel assignment](https://stackabuse.com/unpacking-in-python-beyond-parallel-assignment/) — worked examples of each form
-- [Arbitrary argument lists](https://docs.python.org/3/tutorial/controlflow.html#arbitrary-argument-lists) — `*args` and `**kwargs` in a function definition
-- [Dan Bader: nested unpacking](https://dbader.org/blog/python-nested-unpacking) — unpacking a structure that is itself full of structures
-- [zip()](https://docs.python.org/3/library/functions.html#zip) — pairs up the items of several iterables; with `*` in front of a list of rows it transposes them
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
-
 ## Hints
 ### Hint 1
 Two stars this time. `**kwargs` in a parameter list collects any number of `name=value` arguments into a dictionary; `{**a, **b}` in an expression pours two dictionaries into one new one, with the later one winning wherever the keys overlap. Between them they cover tasks 3 and 4 in about a line each.
 ### Hint 2
-For task 3, the stops arrive as keyword arguments, so *inside* the function they are already a dict — you only need their values, in order, under one new key. Build the answer as a new dict literal that spreads the route in and then adds the extra key, rather than mutating the dict you were handed. [`<dict>.values()`](https://docs.python.org/3/library/stdtypes.html#dict.values) gives you the values, and `list(...)` fixes them as a list.
+For task 3, the stops arrive as keyword arguments, so *inside* the function they are already a dict — you only need their values, in order, under one new key. Build the answer as a new dict literal that spreads the route in and then adds the extra key, rather than mutating the dict you were handed. [`<dict>.values()`](https://devdocs.io/python~3.14/library/stdtypes#dict.values) gives you the values, and `list(...)` fixes them as a list.
 
-Task 5 is a transpose. `zip(*rows)` feeds each row to [`zip`](https://docs.python.org/3/library/functions.html#zip) as a separate argument, so `zip` pairs up first-of-each, second-of-each, third-of-each — which is exactly the swap the depot needs. `zip` yields tuples, though, and the depot wants each row as a *list* of tuples; a starred assignment target like `[*row] = ...` unpacks one of those into a list for you, and you can name all three rows in a single multiple assignment.
+Task 5 is a transpose. `zip(*rows)` feeds each row to [`zip`](https://devdocs.io/python~3.14/library/functions#zip) as a separate argument, so `zip` pairs up first-of-each, second-of-each, third-of-each — which is exactly the swap the depot needs. `zip` yields tuples, though, and the depot wants each row as a *list* of tuples; a starred assignment target like `[*row] = ...` unpacks one of those into a list for you, and you can name all three rows in a single multiple assignment.
 ### Hint 3
 Different data, same shape. Tagging a server record, and turning a table of columns into a table of rows:
 

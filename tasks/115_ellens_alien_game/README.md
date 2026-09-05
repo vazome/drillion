@@ -3,13 +3,24 @@ title: classes — Ellen's alien, its own health and its own position
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [88, 89, 90, 93, 95, 97, 101, 104, 106, 112]
+prereqs: [112]
 tags: [classes]
 source: exercism/python concept/ellens-alien-game (MIT, adapted)
 ---
 # classes — Ellen's alien, its own health and its own position
 
 *Classes — `__init__`, methods, instance attributes, and one class attribute.*
+
+## Read first
+- [Classes (the Python tutorial)](https://devdocs.io/python~3.14/tutorial/classes) — `class`, `__init__`, `self`, and the difference between a class attribute and an instance attribute
+- [Python Morsels: Classes](https://www.pythonmorsels.com/topics/classes/) — a short rundown of what a class actually is
+- [Real Python: OOP in Python 3](https://realpython.com/python3-object-oriented-programming/) — the same material at length, with worked examples
+- [DigitalOcean: Class and instance variables](https://www.digitalocean.com/community/tutorials/understanding-class-and-instance-variables-in-python-3) — the exact distinction this task grades
+- [DigitalOcean: Constructing classes and defining objects](https://www.digitalocean.com/community/tutorials/how-to-construct-classes-and-define-objects-in-python-3) — a gentler start if `self` is still strange
+- [PyBites: when to use classes](https://pybit.es/articles/when-classes/) — and when a plain function or dict is the better answer
+- [The `pass` statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-pass-statement) — the placeholder body task 5 asks for
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A game has a thousand aliens on screen and each one has to remember where it is and how much damage it has taken. Keeping that in parallel lists — one for x, one for y, one for health, all indexed the same way — falls apart the first time an alien dies and the indexes shift. A class puts the three numbers and the four things you can do to them in one place, so "hit that alien" is one call and the alien is the only thing that knows how its own health works. The distinction the task really turns on is the one every code review asks about: health belongs to *one* alien, but the running total of aliens ever spawned belongs to the *class*, and putting either in the wrong place is a bug you only see at scale.
@@ -499,17 +510,6 @@ Alien.total_aliens_created   # -> however many aliens have been built so far
 - The Alien constructor takes _2 parameters_.
 - Unpacking what is _inside_ the tuple would yield two parameters.
 - The standalone function is outside of the `class`.
-
-## Read first
-- [Classes (the Python tutorial)](https://docs.python.org/3/tutorial/classes.html) — `class`, `__init__`, `self`, and the difference between a class attribute and an instance attribute
-- [Python Morsels: Classes](https://www.pythonmorsels.com/topics/classes/) — a short rundown of what a class actually is
-- [Real Python: OOP in Python 3](https://realpython.com/python3-object-oriented-programming/) — the same material at length, with worked examples
-- [DigitalOcean: Class and instance variables](https://www.digitalocean.com/community/tutorials/understanding-class-and-instance-variables-in-python-3) — the exact distinction this task grades
-- [DigitalOcean: Constructing classes and defining objects](https://www.digitalocean.com/community/tutorials/how-to-construct-classes-and-define-objects-in-python-3) — a gentler start if `self` is still strange
-- [PyBites: when to use classes](https://pybit.es/articles/when-classes/) — and when a plain function or dict is the better answer
-- [The `pass` statement](https://docs.python.org/3/reference/simple_stmts.html#the-pass-statement) — the placeholder body task 5 asks for
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

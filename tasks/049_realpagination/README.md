@@ -13,6 +13,9 @@ tags: [http, requests]
 > [!NOTE]
 > Topic 52 on the checklist is FastAPI. That needs a running server and packages we do not have offline, so this slot tasks real-API pagination instead — the same loop as topic 49, but against actual requests/Response objects rather than a fake.
 
+## Read first
+- [Requests: session objects](https://requests.readthedocs.io/en/latest/user/advanced/#session-objects) — one session across every page
+
 ## Why
 A manager wants every open issue in the team's repo on a GitHub-style server, to build a backlog report. The server hands back issues a few at a time, and it tells you where the next batch lives not in the data but in a response header called `Link`: a line listing web addresses labelled next, prev, first and last. You must follow the "next" address until there is none, send the token and a time limit with every request, and never guess at addresses yourself, because the server only answers addresses it handed out.
 

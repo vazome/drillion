@@ -3,13 +3,20 @@ title: loops — hand back the fewest coins that add up
 difficulty: hard
 tier: core
 minutes: 25
-prereqs: [88, 89, 90, 92, 97, 99, 101]
+prereqs: [90, 101]
 tags: [loops]
 source: exercism/python practice/change (MIT, adapted)
 ---
 # loops — hand back the fewest coins that add up
 
 *change — the greedy answer is the wrong answer; build up from the small amounts instead.*
+
+## Read first
+- [`range()`](https://devdocs.io/python~3.14/library/functions#func-range) — walking `1` up to `target` in order, so that every smaller amount is already answered by the time you need it
+- [`min()`](https://devdocs.io/python~3.14/library/functions#min) — the smallest of several candidates, and the `key=` argument for when "smallest" means "shortest list"
+- [Raising exceptions](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions) — `raise ValueError("…")`, and why the message has to match exactly
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A till, a vending machine, a payouts service, a scheduler handing out quota in fixed chunks — all of them have to hit an exact total out of fixed denominations, and all of them want to hand over as few pieces as possible. The instinct is to grab the biggest denomination that still fits and repeat. That works for the coins in your pocket, because those were designed so it would, and it quietly fails everywhere else: with 1, 10 and 11 available, the greedy answer for 20 is 11 plus nine 1s, and the right answer is two 10s. In a payout system that is real money, and it is invisible until somebody audits it.
@@ -50,9 +57,9 @@ Determine the fewest number of coins to give a customer so that the sum of their
 
 ### Exception messages
 
-Sometimes it is necessary to [raise an exception](https://docs.python.org/3/tutorial/errors.html#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://docs.python.org/3/library/exceptions.html#base-classes), but should still include a meaningful message.
+Sometimes it is necessary to [raise an exception](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://devdocs.io/python~3.14/library/exceptions#base-classes), but should still include a meaningful message.
 
-This particular exercise requires that you use the [raise statement](https://docs.python.org/3/reference/simple_stmts.html#the-raise-statement) to "throw" a `ValueError` when change cannot be made with the coins given. The tests will only pass if you both `raise` the `exception` and include a message with it.
+This particular exercise requires that you use the [raise statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement) to "throw" a `ValueError` when change cannot be made with the coins given. The tests will only pass if you both `raise` the `exception` and include a message with it.
 
 To raise a `ValueError` with a message, write the message as an argument to the `exception` type:
 
@@ -88,13 +95,6 @@ solve([1, 5, 10, 21, 25], 0)    # -> []
 
 > [!WARNING]
 > "Take the biggest coin that still fits, then repeat" is wrong, and the tests are chosen to prove it. On `[1, 10, 11]` with a target of 20 it pays ten coins where two will do, and on `[2, 5, 10, 20, 50]` with a target of 21 it takes the 20 and then strands itself with 1 left and nothing small enough to pay it.
-
-## Read first
-- [`range()`](https://docs.python.org/3/library/functions.html#func-range) — walking `1` up to `target` in order, so that every smaller amount is already answered by the time you need it
-- [`min()`](https://docs.python.org/3/library/functions.html#min) — the smallest of several candidates, and the `key=` argument for when "smallest" means "shortest list"
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("…")`, and why the message has to match exactly
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

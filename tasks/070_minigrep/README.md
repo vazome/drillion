@@ -3,7 +3,7 @@ title: argparse — mini-grep with argparse flags
 difficulty: medium
 tier: core
 minutes: 25
-prereqs: [27]
+prereqs: [18, 25]
 tags: [argparse]
 ---
 # argparse — mini-grep with argparse flags
@@ -11,6 +11,10 @@ tags: [argparse]
 *Whole-task task: rebuild grep, flags and all.*
 
 Combines topics 29 (regex), 37 (argparse), 28 (str methods).
+
+## Read first
+- [re](https://devdocs.io/python~3.14/library/re) — the pattern side
+- [argparse](https://devdocs.io/python~3.14/library/argparse) — the flags side
 
 ## Why
 grep is the command-line tool every engineer uses to pull matching lines out of a log. Interviewers ask you to rebuild a small version of it because it combines two everyday skills: reading command-line options the standard way, and searching lines for a pattern. The ignore-case, invert and line-number options are the ones people reach for most on a real shell.

@@ -3,7 +3,7 @@ title: csv — inner-join two CSVs on a shared key
 difficulty: medium
 tier: core
 minutes: 30
-prereqs: [30]
+prereqs: [11, 28]
 tags: [csv]
 ---
 # csv — inner-join two CSVs on a shared key
@@ -11,6 +11,9 @@ tags: [csv]
 *Whole-task task: two CSVs, one shared column, join and filter.*
 
 Combines topics 32 (csv), 18 (dict lookups), 20 (defaultdict grouping).
+
+## Read first
+- [csv](https://devdocs.io/python~3.14/library/csv) — `DictReader` on both sides of the join
 
 ## Why
 One spreadsheet lists services with the team that owns each and its CPU allocation. Another lists which people are on which team. A manager asks "for every service using at least 200 CPU, who do I contact?" That means matching rows from the two files on the shared "team" column, which is the single most common "write a quick script" request in ops.

@@ -3,13 +3,22 @@ title: strings — ROT-n the letters, leave everything else alone
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [88, 90, 92, 95]
+prereqs: [90, 95]
 tags: [strings]
 source: exercism/python practice/rotational-cipher (MIT, adapted)
 ---
 # strings — ROT-n the letters, leave everything else alone
 
 *rotational-cipher — shift letters around a 26-long circle and pass every other character straight through.*
+
+## Read first
+- [Text sequence type: str](https://devdocs.io/python~3.14/library/stdtypes#text-sequence-type-str) — strings are immutable, so you build a new one rather than editing in place
+- [string.ascii_lowercase / ascii_uppercase](https://devdocs.io/python~3.14/library/string#string.ascii_lowercase) — both alphabets, already written down
+- [Arithmetic operations](https://devdocs.io/python~3.14/library/stdtypes#numeric-types-int-float-complex) — `%`, and why it is what makes the shift wrap
+- [str.join()](https://devdocs.io/python~3.14/library/stdtypes#str.join) — assembling the result from a list of characters instead of `+=` in a loop
+- [ord() and chr()](https://devdocs.io/python~3.14/library/functions#ord) — the other route: characters as code points and back
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Two things worth owning live in this task. The first is modular arithmetic: `% 26` is what makes a shift wrap around instead of falling off the end of the alphabet, and it is the same `%` that makes ring buffers, round-robin load balancers, retry-slot assignment and hash bucketing work. The second is the discipline of transforming *only* what you were asked to transform — the letters — and passing punctuation, digits and spaces through untouched. Every text-processing bug you will ever debug is some version of a transformation that quietly ate a character it was not supposed to touch.
@@ -77,15 +86,6 @@ solve("Let's eat, Grandma!", 21)  # -> "Gzo'n zvo, Bmviyhv!"
 
 > [!WARNING]
 > Case is not folded here — unlike the Atbash task, `"OMG"` must come back as `"TRL"`, in capitals. Shifting a capital with the lower-case alphabet's positions is the classic way to produce mojibake.
-
-## Read first
-- [Text sequence type: str](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str) — strings are immutable, so you build a new one rather than editing in place
-- [string.ascii_lowercase / ascii_uppercase](https://docs.python.org/3/library/string.html#string.ascii_lowercase) — both alphabets, already written down
-- [Arithmetic operations](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex) — `%`, and why it is what makes the shift wrap
-- [str.join()](https://docs.python.org/3/library/stdtypes.html#str.join) — assembling the result from a list of characters instead of `+=` in a loop
-- [ord() and chr()](https://docs.python.org/3/library/functions.html#ord) — the other route: characters as code points and back
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

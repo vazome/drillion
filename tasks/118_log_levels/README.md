@@ -3,7 +3,7 @@ title: enums — name the six log levels once
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [92, 96, 101, 104, 115]
+prereqs: [96, 115]
 tags: [enums]
 source: exercism/python concept/log-levels (MIT, adapted)
 ---
@@ -11,12 +11,22 @@ source: exercism/python concept/log-levels (MIT, adapted)
 
 *Enums — members, values, aliases, and iterating the set of names.*
 
+## Read first
+- [enum — support for enumerations](https://devdocs.io/python~3.14/library/enum) — declaring members, `EnumClass(value)` lookup by value, `EnumClass[name]` lookup by name
+- [Aliases in an Enum](https://devdocs.io/python~3.14/howto/enum#duplicating-enum-members-and-values) — two names, one value, and why iteration shows only the first
+- [The `is` operator](https://www.w3schools.com/python/ref_keyword_is.asp) — enum members are singletons, so identity is the right comparison
+- [enum.auto()](https://devdocs.io/python~3.14/howto/enum#using-auto) — for when you do not care what the values are (not this task: here the values are the wire format)
+- [The functional API](https://devdocs.io/python~3.14/howto/enum#functional-api) — `Enum("LogLevel", ...)` builds the same class without a `class` block
+- [str.split()](https://devdocs.io/python~3.14/library/stdtypes#str.split) — one way to get `INF` out of `"[INF]: File deleted"`
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+
 ## Why
 Every log pipeline has the same handful of severities, and every log pipeline that spells them as bare strings eventually ships `"WARN"` in one service and `"WRN"` in another, and a dashboard that quietly counts neither. An enum makes the set of allowed values a real thing in the code: there are exactly seven, they are compared by identity so a typo is an error instead of a silent mismatch, and the two spellings you inherited from the old system can be declared as an alias of the same member instead of a second truth. This task builds that enum and the four functions around it — parse an incoming line, shorten it for storage, expose the legacy alias, and list what exists.
 
 ## Introduction
 
-In Python, [an enum](https://docs.python.org/3/library/enum.html) is a set of names that are bound to unique `literal`, or `constant` values. Enums are defined by inheriting an `Enum` class. Built-in enum types are available in the module `enum` and the class `Enum` can be imported using `from enum import Enum`.
+In Python, [an enum](https://devdocs.io/python~3.14/library/enum) is a set of names that are bound to unique `literal`, or `constant` values. Enums are defined by inheriting an `Enum` class. Built-in enum types are available in the module `enum` and the class `Enum` can be imported using `from enum import Enum`.
 
 ```python
 class Color(Enum):
@@ -227,7 +237,7 @@ logs["get_members"]()
 
 ### General
 
-- [Python Docs: Enum](https://docs.python.org/3/library/enum.html)
+- [Python Docs: Enum](https://devdocs.io/python~3.14/library/enum)
 
 ### 1. Parse log level
 
@@ -256,16 +266,6 @@ logs["get_members"]()
 - The tuple can be constructed with `(item1, item2)`.
 - The name and value of the enum can be accessed with `member.name` and `member.value`.
 - Return the list containing all the tuples.
-
-## Read first
-- [enum — support for enumerations](https://docs.python.org/3/library/enum.html) — declaring members, `EnumClass(value)` lookup by value, `EnumClass[name]` lookup by name
-- [Aliases in an Enum](https://docs.python.org/3/howto/enum.html#duplicating-enum-members-and-values) — two names, one value, and why iteration shows only the first
-- [The `is` operator](https://www.w3schools.com/python/ref_keyword_is.asp) — enum members are singletons, so identity is the right comparison
-- [enum.auto()](https://docs.python.org/3/howto/enum.html#using-auto) — for when you do not care what the values are (not this task: here the values are the wire format)
-- [The functional API](https://docs.python.org/3/howto/enum.html#functional-api) — `Enum("LogLevel", ...)` builds the same class without a `class` block
-- [str.split()](https://docs.python.org/3/library/stdtypes.html#str.split) — one way to get `INF` out of `"[INF]: File deleted"`
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

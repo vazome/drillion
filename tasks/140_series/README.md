@@ -3,13 +3,21 @@ title: sequences — every window of n digits, in order
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [88, 90, 92, 95, 97, 101]
+prereqs: [90, 101]
 tags: [sequences]
 source: exercism/python practice/series (MIT, adapted)
 ---
 # sequences — every window of n digits, in order
 
 *series — the sliding window, plus four error messages that must be exact.*
+
+## Read first
+- [Sequence slicing](https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations) — `series[start:start + length]` never raises, it just gives you a shorter piece, which is why the guard clauses have to do the rejecting
+- [range()](https://devdocs.io/python~3.14/library/functions#func-range) — the exact set of start positions is a `range`, and getting its end right is the whole off-by-one
+- [List comprehensions](https://devdocs.io/python~3.14/tutorial/datastructures#list-comprehensions) — one line once the range is right
+- [Raising exceptions](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions) — `raise ValueError("message")` for the four rejected cases
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A sliding window is the shape behind "the last five minutes of latency", "any three consecutive failed health checks", "every 4-byte frame in this payload". Getting the count of windows right — and it is `len - n + 1`, not `len // n` and not `len - n` — is the kind of off-by-one that ships. The other half of this task is the guard clauses: four impossible inputs, four exact messages, checked before any work is done.
@@ -35,9 +43,9 @@ the digits need not be _numerically consecutive_.
 
 ### Exception messages
 
-Sometimes it is necessary to [raise an exception](https://docs.python.org/3/tutorial/errors.html#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://docs.python.org/3/library/exceptions.html#base-classes), but should still include a meaningful message.
+Sometimes it is necessary to [raise an exception](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://devdocs.io/python~3.14/library/exceptions#base-classes), but should still include a meaningful message.
 
-This particular exercise requires that you use the [raise statement](https://docs.python.org/3/reference/simple_stmts.html#the-raise-statement) to "throw" a `ValueError` if the series and/or length parameters input into the `slice()` function are empty or out of range. The tests will only pass if you both `raise` the `exception` and include a message with it.
+This particular exercise requires that you use the [raise statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement) to "throw" a `ValueError` if the series and/or length parameters input into the `slice()` function are empty or out of range. The tests will only pass if you both `raise` the `exception` and include a message with it.
 
 To raise a `ValueError` with a message, write the message as an argument to the `exception` type:
 
@@ -89,14 +97,6 @@ solve("12345", 42)  # raises ValueError("slice length cannot be greater than ser
 
 > [!WARNING]
 > The messages are compared character for character, lower case and without a full stop. Order matters as well: `solve("", 1)` must say `series cannot be empty`, so the empty-series check comes first.
-
-## Read first
-- [Sequence slicing](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — `series[start:start + length]` never raises, it just gives you a shorter piece, which is why the guard clauses have to do the rejecting
-- [range()](https://docs.python.org/3/library/functions.html#func-range) — the exact set of start positions is a `range`, and getting its end right is the whole off-by-one
-- [List comprehensions](https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions) — one line once the range is right
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("message")` for the four rejected cases
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

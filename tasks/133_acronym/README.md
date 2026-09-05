@@ -3,13 +3,21 @@ title: regular-expressions — squeeze a long name down to its initials
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [88, 95, 96, 101]
+prereqs: [96, 101]
 tags: [regular-expressions, files-text]
 source: exercism/python practice/acronym (MIT, adapted)
 ---
 # regular-expressions — squeeze a long name down to its initials
 
 *acronym — first letter of every word, once you agree what a word is.*
+
+## Read first
+- [re.findall()](https://devdocs.io/python~3.14/library/re#re.findall) — pull out every run that matches a pattern instead of splitting on separators
+- [re.sub()](https://devdocs.io/python~3.14/library/re#re.sub) — the other route: replace the characters you do not want, then `split()`
+- [str.split()](https://devdocs.io/python~3.14/library/stdtypes#str.split) — with no argument it splits on runs of whitespace and drops empty pieces, which is exactly the collapsing you need
+- [str.isalpha()](https://devdocs.io/python~3.14/library/stdtypes#str.isalpha) — "is this character a letter?", one character at a time
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Naming things is half of infrastructure work: a service called "Customer Identity And Access Management" becomes `ciam` in the repo name, the DNS entry, the IAM role and the dashboard title, and someone has to generate that consistently rather than by taste. The same three lines turn a ticket title into a slug or a column header into a short key. The interesting part is not the initials — it is that "word" has to be defined precisely enough that `metal-oxide` gives two letters and `Halley's` gives one.
@@ -63,14 +71,6 @@ solve("Halley's Comet")                           # -> "HC"
 
 > [!WARNING]
 > `"Something - I made up from thin air"` must give `"SIMUFTA"`, not `"S-IMUFTA"`. A lone hyphen between spaces is a separator that produces no letter at all, so an empty piece must never reach `word[0]`.
-
-## Read first
-- [re.findall()](https://docs.python.org/3/library/re.html#re.findall) — pull out every run that matches a pattern instead of splitting on separators
-- [re.sub()](https://docs.python.org/3/library/re.html#re.sub) — the other route: replace the characters you do not want, then `split()`
-- [str.split()](https://docs.python.org/3/library/stdtypes.html#str.split) — with no argument it splits on runs of whitespace and drops empty pieces, which is exactly the collapsing you need
-- [str.isalpha()](https://docs.python.org/3/library/stdtypes.html#str.isalpha) — "is this character a letter?", one character at a time
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

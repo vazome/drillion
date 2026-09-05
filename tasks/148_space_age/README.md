@@ -3,13 +3,21 @@ title: dicts — your age in years on any planet
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [88, 89, 90, 97, 99, 101, 106]
+prereqs: [106]
 tags: [dicts]
 source: exercism/python practice/space-age (MIT, adapted)
 ---
 # dicts — your age in years on any planet
 
 *space-age — one stored value, eight views of it, and a table instead of eight copies of the same formula.*
+
+## Read first
+- [A first look at classes](https://devdocs.io/python~3.14/tutorial/classes#a-first-look-at-classes) — `__init__`, `self`, and what a method actually is
+- [Mapping types: dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — the natural home for eight planet-to-period constants
+- [round()](https://devdocs.io/python~3.14/library/functions#round) — the second argument is the number of decimal places
+- [Floating point arithmetic: issues and limitations](https://devdocs.io/python~3.14/tutorial/floatingpoint) — why you round once at the end rather than as you go
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 A duration is stored once, in one unit — seconds, or milliseconds since the epoch — and then every screen wants it in a different one: minutes for the SLA report, days for the retention policy, business quarters for finance. The moment you write the conversion out by hand for the third time, one of the constants is wrong and nobody notices for a year. This task is that problem in fancy dress: eight conversions, one stored number, and eight constants that belong in a table rather than sprinkled through eight function bodies. The other half is the object: a small class that holds the raw value and answers questions about it, which is the cheapest useful class there is.
@@ -80,9 +88,9 @@ For more information on constructing and using classes, see:
 -   [**Objects, values, and types**][objects, values and types] in the Python data model documentation.
 -   [**What is a Class?**][what is a class] from Trey Hunners Python Morsels website.
 
-[first look at classes]: https://docs.python.org/3/tutorial/classes.html#a-first-look-at-classes
-[names and objects]: https://docs.python.org/3/tutorial/classes.html#a-word-about-names-and-objects
-[objects, values and types]: https://docs.python.org/3/reference/datamodel.html#objects-values-and-types
+[first look at classes]: https://devdocs.io/python~3.14/tutorial/classes#a-first-look-at-classes
+[names and objects]: https://devdocs.io/python~3.14/tutorial/classes#a-word-about-names-and-objects
+[objects, values and types]: https://devdocs.io/python~3.14/reference/datamodel#objects-values-and-types
 [what is a class]: https://www.pythonmorsels.com/what-is-a-class/
 
 ## You get
@@ -125,14 +133,6 @@ SpaceAge(1821023456).on_neptune()  # -> 0.35
 
 > [!WARNING]
 > Eight methods that each repeat the same division is eight chances to mistype a constant. Put the periods in one dict or one table of class attributes; the grader does not care how you build the methods, only that all eight exist and answer correctly.
-
-## Read first
-- [A first look at classes](https://docs.python.org/3/tutorial/classes.html#a-first-look-at-classes) — `__init__`, `self`, and what a method actually is
-- [Mapping types: dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — the natural home for eight planet-to-period constants
-- [round()](https://docs.python.org/3/library/functions.html#round) — the second argument is the number of decimal places
-- [Floating point arithmetic: issues and limitations](https://docs.python.org/3/tutorial/floatingpoint.html) — why you round once at the end rather than as you go
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

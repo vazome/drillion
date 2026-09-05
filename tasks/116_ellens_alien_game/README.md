@@ -3,13 +3,22 @@ title: classes — spawn a wave of aliens from a list of positions
 difficulty: easy
 tier: core
 minutes: 12
-prereqs: [88, 89, 90, 93, 95, 97, 101, 104, 106, 112, 115]
+prereqs: [115]
 tags: [classes]
 source: exercism/python concept/ellens-alien-game (MIT, adapted)
 ---
 # classes — spawn a wave of aliens from a list of positions
 
 *Classes — turning rows of data into objects, one call per row.*
+
+## Read first
+- [Classes (the Python tutorial)](https://devdocs.io/python~3.14/tutorial/classes) — the constructor call `Alien(2, -1)` is just the class name used like a function
+- [Tuple unpacking](https://devdocs.io/python~3.14/tutorial/datastructures#tuples-and-sequences) — `x, y = position` splits a pair into two names in one line
+- [Unpacking argument lists](https://devdocs.io/python~3.14/tutorial/controlflow#unpacking-argument-lists) — `Alien(*position)` spreads a tuple across the parameters, the shortest form of the same idea
+- [List comprehensions](https://devdocs.io/python~3.14/tutorial/datastructures#list-comprehensions) — one expression per input item, and the result really is a `list`
+- [Python Morsels: Classes](https://www.pythonmorsels.com/topics/classes/) — a refresher on what an instance is
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 The level designer hands the game a list of starting positions — plain coordinate pairs out of a level file. The game needs live alien objects, one per pair, in the same order. This little function is the seam every program has between "data that came from outside" and "objects the rest of the code talks to": the loader that turns rows from a database into records, the parser that turns YAML into config objects. It is three lines, and the only two things that can go wrong are forgetting that the constructor wants two arguments while the data arrives as one tuple, and returning a generator when the caller asked for a list.
@@ -484,15 +493,6 @@ solve([])                                         # -> []
 - The Alien constructor takes _2 parameters_.
 - Unpacking what is _inside_ the tuple would yield two parameters.
 - The standalone function is outside of the `class`.
-
-## Read first
-- [Classes (the Python tutorial)](https://docs.python.org/3/tutorial/classes.html) — the constructor call `Alien(2, -1)` is just the class name used like a function
-- [Tuple unpacking](https://docs.python.org/3/tutorial/datastructures.html#tuples-and-sequences) — `x, y = position` splits a pair into two names in one line
-- [Unpacking argument lists](https://docs.python.org/3/tutorial/controlflow.html#unpacking-argument-lists) — `Alien(*position)` spreads a tuple across the parameters, the shortest form of the same idea
-- [List comprehensions](https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions) — one expression per input item, and the result really is a `list`
-- [Python Morsels: Classes](https://www.pythonmorsels.com/topics/classes/) — a refresher on what an instance is
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

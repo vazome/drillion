@@ -3,13 +3,24 @@ title: string-formatting — Erin's event leaflet
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [95, 97, 101]
+prereqs: [101]
 tags: [string-formatting]
 source: exercism/python concept/pretty-leaflet (MIT, adapted)
 ---
 # string-formatting — Erin's event leaflet
 
 *f-strings and format specs — centring, padding and a 20-column box.*
+
+## Read first
+- [f-strings](https://devdocs.io/python~3.14/reference/lexical_analysis#f-strings) — the `f'...'` prefix and what is allowed between the braces
+- [str.format()](https://devdocs.io/python~3.14/library/stdtypes#str.format) — the same formatting as a method call, for when the template itself is data
+- [Format specification mini-language](https://devdocs.io/python~3.14/library/string#format-specification-mini-language) — everything after the `:`: fill character, alignment (`<` `^` `>`), width, precision
+- [PEP 3101: standard format specifiers](https://www.python.org/dev/peps/pep-3101/#standard-format-specifiers) — the specifier table from the PEP that introduced `.format()`
+- [Real Python: formatted output](https://realpython.com/python-formatted-output/) — a complete tour with the output printed for every example
+- [str.capitalize()](https://devdocs.io/python~3.14/library/stdtypes#str.capitalize) — first letter up, the rest down, which is exactly task 1
+- [calendar.month_name](https://devdocs.io/python~3.14/library/calendar#calendar.month_name) — English month names indexed 1–12, so you need not type them out
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 Erin is printing thousands of handbills for a season of events, and the layout has to come out of code rather than out of a designer's hands: the same narrow box every time, the event name centred, the date under it, then one line per performer with their instrument icon lined up on the right. Every piece of that is a formatting decision — capitalise this, spell out that month number, centre inside 18 columns, keep the name in 11. This is the same skill that produces a readable `--help` screen, a status table in a CLI, or an aligned log line: get the format specs right once and the template prints a thousand leaflets.
@@ -85,16 +96,16 @@ Example of format specifiers, [more examples at the end of this page][summary-st
 
 [all-about-formatting]: https://realpython.com/python-formatted-output
 [difference-formatting]: https://realpython.com/python-string-formatting/#2-new-style-string-formatting-strformat
-[printf-style-docs]: https://docs.python.org/3/library/stdtypes.html#printf-style-string-formatting
+[printf-style-docs]: https://devdocs.io/python~3.14/library/stdtypes#printf-style-string-formatting
 [tuples]: https://www.w3schools.com/python/python_tuples.asp
-[format-mini-language]: https://docs.python.org/3/library/string.html#format-specification-mini-language
+[format-mini-language]: https://devdocs.io/python~3.14/library/string#format-specification-mini-language
 [str-conversion]: https://www.w3resource.com/python/built-in-function/str.php
 [repr-conversion]: https://www.w3resource.com/python/built-in-function/repr.php
 [ascii-conversion]: https://www.w3resource.com/python/built-in-function/ascii.php
 [format-specifiers]: https://www.python.org/dev/peps/pep-3101/#standard-format-specifiers
 [summary-string-format]: https://www.w3schools.com/python/ref_string_format.asp
-[template-string]: https://docs.python.org/3/library/string.html#template-strings
-[gnu-gettext-api]: https://docs.python.org/3/library/gettext.html
+[template-string]: https://devdocs.io/python~3.14/library/string#template-strings-strings
+[gnu-gettext-api]: https://devdocs.io/python~3.14/library/gettext
 
 ## Instructions
 Your acquaintance Erin needs to print thousands of handbills for multiple events and they need your help! They've asked you to create the layout for a leaflet containing a header, an optional date, and a list of artists -- each associated with a _unicode icon_. The goal is to `print` and distribute your cool new leaflet design - and you'll need all your Python string formatting skills to succeed.
@@ -256,28 +267,17 @@ Use only f-strings or the `format()` method to build a leaflet containing basic 
 ********************
 ```
 
-[str-f-strings-docs]: https://docs.python.org/3/reference/lexical_analysis.html#f-strings
+[str-f-strings-docs]: https://devdocs.io/python~3.14/reference/lexical_analysis#f-strings
 [realpython-article]: https://realpython.com/python-formatted-output/
-[formatspec-docs]: https://docs.python.org/3/library/string.html#formatspec
-
-## Read first
-- [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#f-strings) — the `f'...'` prefix and what is allowed between the braces
-- [str.format()](https://docs.python.org/3/library/stdtypes.html#str.format) — the same formatting as a method call, for when the template itself is data
-- [Format specification mini-language](https://docs.python.org/3/library/string.html#format-specification-mini-language) — everything after the `:`: fill character, alignment (`<` `^` `>`), width, precision
-- [PEP 3101: standard format specifiers](https://www.python.org/dev/peps/pep-3101/#standard-format-specifiers) — the specifier table from the PEP that introduced `.format()`
-- [Real Python: formatted output](https://realpython.com/python-formatted-output/) — a complete tour with the output printed for every example
-- [str.capitalize()](https://docs.python.org/3/library/stdtypes.html#str.capitalize) — first letter up, the rest down, which is exactly task 1
-- [calendar.month_name](https://docs.python.org/3/library/calendar.html#calendar.month_name) — English month names indexed 1–12, so you need not type them out
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+[formatspec-docs]: https://devdocs.io/python~3.14/library/string#formatspec
 
 ## Hints
 ### Hint 1
-Four functions, and only the last one is really a layout problem. `str.capitalize()` finishes task 1 in one call — check what it does to the letters *after* the first. For the date, the month arrives as a number and has to come out as an English word; [`calendar.month_name[2]`](https://docs.python.org/3/library/calendar.html#calendar.month_name) is `'February'` if you would rather not type the twelve names yourself. Everything else is one f-string per row.
+Four functions, and only the last one is really a layout problem. `str.capitalize()` finishes task 1 in one call — check what it does to the letters *after* the first. For the date, the month arrives as a number and has to come out as an English word; [`calendar.month_name[2]`](https://devdocs.io/python~3.14/library/calendar#calendar.month_name) is `'February'` if you would rather not type the twelve names yourself. Everything else is one f-string per row.
 ### Hint 2
 Build the leaflet as a **list of row strings** and `"\n".join(...)` them at the very end. Each row then becomes its own small formatting problem, and you can print the list while you work to see the box taking shape. Two of those rows never change — the row of asterisks and the empty row — so make each once and reuse it.
 
-The rows in between all have the same skeleton: a `*`, then a fixed number of columns that a format spec fills, then a `*`. The [format spec](https://docs.python.org/3/library/string.html#formatspec) after the `:` is where alignment lives — `^` centres, `<` pushes left, `>` pushes right, and the number is the width. Conversions go **before** the colon: `!r` asks for the quoted `repr` of a value, `!s` for its plain `str`.
+The rows in between all have the same skeleton: a `*`, then a fixed number of columns that a format spec fills, then a `*`. The [format spec](https://devdocs.io/python~3.14/library/string#formatspec) after the `:` is where alignment lives — `^` centres, `<` pushes left, `>` pushes right, and the number is the width. Conversions go **before** the colon: `!r` asks for the quoted `repr` of a value, `!s` for its plain `str`.
 
 For the artist rows, loop with `enumerate` over the authors so you have the name and its position together, and compare that position with `len(icons)` before you index into the icons — some leaflets have more artists than icons.
 ### Hint 3

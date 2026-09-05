@@ -3,13 +3,22 @@ title: generators — produce primes on demand and take the nth one
 difficulty: hard
 tier: advanced
 minutes: 15
-prereqs: [88, 89, 90, 92, 93, 95, 97, 99, 101]
+prereqs: [7, 90, 101]
 tags: [generators]
 source: exercism/python practice/nth-prime (MIT, adapted)
 ---
 # generators — produce primes on demand and take the nth one
 
 *nth-prime — an endless sequence you generate lazily, stopping the moment you have enough.*
+
+## Read first
+- [Generators](https://devdocs.io/python~3.14/tutorial/classes#generators) — `yield` produces a value and pauses, which is how an endless sequence stays affordable
+- [itertools.count()](https://devdocs.io/python~3.14/library/itertools#itertools.count) — an endless counter, with a start and a step
+- [itertools.islice()](https://devdocs.io/python~3.14/library/itertools#itertools.islice) — "take the first n of something endless" without building a list of everything
+- [math.isqrt()](https://devdocs.io/python~3.14/library/math#math.isqrt) — testing divisors past the square root cannot find anything new
+- [Raising exceptions](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions) — the guard clause at the top of the function
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 You cannot precompute this one, because nobody tells you how far to go: asked for the 10001st prime, you have no idea in advance where it lives. That is the same position you are in when you page through an API until you find the record you want, or read a log stream until the error appears — the source is effectively endless, so you produce values one at a time and stop when the condition is met. Doing it any other way means guessing an upper bound, and guessing an upper bound is how "it worked in staging" becomes "it ran out of memory in production".
@@ -23,9 +32,9 @@ If your language provides methods in the standard library to deal with prime num
 
 ### Exception messages
 
-Sometimes it is necessary to [raise an exception](https://docs.python.org/3/tutorial/errors.html#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://docs.python.org/3/library/exceptions.html#base-classes), but should still include a meaningful message.
+Sometimes it is necessary to [raise an exception](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://devdocs.io/python~3.14/library/exceptions#base-classes), but should still include a meaningful message.
 
-This particular exercise requires that you use the [raise statement](https://docs.python.org/3/reference/simple_stmts.html#the-raise-statement) to "throw" a `ValueError` when the `prime()` function receives malformed input. Since this exercise deals only with _positive_ numbers, any number < 1 is malformed.  The tests will only pass if you both `raise` the `exception` and include a message with it.
+This particular exercise requires that you use the [raise statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement) to "throw" a `ValueError` when the `prime()` function receives malformed input. Since this exercise deals only with _positive_ numbers, any number < 1 is malformed.  The tests will only pass if you both `raise` the `exception` and include a message with it.
 
 To raise a `ValueError` with a message, write the message as an argument to the `exception` type:
 
@@ -76,15 +85,6 @@ solve(-3)     # raises ValueError("there is no zeroth prime")
 > One of the graded cases is `solve(10001)`, the 10001st prime — `104743`. Testing a candidate by dividing it by every smaller number will not finish before the runner gives up. Stop at the square root: once nothing up to the square root of a candidate divides it, the candidate is prime — that one change is the difference between finishing and being killed on the clock.
 >
 > The `ValueError` message is compared character for character: lower case, no full stop, the word `zeroth` spelled exactly like that. Raise it before you do any work — a negative `number` must not send a loop off looking for a prime it will never reach.
-
-## Read first
-- [Generators](https://docs.python.org/3/tutorial/classes.html#generators) — `yield` produces a value and pauses, which is how an endless sequence stays affordable
-- [itertools.count()](https://docs.python.org/3/library/itertools.html#itertools.count) — an endless counter, with a start and a step
-- [itertools.islice()](https://docs.python.org/3/library/itertools.html#itertools.islice) — "take the first n of something endless" without building a list of everything
-- [math.isqrt()](https://docs.python.org/3/library/math.html#math.isqrt) — testing divisors past the square root cannot find anything new
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — the guard clause at the top of the function
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Hints
 ### Hint 1

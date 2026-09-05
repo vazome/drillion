@@ -3,13 +3,23 @@ title: sets — sort dishes into diets, find the singleton ingredients
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [88, 97, 101, 104, 106, 113]
+prereqs: [113]
 tags: [sets]
 source: exercism/python concept/cater-waiter (MIT, adapted)
 ---
 # sets — sort dishes into diets, find the singleton ingredients
 
 *Sets — subset (`<=`) and symmetric difference (`^`), sorting a menu by diet.*
+
+## Read first
+- [Set types — set, frozenset](https://devdocs.io/python~3.14/library/stdtypes#set) — the full method table; the *methods* take any iterable, the *operators* need sets on both sides
+- [set.issubset()](https://devdocs.io/python~3.14/library/stdtypes#frozenset.issubset) — "is every one of mine also in yours?"; the operator form is `<=`
+- [set.symmetric_difference()](https://devdocs.io/python~3.14/library/stdtypes#frozenset.symmetric_difference) — in one or the other but not both; the operator form is `^`
+- [Symmetric difference (Wikipedia)](https://en.wikipedia.org/wiki/Symmetric_difference) — why chaining it over three or more sets is not "appears exactly once"
+- [Real Python: Sets in Python](https://realpython.com/python-sets/) — a walk through the operations with pictures of the overlaps
+- [Set and logic symbols cheat sheet](http://notes.imt-decal.org/sets/cheat-sheet.html) — the maths notation the method names come from
+
+*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
 ## Why
 The guest list for the catering event comes with dietary needs, so every dish has to be filed under vegan, vegetarian, keto, paleo or omnivore before the staff can plate anything. "This dish is vegan" is not a judgement call: it means every one of its ingredients is on the vegan list, which is precisely the subset test. The second chore is the shopper's problem — inside one diet, find the ingredients that only one dish uses, because those are the ones nobody notices are missing until service starts. That is symmetric difference. Between them you have the two set questions that are easy to write badly with loops and trivial with an operator.
@@ -410,12 +420,12 @@ The operator version of this method is  `<set> ^ <other set>`:
 >
 > [symmetric_difference]: https://en.wikipedia.org/wiki/Symmetric_difference
 
-[hashable]: https://docs.python.org/3.7/glossary.html#term-hashable
+[hashable]: https://devdocs.io/python~3.14/glossary#term-hashable
 [intersection]: https://www.mathgoodies.com/lessons/sets/intersection
 [mathematical-sets]: https://en.wikipedia.org/wiki/Set_theory#Basic_concepts_and_notation
 [operator]: https://www.computerhope.com/jargon/o/operator.htm
-[type-frozenset]: https://docs.python.org/3/library/stdtypes.html#frozenset
-[type-set]: https://docs.python.org/3/library/stdtypes.html#set
+[type-frozenset]: https://devdocs.io/python~3.14/library/stdtypes#frozenset
+[type-set]: https://devdocs.io/python~3.14/library/stdtypes#set
 
 ## Instructions
 
@@ -660,19 +670,9 @@ kitchen["singleton_ingredients"]([{"salt", "tofu"}, {"salt", "pears"}], {"salt"}
 - A _symmetric difference_ of more than two `sets` will include elements that are repeated more than two times across the input `sets`.  To remove these cross-set repeated elements, the _intersections_ between set pairs needs to be subtracted from the symmetric difference.
 - Using [concept: loops](/tracks/python/concepts/loops) to iterate through the various dishes might be useful here.
 
-[hashable]: https://docs.python.org/3.7/glossary.html#term-hashable
-[iterable]: https://docs.python.org/3/glossary.html#term-iterable
-[sets]: https://docs.python.org/3/tutorial/datastructures.html#sets
-
-## Read first
-- [Set types — set, frozenset](https://docs.python.org/3/library/stdtypes.html#set) — the full method table; the *methods* take any iterable, the *operators* need sets on both sides
-- [set.issubset()](https://docs.python.org/3/library/stdtypes.html#frozenset.issubset) — "is every one of mine also in yours?"; the operator form is `<=`
-- [set.symmetric_difference()](https://docs.python.org/3/library/stdtypes.html#frozenset.symmetric_difference) — in one or the other but not both; the operator form is `^`
-- [Symmetric difference (Wikipedia)](https://en.wikipedia.org/wiki/Symmetric_difference) — why chaining it over three or more sets is not "appears exactly once"
-- [Real Python: Sets in Python](https://realpython.com/python-sets/) — a walk through the operations with pictures of the overlaps
-- [Set and logic symbols cheat sheet](http://notes.imt-decal.org/sets/cheat-sheet.html) — the maths notation the method names come from
-
-*Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
+[hashable]: https://devdocs.io/python~3.14/glossary#term-hashable
+[iterable]: https://devdocs.io/python~3.14/glossary#term-iterable
+[sets]: https://devdocs.io/python~3.14/tutorial/datastructures#sets
 
 ## Hints
 ### Hint 1
