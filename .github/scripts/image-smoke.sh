@@ -55,4 +55,3 @@ done
 test "$(curl -fsS http://127.0.0.1:8765/api/health | jq .tasks)" = 174
 curl -fsS -o /dev/null http://127.0.0.1:8765/
 curl -fsS -o /dev/null -X POST http://127.0.0.1:8765/api/task/017_fstrings/open
-
