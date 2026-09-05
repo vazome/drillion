@@ -10,6 +10,10 @@ tags: [dict-get]
 
 *Counting into a dict by hand — the KeyError that bites every beginner.*
 
+## Read first
+- [dict.get](https://devdocs.io/python~3.14/library/stdtypes#dict.get) — a default instead of a `KeyError`
+- [Mapping Types — dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — `setdefault` and the rest of the surface
+
 ## Why
 A deploy log is a stream of action words: "deploy", "rollback", "pod", "node". Your manager asks "how many of each happened this week?" You need a tally: each distinct word and its count. Interviewers often ask for this "without imports" to see whether you can handle the first time a new word shows up, when there is no count to add to yet.
 

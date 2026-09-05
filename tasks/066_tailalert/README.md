@@ -12,6 +12,9 @@ tags: [file-tailing]
 
 Combines topics 26 (line iteration), 29 (regex), 21 (deque).
 
+## Read first
+- [collections.deque](https://devdocs.io/python~3.14/library/collections#collections.deque) — `maxlen` gives you the rolling window for free
+
 ## Why
 A service writes a log file that grows all day and never stops. The on-call team wants to be paged every time an ERROR line shows up, and the page must include the few lines just before it so they can see what led up to the error. The log can be huge, so the tool must never try to hold all of it in memory.
 

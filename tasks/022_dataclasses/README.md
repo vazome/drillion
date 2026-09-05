@@ -10,6 +10,9 @@ tags: [dataclasses]
 
 *@dataclass writes the boilerplate; frozen=True makes a record you cannot corrupt.*
 
+## Read first
+- [dataclasses](https://devdocs.io/python~3.14/library/dataclasses) — `__init__`/`__repr__`/`__eq__` for free; `field(default_factory=...)` for the mutable case
+
 ## Why
 An inventory script reads server records from a short-hand list where people leave out the fields that have sensible defaults: most servers get 100 CPU and live in the main zone unless said otherwise. The records get passed around many scripts, so nobody should be able to change one by accident after it is made. Capacity planning then wants the list ordered smallest-CPU first.
 

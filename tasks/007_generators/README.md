@@ -10,6 +10,10 @@ tags: [generators]
 
 *A generator hands over one item at a time, so a 10 GB log never lands in RAM.*
 
+## Read first
+- [Generators](https://devdocs.io/python~3.14/tutorial/classes#generators) — `yield` and why the function does not run until you iterate
+- [Yield expressions](https://devdocs.io/python~3.14/reference/expressions#yield-expressions) — the precise semantics
+
 ## Why
 A log file on a production server is 10 GB. Support needs the request ids of every failed request so they can look them up, and they want the first one right away, not after the whole file has been read. Loading the file into memory would crash the box. You need a way to hand out results one at a time, reading only as far as needed for the next answer.
 

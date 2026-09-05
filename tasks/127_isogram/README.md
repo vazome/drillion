@@ -12,10 +12,10 @@ source: exercism/python practice/isogram (MIT, adapted)
 *isogram — no letter twice: the set-length trick for spotting duplicates.*
 
 ## Read first
-- [str.isalpha()](https://docs.python.org/3/library/stdtypes.html#str.isalpha) — `isalpha()` and `lower()`, the two methods that decide which characters count here
-- [set](https://docs.python.org/3/library/stdtypes.html#set) — a set keeps one copy of each item; its length is therefore "how many distinct things did I see"
+- [str.isalpha()](https://devdocs.io/python~3.14/library/stdtypes#str.isalpha) — `isalpha()` and `lower()`, the two methods that decide which characters count here
+- [set](https://devdocs.io/python~3.14/library/stdtypes#set) — a set keeps one copy of each item; its length is therefore "how many distinct things did I see"
 - [Real Python: strings](https://realpython.com/python-strings/) — walking a string character by character
-- [len()](https://docs.python.org/3/library/functions.html#len) — the measuring half of the trick
+- [len()](https://devdocs.io/python~3.14/library/functions#len) — the measuring half of the trick
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

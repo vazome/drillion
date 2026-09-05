@@ -12,10 +12,10 @@ source: exercism/python practice/pangram (MIT, adapted)
 *pangram — does the sentence use all 26 letters? A subset check, not 26 ifs.*
 
 ## Read first
-- [set](https://docs.python.org/3/library/stdtypes.html#set) — sets, and `<=` / `issubset`: "is everything I need in there?"
-- [string.ascii_lowercase](https://docs.python.org/3/library/string.html#string.ascii_lowercase) — the alphabet as a ready-made constant, so you never type it out
-- [all()](https://docs.python.org/3/library/functions.html#all) — `all()`, the other way to say the same thing
-- [str.lower()](https://docs.python.org/3/library/stdtypes.html#str.lower) — folding the case before you compare
+- [set](https://devdocs.io/python~3.14/library/stdtypes#set) — sets, and `<=` / `issubset`: "is everything I need in there?"
+- [string.ascii_lowercase](https://devdocs.io/python~3.14/library/string#string.ascii_lowercase) — the alphabet as a ready-made constant, so you never type it out
+- [all()](https://devdocs.io/python~3.14/library/functions#all) — `all()`, the other way to say the same thing
+- [str.lower()](https://devdocs.io/python~3.14/library/stdtypes#str.lower) — folding the case before you compare
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

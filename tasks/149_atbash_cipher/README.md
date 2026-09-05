@@ -12,11 +12,11 @@ source: exercism/python practice/atbash-cipher (MIT, adapted)
 *atbash-cipher — normalise, substitute, group; and decoding is the same walk without the grouping.*
 
 ## Read first
-- [String methods](https://docs.python.org/3/library/stdtypes.html#string-methods) — `isalnum()`, `lower()` and `join()`, which is most of this task
-- [str.maketrans() and str.translate()](https://docs.python.org/3/library/stdtypes.html#str.translate) — a whole substitution table applied in one call
-- [Common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — slicing, including `[::-1]` to build the reversed alphabet
-- [string.ascii_lowercase](https://docs.python.org/3/library/string.html#string.ascii_lowercase) — the alphabet, already written down for you
-- [range() with a step](https://docs.python.org/3/library/functions.html#func-range) — `range(0, len(text), 5)` is the index of every group's first character
+- [String methods](https://devdocs.io/python~3.14/library/stdtypes#string-methods) — `isalnum()`, `lower()` and `join()`, which is most of this task
+- [str.maketrans() and str.translate()](https://devdocs.io/python~3.14/library/stdtypes#str.translate) — a whole substitution table applied in one call
+- [Common sequence operations](https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations) — slicing, including `[::-1]` to build the reversed alphabet
+- [string.ascii_lowercase](https://devdocs.io/python~3.14/library/string#string.ascii_lowercase) — the alphabet, already written down for you
+- [range() with a step](https://devdocs.io/python~3.14/library/functions#func-range) — `range(0, len(text), 5)` is the index of every group's first character
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

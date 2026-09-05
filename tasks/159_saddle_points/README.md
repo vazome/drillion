@@ -12,11 +12,11 @@ source: exercism/python practice/saddle-points (MIT, adapted)
 *saddle-points — two aggregates computed once, then one pass over the grid.*
 
 ## Read first
-- [zip()](https://docs.python.org/3/library/functions.html#zip) — `zip(*matrix)` hands you the columns, which is how you get the column minima without a second nested loop
-- [max() and min()](https://docs.python.org/3/library/functions.html#max) — one call per row and per column, computed once and reused
-- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — indexes alongside values, so the `+ 1` for one-based numbering happens in one place
-- [any()](https://docs.python.org/3/library/functions.html#any) — the irregularity check is one `any` over the row lengths
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — the guard clauses at the top of the function
+- [zip()](https://devdocs.io/python~3.14/library/functions#zip) — `zip(*matrix)` hands you the columns, which is how you get the column minima without a second nested loop
+- [max() and min()](https://devdocs.io/python~3.14/library/functions#max) — one call per row and per column, computed once and reused
+- [enumerate()](https://devdocs.io/python~3.14/library/functions#enumerate) — indexes alongside values, so the `+ 1` for one-based numbering happens in one place
+- [any()](https://devdocs.io/python~3.14/library/functions#any) — the irregularity check is one `any` over the row lengths
+- [Raising exceptions](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions) — the guard clauses at the top of the function
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -63,9 +63,9 @@ So the point at `[2, 1]` (row: 2, column: 1) is a great spot for a tree house.
 
 ### Exception messages
 
-Sometimes it is necessary to [raise an exception](https://docs.python.org/3/tutorial/errors.html#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://docs.python.org/3/library/exceptions.html#base-classes), but should still include a meaningful message.
+Sometimes it is necessary to [raise an exception](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://devdocs.io/python~3.14/library/exceptions#base-classes), but should still include a meaningful message.
 
-This particular exercise requires that you use the [raise statement](https://docs.python.org/3/reference/simple_stmts.html#the-raise-statement) to "throw" a `ValueError` if the `matrix` is irregular. The tests will only pass if you both `raise` the `exception` and include a message with it.
+This particular exercise requires that you use the [raise statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement) to "throw" a `ValueError` if the `matrix` is irregular. The tests will only pass if you both `raise` the `exception` and include a message with it.
 
 To raise a `ValueError` with a message, write the message as an argument to the `exception` type:
 

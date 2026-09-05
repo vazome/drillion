@@ -12,9 +12,9 @@ source: exercism/python concept/cater-waiter (MIT, adapted)
 *Sets — subset (`<=`) and symmetric difference (`^`), sorting a menu by diet.*
 
 ## Read first
-- [Set types — set, frozenset](https://docs.python.org/3/library/stdtypes.html#set) — the full method table; the *methods* take any iterable, the *operators* need sets on both sides
-- [set.issubset()](https://docs.python.org/3/library/stdtypes.html#frozenset.issubset) — "is every one of mine also in yours?"; the operator form is `<=`
-- [set.symmetric_difference()](https://docs.python.org/3/library/stdtypes.html#frozenset.symmetric_difference) — in one or the other but not both; the operator form is `^`
+- [Set types — set, frozenset](https://devdocs.io/python~3.14/library/stdtypes#set) — the full method table; the *methods* take any iterable, the *operators* need sets on both sides
+- [set.issubset()](https://devdocs.io/python~3.14/library/stdtypes#frozenset.issubset) — "is every one of mine also in yours?"; the operator form is `<=`
+- [set.symmetric_difference()](https://devdocs.io/python~3.14/library/stdtypes#frozenset.symmetric_difference) — in one or the other but not both; the operator form is `^`
 - [Symmetric difference (Wikipedia)](https://en.wikipedia.org/wiki/Symmetric_difference) — why chaining it over three or more sets is not "appears exactly once"
 - [Real Python: Sets in Python](https://realpython.com/python-sets/) — a walk through the operations with pictures of the overlaps
 - [Set and logic symbols cheat sheet](http://notes.imt-decal.org/sets/cheat-sheet.html) — the maths notation the method names come from
@@ -420,12 +420,12 @@ The operator version of this method is  `<set> ^ <other set>`:
 >
 > [symmetric_difference]: https://en.wikipedia.org/wiki/Symmetric_difference
 
-[hashable]: https://docs.python.org/3.7/glossary.html#term-hashable
+[hashable]: https://devdocs.io/python~3.14/glossary#term-hashable
 [intersection]: https://www.mathgoodies.com/lessons/sets/intersection
 [mathematical-sets]: https://en.wikipedia.org/wiki/Set_theory#Basic_concepts_and_notation
 [operator]: https://www.computerhope.com/jargon/o/operator.htm
-[type-frozenset]: https://docs.python.org/3/library/stdtypes.html#frozenset
-[type-set]: https://docs.python.org/3/library/stdtypes.html#set
+[type-frozenset]: https://devdocs.io/python~3.14/library/stdtypes#frozenset
+[type-set]: https://devdocs.io/python~3.14/library/stdtypes#set
 
 ## Instructions
 
@@ -670,9 +670,9 @@ kitchen["singleton_ingredients"]([{"salt", "tofu"}, {"salt", "pears"}], {"salt"}
 - A _symmetric difference_ of more than two `sets` will include elements that are repeated more than two times across the input `sets`.  To remove these cross-set repeated elements, the _intersections_ between set pairs needs to be subtracted from the symmetric difference.
 - Using [concept: loops](/tracks/python/concepts/loops) to iterate through the various dishes might be useful here.
 
-[hashable]: https://docs.python.org/3.7/glossary.html#term-hashable
-[iterable]: https://docs.python.org/3/glossary.html#term-iterable
-[sets]: https://docs.python.org/3/tutorial/datastructures.html#sets
+[hashable]: https://devdocs.io/python~3.14/glossary#term-hashable
+[iterable]: https://devdocs.io/python~3.14/glossary#term-iterable
+[sets]: https://devdocs.io/python~3.14/tutorial/datastructures#sets
 
 ## Hints
 ### Hint 1

@@ -17,7 +17,7 @@ source: exercism/python concept/locomotive-engineer (MIT, adapted)
 - [PEP 3132: extended iterable unpacking](https://peps.python.org/pep-3132/) — the `first, *rest = seq` form and why it exists
 - [PEP 448: additional unpacking generalizations](https://peps.python.org/pep-0448/) — `[*a, *b]` and `{**a, **b}` in literals and calls
 - [Stack Abuse: unpacking beyond parallel assignment](https://stackabuse.com/unpacking-in-python-beyond-parallel-assignment/) — worked examples of each form
-- [Arbitrary argument lists](https://docs.python.org/3/tutorial/controlflow.html#arbitrary-argument-lists) — `*args` and `**kwargs` in a function definition
+- [Arbitrary argument lists](https://devdocs.io/python~3.14/tutorial/controlflow#arbitrary-argument-lists) — `*args` and `**kwargs` in a function definition
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -380,14 +380,14 @@ The `zip()` function takes multiple iterables and returns a `list` of `tuples` w
 ```
 
 [args and kwargs]: https://www.geeksforgeeks.org/args-kwargs-python/
-[items]: https://docs.python.org/3/library/stdtypes.html#dict.items
+[items]: https://devdocs.io/python~3.14/library/stdtypes#dict.items
 [multiple assignment]: https://www.geeksforgeeks.org/assigning-multiple-variables-in-one-line-in-python/
 [packing and unpacking]: https://www.geeksforgeeks.org/packing-and-unpacking-arguments-in-python/
 [pep-3132]: https://peps.python.org/pep-3132/
 [sorting algorithms]: https://realpython.com/sorting-algorithms-python/
 [unpacking]: https://www.geeksforgeeks.org/unpacking-arguments-in-python/?ref=rp
-[view-objects]: https://docs.python.org/3/library/stdtypes.html#dict-views
-[zip]: https://docs.python.org/3/library/functions.html#zip
+[view-objects]: https://devdocs.io/python~3.14/library/stdtypes#dict-views
+[zip]: https://devdocs.io/python~3.14/library/functions#zip
 
 ## Instructions
 Your friend Linus is a Locomotive Engineer who drives cargo trains between cities.

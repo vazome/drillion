@@ -12,13 +12,13 @@ source: exercism/python concept/ellens-alien-game (MIT, adapted)
 *Classes — `__init__`, methods, instance attributes, and one class attribute.*
 
 ## Read first
-- [Classes (the Python tutorial)](https://docs.python.org/3/tutorial/classes.html) — `class`, `__init__`, `self`, and the difference between a class attribute and an instance attribute
+- [Classes (the Python tutorial)](https://devdocs.io/python~3.14/tutorial/classes) — `class`, `__init__`, `self`, and the difference between a class attribute and an instance attribute
 - [Python Morsels: Classes](https://www.pythonmorsels.com/topics/classes/) — a short rundown of what a class actually is
 - [Real Python: OOP in Python 3](https://realpython.com/python3-object-oriented-programming/) — the same material at length, with worked examples
 - [DigitalOcean: Class and instance variables](https://www.digitalocean.com/community/tutorials/understanding-class-and-instance-variables-in-python-3) — the exact distinction this task grades
 - [DigitalOcean: Constructing classes and defining objects](https://www.digitalocean.com/community/tutorials/how-to-construct-classes-and-define-objects-in-python-3) — a gentler start if `self` is still strange
 - [PyBites: when to use classes](https://pybit.es/articles/when-classes/) — and when a plain function or dict is the better answer
-- [The `pass` statement](https://docs.python.org/3/reference/simple_stmts.html#the-pass-statement) — the placeholder body task 5 asks for
+- [The `pass` statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-pass-statement) — the placeholder body task 5 asks for
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

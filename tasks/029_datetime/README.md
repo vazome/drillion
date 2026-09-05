@@ -10,6 +10,10 @@ tags: [files-text]
 
 *'When did it break, and for how long' is a datetime question, every time.*
 
+## Read first
+- [datetime](https://devdocs.io/python~3.14/library/datetime) — aware vs naive — the distinction that causes production bugs
+- [strftime and strptime codes](https://devdocs.io/python~3.14/library/datetime#strftime-and-strptime-format-codes) — the format-code table
+
 ## Why
 After an outage the incident review asks two questions: how long did the event window last, from the first request to the last, and which minute was the busiest? The web server's access log gives one line per request with a timestamp, but the lines are out of order because several servers' logs were merged. You turn the timestamps into real times you can subtract and count.
 

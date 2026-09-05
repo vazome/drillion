@@ -12,11 +12,11 @@ source: exercism/python practice/isbn-verifier (MIT, adapted)
 *isbn-verifier — a weighted checksum, and the one character that is not a digit.*
 
 ## Read first
-- [str.replace()](https://docs.python.org/3/library/stdtypes.html#str.replace) — dropping the dashes in one call
-- [str.isdigit()](https://docs.python.org/3/library/stdtypes.html#str.isdigit) — the per-character question that decides whether a piece is usable
-- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — position and character together; the position *is* the weight here
-- [zip()](https://docs.python.org/3/library/functions.html#zip) — the other route: pair each character with a weight from `range(10, 0, -1)`
-- [Text sequence type: str](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str) — slicing and indexing a string
+- [str.replace()](https://devdocs.io/python~3.14/library/stdtypes#str.replace) — dropping the dashes in one call
+- [str.isdigit()](https://devdocs.io/python~3.14/library/stdtypes#str.isdigit) — the per-character question that decides whether a piece is usable
+- [enumerate()](https://devdocs.io/python~3.14/library/functions#enumerate) — position and character together; the position *is* the weight here
+- [zip()](https://devdocs.io/python~3.14/library/functions#zip) — the other route: pair each character with a weight from `range(10, 0, -1)`
+- [Text sequence type: str](https://devdocs.io/python~3.14/library/stdtypes#text-sequence-type-str) — slicing and indexing a string
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

@@ -12,14 +12,14 @@ source: exercism/python concept/currency-exchange (MIT, adapted)
 *Arithmetic operators — the three sums a currency desk does before anything else.*
 
 ## Read first
-- [Arithmetic Operations](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex) — the arithmetic operators table: `+ - * / // %` and what each returns
-- [The Python Numbers tutorial](https://docs.python.org/3/tutorial/introduction.html#numbers) — the five-minute tour: `/` always hands back a float, even when the division comes out even
-- [integers](https://docs.python.org/3/library/functions.html#int) — `int()`, whole numbers of arbitrary precision
-- [floats](https://docs.python.org/3/library/functions.html#float) — `float()`, and the 15-digits-of-precision caveat
-- [Operator Precedence](https://docs.python.org/3/reference/expressions.html#operator-precedence) — which part of a long expression happens first
-- [Decimals](https://docs.python.org/3/library/decimal.html#module-decimal) — what you reach for when float rounding is not acceptable (real money, later)
-- [fractions](https://docs.python.org/3/library/fractions.html) — exact rational arithmetic
-- [Python's numerical and mathematical modules](https://docs.python.org/3/library/numeric.html) — the wider shelf
+- [Arithmetic Operations](https://devdocs.io/python~3.14/library/stdtypes#numeric-types-int-float-complex) — the arithmetic operators table: `+ - * / // %` and what each returns
+- [The Python Numbers tutorial](https://devdocs.io/python~3.14/tutorial/introduction#numbers) — the five-minute tour: `/` always hands back a float, even when the division comes out even
+- [integers](https://devdocs.io/python~3.14/library/functions#int) — `int()`, whole numbers of arbitrary precision
+- [floats](https://devdocs.io/python~3.14/library/functions#float) — `float()`, and the 15-digits-of-precision caveat
+- [Operator Precedence](https://devdocs.io/python~3.14/reference/expressions#operator-precedence) — which part of a long expression happens first
+- [Decimals](https://devdocs.io/python~3.14/library/decimal#module-decimal) — what you reach for when float rounding is not acceptable (real money, later)
+- [fractions](https://devdocs.io/python~3.14/library/fractions) — exact rational arithmetic
+- [Python's numerical and mathematical modules](https://devdocs.io/python~3.14/library/numeric) — the wider shelf
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -98,11 +98,11 @@ To convert a float to an integer, you can use `int()`. To convert an integer to 
 ```
 
 [0.30000000000000004.com]: https://0.30000000000000004.com/
-[`float()` built in]: https://docs.python.org/3/library/functions.html#float
-[`int()` built in]: https://docs.python.org/3/library/functions.html#int
+[`float()` built in]: https://devdocs.io/python~3.14/library/functions#float
+[`int()` built in]: https://devdocs.io/python~3.14/library/functions#int
 [arbitrary-precision]: https://en.wikipedia.org/wiki/Arbitrary-precision_arithmetic#:~:text=In%20computer%20science%2C%20arbitrary%2Dprecision,memory%20of%20the%20host%20system.
-[floating point math]: https://docs.python.org/3.9/tutorial/floatingpoint.html
-[numeric-type-docs]: https://docs.python.org/3/library/stdtypes.html#typesnumeric
+[floating point math]: https://devdocs.io/python~3.14/tutorial/floatingpoint
+[numeric-type-docs]: https://devdocs.io/python~3.14/library/stdtypes#typesnumeric
 
 ## Instructions
 Your friend Chandler plans to visit exotic countries all around the world. Sadly, Chandler's math skills aren't good. He's pretty worried about being scammed by currency exchanges during his trip - and he wants you to make a currency calculator for him. Here are his specifications for the app:
@@ -266,17 +266,17 @@ desk["get_value_of_bills"](5, 128)     # -> 640      (128 bills of 5)
 - You can get exchanged money affected by commission by using divide operation and type casting to `int`.
 
 
-[division-operator]: https://docs.python.org/3/tutorial/introduction.html#numbers
-[multiplication-operator]: https://docs.python.org/3/tutorial/introduction.html#numbers
-[python-numbers-tutorial]: https://docs.python.org/3/tutorial/introduction.html#numbers
-[python-numeric-types]: https://docs.python.org/3.9/library/stdtypes.html#numeric-types-int-float-complex
-[subtraction-operator]: https://docs.python.org/3/tutorial/introduction.html#numbers
+[division-operator]: https://devdocs.io/python~3.14/tutorial/introduction#numbers
+[multiplication-operator]: https://devdocs.io/python~3.14/tutorial/introduction#numbers
+[python-numbers-tutorial]: https://devdocs.io/python~3.14/tutorial/introduction#numbers
+[python-numeric-types]: https://devdocs.io/python~3.14/library/stdtypes#numeric-types-int-float-complex
+[subtraction-operator]: https://devdocs.io/python~3.14/tutorial/introduction#numbers
 
 ## Hints
 ### Hint 1
-One operator each, and the hard part is picking which. The rate is quoted as 'how much of MY money buys one of THEIRS', so going from his money to theirs is the [division](https://docs.python.org/3/tutorial/introduction.html#numbers) that undoes multiplying by the rate. The other two are the obvious ones: [subtraction](https://docs.python.org/3/tutorial/introduction.html#numbers) for what is left after handing some over, and [multiplication](https://docs.python.org/3/tutorial/introduction.html#numbers) for what N things of the same size add up to.
+One operator each, and the hard part is picking which. The rate is quoted as 'how much of MY money buys one of THEIRS', so going from his money to theirs is the [division](https://devdocs.io/python~3.14/tutorial/introduction#numbers) that undoes multiplying by the rate. The other two are the obvious ones: [subtraction](https://devdocs.io/python~3.14/tutorial/introduction#numbers) for what is left after handing some over, and [multiplication](https://devdocs.io/python~3.14/tutorial/introduction#numbers) for what N things of the same size add up to.
 ### Hint 2
-Sanity-check each formula on a rate you can do in your head. At a rate of 2, 100 of his money must come back as 50 of theirs — so if your expression gives 200, you have the division the wrong way round. Then build the dict mapping each key string to the function object (no parentheses). The [Python numbers tutorial](https://docs.python.org/3/tutorial/introduction.html#numbers) and [Python numeric types](https://docs.python.org/3.9/library/stdtypes.html#numeric-types-int-float-complex) are a great introduction if any of the three operators is new.
+Sanity-check each formula on a rate you can do in your head. At a rate of 2, 100 of his money must come back as 50 of theirs — so if your expression gives 200, you have the division the wrong way round. Then build the dict mapping each key string to the function object (no parentheses). The [Python numbers tutorial](https://devdocs.io/python~3.14/tutorial/introduction#numbers) and [Python numeric types](https://devdocs.io/python~3.14/library/stdtypes#numeric-types-int-float-complex) are a great introduction if any of the three operators is new.
 ### Hint 3
 Different data, same shape. Petrol at 1.75 per litre, a 60-litre tank, a 50-euro note:
 

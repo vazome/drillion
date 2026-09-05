@@ -13,8 +13,8 @@ tags: [concurrency, asyncio]
 
 ## Read first
 - [Using the async with Statement / Creating Custom Context Managers](https://realpython.com/python-with-statement/) — `__enter__`/`__exit__` first, then the async twins
-- [Asynchronous context managers](https://docs.python.org/3/reference/datamodel.html#asynchronous-context-managers) — the two methods Python calls: `__aenter__` on the way in, `__aexit__` on the way out (ALWAYS, even on error)
-- [contextlib.asynccontextmanager](https://docs.python.org/3/library/contextlib.html#contextlib.asynccontextmanager) — the shorter way: one async generator with a single `yield`
+- [Asynchronous context managers](https://devdocs.io/python~3.14/reference/datamodel#asynchronous-context-managers) — the two methods Python calls: `__aenter__` on the way in, `__aexit__` on the way out (ALWAYS, even on error)
+- [contextlib.asynccontextmanager](https://devdocs.io/python~3.14/library/contextlib#contextlib.asynccontextmanager) — the shorter way: one async generator with a single `yield`
 
 > [!NOTE]
 > **Take-home:** your `tests/test_search.py`

@@ -12,12 +12,12 @@ source: exercism/python concept/log-levels (MIT, adapted)
 *Enums — members, values, aliases, and iterating the set of names.*
 
 ## Read first
-- [enum — support for enumerations](https://docs.python.org/3/library/enum.html) — declaring members, `EnumClass(value)` lookup by value, `EnumClass[name]` lookup by name
-- [Aliases in an Enum](https://docs.python.org/3/howto/enum.html#duplicating-enum-members-and-values) — two names, one value, and why iteration shows only the first
+- [enum — support for enumerations](https://devdocs.io/python~3.14/library/enum) — declaring members, `EnumClass(value)` lookup by value, `EnumClass[name]` lookup by name
+- [Aliases in an Enum](https://devdocs.io/python~3.14/howto/enum#duplicating-enum-members-and-values) — two names, one value, and why iteration shows only the first
 - [The `is` operator](https://www.w3schools.com/python/ref_keyword_is.asp) — enum members are singletons, so identity is the right comparison
-- [enum.auto()](https://docs.python.org/3/howto/enum.html#using-auto) — for when you do not care what the values are (not this task: here the values are the wire format)
-- [The functional API](https://docs.python.org/3/howto/enum.html#functional-api) — `Enum("LogLevel", ...)` builds the same class without a `class` block
-- [str.split()](https://docs.python.org/3/library/stdtypes.html#str.split) — one way to get `INF` out of `"[INF]: File deleted"`
+- [enum.auto()](https://devdocs.io/python~3.14/howto/enum#using-auto) — for when you do not care what the values are (not this task: here the values are the wire format)
+- [The functional API](https://devdocs.io/python~3.14/howto/enum#functional-api) — `Enum("LogLevel", ...)` builds the same class without a `class` block
+- [str.split()](https://devdocs.io/python~3.14/library/stdtypes#str.split) — one way to get `INF` out of `"[INF]: File deleted"`
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -26,7 +26,7 @@ Every log pipeline has the same handful of severities, and every log pipeline th
 
 ## Introduction
 
-In Python, [an enum](https://docs.python.org/3/library/enum.html) is a set of names that are bound to unique `literal`, or `constant` values. Enums are defined by inheriting an `Enum` class. Built-in enum types are available in the module `enum` and the class `Enum` can be imported using `from enum import Enum`.
+In Python, [an enum](https://devdocs.io/python~3.14/library/enum) is a set of names that are bound to unique `literal`, or `constant` values. Enums are defined by inheriting an `Enum` class. Built-in enum types are available in the module `enum` and the class `Enum` can be imported using `from enum import Enum`.
 
 ```python
 class Color(Enum):
@@ -237,7 +237,7 @@ logs["get_members"]()
 
 ### General
 
-- [Python Docs: Enum](https://docs.python.org/3/library/enum.html)
+- [Python Docs: Enum](https://devdocs.io/python~3.14/library/enum)
 
 ### 1. Parse log level
 

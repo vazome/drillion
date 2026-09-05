@@ -12,7 +12,7 @@ tags: [sorted]
 *sorted(key=...) — top-3 most-used Python in interviews.*
 
 ## Read first
-- [Sorting Techniques (Python HOWTO)](https://docs.python.org/3/howto/sorting.html) — `key=`, `reverse=`, and why Python's sort is 'stable' (ties keep order)
+- [Sorting Techniques (Python HOWTO)](https://devdocs.io/python~3.14/howto/sorting) — `key=`, `reverse=`, and why Python's sort is 'stable' (ties keep order)
 - [How to Use sorted() and .sort()](https://realpython.com/python-sort/) — same, slower and with pictures
 
 > [!NOTE]

@@ -12,10 +12,10 @@ source: exercism/python practice/high-scores (MIT, adapted)
 *high-scores — keep the raw series in the order it arrived, and answer questions with copies of it.*
 
 ## Read first
-- [Sorting techniques](https://docs.python.org/3/howto/sorting.html) — `sorted(...)` hands back a new list; `.sort()` rewrites the one you already have
-- [`max()`](https://docs.python.org/3/library/functions.html#max) — the highest score without sorting anything
-- [Lists](https://docs.python.org/3/tutorial/introduction.html#lists) — negative indexing for "the last one", and slicing that is happy to be asked for more items than exist
-- [A first look at classes](https://docs.python.org/3/tutorial/classes.html#a-first-look-at-classes) — `__init__`, `self`, and storing state on the instance
+- [Sorting techniques](https://devdocs.io/python~3.14/howto/sorting) — `sorted(...)` hands back a new list; `.sort()` rewrites the one you already have
+- [`max()`](https://devdocs.io/python~3.14/library/functions#max) — the highest score without sorting anything
+- [Lists](https://devdocs.io/python~3.14/tutorial/introduction#lists) — negative indexing for "the last one", and slicing that is happy to be asked for more items than exist
+- [A first look at classes](https://devdocs.io/python~3.14/tutorial/classes#a-first-look-at-classes) — `__init__`, `self`, and storing state on the instance
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -31,11 +31,11 @@ Your task is to write methods that return the highest score from the list, the l
 In this exercise, you're going to use and manipulate [`lists`][lists].
 Python lists are very versatile, and you'll find yourself using them again and again in problems both simple and complex.
 
-- [**Data Structures (Python 3 Documentation Tutorial)**](https://docs.python.org/3/tutorial/datastructures.html)
+- [**Data Structures (Python 3 Documentation Tutorial)**](https://devdocs.io/python~3.14/tutorial/datastructures)
 - [**Lists and Tuples in Python (Real Python)**](https://realpython.com/python-lists-tuples/)
 - [**Python Lists (Google for Education)**](https://developers.google.com/edu/python/lists)
 
-[lists]: https://docs.python.org/3/library/stdtypes.html#lists
+[lists]: https://devdocs.io/python~3.14/library/stdtypes#lists
 
 ## You get
 Nothing to start — you return a **class**. The grader builds it as `HighScores(scores)`, where `scores` is a non-empty list of `int` scores in the order the player set them, e.g. `[30, 50, 20, 70]`.

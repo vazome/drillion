@@ -12,12 +12,12 @@ source: exercism/python concept/restaurant-rozalynn (MIT, adapted)
 *`None` — `is None` as a test, over a dict's keys and values.*
 
 ## Read first
-- [None (the standard type hierarchy)](https://docs.python.org/3/library/stdtypes.html#the-null-object) — one `None` object per program, so identity is the right test
-- [`is` and `is not`](https://docs.python.org/3/reference/expressions.html#is-not) — identity, not equality; PEP 8 asks for `is None` specifically
-- [dict.items()](https://docs.python.org/3/library/stdtypes.html#dict.items) — walk keys and values together in one loop
-- [dict.values()](https://docs.python.org/3/library/stdtypes.html#dict.values) — when only the values matter
+- [None (the standard type hierarchy)](https://devdocs.io/python~3.14/library/stdtypes#the-null-object) — one `None` object per program, so identity is the right test
+- [`is` and `is not`](https://devdocs.io/python~3.14/reference/expressions#is-not) — identity, not equality; PEP 8 asks for `is None` specifically
+- [dict.items()](https://devdocs.io/python~3.14/library/stdtypes#dict.items) — walk keys and values together in one loop
+- [dict.values()](https://devdocs.io/python~3.14/library/stdtypes#dict.values) — when only the values matter
 - [Real Python: Null in Python](https://realpython.com/null-in-python/) — `None`, falsiness, and the difference between them
-- [List comprehensions](https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions) — the one-line form of "collect the ones that match"
+- [List comprehensions](https://devdocs.io/python~3.14/tutorial/datastructures#list-comprehensions) — the one-line form of "collect the ones that match"
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

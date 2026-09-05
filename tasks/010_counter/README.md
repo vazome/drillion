@@ -10,6 +10,9 @@ tags: [counter]
 
 *Top-N counting — the single most-asked DevOps screen question.*
 
+## Read first
+- [collections.Counter](https://devdocs.io/python~3.14/library/collections#collections.Counter) — counting without a hand-rolled dict; `most_common` is the payoff
+
 ## Why
 A web server is under unusual load. The security lead asks "which IP addresses are hitting us the most?" so they can decide whether to block one. You have the access log, one request per line, and need the busiest few addresses with their request counts, biggest first. This is the single most-asked DevOps screening question.
 

@@ -12,9 +12,9 @@ source: exercism/python practice/tournament (MIT, adapted)
 *tournament — fold the results into counters, then sort and pad them into a fixed-width report.*
 
 ## Read first
-- [Format specification mini-language](https://docs.python.org/3/library/string.html#format-specification-mini-language) — `{name:30}` left-aligns text in 30 columns, `{n:2}` right-aligns a number in 2; you never count spaces yourself
-- [`dict.setdefault()`](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) — fetch a key's record, creating it the first time you see that key
-- [`sorted()`](https://docs.python.org/3/library/functions.html#sorted) — the `key=` argument, and how a tuple key sorts on its first item and falls back to the second
+- [Format specification mini-language](https://devdocs.io/python~3.14/library/string#format-specification-mini-language) — `{name:30}` left-aligns text in 30 columns, `{n:2}` right-aligns a number in 2; you never count spaces yourself
+- [`dict.setdefault()`](https://devdocs.io/python~3.14/library/stdtypes#dict.setdefault) — fetch a key's record, creating it the first time you see that key
+- [`sorted()`](https://devdocs.io/python~3.14/library/functions#sorted) — the `key=` argument, and how a tuple key sorts on its first item and falls back to the second
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

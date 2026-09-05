@@ -13,11 +13,11 @@ tags: [type-hints]
 
 ## Read first
 - [Python Type Checking (Guide)](https://realpython.com/python-type-checking/) — the take-home REQUIRED annotations on every signature
-- [typing — support for type hints](https://docs.python.org/3/library/typing.html) — reference, only for lookup
-- [Dictionaries (Python tutorial)](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — dicts: read, add, remove, loop over
+- [typing — support for type hints](https://devdocs.io/python~3.14/library/typing) — reference, only for lookup
+- [Dictionaries (Python tutorial)](https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries) — dicts: read, add, remove, loop over
 - [Dictionaries in Python](https://realpython.com/python-dicts/) — same, longer; 'Building a Dictionary Incrementally' and 'Dictionary Methods' (`.items()`, `.pop()`) are the 70% of this task
-- [typing.get_type_hints](https://docs.python.org/3/library/typing.html#typing.get_type_hints) — the one call that reads the hints
-- [typing.get_args](https://docs.python.org/3/library/typing.html#typing.get_args) — split `str | None` into its parts
+- [typing.get_type_hints](https://devdocs.io/python~3.14/library/typing#typing.get_type_hints) — the one call that reads the hints
+- [typing.get_args](https://devdocs.io/python~3.14/library/typing#typing.get_args) — split `str | None` into its parts
 
 > [!NOTE]
 > **Take-home:** required on every signature

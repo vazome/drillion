@@ -12,6 +12,10 @@ tags: [strings, counter]
 
 Combines topics 28 (str methods), 19 (Counter), 22 (sets and sorting).
 
+## Read first
+- [collections.Counter](https://devdocs.io/python~3.14/library/collections#collections.Counter) — tallying before you render
+- [Format Specification Mini-Language](https://devdocs.io/python~3.14/library/string#formatspec) — the column widths
+
 ## Why
 Many phone screens for ops roles open with two or three tiny warm-up questions before the real work: is this phrase the same read backwards, are these two words made of the same letters, what are the most common words in this text. They are not about the job; they check that you can state a rule clearly and then write it. Here all three are bundled into one function so you can practise them together.
 

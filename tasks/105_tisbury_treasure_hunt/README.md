@@ -12,15 +12,15 @@ source: exercism/python concept/tisbury-treasure-hunt (MIT, adapted)
 *Membership, concatenation, and formatting tuples into a report.*
 
 ## Read first
-- [tuple](https://docs.python.org/3/library/stdtypes.html#tuple) — the constructor and the literal, and why a one-element tuple needs its trailing comma
-- [Sequence types — list, tuple, range](https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range) — where tuples sit among Python's sequences
-- [Common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — indexing, `in`, `+` and `*`, all shared with strings and lists
+- [tuple](https://devdocs.io/python~3.14/library/stdtypes#tuple) — the constructor and the literal, and why a one-element tuple needs its trailing comma
+- [Sequence types — list, tuple, range](https://devdocs.io/python~3.14/library/stdtypes#sequence-types-list-tuple-range) — where tuples sit among Python's sequences
+- [Common sequence operations](https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations) — indexing, `in`, `+` and `*`, all shared with strings and lists
 - [Ned Batchelder: Lists vs Tuples](https://nedbatchelder.com/blog/201608/lists_vs_tuples.html) — the useful mental model: a list is a collection, a tuple is a record
 - [Stack Overflow: what's the difference between lists and tuples?](https://stackoverflow.com/a/626871) — the short answer
 - [James Tauber: tuples are not just constant lists](https://jtauber.com/blog/2006/04/15/python_tuples_are_not_just_constant_lists/) — why position means something in a tuple and nothing in a list
-- [hashable](https://docs.python.org/3/glossary.html#hashable) — the property that lets a tuple be a dict key when a list cannot be
-- [Membership test operations](https://docs.python.org/3/reference/expressions.html#membership-test-operations) — what `in` actually checks when the right-hand side is a tuple
-- [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#f-strings) — how a tuple gets rendered when you drop it into `{}`
+- [hashable](https://devdocs.io/python~3.14/glossary#hashable) — the property that lets a tuple be a dict key when a list cannot be
+- [Membership test operations](https://devdocs.io/python~3.14/reference/expressions#membership-test-operations) — what `in` actually checks when the right-hand side is a tuple
+- [f-strings](https://devdocs.io/python~3.14/reference/lexical_analysis#f-strings) — how a tuple gets rendered when you drop it into `{}`
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -168,9 +168,9 @@ The `in` operator can be used to check membership in a `tuple`.
 True
 ```
 
-[common sequence operations]: https://docs.python.org/3/library/stdtypes.html#common-sequence-operations
-[mutable sequence operations]: https://docs.python.org/3/library/stdtypes.html#mutable-sequence-types
-[tuple]: https://docs.python.org/3/library/stdtypes.html#tuple
+[common sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations
+[mutable sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#mutable-sequence-types
+[tuple]: https://devdocs.io/python~3.14/library/stdtypes#tuple
 
 ## Instructions
 Azara and Rui are teammates competing in a pirate-themed treasure hunt.
@@ -356,21 +356,21 @@ hunt["clean_up"](
 - There are multiple textual formatting options available via Python's [`format specification mini-language`][format specification mini-language].
 
 [bracket notation]: https://stackoverflow.com/questions/30250282/whats-the-difference-between-the-square-bracket-and-dot-notations-in-python
-[class str]: https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str
-[class tuple]: https://docs.python.org/3/library/stdtypes.html#tuple
-[common sequence operations]: https://docs.python.org/3/library/stdtypes.html#common-sequence-operations
-[enumerate]: https://docs.python.org/3/library/functions.html#enumerate
-[f-strings]: https://docs.python.org/3/tutorial/inputoutput.html#formatted-string-literals
-[format specification mini-language]: https://docs.python.org/3/library/string.html#format-specification-mini-language
-[iterable]: https://docs.python.org/3/glossary.html#term-iterable
-[sequence types]: https://docs.python.org/3/library/stdtypes.html#typesseq
-[str.format]: https://docs.python.org/3/library/stdtypes.html#str.format
-[testing membership]: https://docs.python.org/3/reference/expressions.html#membership-test-operations
-[tuples]: https://docs.python.org/3/tutorial/datastructures.html#tuples-and-sequences
+[class str]: https://devdocs.io/python~3.14/library/stdtypes#text-sequence-type-str
+[class tuple]: https://devdocs.io/python~3.14/library/stdtypes#tuple
+[common sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations
+[enumerate]: https://devdocs.io/python~3.14/library/functions#enumerate
+[f-strings]: https://devdocs.io/python~3.14/tutorial/inputoutput#formatted-string-literals
+[format specification mini-language]: https://devdocs.io/python~3.14/library/string#format-specification-mini-language
+[iterable]: https://devdocs.io/python~3.14/glossary#term-iterable
+[sequence types]: https://devdocs.io/python~3.14/library/stdtypes#typesseq
+[str.format]: https://devdocs.io/python~3.14/library/stdtypes#str.format
+[testing membership]: https://devdocs.io/python~3.14/reference/expressions#membership-test-operations
+[tuples]: https://devdocs.io/python~3.14/tutorial/datastructures#tuples-and-sequences
 
 ## Hints
 ### Hint 1
-All three functions rest on the one small conversion from the previous task: Azara's `'4B'` has to become `('4', 'B')` before it can be compared with anything of Rui's. Once it is in that shape, task 3 is a single [membership test](https://docs.python.org/3/reference/expressions.html#membership-test-operations) — Rui's record *is* a tuple, and `in` asks whether a value is one of its elements.
+All three functions rest on the one small conversion from the previous task: Azara's `'4B'` has to become `('4', 'B')` before it can be compared with anything of Rui's. Once it is in that shape, task 3 is a single [membership test](https://devdocs.io/python~3.14/reference/expressions#membership-test-operations) — Rui's record *is* a tuple, and `in` asks whether a value is one of its elements.
 ### Hint 2
 Task 4 is task 3 plus one sequence operation: two tuples joined with `+` produce a single flat tuple, which is exactly the five-item record being asked for. Call your own comparison function rather than repeating the comparison — that is what "could you re-use `compare_records`?" in the Exercism hints is pointing at.
 

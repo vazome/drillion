@@ -12,10 +12,10 @@ source: exercism/python practice/matching-brackets (MIT, adapted)
 *matching-brackets — the stack, in its smallest useful form.*
 
 ## Read first
-- [Using lists as stacks](https://docs.python.org/3/tutorial/datastructures.html#using-lists-as-stacks) — `append()` and `pop()` are push and pop; that is the entire data structure
-- [list.pop()](https://docs.python.org/3/library/stdtypes.html#mutable-sequence-types) — with no argument it removes and returns the **last** item, which is exactly "most recently opened"
-- [Mapping types: dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — one small dict maps each closer to the opener it expects, so there is no three-branch `if`
-- [Truth value testing](https://docs.python.org/3/library/stdtypes.html#truth-value-testing) — an empty list is falsey, which makes "is anything still open?" a one-liner
+- [Using lists as stacks](https://devdocs.io/python~3.14/tutorial/datastructures#using-lists-as-stacks) — `append()` and `pop()` are push and pop; that is the entire data structure
+- [list.pop()](https://devdocs.io/python~3.14/library/stdtypes#mutable-sequence-types) — with no argument it removes and returns the **last** item, which is exactly "most recently opened"
+- [Mapping types: dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — one small dict maps each closer to the opener it expects, so there is no three-branch `if`
+- [Truth value testing](https://devdocs.io/python~3.14/library/stdtypes#truth-value-testing) — an empty list is falsey, which makes "is anything still open?" a one-liner
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

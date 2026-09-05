@@ -12,15 +12,15 @@ source: exercism/python concept/guidos-gorgeous-lasagna (MIT, adapted)
 *Constants and small functions — the shape every Python module has.*
 
 ## Read first
-- [Defining functions](https://docs.python.org/3/tutorial/controlflow.html#defining-functions) — `def`, parameters, `return`, and what a function hands back when you forget to return anything
+- [Defining functions](https://devdocs.io/python~3.14/tutorial/controlflow#defining-functions) — `def`, parameters, `return`, and what a function hands back when you forget to return anything
 - [Reuven Lerner: Understanding Python Assignment](https://lerner.co.il/2019/06/18/understanding-python-assignment/) — what `name = value` actually binds, and why `SCREAMING_SNAKE_CASE` is a promise to yourself, not a lock
 - [Real Python: Commenting vs Documenting Code](https://realpython.com/documenting-python-code/#commenting-vs-documenting-code) — comments explain why, docstrings explain what
 - [Python Morsels: Everything is an Object](https://www.pythonmorsels.com/everything-is-an-object/) — including functions, which is why one fits in a dict
 - [Eli Bendersky: Python internals: how callables work](https://eli.thegreenplace.net/2012/03/23/python-internals-how-callables-work/) — what actually happens at `f()`
 - [Sentdex (YouTube): Python 3 Programming Tutorial — Functions](https://www.youtube.com/watch?v=owglNL1KQf0) — the same material, spoken
 - [dynamic typing and strong typing](https://stackoverflow.com/questions/11328920/is-python-strongly-typed) — why Python lets you rebind a name to another type but will not add an `int` to a `str`
-- [type hints](https://docs.python.org/3/library/typing.html) — optional annotations, ignored at runtime
-- [significant indentation](https://docs.python.org/3/reference/lexical_analysis.html#indentation) — the block rule that bites everyone once
+- [type hints](https://devdocs.io/python~3.14/library/typing) — optional annotations, ignored at runtime
+- [significant indentation](https://devdocs.io/python~3.14/reference/lexical_analysis#indentation) — the block rule that bites everyone once
 - [DigitalOcean: How to Write Doctests in Python](https://www.digitalocean.com/community/tutorials/how-to-write-doctests-in-python) — docstrings that are also tests
 - [Ned Batchelder: Is Python Interpreted or Compiled? Yes.](https://nedbatchelder.com/blog/201803/is_python_interpreted_or_compiled_yes.html) — what runs when you run a `.py`
 
@@ -272,23 +272,23 @@ Returns:
 Takes a number and raises it to the specified power, returning the result.
 ```
 
-[calls]: https://docs.python.org/3/reference/expressions.html#calls
+[calls]: https://devdocs.io/python~3.14/reference/expressions#calls
 [comments]: https://realpython.com/python-comments-guide/#python-commenting-basics
-[docstring]: https://docs.python.org/3/tutorial/controlflow.html#tut-docstrings
-[doctests]: https://docs.python.org/3/library/doctest.html
+[docstring]: https://devdocs.io/python~3.14/tutorial/controlflow#tut-docstrings
+[doctests]: https://devdocs.io/python~3.14/library/doctest
 [duck typing]: https://en.wikipedia.org/wiki/Duck_typing
 [dynamic typing in python]: https://stackoverflow.com/questions/11328920/is-python-strongly-typed
-[everythings an object]: https://docs.python.org/3/reference/datamodel.html
+[everythings an object]: https://devdocs.io/python~3.14/reference/datamodel
 [facts-and-myths-about-python-names]: https://nedbatchelder.com/text/names.html
-[function definition]: https://docs.python.org/3/tutorial/controlflow.html#defining-functions
+[function definition]: https://devdocs.io/python~3.14/tutorial/controlflow#defining-functions
 [gradual typing]: https://en.wikipedia.org/wiki/Gradual_typing
-[module]: https://docs.python.org/3/tutorial/modules.html
-[none]: https://docs.python.org/3/library/constants.html
-[parameters]: https://docs.python.org/3/glossary.html#term-parameter
+[module]: https://devdocs.io/python~3.14/tutorial/modules
+[none]: https://devdocs.io/python~3.14/library/constants
+[parameters]: https://devdocs.io/python~3.14/glossary#term-parameter
 [pep257]: https://www.python.org/dev/peps/pep-0257/
-[return]: https://docs.python.org/3/reference/simple_stmts.html#return
+[return]: https://devdocs.io/python~3.14/reference/simple_stmts#return
 [sphinx]: https://www.sphinx-doc.org/en/master/usage/index.html
-[type hints]: https://docs.python.org/3/library/typing.html
+[type hints]: https://devdocs.io/python~3.14/library/typing
 
 ## Instructions
 You're going to write some code to help you cook a gorgeous lasagna from your favorite cookbook.
@@ -376,8 +376,8 @@ def elapsed_time_in_minutes(number_of_layers, elapsed_bake_time):
 ```
 
 [constants]: https://stackoverflow.com/a/2682752
-[functions]: https://docs.python.org/3/tutorial/controlflow.html#defining-functions
-[function-docstrings]: https://docs.python.org/3/tutorial/controlflow.html#documentation-strings
+[functions]: https://devdocs.io/python~3.14/tutorial/controlflow#defining-functions
+[function-docstrings]: https://devdocs.io/python~3.14/tutorial/controlflow#documentation-strings
 
 ## You get
 Nothing. You define the numbers and the functions yourself.
@@ -454,30 +454,30 @@ Nobody bakes past the cookbook time, so `bake_time_remaining` never has to deal 
 - Clearly [commenting][comments] and [documenting][docstrings] your code according to [PEP257][pep257] is always recommended.
 - Some examples of Google-style docstrings can be found in the Sphinx documentation for the [napoleon module][napoleon].
 
-[assignment]: https://docs.python.org/3/reference/simple_stmts.html#grammar-token-assignment-stmt
+[assignment]: https://devdocs.io/python~3.14/reference/simple_stmts#grammar-token-assignment-stmt
 [comments]: https://realpython.com/python-comments-guide/
 [constants]: https://stackoverflow.com/a/2682752
-[defining functions]: https://docs.python.org/3/tutorial/controlflow.html#defining-functions
-[docstrings]: https://docs.python.org/3/tutorial/controlflow.html#tut-docstrings
+[defining functions]: https://devdocs.io/python~3.14/tutorial/controlflow#defining-functions
+[docstrings]: https://devdocs.io/python~3.14/tutorial/controlflow#tut-docstrings
 [magic-numbers]: https://en.wikipedia.org/wiki/Magic_number_(programming)
 [naming]: https://realpython.com/python-variables/
 [napoleon]: https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#module-sphinx.ext.napoleon
-[numbers]: https://docs.python.org/3/tutorial/introduction.html#numbers
+[numbers]: https://devdocs.io/python~3.14/tutorial/introduction#numbers
 [pep8]: https://www.python.org/dev/peps/pep-0008/
 [pep257]: https://www.python.org/dev/peps/pep-0257/
-[python as a calculator]: https://docs.python.org/3/tutorial/introduction.html#using-python-as-a-calculator
-[return]: https://docs.python.org/3/reference/simple_stmts.html#return
-[the python tutorial]: https://docs.python.org/3/tutorial/introduction.html
+[python as a calculator]: https://devdocs.io/python~3.14/tutorial/introduction#using-python-as-a-calculator
+[return]: https://devdocs.io/python~3.14/reference/simple_stmts#return
+[the python tutorial]: https://devdocs.io/python~3.14/tutorial/introduction
 
 ## Hints
 ### Hint 1
-Two numbers in this recipe never change: 40 and 2. [Name](https://realpython.com/python-variables/) each one and [assign](https://docs.python.org/3/reference/simple_stmts.html#grammar-token-assignment-stmt) it an integer value once, above the functions, and let the functions read those names — that is how you avoid a ["magic number"](https://en.wikipedia.org/wiki/Magic_number_(programming)) sitting in the middle of your arithmetic. The third function does not need to redo the per-layer arithmetic: remember, you can always *call* a function you have defined previously.
+Two numbers in this recipe never change: 40 and 2. [Name](https://realpython.com/python-variables/) each one and [assign](https://devdocs.io/python~3.14/reference/simple_stmts#grammar-token-assignment-stmt) it an integer value once, above the functions, and let the functions read those names — that is how you avoid a ["magic number"](https://en.wikipedia.org/wiki/Magic_number_(programming)) sitting in the middle of your arithmetic. The third function does not need to redo the per-layer arithmetic: remember, you can always *call* a function you have defined previously.
 ### Hint 2
 Shape of the work: define the two constants, then define the three functions, then build the dict that maps each key string to the matching function.
 
-- `bake_time_remaining` — one parameter, the time elapsed so far; use the [mathematical operator for subtraction](https://docs.python.org/3/tutorial/introduction.html#numbers) and [return a value](https://docs.python.org/3/reference/simple_stmts.html#return).
+- `bake_time_remaining` — one parameter, the time elapsed so far; use the [mathematical operator for subtraction](https://devdocs.io/python~3.14/tutorial/introduction#numbers) and [return a value](https://devdocs.io/python~3.14/reference/simple_stmts#return).
 - `preparation_time_in_minutes` — one parameter, the number of layers; use the operator for multiplication and return a value.
-- `elapsed_time_in_minutes` — two parameters; [use the operator for addition](https://docs.python.org/3/tutorial/introduction.html#using-python-as-a-calculator) to sum the other two answers.
+- `elapsed_time_in_minutes` — two parameters; [use the operator for addition](https://devdocs.io/python~3.14/tutorial/introduction#using-python-as-a-calculator) to sum the other two answers.
 
 Put the function name in the dict WITHOUT parentheses — `{'bake_time_remaining': bake_time_remaining}` hands over the function itself so the caller can run it later; adding `()` would run it now, with no arguments, and store the result.
 ### Hint 3

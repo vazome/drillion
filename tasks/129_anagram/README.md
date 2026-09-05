@@ -12,10 +12,10 @@ source: exercism/python practice/anagram (MIT, adapted)
 *anagram — same letters, different order: fingerprint a word and compare.*
 
 ## Read first
-- [Sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — `sorted()`, which turns any iterable into a list in a fixed order — including a string, character by character
-- [More on lists](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — list methods and list comprehensions, the shape this answer wants
-- [collections.Counter](https://docs.python.org/3/library/collections.html#collections.Counter) — the other fingerprint: how many of each item
-- [str.lower()](https://docs.python.org/3/library/stdtypes.html#str.lower) — the case fold that makes "Seton" comparable with "stone"
+- [Sorting HOW TO](https://devdocs.io/python~3.14/howto/sorting) — `sorted()`, which turns any iterable into a list in a fixed order — including a string, character by character
+- [More on lists](https://devdocs.io/python~3.14/tutorial/datastructures#more-on-lists) — list methods and list comprehensions, the shape this answer wants
+- [collections.Counter](https://devdocs.io/python~3.14/library/collections#collections.Counter) — the other fingerprint: how many of each item
+- [str.lower()](https://devdocs.io/python~3.14/library/stdtypes#str.lower) — the case fold that makes "Seton" comparable with "stone"
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

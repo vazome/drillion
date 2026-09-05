@@ -12,6 +12,9 @@ tags: [pathlib]
 
 Combines topics 27 (pathlib), 9 (sort key), 40 (tempfile).
 
+## Read first
+- [pathlib](https://devdocs.io/python~3.14/library/pathlib) — `rglob` and `stat().st_size`
+
 ## Why
 A server's disk is almost full and the on-call engineer needs to know, right now, which files are eating the space so they can delete or move the biggest ones. "Show me the five largest files under /var" is the question. A list sorted biggest-first is what they act on.
 

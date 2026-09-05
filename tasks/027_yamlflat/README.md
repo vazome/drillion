@@ -10,6 +10,9 @@ tags: [files-text]
 
 Half of DevOps config is YAML. PyYAML is not installed here, so this drills the concept by hand on the flat subset — in real code it is one `yaml.safe_load` call.
 
+## Read first
+- [PyYAML documentation](https://pyyaml.org/wiki/PyYAMLDocumentation) — `safe_load` — never plain `load` on input you did not write
+
 ## Why
 Deployment settings live in a small text file: one setting per line as "key: value", with comments and blank lines in between. The deploy tool needs those settings as real typed values (3 as a number, false as a yes/no flag), not as text. The usual library for this format is not installed here, so you parse the simple flat form by hand. The trap: a value like an image tag `nginx:1.25` contains a colon of its own.
 

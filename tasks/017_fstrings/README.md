@@ -10,6 +10,10 @@ tags: [f-strings]
 
 *f-string format specs — every ops report and CLI table uses them.*
 
+## Read first
+- [f-strings](https://devdocs.io/python~3.14/reference/lexical_analysis#f-strings) — the syntax itself
+- [Format Specification Mini-Language](https://devdocs.io/python~3.14/library/string#formatspec) — everything after the `:` — width, `<` `>` `^`, `,` and `.2f`
+
 ## Why
 You run the servers for a company. Every month finance asks "how much did each service cost?" and wants it as a neat table they can read at a glance — numbers lined up under each other, commas in the thousands, always two decimals. Ragged numbers get misread; aligned ones don't. Your job is to turn a plain list of (service, cost) into that table.
 

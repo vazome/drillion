@@ -10,6 +10,10 @@ tags: [errors]
 
 *try/except — catch the specific thing, not everything.*
 
+## Read first
+- [Errors and Exceptions](https://devdocs.io/python~3.14/tutorial/errors) — `try`/`except`/`else`/`finally` and what each is for
+- [Built-in Exceptions](https://devdocs.io/python~3.14/library/exceptions) — the hierarchy — catch the narrowest thing that can happen
+
 ## Why
 A monitoring agent sends metrics as lines like "cpu=90". Now and then a line is garbage: truncated, missing the equals sign, or with a value that is not a number. A parser that crashes on the first bad line takes the whole dashboard down. The team wants a parser that keeps the good lines and quietly skips the bad ones, but only for the specific errors bad input causes, so real bugs still surface.
 

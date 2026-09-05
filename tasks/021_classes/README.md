@@ -10,6 +10,9 @@ tags: [classes]
 
 *A class bundles state with the things derived from it, and @property keeps them honest.*
 
+## Read first
+- [Classes](https://devdocs.io/python~3.14/tutorial/classes) — `__init__`, `self`, and what an instance attribute actually is
+
 ## Why
 Your cluster runs services, each with a name, a number of copies (replicas) and a CPU budget per copy. Capacity planning asks "how much CPU does each service use in total?", and that total changes whenever someone scales a service up or down. If you work it out once and store it, it goes stale; it has to be recomputed every time it is asked for. Bundling the facts and the derived figure together is what a class is for.
 

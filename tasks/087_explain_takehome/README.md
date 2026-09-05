@@ -16,8 +16,8 @@ These are the ones the questions come from — re-read, then answer from memory.
 
 - [Async IO Explained](https://realpython.com/async-io-python/)
 - [asyncpg connection pools](https://magicstack.github.io/asyncpg/current/usage.html#connection-pools)
-- [asyncio synchronization primitives](https://docs.python.org/3/library/asyncio-sync.html) — Lock and Semaphore
-- [Asynchronous context managers](https://docs.python.org/3/reference/datamodel.html#asynchronous-context-managers)
+- [asyncio synchronization primitives](https://devdocs.io/python~3.14/library/asyncio-sync) — Lock and Semaphore
+- [Asynchronous context managers](https://devdocs.io/python~3.14/reference/datamodel#asynchronous-context-managers)
 - [pytest fixtures](https://docs.pytest.org/en/stable/how-to/fixtures.html)
 - [FastAPI async tests](https://fastapi.tiangolo.com/advanced/async-tests/)
 - [Rerankers](https://www.pinecone.io/learn/series/rag/rerankers/)

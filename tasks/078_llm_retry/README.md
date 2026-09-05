@@ -10,6 +10,9 @@ tags: [llm, langchain]
 
 *Retry the failures that clear on their own — and only those.*
 
+## Read first
+- [LangChain: Runnable interface](https://python.langchain.com/docs/concepts/runnables/) — `with_retry` before you write your own loop
+
 ## Why
 LangChain is a library for wiring steps together around an AI model. Calls to a paid AI service fail in two ways. "Too many requests, slow down" clears by itself if you wait a bit and try again. "Your request is malformed" will never clear, and retrying it only wastes money, adds load and delays the error message someone needs to read. A script that treats both the same way is a common and expensive bug.
 

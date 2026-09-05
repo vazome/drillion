@@ -10,6 +10,9 @@ tags: [functools]
 
 *lru_cache is the cheapest speedup in Python; wraps is why your wrapper keeps its name.*
 
+## Read first
+- [functools](https://devdocs.io/python~3.14/library/functools) — `wraps`, `partial`, `lru_cache`, `reduce`
+
 ## Why
 A pricing function is slow, and a billing report calls it thousands of times with only a handful of different inputs. The same answer is recomputed over and over. You want to remember each answer the first time and reuse it after that. At the same time, wrapping the function must not change its name or description, or the logs and error messages will start naming a function that does not exist.
 

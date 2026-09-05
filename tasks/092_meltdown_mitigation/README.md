@@ -12,11 +12,11 @@ source: exercism/python concept/meltdown-mitigation (MIT, adapted)
 *if / elif / else — three reactor decisions, each a different shape of branch.*
 
 ## Read first
-- [Python Docs: Control flow tools](https://docs.python.org/3/tutorial/controlflow.html#more-control-flow-tools) — if / elif / else: the first branch whose test is `True` wins, and the rest are never even evaluated
+- [Python Docs: Control flow tools](https://devdocs.io/python~3.14/tutorial/controlflow#more-control-flow-tools) — if / elif / else: the first branch whose test is `True` wins, and the rest are never even evaluated
 - [Real Python: Conditional statements in Python](https://realpython.com/python-conditional-statements/) — chained comparisons (`0 <= x < 10`) and when a ladder of `elif` beats a pile of separate `if`s
-- [Python Docs: Truth value testing](https://docs.python.org/3/library/stdtypes.html#truth-value-testing) — what counts as `True` when the test is not a comparison
-- [Python Docs: Standard types — boolean operations](https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not) — `and` / `or` / `not` inside a condition
-- [Python Docs: Comparisons](https://docs.python.org/3/library/stdtypes.html#comparisons) — the `<` / `<=` table this whole task turns on
+- [Python Docs: Truth value testing](https://devdocs.io/python~3.14/library/stdtypes#truth-value-testing) — what counts as `True` when the test is not a comparison
+- [Python Docs: Standard types — boolean operations](https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not) — `and` / `or` / `not` inside a condition
+- [Python Docs: Comparisons](https://devdocs.io/python~3.14/library/stdtypes#comparisons) — the `<` / `<=` table this whole task turns on
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -101,11 +101,11 @@ else:
 '13'
 ```
 
-[boolean operations]: https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not
-[comparisons]: https://docs.python.org/3/library/stdtypes.html#comparisons
-[control flow tools]: https://docs.python.org/3/tutorial/controlflow.html#more-control-flow-tools
-[if statement]: https://docs.python.org/3/reference/compound_stmts.html#the-if-statement
-[truth value testing]: https://docs.python.org/3/library/stdtypes.html#truth-value-testing
+[boolean operations]: https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not
+[comparisons]: https://devdocs.io/python~3.14/library/stdtypes#comparisons
+[control flow tools]: https://devdocs.io/python~3.14/tutorial/controlflow#more-control-flow-tools
+[if statement]: https://devdocs.io/python~3.14/reference/compound_stmts#the-if-statement
+[truth value testing]: https://devdocs.io/python~3.14/library/stdtypes#truth-value-testing
 
 ## Instructions
 In this exercise, we'll develop a simple control system for a nuclear reactor.
@@ -269,17 +269,17 @@ reactor["fail_safe"](10, 1101, 10000)            # -> 'DANGER'  (110.1%, over th
 - If the linter complains, consider assigning the output of a branch to a common variable, and then `return`ing that variable.
 
 
-[boolean operations]: https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not
+[boolean operations]: https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not
 [comparisons review]: https://www.learnpython.dev/02-introduction-to-python/090-boolean-logic/20-comparisons/
-[comparisons]: https://docs.python.org/3/library/stdtypes.html#comparisons
-[control flow tools]: https://docs.python.org/3/tutorial/controlflow.html
+[comparisons]: https://devdocs.io/python~3.14/library/stdtypes#comparisons
+[control flow tools]: https://devdocs.io/python~3.14/tutorial/controlflow
 [python booleans]: https://realpython.com/python-boolean/
 [python comparisons examples]: https://www.tutorialspoint.com/python/comparison_operators_example.htm
 [real python conditionals]: https://realpython.com/python-conditional-statements/
 
 ## Hints
 ### Hint 1
-Three different shapes. The first is one condition made of three parts that must all hold — no branching needed at all, just the [comparison operators](https://docs.python.org/3/library/stdtypes.html#comparisons) combined with [boolean operations](https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not) into a single test. The other two are ladders: any number of `elif` statements can be used as decision "branches". Order them from one end of the scale to the other so that by the time you test a band, everything above it has already been ruled out and you only need ONE comparison per branch. `else` is the code block that runs when all the tests return `False`.
+Three different shapes. The first is one condition made of three parts that must all hold — no branching needed at all, just the [comparison operators](https://devdocs.io/python~3.14/library/stdtypes#comparisons) combined with [boolean operations](https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not) into a single test. The other two are ladders: any number of `elif` statements can be used as decision "branches". Order them from one end of the scale to the other so that by the time you test a band, everything above it has already been ruled out and you only need ONE comparison per branch. `else` is the code block that runs when all the tests return `False`.
 ### Hint 2
 Write the ladders top-down, highest band first, and each `elif` then only needs the lower edge of its band — the upper edge is already excluded by the branch above. The last band needs no test at all: `else` is everything left over, which is also what saves you when a reading is 0. Percentages: compute the percentage once into a variable before the ladder, so the arithmetic cannot drift between branches.
 

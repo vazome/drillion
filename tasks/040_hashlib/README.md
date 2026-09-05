@@ -10,6 +10,9 @@ tags: [stdlib-ops]
 
 *A checksum is how you prove the artifact you deployed is the artifact you built.*
 
+## Read first
+- [hashlib](https://devdocs.io/python~3.14/library/hashlib) — digests over bytes, and why you feed it in chunks
+
 ## Why
 The release pipeline publishes a checksum (a short fingerprint string computed from a file's bytes) next to every build artifact. Before deploying, you must prove the files that arrived on the server are the exact ones that were built: a single changed byte, from a corrupted download or tampering, must be caught. You compute each file's fingerprint and compare it with the published one.
 

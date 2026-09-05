@@ -12,11 +12,11 @@ source: exercism/python practice/circular-buffer (MIT, adapted)
 *circular-buffer — the storage never grows, so the interesting code is what happens at the two edges.*
 
 ## Read first
-- [User-defined exceptions](https://docs.python.org/3/tutorial/errors.html#user-defined-exceptions) — why an exception class is usually nothing but a name and a base class
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise Something("message")`, and where that message ends up
-- [`BufferError`](https://docs.python.org/3/library/exceptions.html#BufferError) — the built-in base class both given exceptions inherit from
-- [`%` on integers](https://docs.python.org/3/reference/expressions.html#binary-arithmetic-operations) — `(index + 1) % capacity` is how a position walks off the end and reappears at the start
-- [`collections.deque`](https://docs.python.org/3/library/collections.html#collections.deque) — a ready-made double-ended queue, and `maxlen` if you would rather not do the index arithmetic yourself
+- [User-defined exceptions](https://devdocs.io/python~3.14/tutorial/errors#user-defined-exceptions) — why an exception class is usually nothing but a name and a base class
+- [Raising exceptions](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions) — `raise Something("message")`, and where that message ends up
+- [`BufferError`](https://devdocs.io/python~3.14/library/exceptions#BufferError) — the built-in base class both given exceptions inherit from
+- [`%` on integers](https://devdocs.io/python~3.14/reference/expressions#binary-arithmetic-operations) — `(index + 1) % capacity` is how a position walks off the end and reappears at the start
+- [`collections.deque`](https://devdocs.io/python~3.14/library/collections#collections.deque) — a ready-made double-ended queue, and `maxlen` if you would rather not do the index arithmetic yourself
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -83,13 +83,13 @@ Because there is space available, if the client again uses overwrite to store C 
 
 ### Customizing and Raising Exceptions
 
-Sometimes it is necessary to both [customize](https://docs.python.org/3/tutorial/errors.html#user-defined-exceptions) and [`raise`](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) exceptions in your code. When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging.
+Sometimes it is necessary to both [customize](https://devdocs.io/python~3.14/tutorial/errors#user-defined-exceptions) and [`raise`](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions) exceptions in your code. When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging.
 
-Custom exceptions can be created through new exception classes (see [`classes`](https://docs.python.org/3/tutorial/classes.html#tut-classes) for more detail.) that are typically subclasses of [`Exception`](https://docs.python.org/3/library/exceptions.html#Exception).
+Custom exceptions can be created through new exception classes (see [`classes`](https://devdocs.io/python~3.14/tutorial/classes#tut-classes) for more detail.) that are typically subclasses of [`Exception`](https://devdocs.io/python~3.14/library/exceptions#Exception).
 
-For situations where you know the error source will be a derivative of a certain exception type, you can choose to inherit from one of the [`built in error types`](https://docs.python.org/3/library/exceptions.html#base-classes) under the _Exception_ class. When raising the error, you should still include a meaningful message.
+For situations where you know the error source will be a derivative of a certain exception type, you can choose to inherit from one of the [`built in error types`](https://devdocs.io/python~3.14/library/exceptions#base-classes) under the _Exception_ class. When raising the error, you should still include a meaningful message.
 
-This particular exercise requires that you create two _custom exceptions_.  One exception to be [raised](https://docs.python.org/3/reference/simple_stmts.html#the-raise-statement)/"thrown" when your circular buffer is **full**, and one for when it is **empty**. The tests will only pass if you customize appropriate exceptions, `raise` those exceptions, and include appropriate error messages.
+This particular exercise requires that you create two _custom exceptions_.  One exception to be [raised](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement)/"thrown" when your circular buffer is **full**, and one for when it is **empty**. The tests will only pass if you customize appropriate exceptions, `raise` those exceptions, and include appropriate error messages.
 
 To customize a `built-in exception`, create a `class` that inherits from that exception. When raising the custom exception with a message, write the message as an argument to the `exception` type:
 

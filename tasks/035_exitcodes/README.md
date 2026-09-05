@@ -10,6 +10,9 @@ tags: [stdlib-ops]
 
 *A pipeline reads one thing from your script: the exit code.*
 
+## Read first
+- [sys.exit](https://devdocs.io/python~3.14/library/sys#sys.exit) — 0 means success; anything else is a failure a caller can branch on
+
 ## Why
 A CI pipeline runs your deploy script and then decides whether to carry on. It cannot read your printed messages; it reads exactly one number, the exit code. Zero means success, anything else means failure, and different numbers let the pipeline tell a usage mistake from a refused deploy. You write the decision part of the deploy command so it hands back the right number for each situation.
 

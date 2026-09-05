@@ -12,6 +12,9 @@ tags: [topological-sort]
 
 Combines topics 18 (dict lookups), 20 (defaultdict grouping), 22 (sets).
 
+## Read first
+- [graphlib.TopologicalSorter](https://devdocs.io/python~3.14/library/graphlib) — the stdlib already sorts a dependency graph — and raises on a cycle
+
 ## Why
 A platform has many services, and some cannot start until others are already running: the API needs the database, the cache needs the database, and so on. After a full outage someone has to bring everything back up in an order that works. If two services each wait for the other, nothing can start at all, and the team needs to know that before they try.
 

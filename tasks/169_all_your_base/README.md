@@ -12,9 +12,9 @@ source: exercism/python practice/all-your-base (MIT, adapted)
 *all-your-base — collapse the digits into one number, then peel a new set of digits off it.*
 
 ## Read first
-- [`divmod()`](https://docs.python.org/3/library/functions.html#divmod) — quotient and remainder in one call: the remainder is the next output digit, the quotient is what is left to convert
-- [`any()`](https://docs.python.org/3/library/functions.html#any) — "is *any* digit out of range?" as a single expression
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("…")` with a message that has to match exactly
+- [`divmod()`](https://devdocs.io/python~3.14/library/functions#divmod) — quotient and remainder in one call: the remainder is the next output digit, the quotient is what is left to convert
+- [`any()`](https://devdocs.io/python~3.14/library/functions#any) — "is *any* digit out of range?" as a single expression
+- [Raising exceptions](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions) — `raise ValueError("…")` with a message that has to match exactly
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -58,9 +58,9 @@ _Yes. Those three numbers above are exactly the same. Congratulations!_
 
 ### Exception messages
 
-Sometimes it is necessary to [raise an exception](https://docs.python.org/3/tutorial/errors.html#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://docs.python.org/3/library/exceptions.html#base-classes), but should still include a meaningful message.
+Sometimes it is necessary to [raise an exception](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://devdocs.io/python~3.14/library/exceptions#base-classes), but should still include a meaningful message.
 
-This particular exercise requires that you use the [raise statement](https://docs.python.org/3/reference/simple_stmts.html#the-raise-statement) to "throw" a `ValueError` for different input and output bases. The tests will only pass if you both `raise` the `exception` and include a meaningful message with it.
+This particular exercise requires that you use the [raise statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement) to "throw" a `ValueError` for different input and output bases. The tests will only pass if you both `raise` the `exception` and include a meaningful message with it.
 
 To raise a `ValueError` with a message, write the message as an argument to the `exception` type:
 

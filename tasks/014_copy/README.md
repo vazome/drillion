@@ -10,6 +10,9 @@ tags: [shallow-vs-deep-copy]
 
 *One shared inner list has silently corrupted many config-cloning scripts.*
 
+## Read first
+- [copy — Shallow and deep copy](https://devdocs.io/python~3.14/library/copy) — why a nested structure needs `deepcopy` and a flat one does not
+
 ## Why
 A classic interview question and a real production bug. A script takes the base config for one environment, copies it to make a second one, and edits the copy. Weeks later someone notices the ORIGINAL config changed too: a server added to staging showed up in prod. The copy only duplicated the outer container; the lists inside were still shared between both. You are asked to predict, line by line, which edits leak into which dict.
 

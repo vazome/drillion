@@ -10,6 +10,10 @@ tags: [stdlib-ops]
 
 *Every internal tool grows a CLI; argparse is the one interviewers expect you to know.*
 
+## Read first
+- [argparse tutorial](https://devdocs.io/python~3.14/howto/argparse) — the short path to a working parser
+- [argparse](https://devdocs.io/python~3.14/library/argparse) — the reference, once you need `nargs` or subcommands
+
 ## Why
 The team has an internal deploy tool people run from the terminal: `deployctl web -r 3 --env prod`. It must accept a service name, a replica count, an environment, a dry-run switch and some tags, and it must reject bad input (a typo in the environment, a replica count that is not a number) with a clear message and a non-zero exit. Writing those checks by hand is tedious and buggy; you declare what the arguments are and let the standard library enforce them.
 

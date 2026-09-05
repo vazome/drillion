@@ -10,6 +10,9 @@ tags: [defaultdict-list]
 
 *Grouping records by a key is the most-typed loop in ops scripting.*
 
+## Read first
+- [collections.defaultdict](https://devdocs.io/python~3.14/library/collections#collections.defaultdict) — the factory runs on a missing key, so grouping stops needing a guard
+
 ## Why
 A central log collector mixes messages from every host into one stream. An engineer investigating an incident asks "show me everything each host said, host by host, in order". You need to sort the lines into buckets by host name, keeping the message text but dropping the severity word. Grouping records by a key is the most-typed loop in ops scripting.
 

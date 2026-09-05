@@ -10,6 +10,9 @@ tags: [errors]
 
 *Interviewers feed you a log with junk in it on purpose; one bad line must not kill the run.*
 
+## Read first
+- [Errors and Exceptions](https://devdocs.io/python~3.14/tutorial/errors) — skipping a bad line without losing the good ones
+
 ## Why
 A log export from a customer has junk mixed in: blank lines, lines cut short, a field that should be a number but says "N/A". Someone in support wants the good records loaded so they can look at response times. A script that crashes on the first bad line is useless; a script that quietly throws lines away is worse, because nobody learns that 40% of the data went missing. So: keep what you can, and count what you dropped.
 

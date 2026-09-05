@@ -13,7 +13,7 @@ tags: [testing]
 
 ## Read first
 - [Understanding the Python mock object library](https://realpython.com/python-mock-library/) — swapping a real function for a fake inside a test
-- [unittest.mock.patch](https://docs.python.org/3/library/unittest.mock.html#unittest.mock.patch) — the swap that puts the original back for you, plus `patch.object`
+- [unittest.mock.patch](https://devdocs.io/python~3.14/library/unittest.mock#unittest.mock.patch) — the swap that puts the original back for you, plus `patch.object`
 
 > [!NOTE]
 > **Take-home:** `monkeypatch.setattr(...)`

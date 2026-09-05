@@ -12,12 +12,12 @@ source: exercism/python concept/plane-tickets (MIT, adapted)
 *Generators — `yield`, laziness, and one generator feeding another.*
 
 ## Read first
-- [Generators (the Python tutorial)](https://docs.python.org/3/tutorial/classes.html#generators) — a function with `yield` in it is a generator; calling it runs none of the body
-- [yield expressions](https://docs.python.org/3.11/reference/expressions.html#yield-expressions) — what `yield` does to the function it appears in
+- [Generators (the Python tutorial)](https://devdocs.io/python~3.14/tutorial/classes#generators) — a function with `yield` in it is a generator; calling it runs none of the body
+- [yield expressions](https://devdocs.io/python~3.14/reference/expressions#yield-expressions) — what `yield` does to the function it appears in
 - [Real Python: Introduction to generators](https://realpython.com/introduction-to-python-generators/) — `yield`, `next()`, and why laziness saves memory
 - [Python Morsels: Iterators & Generators](https://www.pythonmorsels.com/iterators/) — the protocol underneath, in short form
 - [Lazy evaluation (Wikipedia)](https://en.wikipedia.org/wiki/Lazy_evaluation) — the idea, outside Python
-- [inspect.isgenerator()](https://docs.python.org/3/library/inspect.html#inspect.isgenerator) — the check the grader runs on three of your four functions
+- [inspect.isgenerator()](https://devdocs.io/python~3.14/library/inspect#inspect.isgenerator) — the check the grader runs on three of your four functions
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -112,7 +112,7 @@ StopIteration
 > - They cannot be used with the `len()` function, as they have no length.
 > - They can be _finite_ or _infinite_ - be careful when collecting all values from an _infinite_ `generator-iterator`!
 >
-> [iterator]: https://docs.python.org/3.11/glossary.html#term-iterator
+> [iterator]: https://devdocs.io/python~3.14/glossary#term-iterator
 > [iterables]: https://wiki.python.org/moin/Iterator
 > [lazy evaluation]: https://en.wikipedia.org/wiki/Lazy_evaluation
 
@@ -159,10 +159,10 @@ Generators are also very helpful when a process or calculation is _complex_, _ex
 
 Now whenever `__next__()` is called on the `infinite_sequence` object, it will return the _previous number_ + 1.
 
-[generator-iterator]: https://docs.python.org/3.11/glossary.html#term-generator-iterator
-[iterator]: https://docs.python.org/3.11/glossary.html#term-iterator
+[generator-iterator]: https://devdocs.io/python~3.14/glossary#term-generator-iterator
+[iterator]: https://devdocs.io/python~3.14/glossary#term-iterator
 [lazy iterator]: https://en.wikipedia.org/wiki/Lazy_evaluation
-[yield expression]: https://docs.python.org/3.11/reference/expressions.html#yield-expressions
+[yield expression]: https://devdocs.io/python~3.14/reference/expressions#yield-expressions
 
 ## Instructions
 

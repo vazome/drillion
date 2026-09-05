@@ -10,6 +10,9 @@ tags: [http]
 
 *Every list API caps the page size, so "get all of them" is always a loop.*
 
+## Read first
+- [Requests: quickstart](https://requests.readthedocs.io/en/latest/user/quickstart/) — the request loop you are wrapping
+
 ## Why
 An ops engineer needs a list of every pod in a cluster for a capacity report. The cluster's API never hands back the whole list at once: each answer holds a handful of items plus a bookmark (called a cursor) that you send back to get the next batch. Miss a batch and the report silently under-counts; keep asking after the last batch and the API refuses. The task: fetch batch after batch until the API says there are no more, and glue all the items into one list.
 

@@ -12,11 +12,11 @@ source: exercism/python practice/triangle (MIT, adapted)
 *triangle — three predicates that all share one validity check.*
 
 ## Read first
-- [Boolean values](https://docs.python.org/3/library/stdtypes.html#bltin-boolean-values) — `True` and `False` are the objects the grader compares against by identity
-- [Boolean operations: and, or, not](https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not) — and the fact that `and` returns an operand, not always a `bool`
-- [Truth value testing](https://docs.python.org/3/library/stdtypes.html#truth) — why "truthy" and "is `True`" are different questions
-- [all() and any()](https://docs.python.org/3/library/functions.html#all) — three comparisons collapsed into one call, and both do return real bools
-- [sorted()](https://docs.python.org/3/library/functions.html#sorted) — put the sides in order once and the inequality check stops needing three cases
+- [Boolean values](https://devdocs.io/python~3.14/library/stdtypes#bltin-boolean-values) — `True` and `False` are the objects the grader compares against by identity
+- [Boolean operations: and, or, not](https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not) — and the fact that `and` returns an operand, not always a `bool`
+- [Truth value testing](https://devdocs.io/python~3.14/library/stdtypes#truth) — why "truthy" and "is `True`" are different questions
+- [all() and any()](https://devdocs.io/python~3.14/library/functions#all) — three comparisons collapsed into one call, and both do return real bools
+- [sorted()](https://devdocs.io/python~3.14/library/functions#sorted) — put the sides in order once and the inequality check stops needing three cases
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

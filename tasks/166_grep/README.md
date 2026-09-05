@@ -12,12 +12,12 @@ source: exercism/python practice/grep (MIT, adapted)
 *grep — sort the flags into "which lines match" and "how they are printed", and the task falls apart into two easy halves.*
 
 ## Read first
-- [`str.splitlines()`](https://docs.python.org/3/library/stdtypes.html#str.splitlines) — cutting a file's text into lines, and `keepends=True` if you would rather each line kept the newline it came with
-- [`in` on strings](https://docs.python.org/3/reference/expressions.html#membership-test-operations) — the substring test this whole task is built on
-- [`str.lower()`](https://docs.python.org/3/library/stdtypes.html#str.lower) — one way to make a comparison ignore case: change both sides, not one
-- [`enumerate()`](https://docs.python.org/3/library/functions.html#enumerate) — line numbers with `start=1`, because files are numbered from one and Python is not
-- [`str.split()`](https://docs.python.org/3/library/stdtypes.html#str.split) — turning `"-n -i -x"` into something you can ask membership questions about
-- [`str.join()`](https://docs.python.org/3/library/stdtypes.html#str.join) — gluing the collected output back into the single string you return
+- [`str.splitlines()`](https://devdocs.io/python~3.14/library/stdtypes#str.splitlines) — cutting a file's text into lines, and `keepends=True` if you would rather each line kept the newline it came with
+- [`in` on strings](https://devdocs.io/python~3.14/reference/expressions#membership-test-operations) — the substring test this whole task is built on
+- [`str.lower()`](https://devdocs.io/python~3.14/library/stdtypes#str.lower) — one way to make a comparison ignore case: change both sides, not one
+- [`enumerate()`](https://devdocs.io/python~3.14/library/functions#enumerate) — line numbers with `start=1`, because files are numbered from one and Python is not
+- [`str.split()`](https://devdocs.io/python~3.14/library/stdtypes#str.split) — turning `"-n -i -x"` into something you can ask membership questions about
+- [`str.join()`](https://devdocs.io/python~3.14/library/stdtypes#str.join) — gluing the collected output back into the single string you return
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

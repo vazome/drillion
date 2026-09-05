@@ -12,10 +12,10 @@ source: exercism/python practice/word-count (MIT, adapted)
 *word-count — cut messy text into words, then count them into a dict.*
 
 ## Read first
-- [Mapping types: dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — what a dict guarantees and what it costs
-- [collections.Counter](https://docs.python.org/3/library/collections.html#collections.Counter) — a dict subclass built for exactly this tally
-- [re.findall()](https://docs.python.org/3/library/re.html#re.findall) — "give me every piece that looks like this", instead of "split on every separator I can think of"
-- [str.lower()](https://docs.python.org/3/library/stdtypes.html#str.lower) — case folding before you count
+- [Mapping types: dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — what a dict guarantees and what it costs
+- [collections.Counter](https://devdocs.io/python~3.14/library/collections#collections.Counter) — a dict subclass built for exactly this tally
+- [re.findall()](https://devdocs.io/python~3.14/library/re#re.findall) — "give me every piece that looks like this", instead of "split on every separator I can think of"
+- [str.lower()](https://devdocs.io/python~3.14/library/stdtypes#str.lower) — case folding before you count
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -146,21 +146,21 @@ ________
   Generator expressions are evaluated in a "lazy" fashion, and take up less space in memory than a corresponding list comprehension.
 
 
-[collections.counter]: https://docs.python.org/3/library/collections.html#collections.Counter
-[collections]: https://docs.python.org/3/library/collections.html#module-collections
+[collections.counter]: https://devdocs.io/python~3.14/library/collections#collections.Counter
+[collections]: https://devdocs.io/python~3.14/library/collections#module-collections
 [comprehensions]: https://treyhunner.com/2015/12/python-list-comprehensions-now-in-color/
-[dict.setdefault]: https://docs.python.org/3/library/stdtypes.html#dict.setdefault
-[dict]: https://docs.python.org/3/library/stdtypes.html#mapping-types-dict
+[dict.setdefault]: https://devdocs.io/python~3.14/library/stdtypes#dict.setdefault
+[dict]: https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict
 [generator expressions]: https://dbader.org/blog/python-generator-expressions
-[re.findall]: https://docs.python.org/3/library/re.html?highlight=re#re.findall
-[re.sub]: https://docs.python.org/3/library/re.html?highlight=re#re.sub
-[re]: https://docs.python.org/3/library/re.html?highlight=re#module-re
+[re.findall]: https://devdocs.io/python~3.14/library/re?highlight=re#re.findall
+[re.sub]: https://devdocs.io/python~3.14/library/re?highlight=re#re.sub
+[re]: https://devdocs.io/python~3.14/library/re?highlight=re#module-re
 [regex101]: https://regex101.com/
-[str.lower]: https://docs.python.org/3/library/stdtypes.html#str.lower
-[str.replace]: https://docs.python.org/3/library/stdtypes.html#str.replace
-[str.split]: https://docs.python.org/3/library/stdtypes.html#str.split
-[str.strip]: https://docs.python.org/3/library/stdtypes.html#str.strip
-[string]: https://docs.python.org/3/library/string.html
+[str.lower]: https://devdocs.io/python~3.14/library/stdtypes#str.lower
+[str.replace]: https://devdocs.io/python~3.14/library/stdtypes#str.replace
+[str.split]: https://devdocs.io/python~3.14/library/stdtypes#str.split
+[str.strip]: https://devdocs.io/python~3.14/library/stdtypes#str.strip
+[string]: https://devdocs.io/python~3.14/library/string
 
 ## Hints
 ### Hint 1

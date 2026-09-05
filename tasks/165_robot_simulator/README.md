@@ -12,10 +12,10 @@ source: exercism/python practice/robot-simulator (MIT, adapted)
 *robot-simulator — keep the facing as a number, and both turns become one line of arithmetic.*
 
 ## Read first
-- [A first look at classes](https://docs.python.org/3/tutorial/classes.html#a-first-look-at-classes) — `__init__`, `self`, and methods that change the instance rather than return a new one
-- [`property`](https://docs.python.org/3/library/functions.html#property) — how `.coordinates` can be computed on access instead of stored and kept in sync
-- [`%` on integers](https://docs.python.org/3/reference/expressions.html#binary-arithmetic-operations) — `% 4` keeps a facing inside `0..3`, and Python's `%` gives a non-negative answer even for `-1`
-- [Dictionaries](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — a mapping is a neat stand-in for a chain of `if`s, both for "which letter is this" and for "which way does this facing move"
+- [A first look at classes](https://devdocs.io/python~3.14/tutorial/classes#a-first-look-at-classes) — `__init__`, `self`, and methods that change the instance rather than return a new one
+- [`property`](https://devdocs.io/python~3.14/library/functions#property) — how `.coordinates` can be computed on access instead of stored and kept in sync
+- [`%` on integers](https://devdocs.io/python~3.14/reference/expressions#binary-arithmetic-operations) — `% 4` keeps a facing inside `0..3`, and Python's `%` gives a non-negative answer even for `-1`
+- [Dictionaries](https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries) — a mapping is a neat stand-in for a chain of `if`s, both for "which letter is this" and for "which way does this facing move"
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

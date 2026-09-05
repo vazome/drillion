@@ -13,7 +13,7 @@ tags: [concurrency, asyncio]
 
 ## Read first
 - [Async IO in Python: a complete walkthrough](https://realpython.com/async-io-python/) — THE asyncio walkthrough; read 'Async IO Explained' and 'The asyncio Package' before anything below
-- [asyncio.gather](https://docs.python.org/3/library/asyncio-task.html#asyncio.gather) — hand it many awaitables; it runs them concurrently and keeps argument order
+- [asyncio.gather](https://devdocs.io/python~3.14/library/asyncio-task#asyncio.gather) — hand it many awaitables; it runs them concurrently and keeps argument order
 
 > [!NOTE]
 > **Take-home:** `loadtest.py`, your concurrency test

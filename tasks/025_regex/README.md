@@ -12,7 +12,7 @@ tags: [files-text]
 *Pulling fields out of log lines is the regex work ops actually does.*
 
 ## Read first
-- [Regular Expression HOWTO](https://docs.python.org/3/howto/regex.html) — the official intro; read up to 'Grouping'
+- [Regular Expression HOWTO](https://devdocs.io/python~3.14/howto/regex) — the official intro; read up to 'Grouping'
 - [Regular Expressions: Regexes in Python](https://realpython.com/regex-python/) — `re.sub` / `re.findall` with examples
 - [regex101](https://regex101.com) — paste a pattern, see what it matches, live
 

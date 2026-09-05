@@ -10,6 +10,9 @@ tags: [cloud, boto3]
 
 *Every AWS list call answers with one page; the rest of the account is on page two.*
 
+## Read first
+- [boto3 documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) — clients vs resources, and where the operation names come from
+
 ## Why
 Finance asks "how much is stored in the logs bucket, and what exactly is in it?". AWS answers list requests one page at a time, about a thousand entries per page, and only quietly notes that more exist. A script that reads one page reports a fraction of the bucket, and nobody notices until the bill disagrees with the report. You are asked for the full list of object names and the total size, walking every page.
 

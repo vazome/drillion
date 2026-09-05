@@ -12,11 +12,11 @@ source: exercism/python practice/scrabble-score (MIT, adapted)
 *scrabble-score — a lookup table, a case fold, and one `sum`.*
 
 ## Read first
-- [Mapping types: dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — a letter-to-value table is a dict, and lookup is the operation it is fastest at
-- [sum()](https://docs.python.org/3/library/functions.html#sum) — adding up an iterable, including a generator expression, in one call
-- [str.lower()](https://docs.python.org/3/library/stdtypes.html#str.lower) — fold the case once at the top rather than at every lookup
-- [dict.get()](https://docs.python.org/3/library/stdtypes.html#dict.get) — a default instead of a `KeyError` when a character is not in the table
-- [re.findall()](https://docs.python.org/3/library/re.html#re.findall) — the regular-expressions route, if you want to pick out the scoring characters by pattern
+- [Mapping types: dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — a letter-to-value table is a dict, and lookup is the operation it is fastest at
+- [sum()](https://devdocs.io/python~3.14/library/functions#sum) — adding up an iterable, including a generator expression, in one call
+- [str.lower()](https://devdocs.io/python~3.14/library/stdtypes#str.lower) — fold the case once at the top rather than at every lookup
+- [dict.get()](https://devdocs.io/python~3.14/library/stdtypes#dict.get) — a default instead of a `KeyError` when a character is not in the table
+- [re.findall()](https://devdocs.io/python~3.14/library/re#re.findall) — the regular-expressions route, if you want to pick out the scoring characters by pattern
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

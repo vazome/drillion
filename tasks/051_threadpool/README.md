@@ -10,6 +10,9 @@ tags: [concurrency]
 
 *200 API calls at 200ms each is 40 seconds one at a time, or under a second in a pool.*
 
+## Read first
+- [ThreadPoolExecutor](https://devdocs.io/python~3.14/library/concurrent.futures#threadpoolexecutor) — `submit`, `map`, and `as_completed`
+
 ## Why
 A morning report needs to ask 200 hosts for their status. Each ask is mostly waiting on the network, about 200ms; done one after another that is 40 seconds, done a few at once it is under a second. But the report must list the rows in the same order as the host list, and you must not fire all 200 at once because the network team set a limit. The ask: run the checks a fixed number at a time and hand back the answers in the original order.
 

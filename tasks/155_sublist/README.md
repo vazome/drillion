@@ -12,10 +12,10 @@ source: exercism/python practice/sublist (MIT, adapted)
 *sublist — equal, contains, contained by, or none of the above — decided in that order.*
 
 ## Read first
-- [Comparing sequences](https://docs.python.org/3/tutorial/datastructures.html#comparing-sequences-and-other-types) — `==` on lists compares element by element, in order
-- [Slicing](https://docs.python.org/3/reference/expressions.html#slicings) — `big[i:i + len(small)]` is a candidate window
-- [any()](https://docs.python.org/3/library/functions.html#any) — "is there at least one window that matches?" in one expression
-- [range()](https://docs.python.org/3/library/stdtypes.html#range) — getting the last valid start index right is the only arithmetic here
+- [Comparing sequences](https://devdocs.io/python~3.14/tutorial/datastructures#comparing-sequences-and-other-types) — `==` on lists compares element by element, in order
+- [Slicing](https://devdocs.io/python~3.14/reference/expressions#slicings) — `big[i:i + len(small)]` is a candidate window
+- [any()](https://devdocs.io/python~3.14/library/functions#any) — "is there at least one window that matches?" in one expression
+- [range()](https://devdocs.io/python~3.14/library/stdtypes#range) — getting the last valid start index right is the only arithmetic here
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

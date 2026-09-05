@@ -12,10 +12,10 @@ source: exercism/python practice/allergies (MIT, adapted)
 *allergies — one integer, eight yes/no answers, and the arithmetic that gets each one back out.*
 
 ## Read first
-- [Bitwise operations](https://docs.python.org/3/library/stdtypes.html#bitwise-operations-on-integer-types) — `&` keeps only the bits both numbers have, `<<` slides a `1` up to the position you want
-- [`bool()`](https://docs.python.org/3/library/functions.html#bool) — turning a non-zero number into the actual `True` the grader is comparing against
-- [`enumerate()`](https://docs.python.org/3/library/functions.html#enumerate) — pairing each allergen with its position, which is all you need to work out its score
-- [`property`](https://docs.python.org/3/library/functions.html#property) — how `.lst` can be computed on access instead of stored
+- [Bitwise operations](https://devdocs.io/python~3.14/library/stdtypes#bitwise-operations-on-integer-types) — `&` keeps only the bits both numbers have, `<<` slides a `1` up to the position you want
+- [`bool()`](https://devdocs.io/python~3.14/library/functions#bool) — turning a non-zero number into the actual `True` the grader is comparing against
+- [`enumerate()`](https://devdocs.io/python~3.14/library/functions#enumerate) — pairing each allergen with its position, which is all you need to work out its score
+- [`property`](https://devdocs.io/python~3.14/library/functions#property) — how `.lst` can be computed on access instead of stored
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

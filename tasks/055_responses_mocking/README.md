@@ -10,6 +10,9 @@ tags: [testing, requests]
 
 *A test that hits the real API is slow, flaky, and fails when someone else's cert expires.*
 
+## Read first
+- [responses](https://github.com/getsentry/responses) — registering fake HTTP responses so tests never touch the network
+
 ## Why
 An inventory script (`fetch_inventory`, at the bottom of this file, already written) talks to a hosts API: list the hosts, ask each one for its CPU count, then post a report. To test it in CI without a real server, you set up a fake server that answers exactly the requests the script will make: the host list, one answer per host (some of them "404 gone"), and the report endpoint. The fake is strict: a request it was not told about fails, and an answer you registered that the script never asked for also fails. Your job: read the script, then register precisely the answers it needs, built from a spec that changes every run.
 

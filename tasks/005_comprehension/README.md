@@ -10,6 +10,10 @@ tags: [comprehension]
 
 *Comprehension with a filter — transform some, skip the rest.*
 
+## Read first
+- [List Comprehensions](https://devdocs.io/python~3.14/tutorial/datastructures#list-comprehensions) — the form, and when a loop reads better
+- [Nested List Comprehensions](https://devdocs.io/python~3.14/tutorial/datastructures#nested-list-comprehensions) — two `for` clauses, and which order they run in
+
 ## Why
 After a compliance quiz, HR sends you a list of people with their scores and asks for the names of everyone who passed (50 or more), in capital letters for the badge printer. Picking some items out of a list and reshaping them in a single step is the bread and butter of every ops script.
 

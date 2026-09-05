@@ -12,15 +12,15 @@ source: exercism/python concept/inventory-management (MIT, adapted)
 *`pop`, `in`, and turning a dict into a sorted list of pairs.*
 
 ## Read first
-- [Mapping types — dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — every dict method in one table
-- [Tutorial: dictionaries](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — the gentle introduction, with a worked counting example
-- [hashable](https://docs.python.org/3/glossary.html#term-hashable) — why a string or a tuple may be a key and a list may not
-- [dict.setdefault()](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) — insert the default only if the key is missing, return the value either way
-- [dict.items()](https://docs.python.org/3/library/stdtypes.html#dict.items) — the `(key, value)` view you loop over
+- [Mapping types — dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — every dict method in one table
+- [Tutorial: dictionaries](https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries) — the gentle introduction, with a worked counting example
+- [hashable](https://devdocs.io/python~3.14/glossary#term-hashable) — why a string or a tuple may be a key and a list may not
+- [dict.setdefault()](https://devdocs.io/python~3.14/library/stdtypes#dict.setdefault) — insert the default only if the key is missing, return the value either way
+- [dict.items()](https://devdocs.io/python~3.14/library/stdtypes#dict.items) — the `(key, value)` view you loop over
 - [w3schools: Python dictionaries](https://www.w3schools.com/python/python_dictionaries.asp) — quick reference with runnable snippets
-- [collections.Counter](https://docs.python.org/3/library/collections.html#collections.Counter) — what production code reaches for once counting is the whole job
-- [dict.pop()](https://docs.python.org/3/library/stdtypes.html#dict.pop) — remove a key and hand back its value, with an optional default instead of a `KeyError`
-- [sorted()](https://docs.python.org/3/library/functions.html#sorted) — returns a new sorted list and leaves the original alone
+- [collections.Counter](https://devdocs.io/python~3.14/library/collections#collections.Counter) — what production code reaches for once counting is the whole job
+- [dict.pop()](https://devdocs.io/python~3.14/library/stdtypes#dict.pop) — remove a key and hand back its value, with an optional default instead of a `KeyError`
+- [sorted()](https://devdocs.io/python~3.14/library/functions#sorted) — returns a new sorted list and leaves the original alone
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -173,8 +173,8 @@ Likewise, the `.keys()` method will return `keys` and the `.values()` method wil
 
 [associative-array]: https://en.wikipedia.org/wiki/Associative_array#:~:text=In%20computer%20science%2C%20an%20associative,a%20function%20with%20finite%20domain.
 [hashtable-wikipedia]: https://en.wikipedia.org/wiki/Hash_table
-[mapping-types-dict]: https://docs.python.org/3/library/stdtypes.html#mapping-types-dict
-[term-hashable]: https://docs.python.org/3/glossary.html#term-hashable
+[mapping-types-dict]: https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict
+[term-hashable]: https://devdocs.io/python~3.14/glossary#term-hashable
 
 ## Instructions
 In this exercise, you will be managing an inventory system.
@@ -323,24 +323,24 @@ stock["list_inventory"]({"coal": 7, "wood": 11, "diamond": 2, "silver": 0})
 - This function should [return][return-keyword] a [list][list] of [tuples][tuples].
 
 [decrement]: https://www.w3schools.com/python/gloss_python_assignment_operators.asp
-[dict docs]: https://docs.python.org/3/library/stdtypes.html#mapping-types-dict
-[dict items]: https://docs.python.org/3/library/stdtypes.html#dict.items
+[dict docs]: https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict
+[dict items]: https://devdocs.io/python~3.14/library/stdtypes#dict.items
 [dict setdefault]: https://www.w3schools.com/python/ref_dictionary_setdefault.asp
 [dict-pop]: https://www.w3schools.com/python/ref_dictionary_pop.asp
-[dict-tutorial]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
-[for-loop]: https://docs.python.org/3/tutorial/controlflow.html#for-statements
+[dict-tutorial]: https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries
+[for-loop]: https://devdocs.io/python~3.14/tutorial/controlflow#for-statements
 [increment]: https://www.w3schools.com/python/gloss_python_assignment_operators.asp
-[list]: https://docs.python.org/3/tutorial/introduction.html#lists
+[list]: https://devdocs.io/python~3.14/tutorial/introduction#lists
 [return-keyword]: https://www.w3schools.com/python/ref_keyword_return.asp
-[tuples]: https://docs.python.org/3/tutorial/datastructures.html#tuples-and-sequences
+[tuples]: https://devdocs.io/python~3.14/tutorial/datastructures#tuples-and-sequences
 
 ## Hints
 ### Hint 1
-Both functions are about what a `dict` already gives you. Removing an entry is [`dict.pop(key)`](https://docs.python.org/3/library/stdtypes.html#dict.pop) — but it raises `KeyError` on a key that is not there, and the task says an unknown item must leave the inventory untouched. Either check `item in inventory` first, or hand `pop` a second argument to fall back on.
+Both functions are about what a `dict` already gives you. Removing an entry is [`dict.pop(key)`](https://devdocs.io/python~3.14/library/stdtypes#dict.pop) — but it raises `KeyError` on a key that is not there, and the task says an unknown item must leave the inventory untouched. Either check `item in inventory` first, or hand `pop` a second argument to fall back on.
 ### Hint 2
 `list_inventory` stacks three jobs: get the pairs, drop the ones whose count is zero, and put what is left in alphabetical order.
 
-[`dict.items()`](https://docs.python.org/3/library/stdtypes.html#dict.items) gives you the pairs, and each pair is **already a tuple** — exactly the shape the task asks for, so you never build one yourself. [`sorted()`](https://docs.python.org/3/library/functions.html#sorted) on those pairs orders them by the first element of each, which is the name. The filter can be an `if` inside a comprehension or an `if` inside a plain loop with `append`; both read fine here.
+[`dict.items()`](https://devdocs.io/python~3.14/library/stdtypes#dict.items) gives you the pairs, and each pair is **already a tuple** — exactly the shape the task asks for, so you never build one yourself. [`sorted()`](https://devdocs.io/python~3.14/library/functions#sorted) on those pairs orders them by the first element of each, which is the name. The filter can be an `if` inside a comprehension or an `if` inside a plain loop with `append`; both read fine here.
 ### Hint 3
 Different data, same shape. Which feature flags are actually switched on:
 

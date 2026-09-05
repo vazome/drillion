@@ -10,6 +10,9 @@ tags: [slicing]
 
 *Slicing — the fastest way to grab exactly the part of a list you mean.*
 
+## Read first
+- [Common Sequence Operations](https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations) — `s[i:j:k]`, and what a negative step really does
+
 ## Why
 You keep a list of the last few health-check readings for a server, oldest first. The on-call engineer keeps asking for different cuts of it: "drop the warm-up and cool-down readings", "show me only every second sample", "show it newest-first", "just the last three". Pulling out exactly the part of a list you mean, without writing a loop each time, is the skill behind every one of those requests.
 

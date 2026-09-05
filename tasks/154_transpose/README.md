@@ -12,10 +12,10 @@ source: exercism/python practice/transpose (MIT, adapted)
 *transpose — rotate a ragged block of text, padding on the left but never on the right.*
 
 ## Read first
-- [str.splitlines()](https://docs.python.org/3/library/stdtypes.html#str.splitlines) — cut the block into rows; note how it treats the empty string
-- [zip()](https://docs.python.org/3/library/functions.html#zip) — `zip(*rows)` is the transpose itself, once the rows are the right length
-- [Unpacking argument lists](https://docs.python.org/3/tutorial/controlflow.html#unpacking-argument-lists) — what the `*` in `zip(*rows)` actually does
-- [str.ljust()](https://docs.python.org/3/library/stdtypes.html#str.ljust) — pads on the right to a given width, which is how you make rows equal length
+- [str.splitlines()](https://devdocs.io/python~3.14/library/stdtypes#str.splitlines) — cut the block into rows; note how it treats the empty string
+- [zip()](https://devdocs.io/python~3.14/library/functions#zip) — `zip(*rows)` is the transpose itself, once the rows are the right length
+- [Unpacking argument lists](https://devdocs.io/python~3.14/tutorial/controlflow#unpacking-argument-lists) — what the `*` in `zip(*rows)` actually does
+- [str.ljust()](https://devdocs.io/python~3.14/library/stdtypes#str.ljust) — pads on the right to a given width, which is how you make rows equal length
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

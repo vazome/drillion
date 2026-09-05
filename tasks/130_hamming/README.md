@@ -12,10 +12,10 @@ source: exercism/python practice/hamming (MIT, adapted)
 *hamming — count differing positions, and refuse the comparison that makes no sense.*
 
 ## Read first
-- [zip()](https://docs.python.org/3/library/functions.html#zip) — `zip()` walks two sequences side by side and stops at the shorter one (which is why you must check lengths yourself)
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise`, and why the message matters as much as the exception type
-- [Generator expressions](https://docs.python.org/3/reference/expressions.html#generator-expressions) — the `(x for y in z)` form you can hand straight to `sum()`
-- [Built-in exceptions](https://docs.python.org/3/library/exceptions.html#base-classes) — picking the type that says what actually went wrong
+- [zip()](https://devdocs.io/python~3.14/library/functions#zip) — `zip()` walks two sequences side by side and stops at the shorter one (which is why you must check lengths yourself)
+- [Raising exceptions](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions) — `raise`, and why the message matters as much as the exception type
+- [Generator expressions](https://devdocs.io/python~3.14/reference/expressions#generator-expressions) — the `(x for y in z)` form you can hand straight to `sum()`
+- [Built-in exceptions](https://devdocs.io/python~3.14/library/exceptions#base-classes) — picking the type that says what actually went wrong
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -52,9 +52,9 @@ The Hamming distance is only defined for sequences of equal length, so an attemp
 
 ### Exception messages
 
-Sometimes it is necessary to [raise an exception](https://docs.python.org/3/tutorial/errors.html#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://docs.python.org/3/library/exceptions.html#base-classes), but should still include a meaningful message.
+Sometimes it is necessary to [raise an exception](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://devdocs.io/python~3.14/library/exceptions#base-classes), but should still include a meaningful message.
 
-This particular exercise requires that you use the [raise statement](https://docs.python.org/3/reference/simple_stmts.html#the-raise-statement) to "throw" a `ValueError` when the strands being checked are not the same length. The tests will only pass if you both `raise` the `exception` and include a message with it.
+This particular exercise requires that you use the [raise statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement) to "throw" a `ValueError` when the strands being checked are not the same length. The tests will only pass if you both `raise` the `exception` and include a message with it.
 
 To raise a `ValueError` with a message, write the message as an argument to the `exception` type:
 
@@ -96,7 +96,7 @@ solve("AATG", "AAA")                     # -> raises ValueError
 ### Hint 1
 Two jobs in one function, and the order matters: first decide whether this comparison is even legal, then do the counting. The legality test is about lengths only — nothing to do with which letters are in the strands. The Hamming distance is only defined for sequences of equal length, so an attempt to calculate it between sequences of different lengths should not work.
 ### Hint 2
-For the guard: compare the two lengths and use the [raise statement](https://docs.python.org/3/reference/simple_stmts.html#the-raise-statement) to "throw" a `ValueError`, writing the message as an argument to the exception type — spelled exactly as the caller expects, full stop included. The tests will only pass if you both `raise` the exception and include a message with it.
+For the guard: compare the two lengths and use the [raise statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement) to "throw" a `ValueError`, writing the message as an argument to the exception type — spelled exactly as the caller expects, full stop included. The tests will only pass if you both `raise` the exception and include a message with it.
 
 For the count: `zip(a, b)` hands you the pairs one position at a time, and a comparison like `x != y` is already worth 1 when you add it up, because `True` counts as 1 — so a single `sum()` over a generator expression finishes the job.
 ### Hint 3

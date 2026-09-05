@@ -10,6 +10,9 @@ tags: [errors]
 
 *Custom exceptions let callers catch a whole family of errors with one except.*
 
+## Read first
+- [User-defined Exceptions](https://devdocs.io/python~3.14/tutorial/errors#user-defined-exceptions) — subclass `Exception`, carry the context the caller needs
+
 ## Why
 A deploy tool reads a list of service configs and applies the good ones. Bad configs must be skipped, but the report has to say exactly what was wrong with each: a missing field, or a field holding a nonsense value. Real tools solve this with a family of related error types: the checks raise the specific one, and the loop catches the whole family with a single handler. Interviewers ask for exactly this design.
 

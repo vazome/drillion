@@ -12,12 +12,12 @@ source: exercism/python practice/clock (MIT, adapted)
 *clock — normalise once in the constructor, and every other method becomes one line.*
 
 ## Read first
-- [A first look at classes](https://docs.python.org/3/tutorial/classes.html#a-first-look-at-classes) — `__init__`, `self`, and what a method actually is
-- [`object.__repr__` and `object.__str__`](https://docs.python.org/3/reference/datamodel.html#object.__repr__) — the two string forms: one for developers, one for humans
-- [`object.__eq__`](https://docs.python.org/3/reference/datamodel.html#object.__eq__) — define `==` and Python derives `!=` from it for free
-- [`object.__add__`](https://docs.python.org/3/reference/datamodel.html#object.__add__) — how `a + b` reaches your class
-- [`divmod()`](https://docs.python.org/3/library/functions.html#divmod) — quotient and remainder in one call, and it floors, so negatives behave
-- [Format specification mini-language](https://docs.python.org/3/library/string.html#format-specification-mini-language) — `02d` is "two digits, pad with zeros"
+- [A first look at classes](https://devdocs.io/python~3.14/tutorial/classes#a-first-look-at-classes) — `__init__`, `self`, and what a method actually is
+- [`object.__repr__` and `object.__str__`](https://devdocs.io/python~3.14/reference/datamodel#object.__repr__) — the two string forms: one for developers, one for humans
+- [`object.__eq__`](https://devdocs.io/python~3.14/reference/datamodel#object.__eq__) — define `==` and Python derives `!=` from it for free
+- [`object.__add__`](https://devdocs.io/python~3.14/reference/datamodel#object.__add__) — how `a + b` reaches your class
+- [`divmod()`](https://devdocs.io/python~3.14/library/functions#divmod) — quotient and remainder in one call, and it floors, so negatives behave
+- [Format specification mini-language](https://devdocs.io/python~3.14/library/string#format-specification-mini-language) — `02d` is "two digits, pad with zeros"
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -103,13 +103,13 @@ So if you only implement one of these two special methods, it would be better to
 
 [ISO 8601]: https://www.iso.org/iso-8601-date-and-time-format.html
 [REPL]: https://pythonprogramminglanguage.com/repl/
-[classes in python]: https://docs.python.org/3/tutorial/classes.html
-[datetime]: https://docs.python.org/3/library/datetime.html#available-types
+[classes in python]: https://devdocs.io/python~3.14/tutorial/classes
+[datetime]: https://devdocs.io/python~3.14/library/datetime#available-types
 [dunder-methods]: https://www.pythonmorsels.com/every-dunder-method/
-[eval-built-in]: https://docs.python.org/3/library/functions.html#eval
-[repr-docs]: https://docs.python.org/3/reference/datamodel.html#object.__repr__
-[repr-method]: https://docs.python.org/3/library/functions.html#repr
-[str-dunder]: https://docs.python.org/3/reference/datamodel.html#object.__str__
+[eval-built-in]: https://devdocs.io/python~3.14/library/functions#eval
+[repr-docs]: https://devdocs.io/python~3.14/reference/datamodel#object.__repr__
+[repr-method]: https://devdocs.io/python~3.14/library/functions#repr
+[str-dunder]: https://devdocs.io/python~3.14/reference/datamodel#object.__str__
 [str-rep-classes]: https://www.digitalocean.com/community/tutorials/python-str-repr-functions#introduction
 [what-is-an-object]: https://realpython.com/ref/glossary/object/
 

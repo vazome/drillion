@@ -12,15 +12,15 @@ source: exercism/python concept/making-the-grade (MIT, adapted)
 *A `while` that drains a list, and two `for` loops — one that counts, one that collects.*
 
 ## Read first
-- [`for` statements (Python tutorial)](https://docs.python.org/3/tutorial/controlflow.html#for-statements) — the `for each` loop, which is what Python's `for` really is
-- [the `while` statement](https://docs.python.org/3/reference/compound_stmts.html#the-while-statement) — keeps going while its test is truthy; an empty list is falsy
-- [truth value testing](https://docs.python.org/3/library/stdtypes.html#truth-value-testing) — why `while student_scores:` is a complete stopping condition
-- [`round()`](https://docs.python.org/3/library/functions.html#round) — one argument gives you an `int`; two give you a `float`
-- [more on lists](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — `append()` and `pop()`, the two methods these three loops are built from
+- [`for` statements (Python tutorial)](https://devdocs.io/python~3.14/tutorial/controlflow#for-statements) — the `for each` loop, which is what Python's `for` really is
+- [the `while` statement](https://devdocs.io/python~3.14/reference/compound_stmts#the-while-statement) — keeps going while its test is truthy; an empty list is falsy
+- [truth value testing](https://devdocs.io/python~3.14/library/stdtypes#truth-value-testing) — why `while student_scores:` is a complete stopping condition
+- [`round()`](https://devdocs.io/python~3.14/library/functions#round) — one argument gives you an `int`; two give you a `float`
+- [more on lists](https://devdocs.io/python~3.14/tutorial/datastructures#more-on-lists) — `append()` and `pop()`, the two methods these three loops are built from
 - [Loop Like a Native (Ned Batchelder)](https://nedbatchelder.com/text/iter.html) — the talk that explains why you almost never need an index
 - [`for` loops in Python (Real Python)](https://realpython.com/python-for-loop/) — the long version, with `range()`
 - [`while` loops in Python (Real Python)](https://realpython.com/python-while-loop/) — including the ways they fail to terminate
-- [control flow for loops](https://docs.python.org/3/tutorial/controlflow.html#break-and-continue-statements-and-else-clauses-on-loops) — `break`, `continue` and the loop `else`, used properly in the next task
+- [control flow for loops](https://devdocs.io/python~3.14/tutorial/controlflow#break-and-continue-statements-and-else-clauses-on-loops) — `break`, `continue` and the loop `else`, used properly in the next task
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -200,16 +200,16 @@ The [`break`][break statement] (_like in many C-related languages_) keyword can 
 'loop broken.'
 ```
 
-[break statement]: https://docs.python.org/3/reference/simple_stmts.html#the-break-statement
-[common sequence operations]: https://docs.python.org/3/library/stdtypes.html#common-sequence-operations
-[continue statement]: https://docs.python.org/3/reference/simple_stmts.html#the-continue-statement
-[enumerate]: https://docs.python.org/3/library/functions.html#enumerate
-[for statement]: https://docs.python.org/3/reference/compound_stmts.html#for
-[iterable]: https://docs.python.org/3/glossary.html#term-iterable
-[next built-in]: https://docs.python.org/3/library/functions.html#next
-[range]: https://docs.python.org/3/library/stdtypes.html#range
-[truth value testing]: https://docs.python.org/3/library/stdtypes.html#truth-value-testing
-[while statement]: https://docs.python.org/3/reference/compound_stmts.html#the-while-statement
+[break statement]: https://devdocs.io/python~3.14/reference/simple_stmts#the-break-statement
+[common sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations
+[continue statement]: https://devdocs.io/python~3.14/reference/simple_stmts#the-continue-statement
+[enumerate]: https://devdocs.io/python~3.14/library/functions#enumerate
+[for statement]: https://devdocs.io/python~3.14/reference/compound_stmts#for
+[iterable]: https://devdocs.io/python~3.14/glossary#term-iterable
+[next built-in]: https://devdocs.io/python~3.14/library/functions#next
+[range]: https://devdocs.io/python~3.14/library/stdtypes#range
+[truth value testing]: https://devdocs.io/python~3.14/library/stdtypes#truth-value-testing
+[while statement]: https://devdocs.io/python~3.14/reference/compound_stmts#the-while-statement
 
 ## Instructions
 You're a teaching assistant correcting student exams.
@@ -328,7 +328,7 @@ If no 100 scores are found in `student_info`, an empty list `[]` should be retur
 []
 ```
 
-[round]: https://docs.python.org/3/library/functions.html#round
+[round]: https://devdocs.io/python~3.14/library/functions#round
 
 ## You get
 Nothing. `solve()` takes **no arguments**; the grader calls your functions with the score lists.
@@ -414,16 +414,16 @@ Also being familiar with the following can help with completing the tasks:
 - There may be or may not be a student with a score of 100, and you can't return `[]` without checking **all** scores.
 - The [`control flow`][control flow] statements `continue` and `break` may be useful here to move past unwanted values.
 
-[append and pop]: https://docs.python.org/3/tutorial/datastructures.html#more-on-lists
-[control flow]: https://docs.python.org/3/tutorial/controlflow.html#break-and-continue-statements-and-else-clauses-on-loops
-[enumerate]: https://docs.python.org/3/library/functions.html#enumerate
-[f-strings]: https://docs.python.org/3/reference/lexical_analysis.html#formatted-string-literals
-[for-loops]: https://docs.python.org/3/tutorial/controlflow.html#for-statements
-[list]: https://docs.python.org/3/library/stdtypes.html#list
-[range]: https://docs.python.org/3/tutorial/controlflow.html#the-range-function
-[round]: https://docs.python.org/3/library/functions.html#round
-[str]: https://docs.python.org/3/library/stdtypes.html#str
-[while-loops]: https://docs.python.org/3/reference/compound_stmts.html#the-while-statement
+[append and pop]: https://devdocs.io/python~3.14/tutorial/datastructures#more-on-lists
+[control flow]: https://devdocs.io/python~3.14/tutorial/controlflow#break-and-continue-statements-and-else-clauses-on-loops
+[enumerate]: https://devdocs.io/python~3.14/library/functions#enumerate
+[f-strings]: https://devdocs.io/python~3.14/reference/lexical_analysis#formatted-string-literals
+[for-loops]: https://devdocs.io/python~3.14/tutorial/controlflow#for-statements
+[list]: https://devdocs.io/python~3.14/library/stdtypes#list
+[range]: https://devdocs.io/python~3.14/tutorial/controlflow#the-range-function
+[round]: https://devdocs.io/python~3.14/library/functions#round
+[str]: https://devdocs.io/python~3.14/library/stdtypes#str
+[while-loops]: https://devdocs.io/python~3.14/reference/compound_stmts#the-while-statement
 
 ## Hints
 ### Hint 1

@@ -12,12 +12,12 @@ source: exercism/python concept/black-jack (MIT, adapted)
 *Chained comparisons and `in` — the three decisions a blackjack player makes.*
 
 ## Read first
-- [Comparisons in Python (language reference)](https://docs.python.org/3/reference/expressions.html#comparisons) — comparisons CHAIN: `8 < total < 12` is one expression, and the middle is evaluated once
-- [Membership test operations](https://docs.python.org/3/reference/expressions.html#membership-test-operations) — `in` asks "is this a member of that", which reads better than a pile of `==` joined by `or`
-- [Value comparisons](https://docs.python.org/3/reference/expressions.html#value-comparisons) — every comparison hands back `True` or `False`, so a function whose whole body is one comparison can simply return it; no `if` statement is needed
-- [Comparisons in Python (stdtypes)](https://docs.python.org/3/library/stdtypes.html#comparisons) — the operator table
-- [Sequence types](https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range) — a tuple is the cheapest thing to ask `in` about
-- [Conditional expressions](https://docs.python.org/3/reference/expressions.html#conditional-expressions) — `a if test else b`, for when a branch really is needed
+- [Comparisons in Python (language reference)](https://devdocs.io/python~3.14/reference/expressions#comparisons) — comparisons CHAIN: `8 < total < 12` is one expression, and the middle is evaluated once
+- [Membership test operations](https://devdocs.io/python~3.14/reference/expressions#membership-test-operations) — `in` asks "is this a member of that", which reads better than a pile of `==` joined by `or`
+- [Value comparisons](https://devdocs.io/python~3.14/reference/expressions#value-comparisons) — every comparison hands back `True` or `False`, so a function whose whole body is one comparison can simply return it; no `if` statement is needed
+- [Comparisons in Python (stdtypes)](https://devdocs.io/python~3.14/library/stdtypes#comparisons) — the operator table
+- [Sequence types](https://devdocs.io/python~3.14/library/stdtypes#sequence-types-list-tuple-range) — a tuple is the cheapest thing to ask `in` about
+- [Conditional expressions](https://devdocs.io/python~3.14/reference/expressions#conditional-expressions) — `a if test else b`, for when a branch really is needed
 - [Python basic operators (Tutorials Point)](https://www.tutorialspoint.com/python/python_basic_operators.htm) — a worked list with output
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
@@ -245,22 +245,22 @@ True
 False
 ```
 
-[arithmetic conversions]: https://docs.python.org/3/reference/expressions.html?highlight=number%20conversion#arithmetic-conversions
-[boolean operations]: https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not
-[complex numbers]: https://docs.python.org/3/library/functions.html#complex
-[decimal numbers]: https://docs.python.org/3/library/decimal.html
-[hex]: https://docs.python.org/3/library/functions.html?highlight=hex#hex
-[id function]: https://docs.python.org/3/library/functions.html#id
+[arithmetic conversions]: https://devdocs.io/python~3.14/reference/expressions?highlight=number%20conversion#arithmetic-conversions
+[boolean operations]: https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not
+[complex numbers]: https://devdocs.io/python~3.14/library/functions#complex
+[decimal numbers]: https://devdocs.io/python~3.14/library/decimal
+[hex]: https://devdocs.io/python~3.14/library/functions?highlight=hex#hex
+[id function]: https://devdocs.io/python~3.14/library/functions#id
 [lexographic order]: https://en.wikipedia.org/wiki/Lexicographic_order
-[object identity]: https://docs.python.org/3/reference/datamodel.html
-[octal]: https://docs.python.org/3/library/functions.html?#oct
-[ord]: https://docs.python.org/3/library/functions.html#ord
+[object identity]: https://devdocs.io/python~3.14/reference/datamodel
+[octal]: https://devdocs.io/python~3.14/library/functions?#oct
+[ord]: https://devdocs.io/python~3.14/library/functions#ord
 [pep8 programming recommendations]: https://pep8.org/#programming-recommendations
-[rational numbers]: https://docs.python.org/3/library/fractions.html
-[rich comparisons]: https://docs.python.org/3/reference/datamodel.html#object.__lt__
+[rational numbers]: https://devdocs.io/python~3.14/library/fractions
+[rich comparisons]: https://devdocs.io/python~3.14/reference/datamodel#object.__lt__
 [three way boolean comparison]: https://en.wikipedia.org/wiki/Three-way_comparison
-[value comparisons none]: https://docs.python.org/3/reference/expressions.html?highlight=none#value-comparisons
-[value comparisons]: https://docs.python.org/3/reference/expressions.html?highlight=nan#value-comparisons
+[value comparisons none]: https://devdocs.io/python~3.14/reference/expressions?highlight=none#value-comparisons
+[value comparisons]: https://devdocs.io/python~3.14/reference/expressions?highlight=nan#value-comparisons
 
 ## Instructions
 In this exercise you are going to implement some rules of [Blackjack][blackjack],
@@ -468,11 +468,11 @@ hand["can_double_down"]('10', '2')  # -> False  (12 is one too many)
 - You can use the [conditional expression][conditional expression] (_sometimes called a "ternary operator"_)
   to shorten simple `if`/`else` statements: `13 if letter == 'M' else 3`.
 
-[conditional expression]: https://docs.python.org/3/reference/expressions.html#conditional-expressions
-[if syntax]: https://docs.python.org/3/tutorial/controlflow.html#if-statements
-[int constructor]: https://docs.python.org/3/library/functions.html#int
+[conditional expression]: https://devdocs.io/python~3.14/reference/expressions#conditional-expressions
+[if syntax]: https://devdocs.io/python~3.14/tutorial/controlflow#if-statements
+[int constructor]: https://devdocs.io/python~3.14/library/functions#int
 [python comparisons examples]: https://www.tutorialspoint.com/python/comparison_operators_example.htm
-[python comparisons tutorial]: https://docs.python.org/3/reference/expressions.html#comparisons
+[python comparisons tutorial]: https://devdocs.io/python~3.14/reference/expressions#comparisons
 
 ## Hints
 ### Hint 1

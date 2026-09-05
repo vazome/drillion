@@ -10,6 +10,9 @@ tags: [files-text]
 
 *pathlib turns path string-surgery into readable code — and interviewers notice.*
 
+## Read first
+- [pathlib](https://devdocs.io/python~3.14/library/pathlib) — `Path` objects instead of string surgery; `glob`, `rglob`, `stat`
+
 ## Why
 A company keeps one folder per service on a shared server, each with its own log and config subfolders. Before a migration the platform team asks for an inventory: the name of every log file anywhere under the root, the name (minus extension) of every config file, and whether someone already wrote a README at the top. Chopping path strings by hand is error-prone; you need to walk the whole tree and ask questions about each path.
 

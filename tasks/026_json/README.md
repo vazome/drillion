@@ -10,6 +10,9 @@ tags: [files-text]
 
 *APIs answer in JSON; the nested-missing-key crash is the classic screen-share failure.*
 
+## Read first
+- [json](https://devdocs.io/python~3.14/library/json) — `loads`/`dumps`, and why `sort_keys` and `default=` matter for stable output
+
 ## Why
 A cluster API answers with the state of every node as JSON text. Not every node reports CPU load, and not every cluster carries a region tag. The platform team's dashboard script keeps crashing because it assumes those fields are always present. You are asked to write a version that produces a short summary (region plus CPU per node) and never crashes when a field is simply absent.
 

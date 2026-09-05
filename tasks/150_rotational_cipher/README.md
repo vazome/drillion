@@ -12,11 +12,11 @@ source: exercism/python practice/rotational-cipher (MIT, adapted)
 *rotational-cipher — shift letters around a 26-long circle and pass every other character straight through.*
 
 ## Read first
-- [Text sequence type: str](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str) — strings are immutable, so you build a new one rather than editing in place
-- [string.ascii_lowercase / ascii_uppercase](https://docs.python.org/3/library/string.html#string.ascii_lowercase) — both alphabets, already written down
-- [Arithmetic operations](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex) — `%`, and why it is what makes the shift wrap
-- [str.join()](https://docs.python.org/3/library/stdtypes.html#str.join) — assembling the result from a list of characters instead of `+=` in a loop
-- [ord() and chr()](https://docs.python.org/3/library/functions.html#ord) — the other route: characters as code points and back
+- [Text sequence type: str](https://devdocs.io/python~3.14/library/stdtypes#text-sequence-type-str) — strings are immutable, so you build a new one rather than editing in place
+- [string.ascii_lowercase / ascii_uppercase](https://devdocs.io/python~3.14/library/string#string.ascii_lowercase) — both alphabets, already written down
+- [Arithmetic operations](https://devdocs.io/python~3.14/library/stdtypes#numeric-types-int-float-complex) — `%`, and why it is what makes the shift wrap
+- [str.join()](https://devdocs.io/python~3.14/library/stdtypes#str.join) — assembling the result from a list of characters instead of `+=` in a loop
+- [ord() and chr()](https://devdocs.io/python~3.14/library/functions#ord) — the other route: characters as code points and back
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

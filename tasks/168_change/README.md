@@ -12,9 +12,9 @@ source: exercism/python practice/change (MIT, adapted)
 *change — the greedy answer is the wrong answer; build up from the small amounts instead.*
 
 ## Read first
-- [`range()`](https://docs.python.org/3/library/functions.html#func-range) — walking `1` up to `target` in order, so that every smaller amount is already answered by the time you need it
-- [`min()`](https://docs.python.org/3/library/functions.html#min) — the smallest of several candidates, and the `key=` argument for when "smallest" means "shortest list"
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("…")`, and why the message has to match exactly
+- [`range()`](https://devdocs.io/python~3.14/library/functions#func-range) — walking `1` up to `target` in order, so that every smaller amount is already answered by the time you need it
+- [`min()`](https://devdocs.io/python~3.14/library/functions#min) — the smallest of several candidates, and the `key=` argument for when "smallest" means "shortest list"
+- [Raising exceptions](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions) — `raise ValueError("…")`, and why the message has to match exactly
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -57,9 +57,9 @@ Determine the fewest number of coins to give a customer so that the sum of their
 
 ### Exception messages
 
-Sometimes it is necessary to [raise an exception](https://docs.python.org/3/tutorial/errors.html#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://docs.python.org/3/library/exceptions.html#base-classes), but should still include a meaningful message.
+Sometimes it is necessary to [raise an exception](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://devdocs.io/python~3.14/library/exceptions#base-classes), but should still include a meaningful message.
 
-This particular exercise requires that you use the [raise statement](https://docs.python.org/3/reference/simple_stmts.html#the-raise-statement) to "throw" a `ValueError` when change cannot be made with the coins given. The tests will only pass if you both `raise` the `exception` and include a message with it.
+This particular exercise requires that you use the [raise statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement) to "throw" a `ValueError` when change cannot be made with the coins given. The tests will only pass if you both `raise` the `exception` and include a message with it.
 
 To raise a `ValueError` with a message, write the message as an argument to the `exception` type:
 

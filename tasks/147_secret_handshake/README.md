@@ -12,10 +12,10 @@ source: exercism/python practice/secret-handshake (MIT, adapted)
 *secret-handshake — each bit switches one action on, and the top bit reverses the lot.*
 
 ## Read first
-- [Data structure: lists](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — `append`, `reverse`, and the difference between reversing in place and returning a reversed copy
-- [Common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — `[::-1]`, which reads a sequence backwards without touching it
-- [zip()](https://docs.python.org/3/library/functions.html#zip) — walking two sequences side by side, here bits and the actions they stand for
-- [String indexing and slicing](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str) — `binary_str[-1]` is the rightmost character; negative indices count from the end
+- [Data structure: lists](https://devdocs.io/python~3.14/tutorial/datastructures#more-on-lists) — `append`, `reverse`, and the difference between reversing in place and returning a reversed copy
+- [Common sequence operations](https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations) — `[::-1]`, which reads a sequence backwards without touching it
+- [zip()](https://devdocs.io/python~3.14/library/functions#zip) — walking two sequences side by side, here bits and the actions they stand for
+- [String indexing and slicing](https://devdocs.io/python~3.14/library/stdtypes#text-sequence-type-str) — `binary_str[-1]` is the rightmost character; negative indices count from the end
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

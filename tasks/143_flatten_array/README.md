@@ -12,10 +12,10 @@ source: exercism/python practice/flatten-array (MIT, adapted)
 *flatten-array — one list out, whatever the depth in, and no `None` survives.*
 
 ## Read first
-- [Recursion in the Python tutorial](https://docs.python.org/3/tutorial/controlflow.html#defining-functions) — a function is free to call itself; the nested case is just a smaller version of the same problem
-- [isinstance()](https://docs.python.org/3/library/functions.html#isinstance) — "is this item a list, or a plain value?"
-- [list.extend() vs list.append()](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) — `extend` pours a list in, `append` puts the list itself in as one item
-- [The `is` operator](https://docs.python.org/3/reference/expressions.html#is-not) — identity, and why `None` is always tested with it
+- [Recursion in the Python tutorial](https://devdocs.io/python~3.14/tutorial/controlflow#defining-functions) — a function is free to call itself; the nested case is just a smaller version of the same problem
+- [isinstance()](https://devdocs.io/python~3.14/library/functions#isinstance) — "is this item a list, or a plain value?"
+- [list.extend() vs list.append()](https://devdocs.io/python~3.14/tutorial/datastructures#more-on-lists) — `extend` pours a list in, `append` puts the list itself in as one item
+- [The `is` operator](https://devdocs.io/python~3.14/reference/expressions#is-not) — identity, and why `None` is always tested with it
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

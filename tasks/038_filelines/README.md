@@ -10,6 +10,10 @@ tags: [files-text]
 
 *Every ops script starts by reading a file that is bigger than you would like.*
 
+## Read first
+- [Reading and Writing Files](https://devdocs.io/python~3.14/tutorial/inputoutput#reading-and-writing-files) — iterate the handle; do not `read().split()` a big file
+- [open](https://devdocs.io/python~3.14/library/functions#open) — modes, `encoding`, and `newline`
+
 ## Why
 The overnight backup job failed. The log file it wrote is huge, far bigger than the machine's memory. Your manager wants only the ERROR messages, in the order they happened, so the team can see what broke first. You must read the file one line at a time, never the whole thing at once, or your own script will crash the box.
 

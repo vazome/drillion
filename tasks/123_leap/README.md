@@ -12,10 +12,10 @@ source: exercism/python practice/leap (MIT, adapted)
 *leap — three divisibility rules where the exceptions decide the answer.*
 
 ## Read first
-- [boolean operations](https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not) — `and` / `or` / `not`, and the fact that they return a value, not just steer an `if`
-- [boolean values](https://docs.python.org/3/library/stdtypes.html#bltin-boolean-values) — `True` and `False` are ordinary values you can return straight out of an expression
-- [binary arithmetic operations](https://docs.python.org/3/reference/expressions.html#binary-arithmetic-operations) — `%`, the remainder operator you test divisibility with
-- [Operator precedence](https://docs.python.org/3/reference/expressions.html#operator-precedence) — why the `or` in the middle needs its own parentheses
+- [boolean operations](https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not) — `and` / `or` / `not`, and the fact that they return a value, not just steer an `if`
+- [boolean values](https://devdocs.io/python~3.14/library/stdtypes#bltin-boolean-values) — `True` and `False` are ordinary values you can return straight out of an expression
+- [binary arithmetic operations](https://devdocs.io/python~3.14/reference/expressions#binary-arithmetic-operations) — `%`, the remainder operator you test divisibility with
+- [Operator precedence](https://devdocs.io/python~3.14/reference/expressions#operator-precedence) — why the `or` in the middle needs its own parentheses
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

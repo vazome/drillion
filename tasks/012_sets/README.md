@@ -12,7 +12,7 @@ tags: [sets]
 *Dedupe with a set — the runner-up trap.*
 
 ## Read first
-- [Sets (Python tutorial)](https://docs.python.org/3/tutorial/datastructures.html#sets) — what a set is, `&` `|` `-` operators
+- [Sets (Python tutorial)](https://devdocs.io/python~3.14/tutorial/datastructures#sets) — what a set is, `&` `|` `-` operators
 - [Sets in Python](https://realpython.com/python-sets/) — `intersection()` is what the take-home reranker used
 
 > [!NOTE]

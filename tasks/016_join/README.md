@@ -10,6 +10,10 @@ tags: [files-text]
 
 *split / join — the two directions of every parsing task.*
 
+## Read first
+- [str.join](https://devdocs.io/python~3.14/library/stdtypes#str.join) — the separator goes between, never after — that is the trailing-newline bug
+- [String Methods](https://devdocs.io/python~3.14/library/stdtypes#string-methods) — the neighbours: `split`, `strip`, `partition`
+
 ## Why
 A colleague pastes a list of service names into a ticket, separated by commas but with random spaces around each name. Your deploy tool needs the names clean, and the status page wants them shown separated by a vertical bar. This tidy-then-reformat step is the first line of nearly every script that takes text typed by a human.
 

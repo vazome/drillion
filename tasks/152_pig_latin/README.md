@@ -12,10 +12,10 @@ source: exercism/python practice/pig-latin (MIT, adapted)
 *pig-latin — four rewrite rules, applied in the right order, to every word in a line.*
 
 ## Read first
-- [str.split() and str.join()](https://docs.python.org/3/library/stdtypes.html#str.split) — the "split, map, join" shape that every line-of-words task uses
-- [str.startswith()](https://docs.python.org/3/library/stdtypes.html#str.startswith) — accepts a tuple, so one call can test several prefixes
-- [Slicing](https://docs.python.org/3/reference/expressions.html#slicings) — `word[n:] + word[:n]` is the whole of rule 2 once you know `n`
-- [re.match()](https://docs.python.org/3/library/re.html#re.match) — optional: one anchored pattern with alternatives can express the ordering directly
+- [str.split() and str.join()](https://devdocs.io/python~3.14/library/stdtypes#str.split) — the "split, map, join" shape that every line-of-words task uses
+- [str.startswith()](https://devdocs.io/python~3.14/library/stdtypes#str.startswith) — accepts a tuple, so one call can test several prefixes
+- [Slicing](https://devdocs.io/python~3.14/reference/expressions#slicings) — `word[n:] + word[:n]` is the whole of rule 2 once you know `n`
+- [re.match()](https://devdocs.io/python~3.14/library/re#re.match) — optional: one anchored pattern with alternatives can express the ordering directly
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

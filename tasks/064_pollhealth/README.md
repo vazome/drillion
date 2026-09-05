@@ -12,6 +12,9 @@ tags: [retry-loops]
 
 Combines topics 46 (deadlines), 45 (backoff), 39 (exit codes).
 
+## Read first
+- [time.monotonic](https://devdocs.io/python~3.14/library/time#time.monotonic) — polling on a clock that cannot jump
+
 ## Why
 A deploy pipeline has just pushed a new version of a service. Before the pipeline moves to the next stage it has to wait until the service says it is healthy. Waiting forever is not allowed, so there is a time limit; checking every millisecond is wasteful, so the gaps between checks grow. If the service never comes up, the pipeline has to stop with a failure code so nobody ships on top of a broken release.
 

@@ -12,10 +12,10 @@ source: exercism/python practice/roman-numerals (MIT, adapted)
 *roman-numerals — a table of value/symbol pairs beats a wall of if statements.*
 
 ## Read first
-- [Tuples](https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range) — a tuple of `(value, symbol)` pairs is the natural shape for a lookup table that never changes
-- [The while statement](https://docs.python.org/3/reference/compound_stmts.html#the-while-statement) — "keep taking this unit while it still fits"
-- [divmod()](https://docs.python.org/3/library/functions.html#divmod) — the other route: how many of this unit fit, and what is left over, in one call
-- [str.join()](https://docs.python.org/3/library/stdtypes.html#str.join) — build the answer from a list of pieces rather than by repeated `+=`
+- [Tuples](https://devdocs.io/python~3.14/library/stdtypes#sequence-types-list-tuple-range) — a tuple of `(value, symbol)` pairs is the natural shape for a lookup table that never changes
+- [The while statement](https://devdocs.io/python~3.14/reference/compound_stmts#the-while-statement) — "keep taking this unit while it still fits"
+- [divmod()](https://devdocs.io/python~3.14/library/functions#divmod) — the other route: how many of this unit fit, and what is left over, in one call
+- [str.join()](https://devdocs.io/python~3.14/library/stdtypes#str.join) — build the answer from a list of pieces rather than by repeated `+=`
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

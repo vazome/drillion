@@ -12,12 +12,12 @@ source: exercism/python concept/restaurant-rozalynn (MIT, adapted)
 *`None` — the placeholder value, and the safe default argument.*
 
 ## Read first
-- [None (the standard type hierarchy)](https://docs.python.org/3/library/stdtypes.html#the-null-object) — there is exactly one `None` object in a running program, which is why `is` is the way to test for it
-- [Default argument values](https://docs.python.org/3/tutorial/controlflow.html#default-argument-values) — including the warning about mutable defaults, which is the reason `None` is used here
+- [None (the standard type hierarchy)](https://devdocs.io/python~3.14/library/stdtypes#the-null-object) — there is exactly one `None` object in a running program, which is why `is` is the way to test for it
+- [Default argument values](https://devdocs.io/python~3.14/tutorial/controlflow#default-argument-values) — including the warning about mutable defaults, which is the reason `None` is used here
 - [Real Python: Null in Python](https://realpython.com/null-in-python/) — `None` compared with `NULL`, `nil` and friends, and what it is *not*
-- [Dict comprehensions](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — `{key: value for ...}`, the shortest way to lay out a chart
-- [range()](https://docs.python.org/3/library/functions.html#func-range) — off by one lives here: `range(1, size + 1)` is the seats you want
-- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — walk a guest list and get the position alongside each name
+- [Dict comprehensions](https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries) — `{key: value for ...}`, the shortest way to lay out a chart
+- [range()](https://devdocs.io/python~3.14/library/functions#func-range) — off by one lives here: `range(1, size + 1)` is the seats you want
+- [enumerate()](https://devdocs.io/python~3.14/library/functions#enumerate) — walk a guest list and get the position alongside each name
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

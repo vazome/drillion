@@ -12,10 +12,10 @@ source: exercism/python practice/reverse-string (MIT, adapted)
 *reverse-string — the slice everyone half-remembers, on real characters.*
 
 ## Read first
-- [Common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — strings are sequences: everything that works on a list works here too
-- [Slicings](https://docs.python.org/3/reference/expressions.html#slicings) — the three-part slice `[start:stop:step]` and what it does when you leave parts out
+- [Common sequence operations](https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations) — strings are sequences: everything that works on a list works here too
+- [Slicings](https://devdocs.io/python~3.14/reference/expressions#slicings) — the three-part slice `[start:stop:step]` and what it does when you leave parts out
 - [Real Python: strings](https://realpython.com/python-strings/) — indexing and slicing strings, with pictures
-- [reversed()](https://docs.python.org/3/library/functions.html#reversed) — the other route, an iterator you have to `join` back together
+- [reversed()](https://devdocs.io/python~3.14/library/functions#reversed) — the other route, an iterator you have to `join` back together
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

@@ -10,6 +10,10 @@ tags: [stdlib-ops]
 
 *print in a daemon has no level, no timestamp and nowhere to go but stdout.*
 
+## Read first
+- [Logging HOWTO](https://devdocs.io/python~3.14/howto/logging) — levels, and why `print` is not logging
+- [logging](https://devdocs.io/python~3.14/library/logging) — the reference
+
 ## Why
 A background service writes hundreds of messages a minute. In production the operators want only warnings and errors; while debugging they want everything — and they want to switch between the two with one setting, not a code change. The messages must also go somewhere you control (a file, a log system, or here a plain list the test can inspect) in one consistent format. You wire up one such logger.
 

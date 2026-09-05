@@ -12,16 +12,16 @@ source: exercism/python concept/making-the-grade (MIT, adapted)
 *`range()` with a step, `enumerate()`, and the `break` that stops at the first hit.*
 
 ## Read first
-- [`enumerate()`](https://docs.python.org/3/library/functions.html#enumerate) — `(index, value)` pairs, and the `start=` argument that lets you count from 1
-- [the `range()` function](https://docs.python.org/3/tutorial/controlflow.html#the-range-function) — `start`, `stop` (exclusive) and `step`
+- [`enumerate()`](https://devdocs.io/python~3.14/library/functions#enumerate) — `(index, value)` pairs, and the `start=` argument that lets you count from 1
+- [the `range()` function](https://devdocs.io/python~3.14/tutorial/controlflow#the-range-function) — `start`, `stop` (exclusive) and `step`
 - [`range()` is not an iterator (Trey Hunner)](https://treyhunner.com/2018/02/python-range-is-not-an-iterator/) — what a lazy sequence actually is
-- [`break`, `continue` and loop `else`](https://docs.python.org/3/tutorial/controlflow.html#break-and-continue-statements-and-else-clauses-on-loops) — leaving a loop early, and the clause that runs when you did not
-- [`round()`](https://docs.python.org/3/library/functions.html#round) — one argument gives an `int`, which is what keeps the band width whole
-- [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#formatted-string-literals) — assembling `'1. Joci: 100'` in one expression
-- [`for` statements (Python tutorial)](https://docs.python.org/3/tutorial/controlflow.html#for-statements) — the loop all three tasks are built on
+- [`break`, `continue` and loop `else`](https://devdocs.io/python~3.14/tutorial/controlflow#break-and-continue-statements-and-else-clauses-on-loops) — leaving a loop early, and the clause that runs when you did not
+- [`round()`](https://devdocs.io/python~3.14/library/functions#round) — one argument gives an `int`, which is what keeps the band width whole
+- [f-strings](https://devdocs.io/python~3.14/reference/lexical_analysis#formatted-string-literals) — assembling `'1. Joci: 100'` in one expression
+- [`for` statements (Python tutorial)](https://devdocs.io/python~3.14/tutorial/controlflow#for-statements) — the loop all three tasks are built on
 - [`enumerate()` in Python (Real Python)](https://realpython.com/python-enumerate/) — the long version, including when *not* to use it
 - [Loop Like a Native (Ned Batchelder)](https://nedbatchelder.com/text/iter.html) — why indexing a list inside a loop is usually a smell
-- [`StopIteration`](https://docs.python.org/3/library/exceptions.html#StopIteration) — the exception a `for` loop catches for you every time it ends
+- [`StopIteration`](https://devdocs.io/python~3.14/library/exceptions#StopIteration) — the exception a `for` loop catches for you every time it ends
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -201,16 +201,16 @@ The [`break`][break statement] (_like in many C-related languages_) keyword can 
 'loop broken.'
 ```
 
-[break statement]: https://docs.python.org/3/reference/simple_stmts.html#the-break-statement
-[common sequence operations]: https://docs.python.org/3/library/stdtypes.html#common-sequence-operations
-[continue statement]: https://docs.python.org/3/reference/simple_stmts.html#the-continue-statement
-[enumerate]: https://docs.python.org/3/library/functions.html#enumerate
-[for statement]: https://docs.python.org/3/reference/compound_stmts.html#for
-[iterable]: https://docs.python.org/3/glossary.html#term-iterable
-[next built-in]: https://docs.python.org/3/library/functions.html#next
-[range]: https://docs.python.org/3/library/stdtypes.html#range
-[truth value testing]: https://docs.python.org/3/library/stdtypes.html#truth-value-testing
-[while statement]: https://docs.python.org/3/reference/compound_stmts.html#the-while-statement
+[break statement]: https://devdocs.io/python~3.14/reference/simple_stmts#the-break-statement
+[common sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations
+[continue statement]: https://devdocs.io/python~3.14/reference/simple_stmts#the-continue-statement
+[enumerate]: https://devdocs.io/python~3.14/library/functions#enumerate
+[for statement]: https://devdocs.io/python~3.14/reference/compound_stmts#for
+[iterable]: https://devdocs.io/python~3.14/glossary#term-iterable
+[next built-in]: https://devdocs.io/python~3.14/library/functions#next
+[range]: https://devdocs.io/python~3.14/library/stdtypes#range
+[truth value testing]: https://devdocs.io/python~3.14/library/stdtypes#truth-value-testing
+[while statement]: https://devdocs.io/python~3.14/reference/compound_stmts#the-while-statement
 
 ## Instructions
 You're a teaching assistant correcting student exams.
@@ -329,7 +329,7 @@ If no 100 scores are found in `student_info`, an empty list `[]` should be retur
 []
 ```
 
-[round]: https://docs.python.org/3/library/functions.html#round
+[round]: https://devdocs.io/python~3.14/library/functions#round
 
 ## You get
 Nothing. `solve()` takes **no arguments**; the grader calls your functions with the scores, the names and the pairs.
@@ -417,16 +417,16 @@ Also being familiar with the following can help with completing the tasks:
 - There may be or may not be a student with a score of 100, and you can't return `[]` without checking **all** scores.
 - The [`control flow`][control flow] statements `continue` and `break` may be useful here to move past unwanted values.
 
-[append and pop]: https://docs.python.org/3/tutorial/datastructures.html#more-on-lists
-[control flow]: https://docs.python.org/3/tutorial/controlflow.html#break-and-continue-statements-and-else-clauses-on-loops
-[enumerate]: https://docs.python.org/3/library/functions.html#enumerate
-[f-strings]: https://docs.python.org/3/reference/lexical_analysis.html#formatted-string-literals
-[for-loops]: https://docs.python.org/3/tutorial/controlflow.html#for-statements
-[list]: https://docs.python.org/3/library/stdtypes.html#list
-[range]: https://docs.python.org/3/tutorial/controlflow.html#the-range-function
-[round]: https://docs.python.org/3/library/functions.html#round
-[str]: https://docs.python.org/3/library/stdtypes.html#str
-[while-loops]: https://docs.python.org/3/reference/compound_stmts.html#the-while-statement
+[append and pop]: https://devdocs.io/python~3.14/tutorial/datastructures#more-on-lists
+[control flow]: https://devdocs.io/python~3.14/tutorial/controlflow#break-and-continue-statements-and-else-clauses-on-loops
+[enumerate]: https://devdocs.io/python~3.14/library/functions#enumerate
+[f-strings]: https://devdocs.io/python~3.14/reference/lexical_analysis#formatted-string-literals
+[for-loops]: https://devdocs.io/python~3.14/tutorial/controlflow#for-statements
+[list]: https://devdocs.io/python~3.14/library/stdtypes#list
+[range]: https://devdocs.io/python~3.14/tutorial/controlflow#the-range-function
+[round]: https://devdocs.io/python~3.14/library/functions#round
+[str]: https://devdocs.io/python~3.14/library/stdtypes#str
+[while-loops]: https://devdocs.io/python~3.14/reference/compound_stmts#the-while-statement
 
 ## Hints
 ### Hint 1

@@ -12,10 +12,10 @@ source: exercism/python practice/sieve (MIT, adapted)
 *sieve — mark what cannot be, instead of testing what might be.*
 
 ## Read first
-- [Sets](https://docs.python.org/3/tutorial/datastructures.html#sets) — a set of "already crossed out" numbers is one natural way to hold the marks
-- [range() with a step](https://docs.python.org/3/library/stdtypes.html#range) — `range(p * p, limit + 1, p)` is every multiple of `p`, produced by addition
-- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — pairs a flag with the number it belongs to when you collect the survivors
-- [Set difference](https://docs.python.org/3/library/stdtypes.html#frozenset.difference) — "everything from 2 to the limit, minus the crossed-out ones", in one expression
+- [Sets](https://devdocs.io/python~3.14/tutorial/datastructures#sets) — a set of "already crossed out" numbers is one natural way to hold the marks
+- [range() with a step](https://devdocs.io/python~3.14/library/stdtypes#range) — `range(p * p, limit + 1, p)` is every multiple of `p`, produced by addition
+- [enumerate()](https://devdocs.io/python~3.14/library/functions#enumerate) — pairs a flag with the number it belongs to when you collect the survivors
+- [Set difference](https://devdocs.io/python~3.14/library/stdtypes#frozenset.difference) — "everything from 2 to the limit, minus the crossed-out ones", in one expression
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

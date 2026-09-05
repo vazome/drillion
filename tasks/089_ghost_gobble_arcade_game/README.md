@@ -12,11 +12,11 @@ source: exercism/python concept/ghost-gobble-arcade-game (MIT, adapted)
 *and / or / not — four arcade-game rules built from booleans alone.*
 
 ## Read first
-- [boolean-operators](https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not) — the three operators, their precedence (`not` binds tightest, then `and`, then `or`)
-- [Truth Value Testing](https://docs.python.org/3/library/stdtypes.html#truth) — why you never need to write `if flag == True`
-- [boolean values](https://docs.python.org/3/library/stdtypes.html#bltin-boolean-values) — `True` and `False`, a subclass of `int`
-- [bool() function](https://docs.python.org/3/library/functions.html#bool) — turning any object into one of the two
-- [Comparisons in Python](https://docs.python.org/3/library/stdtypes.html#comparisons) — the operators that produce bools in the first place
+- [boolean-operators](https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not) — the three operators, their precedence (`not` binds tightest, then `and`, then `or`)
+- [Truth Value Testing](https://devdocs.io/python~3.14/library/stdtypes#truth) — why you never need to write `if flag == True`
+- [boolean values](https://devdocs.io/python~3.14/library/stdtypes#bltin-boolean-values) — `True` and `False`, a subclass of `int`
+- [bool() function](https://devdocs.io/python~3.14/library/functions#bool) — turning any object into one of the two
+- [Comparisons in Python](https://devdocs.io/python~3.14/library/stdtypes#comparisons) — the operators that produce bools in the first place
 - [Problem Solving with Python — Boolean Data Type](https://problemsolvingwithpython.com/04-Data-Types-and-Variables/04.02-Boolean-Data-Type/) — a gentler walk-through
 - [Python Anti-Patterns: comparing things to True in the wrong way](https://docs.quantifiedcode.com/python-anti-patterns/readability/comparison_to_true.html) — the `== True` habit and why to drop it
 - [PEP 285 — Adding a bool type](https://www.python.org/dev/peps/pep-0285/) — why `bool` subclasses `int`
@@ -49,7 +49,7 @@ We can evaluate Boolean expressions using the `and`, `or`, and `not` operators:
 >>> false_variable = not True
 ```
 
-[bools]: https://docs.python.org/3/library/stdtypes.html#typebool
+[bools]: https://devdocs.io/python~3.14/library/stdtypes#typebool
 
 ## Instructions
 In this exercise, you need to implement some rules from [Pac-Man][Pac-Man], the classic 1980s-era arcade-game.
@@ -157,15 +157,15 @@ rules["win"](True, False, True)   # -> False  (all dots eaten, but lost anyway)
 
 - You can use the [Boolean][boolean] [operators][Boolean-operators] to combine arguments for a result.
 
-[Boolean-operators]: https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not
-[boolean]: https://docs.python.org/3/library/stdtypes.html#truth
-[stdlib-bools]: https://docs.python.org/3/library/stdtypes.html#truth-value-testing
+[Boolean-operators]: https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not
+[boolean]: https://devdocs.io/python~3.14/library/stdtypes#truth
+[stdlib-bools]: https://devdocs.io/python~3.14/library/stdtypes#truth-value-testing
 
 ## Hints
 ### Hint 1
-Do not worry about how the arguments are *derived*, focus on combining the arguments to return the intended result. Read each rule out loud and mark the joining word: 'active AND touching' is `and`; 'a pellet OR a dot' is `or`; 'with NO pellet' is `not`. Each function is a single `return` of the arguments combined that way — no `if` statement is needed, because combining two bools with `and` already gives you a bool. This section of the Python documentation, [Truth Value Testing](https://docs.python.org/3/library/stdtypes.html#truth-value-testing), might help.
+Do not worry about how the arguments are *derived*, focus on combining the arguments to return the intended result. Read each rule out loud and mark the joining word: 'active AND touching' is `and`; 'a pellet OR a dot' is `or`; 'with NO pellet' is `not`. Each function is a single `return` of the arguments combined that way — no `if` statement is needed, because combining two bools with `and` already gives you a bool. This section of the Python documentation, [Truth Value Testing](https://devdocs.io/python~3.14/library/stdtypes#truth-value-testing), might help.
 ### Hint 2
-All four rules are the same move: use the [Boolean](https://docs.python.org/3/library/stdtypes.html#truth) [operators](https://docs.python.org/3/library/stdtypes.html#boolean-operations-and-or-not) to combine the arguments into a result.
+All four rules are the same move: use the [Boolean](https://devdocs.io/python~3.14/library/stdtypes#truth) [operators](https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not) to combine the arguments into a result.
 
 `win` is the interesting one: it is 'all dots eaten AND not lost'. You already wrote the losing rule as its own function, so call it rather than restating 'touching a ghost without a pellet' a second time — that way one bug fix fixes both. Precedence: `not` binds tighter than `and`, so `not a and b` reads as `(not a) and b`; add parentheses whenever you have to stop and think about it.
 ### Hint 3

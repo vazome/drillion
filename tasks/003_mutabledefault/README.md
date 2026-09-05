@@ -10,6 +10,9 @@ tags: [mutable-default]
 
 *The mutable default argument — Python's most-asked trap question.*
 
+## Read first
+- [Default Argument Values](https://devdocs.io/python~3.14/tutorial/controlflow#default-argument-values) — the default is evaluated once, at definition — that is the bug
+
 ## Why
 This is a classic interview question and a real production bug. A helper function keeps a "done" list as a default argument so callers can skip passing one. In production a task runner calls it once per job, and after a while every job report lists every job that ever ran, because the default list is shared between calls and never reset. Nothing crashes; the reports are just wrong. Interviewers ask you to predict the output and explain why it happens.
 

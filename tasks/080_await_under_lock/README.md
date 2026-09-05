@@ -14,8 +14,8 @@ tags: [concurrency, asyncio]
 ## Read first
 - [Async IO Explained](https://realpython.com/async-io-python/) — an `await` is a place where this request pauses and lets OTHER requests run. Nothing else matters as much as that sentence.
 - [asyncpg connection pools](https://magicstack.github.io/asyncpg/current/usage.html#connection-pools) — the real pool you used: a fixed number of database connections, handed out one per `async with pool.acquire()`
-- [asyncio.Semaphore](https://docs.python.org/3/library/asyncio-sync.html#asyncio.Semaphore) — the test's fake pool is just this: a counter of free slots
-- [The async with statement](https://docs.python.org/3/reference/compound_stmts.html#the-async-with-statement)
+- [asyncio.Semaphore](https://devdocs.io/python~3.14/library/asyncio-sync#asyncio.Semaphore) — the test's fake pool is just this: a counter of free slots
+- [The async with statement](https://devdocs.io/python~3.14/reference/compound_stmts#the-async-with-statement)
 
 > [!NOTE]
 > **Take-home:** `embed_query` outside `pool.acquire()`

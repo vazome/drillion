@@ -10,6 +10,9 @@ tags: [errors]
 
 *Any call that can block needs a deadline — waiting forever is an outage.*
 
+## Read first
+- [time.monotonic](https://devdocs.io/python~3.14/library/time#time.monotonic) — a clock that cannot go backwards — the only correct one for deadlines
+
 ## Why
 A deploy script has just asked the cloud to start a new database. The database takes an unknown time to come up: usually a minute, sometimes five, occasionally never (a quota problem, a typo in the config). The next step cannot run until it is ready, so the script must keep looking, pause between looks, and stop with a clear error once a time budget is used up. A script that waits forever blocks the whole pipeline and nobody notices until morning.
 

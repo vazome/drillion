@@ -10,6 +10,10 @@ tags: [truthiness]
 
 *`x or default` is everywhere in config code — and it eats real zeros.*
 
+## Read first
+- [Truth Value Testing](https://devdocs.io/python~3.14/library/stdtypes#truth-value-testing) — why `0`, `''` and `[]` are falsy — the whole trap this task is about
+- [Boolean operations](https://devdocs.io/python~3.14/library/stdtypes#boolean-operations-and-or-not) — `or` returns an operand, not a `bool`
+
 ## Why
 Your deployment script reads settings from a config file. When a setting is missing it should fall back to a sensible default. But "missing" is not the same as "set to zero" or "set to empty": a port of 0 means "let the operating system pick a free port", and an empty name is a deliberate choice. A script that treats those real values as missing quietly overrides what the engineer asked for, and that kind of silent override causes confusing outages.
 

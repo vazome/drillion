@@ -13,7 +13,7 @@ tags: [concurrency]
 
 ## Read first
 - [Speed up your Python program with concurrency](https://realpython.com/python-concurrency/) — threads vs processes vs asyncio, when each wins
-- [Concurrent execution — the stdlib index](https://docs.python.org/3/library/concurrency.html) — the modules themselves: threading, multiprocessing, concurrent.futures, asyncio
+- [Concurrent execution — the stdlib index](https://devdocs.io/python~3.14/library/concurrency) — the modules themselves: threading, multiprocessing, concurrent.futures, asyncio
 
 > [!NOTE]
 > **Take-home:** "why async here?"

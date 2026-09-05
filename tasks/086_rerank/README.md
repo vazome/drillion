@@ -14,8 +14,8 @@ tags: [sets, sorted]
 ## Read first
 - [Rerankers](https://www.pinecone.io/learn/series/rag/rerankers/) — read the first half: why a cheap wide first stage + an expensive narrow second stage beats either alone
 - [Precision and recall](https://en.wikipedia.org/wiki/Precision_and_recall) — just the intro: recall = "did we fetch all the relevant ones", precision = "is what we show actually relevant"
-- [Sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — `key=`, `reverse=True`, and 'Sort Stability': equal scores keep their incoming order, which is how ties stay in vector order
-- [set](https://docs.python.org/3/library/stdtypes.html#set) — `&` gives the words in both sets
+- [Sorting HOW TO](https://devdocs.io/python~3.14/howto/sorting) — `key=`, `reverse=True`, and 'Sort Stability': equal scores keep their incoming order, which is how ties stay in vector order
+- [set](https://devdocs.io/python~3.14/library/stdtypes#set) — `&` gives the words in both sets
 
 > [!NOTE]
 > **Take-home:** Task 2 + the "fraction, not count" upgrade

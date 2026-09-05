@@ -10,6 +10,9 @@ tags: [llm, langchain]
 
 *The dict-of-runnables shape: one input fans out into several named fields.*
 
+## Read first
+- [LangChain Expression Language](https://python.langchain.com/docs/concepts/lcel/) — composing with `|`, and what a dict in the chain means
+
 ## Why
 LangChain is a library for wiring steps together around an AI model. A common pattern at companies is "answer a question using our own documents": the question goes in, related documents are looked up, and both the question and the documents are handed to a template that writes the final text. So one input has to reach several steps at once, and their results have to be collected under names. This task builds exactly that fan-out.
 

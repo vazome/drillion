@@ -12,10 +12,10 @@ source: exercism/python practice/etl (MIT, adapted)
 *etl — invert a "group → members" dict into a "member → group" dict.*
 
 ## Read first
-- [Mapping types: dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — what a dict guarantees, and why the lookup is the point
-- [Docs: dicts](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — the tutorial section, including dict comprehensions
-- [dict.items()](https://docs.python.org/3/library/stdtypes.html#dict.items) — walking keys and values together instead of keys then lookups
-- [str.lower()](https://docs.python.org/3/library/stdtypes.html#str.lower) — the case fold, applied to each letter
+- [Mapping types: dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — what a dict guarantees, and why the lookup is the point
+- [Docs: dicts](https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries) — the tutorial section, including dict comprehensions
+- [dict.items()](https://devdocs.io/python~3.14/library/stdtypes#dict.items) — walking keys and values together instead of keys then lookups
+- [str.lower()](https://devdocs.io/python~3.14/library/stdtypes#str.lower) — the case fold, applied to each letter
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

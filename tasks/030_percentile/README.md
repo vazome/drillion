@@ -10,6 +10,9 @@ tags: [files-text]
 
 *Mean latency lies; the p95 is the number on the dashboard and in the interview.*
 
+## Read first
+- [statistics](https://devdocs.io/python~3.14/library/statistics) — `mean`, `median`, and `quantiles` for the percentile itself
+
 ## Why
 The service promise (SLO) says 95 percent of requests must finish under 300 ms. An average hides the slow requests that make customers complain, so the dashboard shows the p95: the response time that 95 percent of requests are faster than. Given a list of measured response times, you compute that number the way the team has agreed to define it.
 

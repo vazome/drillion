@@ -12,7 +12,7 @@ tags: [concurrency, asyncio]
 *app/db.py explained — create the pool once, even when 50 requests arrive together.*
 
 ## Read first
-- [asyncio.Lock](https://docs.python.org/3/library/asyncio-sync.html#asyncio.Lock) — one holder at a time; `async with lock:` is the whole API you need
+- [asyncio.Lock](https://devdocs.io/python~3.14/library/asyncio-sync#asyncio.Lock) — one holder at a time; `async with lock:` is the whole API you need
 - [Double-checked locking](https://en.wikipedia.org/wiki/Double-checked_locking) — read only 'Motivation and original pattern': check, lock, check again. (Ignore the Java memory-model parts.)
 - [Async IO Explained](https://realpython.com/async-io-python/) — why an `await` is a gap where another request can sneak in between your `if` and your assignment
 

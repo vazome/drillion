@@ -12,6 +12,9 @@ tags: [log-analysis]
 
 Combines topics 19 (Counter), 22 (set), 28 (str), 34 (percentile). Passing this cleanly pushes those components further out too.
 
+## Read first
+- [statistics.quantiles](https://devdocs.io/python~3.14/library/statistics#statistics.quantiles) — the percentile, without hand-rolling the index maths
+
 ## Why
 The site was slow last night and the manager wants a quick read of the web server's access log: which three visitors (IP addresses) made the most requests, how the responses split between success and error classes (2xx, 4xx, 5xx), and how slow the slowest requests were. That last one is the "p95": the time that 95 percent of requests came in under. This is the single most common hands-on question in DevOps interviews.
 

@@ -10,6 +10,9 @@ tags: [stdlib-ops]
 
 *Twelve-factor apps read config from the environment, so every ops script does too.*
 
+## Read first
+- [os.environ](https://devdocs.io/python~3.14/library/os#os.environ) — reading config, and `os.environ.get` for the optional case
+
 ## Why
 A service runs inside a container. Operators change its port, timeout, debug mode and region by setting environment variables (named settings the operating system hands to a process at start) instead of editing files. Some settings have sensible defaults; the database address does not, and booting against a guessed database is an incident waiting to happen. You write the startup code that reads them all and converts them from text to the right types.
 

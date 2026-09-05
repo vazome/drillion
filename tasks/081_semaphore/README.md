@@ -13,8 +13,8 @@ tags: [concurrency, asyncio]
 
 ## Read first
 - [Example of Using an Asyncio Semaphore](https://superfastpython.com/asyncio-semaphore/) — what a semaphore is, with runnable examples; read up to 'Example of Using an Asyncio Semaphore'
-- [asyncio.Semaphore](https://docs.python.org/3/library/asyncio-sync.html#asyncio.Semaphore) — the 6-line reference
-- [asyncio.gather](https://docs.python.org/3/library/asyncio-task.html#asyncio.gather) — start everything, collect in order
+- [asyncio.Semaphore](https://devdocs.io/python~3.14/library/asyncio-sync#asyncio.Semaphore) — the 6-line reference
+- [asyncio.gather](https://devdocs.io/python~3.14/library/asyncio-task#asyncio.gather) — start everything, collect in order
 
 > [!NOTE]
 > **Take-home:** why `FakePool` is a `Semaphore(max_size)`

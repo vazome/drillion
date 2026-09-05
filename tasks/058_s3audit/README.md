@@ -10,6 +10,9 @@ tags: [cloud, boto3]
 
 *The bucket that leaked was never meant to be public; nobody ever looked.*
 
+## Read first
+- [boto3 S3 client](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html) — the S3 operations and their response shapes
+
 ## Why
 A security review asks: "which of our storage buckets can anyone on the internet read?" Data leaks usually come from a bucket that was never meant to be public and that nobody checked. A bucket can be opened two separate ways: an access-control list (ACL, a list of who may do what) that grants everyone read, or an attached policy document that allows everyone. Both must be checked on every bucket, because a script that checks one and stops reports "all clear" on a bucket the world is reading. You produce the list of exposed bucket names.
 

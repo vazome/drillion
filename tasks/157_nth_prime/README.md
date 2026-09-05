@@ -12,11 +12,11 @@ source: exercism/python practice/nth-prime (MIT, adapted)
 *nth-prime — an endless sequence you generate lazily, stopping the moment you have enough.*
 
 ## Read first
-- [Generators](https://docs.python.org/3/tutorial/classes.html#generators) — `yield` produces a value and pauses, which is how an endless sequence stays affordable
-- [itertools.count()](https://docs.python.org/3/library/itertools.html#itertools.count) — an endless counter, with a start and a step
-- [itertools.islice()](https://docs.python.org/3/library/itertools.html#itertools.islice) — "take the first n of something endless" without building a list of everything
-- [math.isqrt()](https://docs.python.org/3/library/math.html#math.isqrt) — testing divisors past the square root cannot find anything new
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — the guard clause at the top of the function
+- [Generators](https://devdocs.io/python~3.14/tutorial/classes#generators) — `yield` produces a value and pauses, which is how an endless sequence stays affordable
+- [itertools.count()](https://devdocs.io/python~3.14/library/itertools#itertools.count) — an endless counter, with a start and a step
+- [itertools.islice()](https://devdocs.io/python~3.14/library/itertools#itertools.islice) — "take the first n of something endless" without building a list of everything
+- [math.isqrt()](https://devdocs.io/python~3.14/library/math#math.isqrt) — testing divisors past the square root cannot find anything new
+- [Raising exceptions](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions) — the guard clause at the top of the function
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -32,9 +32,9 @@ If your language provides methods in the standard library to deal with prime num
 
 ### Exception messages
 
-Sometimes it is necessary to [raise an exception](https://docs.python.org/3/tutorial/errors.html#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://docs.python.org/3/library/exceptions.html#base-classes), but should still include a meaningful message.
+Sometimes it is necessary to [raise an exception](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://devdocs.io/python~3.14/library/exceptions#base-classes), but should still include a meaningful message.
 
-This particular exercise requires that you use the [raise statement](https://docs.python.org/3/reference/simple_stmts.html#the-raise-statement) to "throw" a `ValueError` when the `prime()` function receives malformed input. Since this exercise deals only with _positive_ numbers, any number < 1 is malformed.  The tests will only pass if you both `raise` the `exception` and include a message with it.
+This particular exercise requires that you use the [raise statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement) to "throw" a `ValueError` when the `prime()` function receives malformed input. Since this exercise deals only with _positive_ numbers, any number < 1 is malformed.  The tests will only pass if you both `raise` the `exception` and include a message with it.
 
 To raise a `ValueError` with a message, write the message as an argument to the `exception` type:
 

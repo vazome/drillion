@@ -12,6 +12,9 @@ tags: [cloud, boto3]
 
 Filed under topic 72. The checklist calls 72 "docker SDK vs shelling out", which cannot be drilled offline, so the number was free; topic 69 already holds the S3 public-access audit and these are two separate boto3 tasks.
 
+## Read first
+- [boto3 EC2 client](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2.html) — volume and snapshot operations
+
 ## Why
 The cloud bill keeps growing. One common cause is disk volumes (EBS) that were once attached to servers that have since been deleted. A detached volume still costs full price every month and shows up on no dashboard. The finance lead asks for a report: which volumes are attached to nothing, and how many gigabytes would be freed by removing them. A report only; deleting is a separate, reviewed step.
 

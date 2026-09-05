@@ -10,6 +10,10 @@ tags: [closures]
 
 *Closures capture variables, not values — the late-binding loop surprise.*
 
+## Read first
+- [Python Scopes and Namespaces](https://devdocs.io/python~3.14/tutorial/classes#python-scopes-and-namespaces) — what a closure captures — the variable, not its value
+- [The nonlocal statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-nonlocal-statement) — how to write to an enclosing scope
+
 ## Why
 This is a classic interview question and a real production bug. You build a list of small callback functions in a loop, one per server, each meant to remember "its" server number, and hand them to a scheduler to run later. When they finally run, every one of them acts on the last server. Nothing crashes; the wrong machines get restarted. Interviewers ask you to predict the output and explain why the two ways of writing it give different answers.
 

@@ -10,6 +10,9 @@ tags: [errors]
 
 *Ops scripts get re-run — after a crash, by a retry, by a nervous human at 3am.*
 
+## Read first
+- [Idempotent (MDN)](https://developer.mozilla.org/en-US/docs/Glossary/Idempotent) — the property a retry-safe operation must have
+
 ## Why
 A service's settings (replica count, image version, debug flag) are applied by a script. That script gets run again and again: after a crash, by an automatic retry, by a colleague at 3am who is not sure it ran. Running it twice must not break anything, and it must only report changes that really happened, so the team can tell genuine drift from noise in the audit log. Your job: compare what is with what should be, change only what differs, and list exactly what you touched.
 

@@ -12,10 +12,10 @@ source: exercism/python practice/protein-translation (MIT, adapted)
 *protein-translation — cut a string into fixed-size chunks, look each one up, and stop at the terminator.*
 
 ## Read first
-- [Mapping types: dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — a codon table is a dict; seventeen keys is nothing
-- [Slicing](https://docs.python.org/3/reference/expressions.html#slicings) — `strand[i:i + 3]` combined with `range(0, len(strand), 3)` is the chunker
-- [break](https://docs.python.org/3/tutorial/controlflow.html#break-and-continue-statements-and-else-clauses-on-loops) — leaving a loop early is the whole STOP rule
-- [textwrap.wrap()](https://docs.python.org/3/library/textwrap.html#textwrap.wrap) — an alternative chunker, if you would rather not write the `range` yourself
+- [Mapping types: dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — a codon table is a dict; seventeen keys is nothing
+- [Slicing](https://devdocs.io/python~3.14/reference/expressions#slicings) — `strand[i:i + 3]` combined with `range(0, len(strand), 3)` is the chunker
+- [break](https://devdocs.io/python~3.14/tutorial/controlflow#break-and-continue-statements-and-else-clauses-on-loops) — leaving a loop early is the whole STOP rule
+- [textwrap.wrap()](https://devdocs.io/python~3.14/library/textwrap#textwrap.wrap) — an alternative chunker, if you would rather not write the `range` yourself
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

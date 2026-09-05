@@ -12,10 +12,10 @@ source: exercism/python practice/rna-transcription (MIT, adapted)
 *rna-transcription — a one-to-one character swap, and why four .replace() calls fail.*
 
 ## Read first
-- [str.translate()](https://docs.python.org/3/library/stdtypes.html#str.translate) — `str.maketrans` and `translate`: build the mapping once, apply it in one pass
-- [str.join()](https://docs.python.org/3/library/stdtypes.html#str.join) — `"".join` over a generator, the readable way to build a string character by character
-- [str.replace()](https://docs.python.org/3/library/stdtypes.html#str.replace) — read this one to see the trap: each `replace()` runs over the result of the previous one
-- [Mapping types — dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — the four-entry lookup table, if you prefer a dict to `maketrans`
+- [str.translate()](https://devdocs.io/python~3.14/library/stdtypes#str.translate) — `str.maketrans` and `translate`: build the mapping once, apply it in one pass
+- [str.join()](https://devdocs.io/python~3.14/library/stdtypes#str.join) — `"".join` over a generator, the readable way to build a string character by character
+- [str.replace()](https://devdocs.io/python~3.14/library/stdtypes#str.replace) — read this one to see the trap: each `replace()` runs over the result of the previous one
+- [Mapping types — dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — the four-entry lookup table, if you prefer a dict to `maketrans`
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

@@ -10,6 +10,9 @@ tags: [http]
 
 *A webhook endpoint that skips the signature check is an open door into your pipeline.*
 
+## Read first
+- [hmac](https://devdocs.io/python~3.14/library/hmac) — signing, and `compare_digest` for the constant-time check
+
 ## Why
 Your CI pipeline has a web address that GitHub calls every time code is pushed (a webhook), and that call triggers a deploy. Anyone on the internet can send a request to that address. To prove a message is really from GitHub, both sides share a secret; GitHub computes a fingerprint of the message using that secret and sends it in a header. You recompute the fingerprint yourself and compare. Skip the check and anyone can trigger deploys; compare carelessly and an attacker can guess the fingerprint one character at a time by timing your replies. The security team asks you to write the check.
 

@@ -12,12 +12,12 @@ source: exercism/python concept/mecha-munch-management (MIT, adapted)
 *Dict views, `sorted()`, and why insertion order is the answer.*
 
 ## Read first
-- [Mapping types — dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — every method in one table; worth skimming end to end once
-- [dict.setdefault()](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) — insert-if-missing and return, in one call
-- [dict.fromkeys()](https://docs.python.org/3/library/stdtypes.html#dict.fromkeys) — build a whole dict from an iterable of keys sharing one default value
-- [dict.update()](https://docs.python.org/3/library/stdtypes.html#dict.update) — merge in another mapping *or* an iterable of pairs, in place
-- [Dictionary view objects](https://docs.python.org/3/library/stdtypes.html#dict-views) — `.keys()`, `.values()` and `.items()` are live views, not copies
-- [Sorting HOW TO](https://docs.python.org/3/howto/sorting.html) — `sorted()`, `key=` and `reverse=`
+- [Mapping types — dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — every method in one table; worth skimming end to end once
+- [dict.setdefault()](https://devdocs.io/python~3.14/library/stdtypes#dict.setdefault) — insert-if-missing and return, in one call
+- [dict.fromkeys()](https://devdocs.io/python~3.14/library/stdtypes#dict.fromkeys) — build a whole dict from an iterable of keys sharing one default value
+- [dict.update()](https://devdocs.io/python~3.14/library/stdtypes#dict.update) — merge in another mapping *or* an iterable of pairs, in place
+- [Dictionary view objects](https://devdocs.io/python~3.14/library/stdtypes#dict-views) — `.keys()`, `.values()` and `.items()` are live views, not copies
+- [Sorting HOW TO](https://devdocs.io/python~3.14/howto/sorting) — `sorted()`, `key=` and `reverse=`
 - [Real Python: dictionaries in Python](https://realpython.com/python-dicts/) — the long-form tour
 - [David Beazley: Built-in Super Heroes (video)](https://www.youtube.com/watch?v=lyDLAutA88s) — why the plain built-in dict is usually the right answer
 
@@ -239,13 +239,13 @@ For a detailed explanation of dictionaries and methods for working with them, th
 
 [Real Python][how-to-dicts] and [Finxter][fi-dict-guide] also have very thorough articles on Python dictionaries.
 
-[dict-methods]: https://docs.python.org/3/library/stdtypes.html#dict
-[dict-views]: https://docs.python.org/3/library/stdtypes.html#dict-views
-[dicts-docs]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
+[dict-methods]: https://devdocs.io/python~3.14/library/stdtypes#dict
+[dict-views]: https://devdocs.io/python~3.14/library/stdtypes#dict-views
+[dicts-docs]: https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries
 [fi-dict-guide]: https://blog.finxter.com/python-dictionary
-[fromkeys]: https://docs.python.org/3/library/stdtypes.html#dict.fromkeys
+[fromkeys]: https://devdocs.io/python~3.14/library/stdtypes#dict.fromkeys
 [how-to-dicts]: https://realpython.com/python-dicts/
-[mapping-types-dict]: https://docs.python.org/3/library/stdtypes.html#mapping-types-dict
+[mapping-types-dict]: https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict
 
 ## Instructions
 Mecha Munch™, a grocery shopping automation company, has just hired you to work on their ordering app.
@@ -464,25 +464,25 @@ The dictionary section of the [official tutorial][dicts-docs] and the mapping ty
 - You can access an item in a _nested tuple_ using _bracket notation_:  `<tuple>[<nested_tuple>][<index_of_value>]`
 - Don't forget to check if an inventory count falls to zero, you'll need to add in the "Out of Stock" message.
 
-[builtins]: https://docs.python.org/3/library/functions.html
-[dicts-docs]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
-[fromkeys]: https://docs.python.org/3/library/stdtypes.html#dict.fromkeys
-[items]: https://docs.python.org/3/library/stdtypes.html#dict.items
-[keys]: https://docs.python.org/3/library/stdtypes.html#dict.keys
-[mapping-types-dict]: https://docs.python.org/3/library/stdtypes.html#mapping-types-dict
+[builtins]: https://devdocs.io/python~3.14/library/functions
+[dicts-docs]: https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries
+[fromkeys]: https://devdocs.io/python~3.14/library/stdtypes#dict.fromkeys
+[items]: https://devdocs.io/python~3.14/library/stdtypes#dict.items
+[keys]: https://devdocs.io/python~3.14/library/stdtypes#dict.keys
+[mapping-types-dict]: https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict
 [mvp]: https://en.wikipedia.org/wiki/Minimum_viable_product
-[set-default]: https://docs.python.org/3/library/stdtypes.html#dict.setdefault
-[update]: https://docs.python.org/3/library/stdtypes.html#dict.update
+[set-default]: https://devdocs.io/python~3.14/library/stdtypes#dict.setdefault
+[update]: https://devdocs.io/python~3.14/library/stdtypes#dict.update
 
 ## Hints
 ### Hint 1
-A dictionary remembers the order its keys went in, and that is the whole trick behind the first two tasks: you cannot "sort a dict" in place, you build a **new** one whose keys are inserted in the order you want. [`sorted()`](https://docs.python.org/3/library/functions.html#sorted) over the pairs from [`.items()`](https://docs.python.org/3/library/stdtypes.html#dict.items) gives you that order, and `dict(...)` turns sorted pairs back into a dictionary.
+A dictionary remembers the order its keys went in, and that is the whole trick behind the first two tasks: you cannot "sort a dict" in place, you build a **new** one whose keys are inserted in the order you want. [`sorted()`](https://devdocs.io/python~3.14/library/functions#sorted) over the pairs from [`.items()`](https://devdocs.io/python~3.14/library/stdtypes#dict.items) gives you that order, and `dict(...)` turns sorted pairs back into a dictionary.
 ### Hint 2
 `sorted()` takes `reverse=True` when the store wants Z→A, so tasks 4 and 5 differ by one keyword argument at the end.
 
 For the fulfillment cart, walk the **customer's cart** — its keys are the items actually ordered, and the aisle map may well list more — look each item up in the aisle map, and put the quantity in front of the aisle information in a *new* list, so nothing you were handed gets modified.
 
-For the last task, [`.items()`](https://docs.python.org/3/library/stdtypes.html#dict.items) hands you the key and the value together, the value being the `[count, aisle, chilled]` list, so `store_inventory[key][0]` is the number to reduce. Check for zero *after* subtracting, and swap the number — not the whole list — for the out-of-stock message.
+For the last task, [`.items()`](https://devdocs.io/python~3.14/library/stdtypes#dict.items) hands you the key and the value together, the value being the `[count, aisle, chilled]` list, so `store_inventory[key][0]` is the number to reduce. Check for zero *after* subtracting, and swap the number — not the whole list — for the out-of-stock message.
 ### Hint 3
 Different data, same shape. Seats sold out of a venue:
 

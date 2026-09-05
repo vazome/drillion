@@ -12,6 +12,9 @@ tags: [recursion]
 
 Combines topics 30 (nested dicts from JSON), 18 (dict lookups), 25 (copy).
 
+## Read first
+- [Mapping Types — dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — the operations a recursive walk leans on
+
 ## Why
 The staging environment works and production does not. Both were deployed from a config file, and someone on the platform team asks "what exactly is different between the two?" Reading two long files side by side by eye is slow and error-prone; a short list of added, removed and changed settings is what they want.
 

@@ -12,10 +12,10 @@ source: exercism/python practice/prime-factors (MIT, adapted)
 *prime-factors — divide out each factor as often as it goes in, then move to the next candidate.*
 
 ## Read first
-- [while statements](https://docs.python.org/3/reference/compound_stmts.html#the-while-statement) — the outer and inner loops here both run "until it stops working", not a fixed number of times
-- [Floor division and modulo](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex) — `%` asks "does it divide?", `//` does the dividing without turning the number into a float
-- [math.isqrt()](https://docs.python.org/3/library/math.html#math.isqrt) — the exact integer square root, with none of the rounding surprises of `value ** 0.5`
-- [list.append()](https://docs.python.org/3/library/stdtypes.html#mutable-sequence-types) — building the answer as you go
+- [while statements](https://devdocs.io/python~3.14/reference/compound_stmts#the-while-statement) — the outer and inner loops here both run "until it stops working", not a fixed number of times
+- [Floor division and modulo](https://devdocs.io/python~3.14/library/stdtypes#numeric-types-int-float-complex) — `%` asks "does it divide?", `//` does the dividing without turning the number into a float
+- [math.isqrt()](https://devdocs.io/python~3.14/library/math#math.isqrt) — the exact integer square root, with none of the rounding surprises of `value ** 0.5`
+- [list.append()](https://devdocs.io/python~3.14/library/stdtypes#mutable-sequence-types) — building the answer as you go
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

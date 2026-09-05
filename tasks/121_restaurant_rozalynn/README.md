@@ -12,12 +12,12 @@ source: exercism/python concept/restaurant-rozalynn (MIT, adapted)
 *`None` — writing the placeholder back, and the all-or-nothing update.*
 
 ## Read first
-- [None (the standard type hierarchy)](https://docs.python.org/3/library/stdtypes.html#the-null-object) — the placeholder you write back into a seat
-- [`is` and `is not`](https://docs.python.org/3/reference/expressions.html#is-not) — how to spot an empty seat without tripping over `0` or `""`
-- [dict.items()](https://docs.python.org/3/library/stdtypes.html#dict.items) — walking keys and values together to find the empty ones
-- [Assigning into a dict](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — `chart[seat] = name` adds or overwrites in place; the dict you were handed is the dict the caller sees
-- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — pairing each guest with a position so you can index into the list of empty seats
-- [len()](https://docs.python.org/3/library/functions.html#len) — the comparison that decides whether anybody sits down
+- [None (the standard type hierarchy)](https://devdocs.io/python~3.14/library/stdtypes#the-null-object) — the placeholder you write back into a seat
+- [`is` and `is not`](https://devdocs.io/python~3.14/reference/expressions#is-not) — how to spot an empty seat without tripping over `0` or `""`
+- [dict.items()](https://devdocs.io/python~3.14/library/stdtypes#dict.items) — walking keys and values together to find the empty ones
+- [Assigning into a dict](https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries) — `chart[seat] = name` adds or overwrites in place; the dict you were handed is the dict the caller sees
+- [enumerate()](https://devdocs.io/python~3.14/library/functions#enumerate) — pairing each guest with a position so you can index into the list of empty seats
+- [len()](https://devdocs.io/python~3.14/library/functions#len) — the comparison that decides whether anybody sits down
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

@@ -12,6 +12,9 @@ tags: [rate-limiting]
 
 Combines topics 14 (classes), 46 (clock handling), 47 (idempotency).
 
+## Read first
+- [time.monotonic](https://devdocs.io/python~3.14/library/time#time.monotonic) — refilling on elapsed time, not wall-clock time
+
 ## Why
 A public API gets more requests than it can handle, so it must let a steady stream through and turn the rest away. The standard way is a "token bucket": the bucket holds a few tokens, each accepted request spends one, and tokens trickle back in over time. Clients also retry requests that already went through, and a retry must not be charged twice, or a flaky network eats a customer's whole allowance.
 

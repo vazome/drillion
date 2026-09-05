@@ -12,11 +12,11 @@ source: exercism/python practice/luhn (MIT, adapted)
 *luhn — double every second digit from the right, and mind which digits those are.*
 
 ## Read first
-- [Classes tutorial](https://docs.python.org/3/tutorial/classes.html) — `__init__`, `self`, and where instance state lives
-- [str.replace()](https://docs.python.org/3/library/stdtypes.html#str.replace) — removing the spaces in one call
-- [str.isdigit()](https://docs.python.org/3/library/stdtypes.html#str.isdigit) — asks the "is this all digits?" question about a whole string, not just one character
-- [reversed()](https://docs.python.org/3/library/functions.html#reversed) — walk from the right so "every second digit from the right" needs no length arithmetic
-- [enumerate()](https://docs.python.org/3/library/functions.html#enumerate) — position and character together, which is how you know whether to double
+- [Classes tutorial](https://devdocs.io/python~3.14/tutorial/classes) — `__init__`, `self`, and where instance state lives
+- [str.replace()](https://devdocs.io/python~3.14/library/stdtypes#str.replace) — removing the spaces in one call
+- [str.isdigit()](https://devdocs.io/python~3.14/library/stdtypes#str.isdigit) — asks the "is this all digits?" question about a whole string, not just one character
+- [reversed()](https://devdocs.io/python~3.14/library/functions#reversed) — walk from the right so "every second digit from the right" needs no length arithmetic
+- [enumerate()](https://devdocs.io/python~3.14/library/functions#enumerate) — position and character together, which is how you know whether to double
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

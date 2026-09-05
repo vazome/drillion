@@ -10,6 +10,9 @@ tags: [stdlib-ops]
 
 *Staging files in scratch space and tidying up afterwards is half of build tooling.*
 
+## Read first
+- [shutil](https://devdocs.io/python~3.14/library/shutil) — `copy2`, `move`, `rmtree`, `disk_usage`
+
 ## Why
 A build job tidies a work folder: log files get copied to a scratch area for upload, temporary files get moved out of the way. The scratch area must be a fresh, uniquely named folder (two jobs on the same machine must not collide) and it must be removed afterward even if something fails halfway. The release engineer wants a report of what was copied, moved, staged and left behind.
 

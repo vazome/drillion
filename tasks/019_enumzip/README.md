@@ -10,6 +10,10 @@ tags: [enumerate-zip]
 
 *enumerate and zip replace every clumsy `for i in range(len(...))`.*
 
+## Read first
+- [enumerate](https://devdocs.io/python~3.14/library/functions#enumerate) — an index without a counter variable; `start=` exists
+- [zip](https://devdocs.io/python~3.14/library/functions#zip) — pairing two sequences, and `strict=True` for length mismatches
+
 ## Why
 You have two lists that belong together: server names and the IP addresses assigned to them, in matching order. A teammate asks for a numbered inventory they can paste into a ticket: "1. web 10.0.0.1", "2. db 10.0.0.2", and so on. Walking two lists side by side while numbering the lines is one of the most common small jobs in ops scripting.
 

@@ -12,10 +12,10 @@ source: exercism/python practice/run-length-encoding (MIT, adapted)
 *run-length-encoding — a pair of functions that must undo each other exactly.*
 
 ## Read first
-- [itertools.groupby()](https://docs.python.org/3/library/itertools.html#itertools.groupby) — hands you consecutive runs of equal items, which is the whole of `encode`
-- [re.sub() with a function](https://docs.python.org/3/library/re.html#re.sub) — when the replacement is computed from the match, pass a function instead of a string
-- [str.isdigit()](https://docs.python.org/3/library/stdtypes.html#str.isdigit) — the manual route for `decode`: accumulate digits until a non-digit arrives
-- [Sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — `"W" * 12` is the other half of `decode`
+- [itertools.groupby()](https://devdocs.io/python~3.14/library/itertools#itertools.groupby) — hands you consecutive runs of equal items, which is the whole of `encode`
+- [re.sub() with a function](https://devdocs.io/python~3.14/library/re#re.sub) — when the replacement is computed from the match, pass a function instead of a string
+- [str.isdigit()](https://devdocs.io/python~3.14/library/stdtypes#str.isdigit) — the manual route for `decode`: accumulate digits until a non-digit arrives
+- [Sequence operations](https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations) — `"W" * 12` is the other half of `decode`
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

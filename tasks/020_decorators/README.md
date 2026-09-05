@@ -13,7 +13,7 @@ tags: [decorators]
 
 ## Read first
 - [Primer on Python Decorators](https://realpython.com/primer-on-python-decorators/) — `@app.get(...)` and `@pytest.fixture` are decorators; this is how they work
-- [decorator — Python glossary](https://docs.python.org/3/glossary.html#term-decorator) — the one-sentence definition to quote back in an interview
+- [decorator — Python glossary](https://devdocs.io/python~3.14/glossary#term-decorator) — the one-sentence definition to quote back in an interview
 
 > [!NOTE]
 > **Take-home:** `@app.get("/search")`, `@pytest.fixture`

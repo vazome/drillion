@@ -10,6 +10,10 @@ tags: [itertools]
 
 *itertools glues paged streams together; groupby bites everyone exactly once.*
 
+## Read first
+- [itertools](https://devdocs.io/python~3.14/library/itertools) — the whole module — `groupby`, `chain`, `islice` are the ones that pay off
+- [itertools recipes](https://devdocs.io/python~3.14/library/itertools#itertools-recipes) — composites worth stealing
+
 ## Why
 An on-call engineer is paged at 2am. The log service hands back log lines in pages (batches), the way an API says "here are the next 50 results". The incident lead asks: "in the first N lines after the alert fired, how many came from each service?" to see which service got noisy first. You stitch the pages into one stream, stop after N lines, and count per service.
 

@@ -12,10 +12,10 @@ source: exercism/python practice/grains (MIT, adapted)
 *grains — one exponent instead of a loop, and a `ValueError` when the square does not exist.*
 
 ## Read first
-- [Integers](https://docs.python.org/3/library/functions.html#int) — Python `int` is arbitrary precision, so 64 doublings do not overflow
-- [Arithmetic operations](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex) — `**`, and why `2 ** 64` stays exact while `2.0 ** 64` does not
-- [Operator precedence](https://docs.python.org/3/reference/expressions.html#operator-precedence) — `**` binds tighter than `-`, so `2 ** 64 - 1` is the number you meant
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("message")`, and why the message is the useful part
+- [Integers](https://devdocs.io/python~3.14/library/functions#int) — Python `int` is arbitrary precision, so 64 doublings do not overflow
+- [Arithmetic operations](https://devdocs.io/python~3.14/library/stdtypes#numeric-types-int-float-complex) — `**`, and why `2 ** 64` stays exact while `2.0 ** 64` does not
+- [Operator precedence](https://devdocs.io/python~3.14/reference/expressions#operator-precedence) — `**` binds tighter than `-`, so `2 ** 64 - 1` is the number you meant
+- [Raising exceptions](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions) — `raise ValueError("message")`, and why the message is the useful part
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -41,9 +41,9 @@ Write code that calculates:
 
 ### Exception messages
 
-Sometimes it is necessary to [raise an exception](https://docs.python.org/3/tutorial/errors.html#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://docs.python.org/3/library/exceptions.html#base-classes), but should still include a meaningful message.
+Sometimes it is necessary to [raise an exception](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://devdocs.io/python~3.14/library/exceptions#base-classes), but should still include a meaningful message.
 
-This particular exercise requires that you use the [raise statement](https://docs.python.org/3/reference/simple_stmts.html#the-raise-statement) to "throw" a `ValueError` when the square input is out of range. The tests will only pass if you both `raise` the `exception` and include a message with it.
+This particular exercise requires that you use the [raise statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement) to "throw" a `ValueError` when the square input is out of range. The tests will only pass if you both `raise` the `exception` and include a message with it.
 
 To raise a `ValueError` with a message, write the message as an argument to the `exception` type:
 

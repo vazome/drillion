@@ -10,6 +10,9 @@ tags: [deque-maxlen]
 
 *tail -f in Python: keep the newest few lines, forget the rest automatically.*
 
+## Read first
+- [collections.deque](https://devdocs.io/python~3.14/library/collections#collections.deque) — O(1) at both ends, and `maxlen` for a rolling window
+
 ## Why
 An incident is in progress and the on-call engineer asks "what were the last five errors?" The log is a live stream, far too large to hold in memory, and you only get to read it once, front to back. You need to keep just the newest few matching lines as you go and forget the rest automatically. This is `tail -f` done in Python.
 

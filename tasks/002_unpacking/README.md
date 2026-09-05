@@ -10,6 +10,10 @@ tags: [unpacking]
 
 *Star-unpacking and tuple assignment — Python's way of naming the parts.*
 
+## Read first
+- [Tuples and Sequences](https://devdocs.io/python~3.14/tutorial/datastructures#tuples-and-sequences) — sequence unpacking, including `for name, value in rows`
+- [Unpacking Argument Lists](https://devdocs.io/python~3.14/tutorial/controlflow#unpacking-argument-lists) — the `*rest` form
+
 ## Why
 A deploy pipeline hands you a list of build numbers and a list of tag settings. The release manager needs the pieces named: which build is the first, which is the latest, everything in between, and the tags written as "key=value" lines for a config file. Pulling a list apart into named parts without fiddling with index numbers is a daily Python habit, and interviewers watch for it.
 

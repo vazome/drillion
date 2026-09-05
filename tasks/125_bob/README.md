@@ -12,9 +12,9 @@ source: exercism/python practice/bob (MIT, adapted)
 *bob — five canned replies, and the order you test the rules in.*
 
 ## Read first
-- [if statements](https://docs.python.org/3/tutorial/controlflow.html#if-statements) — if / elif / else: the first branch that matches wins, the rest never run
-- [str.isupper()](https://docs.python.org/3/library/stdtypes.html#str.isupper) — `isupper()`, and the detail that decides this task: it is `False` for text containing no letters at all
-- [str.strip()](https://docs.python.org/3/library/stdtypes.html#str.strip) — `strip()` and `endswith()`
+- [if statements](https://devdocs.io/python~3.14/tutorial/controlflow#if-statements) — if / elif / else: the first branch that matches wins, the rest never run
+- [str.isupper()](https://devdocs.io/python~3.14/library/stdtypes#str.isupper) — `isupper()`, and the detail that decides this task: it is `False` for text containing no letters at all
+- [str.strip()](https://devdocs.io/python~3.14/library/stdtypes#str.strip) — `strip()` and `endswith()`
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

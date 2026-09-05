@@ -10,6 +10,10 @@ tags: [stdlib-ops]
 
 *Every deploy script shells out; subprocess.run is how Python does it safely.*
 
+## Read first
+- [subprocess](https://devdocs.io/python~3.14/library/subprocess) — `run`, `capture_output=True`, `text=True`, and `.returncode`
+- [subprocess security](https://devdocs.io/python~3.14/library/subprocess#security-considerations) — why `shell=True` is the wrong default
+
 ## Why
 A deploy script has to run other command-line tools (kubectl, terraform, a health check) and decide what to do based on whether each one succeeded and what it printed. The team lead wants one helper that runs a command and reports back in one tidy package: did it succeed, the exit code, its normal output and its error output. It must never glue the command into one string, because that is how attackers sneak extra commands in.
 

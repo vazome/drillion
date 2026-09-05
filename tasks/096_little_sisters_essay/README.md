@@ -12,12 +12,12 @@ source: exercism/python concept/little-sisters-essay (MIT, adapted)
 *`title()`, `endswith()`, `strip()`, `replace()` — four methods, four one-liners.*
 
 ## Read first
-- [string methods](https://docs.python.org/3/library/stdtypes.html#string-methods) — the whole list; every task here is one entry from it
-- [`str.title()`](https://docs.python.org/3/library/stdtypes.html#str.title) — capitalises the first letter of each word, and lower-cases the rest
-- [`str.endswith()`](https://docs.python.org/3/library/stdtypes.html#str.endswith) — returns a `bool`, and accepts a tuple of suffixes when you need several
-- [`str.strip()`](https://docs.python.org/3/library/stdtypes.html#str.strip) — with no argument it removes whitespace from both ends; with one it removes *any combination* of the characters you pass
-- [`str.replace()`](https://docs.python.org/3/library/stdtypes.html#str.replace) — every occurrence by default, or the first N if you pass a count
-- [common sequence operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations) — the indexing and slicing that `str` shares with `list` and `tuple`
+- [string methods](https://devdocs.io/python~3.14/library/stdtypes#string-methods) — the whole list; every task here is one entry from it
+- [`str.title()`](https://devdocs.io/python~3.14/library/stdtypes#str.title) — capitalises the first letter of each word, and lower-cases the rest
+- [`str.endswith()`](https://devdocs.io/python~3.14/library/stdtypes#str.endswith) — returns a `bool`, and accepts a tuple of suffixes when you need several
+- [`str.strip()`](https://devdocs.io/python~3.14/library/stdtypes#str.strip) — with no argument it removes whitespace from both ends; with one it removes *any combination* of the characters you pass
+- [`str.replace()`](https://devdocs.io/python~3.14/library/stdtypes#str.replace) — every occurrence by default, or the first N if you pass a count
+- [common sequence operations](https://devdocs.io/python~3.14/library/stdtypes#common-sequence-operations) — the indexing and slicing that `str` shares with `list` and `tuple`
 - [strings and character data in Python (Real Python)](https://realpython.com/python-strings/) — the same methods with more worked examples
 - [more string operations and functions (Programiz)](https://www.programiz.com/python-programming/string) — a short reference to skim
 
@@ -140,15 +140,15 @@ Just the place for a Snark! I have said it thrice:
 
 [Lewis Carroll]: https://www.poetryfoundation.org/poets/lewis-carroll
 [The Hunting of the Snark]: https://www.poetryfoundation.org/poems/43909/the-hunting-of-the-snark
-[codecs]: https://docs.python.org/3/library/codecs.html
-[common sequence operations]: https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str
-[locale]: https://docs.python.org/3/library/locale.html#module-locale
-[str methods]: https://docs.python.org/3/library/stdtypes.html#string-methods
-[str-endswith]: https://docs.python.org/3/library/stdtypes.html#str.endswith
-[str-replace]: https://docs.python.org/3/library/stdtypes.html#str.replace
-[str-strip]: https://docs.python.org/3/library/stdtypes.html#str.strip
-[str-title]: https://docs.python.org/3/library/stdtypes.html#str.title
-[text sequence]: https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str
+[codecs]: https://devdocs.io/python~3.14/library/codecs
+[common sequence operations]: https://devdocs.io/python~3.14/library/stdtypes#text-sequence-type-str
+[locale]: https://devdocs.io/python~3.14/library/locale#module-locale
+[str methods]: https://devdocs.io/python~3.14/library/stdtypes#string-methods
+[str-endswith]: https://devdocs.io/python~3.14/library/stdtypes#str.endswith
+[str-replace]: https://devdocs.io/python~3.14/library/stdtypes#str.replace
+[str-strip]: https://devdocs.io/python~3.14/library/stdtypes#str.strip
+[str-title]: https://devdocs.io/python~3.14/library/stdtypes#str.title
+[text sequence]: https://devdocs.io/python~3.14/library/stdtypes#text-sequence-type-str
 [unicode code points]: https://stackoverflow.com/questions/27331819/whats-the-difference-between-a-character-a-code-point-a-glyph-and-a-grapheme
 
 ## Instructions
@@ -261,16 +261,16 @@ essay["replace_word_choice"]("I bake good cakes.", "good", "amazing")
 
 - You can use [string methods][replace-method-docs] to replace words.
 
-[endswith-method-docs]: https://docs.python.org/3/library/stdtypes.html#str.endswith
-[replace-method-docs]: https://docs.python.org/3/library/stdtypes.html#str.replace
-[string-method-docs]: https://docs.python.org/3/library/stdtypes.html#string-methods
-[strip-method-docs]: https://docs.python.org/3/library/stdtypes.html#str.strip
-[title-method-docs]: https://docs.python.org/3/library/stdtypes.html#str.title
-[tutorial-strings]: https://docs.python.org/3/tutorial/introduction.html#text
+[endswith-method-docs]: https://devdocs.io/python~3.14/library/stdtypes#str.endswith
+[replace-method-docs]: https://devdocs.io/python~3.14/library/stdtypes#str.replace
+[string-method-docs]: https://devdocs.io/python~3.14/library/stdtypes#string-methods
+[strip-method-docs]: https://devdocs.io/python~3.14/library/stdtypes#str.strip
+[title-method-docs]: https://devdocs.io/python~3.14/library/stdtypes#str.title
+[tutorial-strings]: https://devdocs.io/python~3.14/tutorial/introduction#text
 
 ## Hints
 ### Hint 1
-Each of the four is a single call on the string you were handed, and the whole task is finding the right method name. You can use a [string method](https://docs.python.org/3/library/stdtypes.html#string-methods) to capitalise a title properly, another to check the ending of a string, another to remove whitespace and another to replace words. Open that page and read the names.
+Each of the four is a single call on the string you were handed, and the whole task is finding the right method name. You can use a [string method](https://devdocs.io/python~3.14/library/stdtypes#string-methods) to capitalise a title properly, another to check the ending of a string, another to remove whitespace and another to replace words. Open that page and read the names.
 ### Hint 2
 The four you want are `title()`, `endswith()`, `strip()` and `replace()`.
 

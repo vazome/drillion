@@ -12,11 +12,11 @@ source: exercism/python practice/phone-number (MIT, adapted)
 *phone-number — normalise the input, and fail with a message that names the problem.*
 
 ## Read first
-- [Raising exceptions](https://docs.python.org/3/tutorial/errors.html#raising-exceptions) — `raise ValueError("message")`, and why the message is the useful part
-- [Built-in exceptions](https://docs.python.org/3/library/exceptions.html#ValueError) — when `ValueError` is the right class to pick
-- [Classes tutorial](https://docs.python.org/3/tutorial/classes.html) — `__init__` runs during construction, so raising there means the object never exists
-- [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#f-strings) — assembling `pretty()` from three slices
-- [str.isdigit()](https://docs.python.org/3/library/stdtypes.html#str.isdigit) and [str.isalpha()](https://docs.python.org/3/library/stdtypes.html#str.isalpha) — the two questions that separate "letters" from "punctuation"
+- [Raising exceptions](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions) — `raise ValueError("message")`, and why the message is the useful part
+- [Built-in exceptions](https://devdocs.io/python~3.14/library/exceptions#ValueError) — when `ValueError` is the right class to pick
+- [Classes tutorial](https://devdocs.io/python~3.14/tutorial/classes) — `__init__` runs during construction, so raising there means the object never exists
+- [f-strings](https://devdocs.io/python~3.14/reference/lexical_analysis#f-strings) — assembling `pretty()` from three slices
+- [str.isdigit()](https://devdocs.io/python~3.14/library/stdtypes#str.isdigit) and [str.isalpha()](https://devdocs.io/python~3.14/library/stdtypes#str.isalpha) — the two questions that separate "letters" from "punctuation"
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -71,9 +71,9 @@ should all produce the output
 
 ### Exception messages
 
-Sometimes it is necessary to [raise an exception](https://docs.python.org/3/tutorial/errors.html#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://docs.python.org/3/library/exceptions.html#base-classes), but should still include a meaningful message.
+Sometimes it is necessary to [raise an exception](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://devdocs.io/python~3.14/library/exceptions#base-classes), but should still include a meaningful message.
 
-This particular exercise requires that you use the [raise statement](https://docs.python.org/3/reference/simple_stmts.html#the-raise-statement) to "throw" multiple `ValueErrors` if the `PhoneNumber()` class constructor is passed a number that is not a _valid phone number_.  This includes errors for when area code or exchange codes are invalid, when the number has too many (or too few) digits, and for when punctuation or letters are given as input. The tests will only pass if you both `raise` the `exception` and include a message with it.
+This particular exercise requires that you use the [raise statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement) to "throw" multiple `ValueErrors` if the `PhoneNumber()` class constructor is passed a number that is not a _valid phone number_.  This includes errors for when area code or exchange codes are invalid, when the number has too many (or too few) digits, and for when punctuation or letters are given as input. The tests will only pass if you both `raise` the `exception` and include a message with it.
 
 To raise a `ValueError` with a message, write the message as an argument to the `exception` type:
 

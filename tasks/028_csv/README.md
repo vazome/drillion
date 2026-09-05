@@ -10,6 +10,9 @@ tags: [files-text]
 
 *split(',') corrupts real CSV the day a field grows a comma.*
 
+## Read first
+- [csv](https://devdocs.io/python~3.14/library/csv) — `DictReader`/`DictWriter`, and why `newline=''` is not optional
+
 ## Why
 Finance exports a spreadsheet of services and their owners as CSV text. Some owner names are written "Last, First" and wrapped in quotes because they contain a comma. A colleague's script that cuts each line at every comma silently garbles those rows and puts the wrong owner on the wrong service. You are asked to parse the export correctly so the cost report is right.
 

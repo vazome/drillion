@@ -13,7 +13,7 @@ tags: [context-managers]
 
 ## Read first
 - [Context Managers and Python's with Statement](https://realpython.com/python-with-statement/) — `with` = setup, body, guaranteed cleanup (read the 'async with' section too)
-- [contextlib](https://docs.python.org/3/library/contextlib.html) — `@contextmanager`, the short way
+- [contextlib](https://devdocs.io/python~3.14/library/contextlib) — `@contextmanager`, the short way
 
 > [!NOTE]
 > **Take-home:** the sync half of `async with pool.acquire()`

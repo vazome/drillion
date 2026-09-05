@@ -12,13 +12,13 @@ source: exercism/python concept/inventory-management (MIT, adapted)
 *Counting into a dict — `setdefault`, `in`, and never below zero.*
 
 ## Read first
-- [Mapping types — dict](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict) — every dict method in one table
-- [Tutorial: dictionaries](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) — the gentle introduction, with a worked counting example
-- [hashable](https://docs.python.org/3/glossary.html#term-hashable) — why a string or a tuple may be a key and a list may not
-- [dict.setdefault()](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) — insert the default only if the key is missing, return the value either way
-- [dict.items()](https://docs.python.org/3/library/stdtypes.html#dict.items) — the `(key, value)` view you loop over
+- [Mapping types — dict](https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict) — every dict method in one table
+- [Tutorial: dictionaries](https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries) — the gentle introduction, with a worked counting example
+- [hashable](https://devdocs.io/python~3.14/glossary#term-hashable) — why a string or a tuple may be a key and a list may not
+- [dict.setdefault()](https://devdocs.io/python~3.14/library/stdtypes#dict.setdefault) — insert the default only if the key is missing, return the value either way
+- [dict.items()](https://devdocs.io/python~3.14/library/stdtypes#dict.items) — the `(key, value)` view you loop over
 - [w3schools: Python dictionaries](https://www.w3schools.com/python/python_dictionaries.asp) — quick reference with runnable snippets
-- [collections.Counter](https://docs.python.org/3/library/collections.html#collections.Counter) — what production code reaches for once counting is the whole job
+- [collections.Counter](https://devdocs.io/python~3.14/library/collections#collections.Counter) — what production code reaches for once counting is the whole job
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
@@ -171,8 +171,8 @@ Likewise, the `.keys()` method will return `keys` and the `.values()` method wil
 
 [associative-array]: https://en.wikipedia.org/wiki/Associative_array#:~:text=In%20computer%20science%2C%20an%20associative,a%20function%20with%20finite%20domain.
 [hashtable-wikipedia]: https://en.wikipedia.org/wiki/Hash_table
-[mapping-types-dict]: https://docs.python.org/3/library/stdtypes.html#mapping-types-dict
-[term-hashable]: https://docs.python.org/3/glossary.html#term-hashable
+[mapping-types-dict]: https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict
+[term-hashable]: https://devdocs.io/python~3.14/glossary#term-hashable
 
 ## Instructions
 In this exercise, you will be managing an inventory system.
@@ -323,20 +323,20 @@ stock["decrement_items"]({"coal": 3, "diamond": 1}, ["diamond", "coal"])
 - This function should [return][return-keyword] a [list][list] of [tuples][tuples].
 
 [decrement]: https://www.w3schools.com/python/gloss_python_assignment_operators.asp
-[dict docs]: https://docs.python.org/3/library/stdtypes.html#mapping-types-dict
-[dict items]: https://docs.python.org/3/library/stdtypes.html#dict.items
+[dict docs]: https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict
+[dict items]: https://devdocs.io/python~3.14/library/stdtypes#dict.items
 [dict setdefault]: https://www.w3schools.com/python/ref_dictionary_setdefault.asp
 [dict-pop]: https://www.w3schools.com/python/ref_dictionary_pop.asp
-[dict-tutorial]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
-[for-loop]: https://docs.python.org/3/tutorial/controlflow.html#for-statements
+[dict-tutorial]: https://devdocs.io/python~3.14/tutorial/datastructures#dictionaries
+[for-loop]: https://devdocs.io/python~3.14/tutorial/controlflow#for-statements
 [increment]: https://www.w3schools.com/python/gloss_python_assignment_operators.asp
-[list]: https://docs.python.org/3/tutorial/introduction.html#lists
+[list]: https://devdocs.io/python~3.14/tutorial/introduction#lists
 [return-keyword]: https://www.w3schools.com/python/ref_keyword_return.asp
-[tuples]: https://docs.python.org/3/tutorial/datastructures.html#tuples-and-sequences
+[tuples]: https://devdocs.io/python~3.14/tutorial/datastructures#tuples-and-sequences
 
 ## Hints
 ### Hint 1
-Each of these three functions is a `for` loop over the item list with one dictionary line inside it. The awkward moment is the first time an item shows up: `inventory[item] += 1` raises `KeyError` when the key is not there yet. [`dict.setdefault(key, 0)`](https://docs.python.org/3/library/stdtypes.html#dict.setdefault) makes that moment go away — it inserts the `0` only when the key is missing, and leaves an existing count alone.
+Each of these three functions is a `for` loop over the item list with one dictionary line inside it. The awkward moment is the first time an item shows up: `inventory[item] += 1` raises `KeyError` when the key is not there yet. [`dict.setdefault(key, 0)`](https://devdocs.io/python~3.14/library/stdtypes#dict.setdefault) makes that moment go away — it inserts the `0` only when the key is missing, and leaves an existing count alone.
 ### Hint 2
 Write `add_items` first, then let `create_inventory` be a single line that calls it with a brand-new empty dict: an inventory built from scratch is just an empty inventory with items added to it. That is one of the two functions gone.
 

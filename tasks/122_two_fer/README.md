@@ -12,10 +12,10 @@ source: exercism/python practice/two-fer (MIT, adapted)
 *two-fer — one line of dialogue, and the argument the caller often forgets.*
 
 ## Read first
-- [Default argument values](https://docs.python.org/3/tutorial/controlflow.html#default-argument-values) — a parameter with a default value: what happens when the caller passes nothing
+- [Default argument values](https://devdocs.io/python~3.14/tutorial/controlflow#default-argument-values) — a parameter with a default value: what happens when the caller passes nothing
 - [Python Morsels: positional vs keyword arguments](https://www.pythonmorsels.com/positional-vs-keyword-arguments/) — the vocabulary an interviewer uses: positional, keyword, default
 - [Real Python: defining your own Python function](https://realpython.com/defining-your-own-python-function/) — the whole `def` statement
-- [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#f-strings) — dropping a value into the middle of a sentence
+- [f-strings](https://devdocs.io/python~3.14/reference/lexical_analysis#f-strings) — dropping a value into the middle of a sentence
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 

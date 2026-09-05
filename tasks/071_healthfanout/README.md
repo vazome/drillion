@@ -12,6 +12,9 @@ tags: [concurrency]
 
 Combines topics 43 (except), 46 (timeouts), 54 (ThreadPoolExecutor).
 
+## Read first
+- [ThreadPoolExecutor](https://devdocs.io/python~3.14/library/concurrent.futures#threadpoolexecutor) — concurrent checks, and one slow host not stalling the rest
+
 ## Why
 A company runs dozens of small services, each with a health page. Every few minutes a monitor has to ask all of them "are you alive?" and produce one verdict per service. Asked one at a time, a single frozen host makes the whole round take minutes; asked all at once with a time limit on each, it takes seconds. One dead host must not stop the report for the others.
 

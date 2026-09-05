@@ -10,6 +10,9 @@ tags: [llm, langchain]
 
 *LCEL: `|` glues small steps into one thing you can call.*
 
+## Read first
+- [LangChain: Runnable interface](https://python.langchain.com/docs/concepts/runnables/) — `invoke`, `batch`, `stream` — the one interface everything implements
+
 ## Why
 LangChain is a library for wiring steps together around an AI model, and its core idea is that small steps get joined into one pipeline with a single operator. Teams use it to build things like "read a metric line, decide whether it is slow, write the report line". Each step is small and can be swapped on its own, and the finished pipeline can handle one item or a whole list with no extra code. Interviewers ask for this to see that you understand the joining idea, not just one big function.
 

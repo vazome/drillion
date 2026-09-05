@@ -12,10 +12,10 @@ source: exercism/python practice/acronym (MIT, adapted)
 *acronym — first letter of every word, once you agree what a word is.*
 
 ## Read first
-- [re.findall()](https://docs.python.org/3/library/re.html#re.findall) — pull out every run that matches a pattern instead of splitting on separators
-- [re.sub()](https://docs.python.org/3/library/re.html#re.sub) — the other route: replace the characters you do not want, then `split()`
-- [str.split()](https://docs.python.org/3/library/stdtypes.html#str.split) — with no argument it splits on runs of whitespace and drops empty pieces, which is exactly the collapsing you need
-- [str.isalpha()](https://docs.python.org/3/library/stdtypes.html#str.isalpha) — "is this character a letter?", one character at a time
+- [re.findall()](https://devdocs.io/python~3.14/library/re#re.findall) — pull out every run that matches a pattern instead of splitting on separators
+- [re.sub()](https://devdocs.io/python~3.14/library/re#re.sub) — the other route: replace the characters you do not want, then `split()`
+- [str.split()](https://devdocs.io/python~3.14/library/stdtypes#str.split) — with no argument it splits on runs of whitespace and drops empty pieces, which is exactly the collapsing you need
+- [str.isalpha()](https://devdocs.io/python~3.14/library/stdtypes#str.isalpha) — "is this character a letter?", one character at a time
 
 *Adapted from [exercism/python](https://github.com/exercism/python) — MIT.*
 
