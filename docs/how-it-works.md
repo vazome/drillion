@@ -13,13 +13,16 @@
    when the tab is hidden. The left pane renders the task's `README.md` — Why / You get /
    You return / Rules / Read first — and the right pane is the editor with the stub.
 3. **Run** saves your region into the file and runs that file's pytest test with the attempt's
-   seed. Failures come back with the assertion lines mapped to editor line numbers.
+   seed. Failures come back with the assertion lines mapped to editor line numbers. A Run
+   grades nothing — it is free and repeatable, however green it comes back. **Submit** is the
+   same execution plus the claim that you are done: it costs an attempt, and on green it is
+   what grades the pass and moves the card.
 4. **Hints** are three levels deep. The first is there from the start; the second opens at two
    minutes of active time and the third at three. Half an hour of reading with nothing run and
    no hint taken, and the page offers one unprompted — the gate opens silently, which is no use
    to someone who is not looking at the panel, and you cannot brute-force something nobody has
-   told you about. The **solution** opens after 3 attempts and 10 active minutes, and taking it
-   means the pass cannot promote the card.
+   told you about. The **solution** opens after 3 submitted attempts and 10 active minutes,
+   and taking it means the pass cannot promote the card.
 5. **Pass** → computed grade → the card moves on the ladder → your code is archived into
    `progress.json` → the file is reset to the stub, so the next review starts blank.
 6. The spec pane carries a **note**, one free-text box per task, saved as you type. It belongs

@@ -57,7 +57,7 @@ test.afterAll(async () => {
 
 test("the page starts the clock by itself, with nothing typed", async ({ page }) => {
   await page.goto(`/#/task/${SLUG}`);
-  await expect(page.getByRole("button", { name: "Run tests" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
   // reading the task is work: the attempt opens on a timer, not on the first keystroke
   const opened = () => page.evaluate(async (s) => (await (await fetch(`/api/task/${s}`)).json()).attempt !== null, SLUG);
   await expect.poll(opened, { timeout: 10_000 }).toBe(true);
@@ -68,7 +68,7 @@ test("a draft that never reached the server is offered back, unless the file mov
     route.request().method() === "PUT" ? route.abort() : route.continue());
 
   await page.goto(`/#/task/${SLUG}`);
-  await expect(page.getByRole("button", { name: "Run tests" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
 
   const blocked = putRequest(page);
   await typeCode(page, body("DRAFT"));
@@ -92,7 +92,7 @@ for (const [action, kept] of [
 ] as const) {
   test(`a save against a moved file offers both versions — ${action}`, async ({ page }) => {
     await page.goto(`/#/task/${SLUG}`);
-    await expect(page.getByRole("button", { name: "Run tests" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
 
     // one clean save first: it opens the attempt and gives the page an etag to go stale
     const first = putOk(page);

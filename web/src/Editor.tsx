@@ -128,16 +128,16 @@ function Failed({ height }: { height: string }) {
   );
 }
 
-export function Editor({ value, onChange, onRun, readOnly, dark, height }: {
-  value: string; onChange: (v: string) => void; onRun: () => void;
+export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, height }: {
+  value: string; onChange: (v: string) => void; onRun: () => void; onSubmit: () => void;
   readOnly?: boolean; dark: boolean; height: string;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const app = useRef<EditorApp>(null);
   const [failed, setFailed] = useState(false);
   // the editor reads these when the user acts, so it must never close over a stale one
-  const latest = useRef({ onChange, onRun });
-  useEffect(() => { latest.current = { onChange, onRun }; }, [onChange, onRun]);
+  const latest = useRef({ onChange, onRun, onSubmit });
+  useEffect(() => { latest.current = { onChange, onRun, onSubmit }; }, [onChange, onRun, onSubmit]);
 
   useEffect(() => {
     let live = true;
@@ -156,9 +156,15 @@ export function Editor({ value, onChange, onRun, readOnly, dark, height }: {
         return started.start(host.current);
       })
       .then(() => {
-        started?.getEditor()?.addCommand(
+        const editor = started?.getEditor();
+        editor?.addCommand(
           monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
           () => latest.current.onRun(),
+        );
+        // Submit is the committing chord, so it wears the modifier Run does not
+        editor?.addCommand(
+          monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter,
+          () => latest.current.onSubmit(),
         );
       })
       .catch((err: unknown) => {

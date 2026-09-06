@@ -790,3 +790,75 @@ def test_a_progress_file_from_a_newer_drillion_answers_409_not_500():
         assert settings.state_path.read_bytes() == before
 
     _api(flow)
+
+
+async def _run_is_free_and_submit_is_the_one_that_counts(api, _path):
+    """Run executes the tests and moves nothing; only Submit costs an attempt and grades."""
+    task = (await api.post(f"/api/task/{SLUG}/open")).json()
+    body = {"code": task["code"], "etag": task["etag"], "submit": False}
+
+    run = (await api.post(f"/api/task/{SLUG}/run", json=body)).json()
+    assert run["passed"] is False and run["graded"] is False
+    assert run["attempts"] == 0  # a Run is free, however it came back
+    assert state.load()["open"][SLUG]["runs"] == 1
+
+    body["code"] = task["code"].replace(
+        "    raise NotImplementedError", f"    {PASSING}"
+    )
+    body["etag"] = run["etag"]
+    green = (await api.post(f"/api/task/{SLUG}/run", json=body)).json()
+    # green, and still nothing moved: no grade, no ladder step, the attempt still open
+    assert green["passed"] is True and green["graded"] is False
+    assert green["attempts"] == 0 and "grade" not in green
+    assert SLUG in state.load()["open"] and state.load()["cards"] == {}
+
+    body["submit"], body["etag"] = True, green["etag"]
+    done = (await api.post(f"/api/task/{SLUG}/run", json=body)).json()
+    assert done["passed"] is True and done["graded"] is True
+    assert done["attempts"] == 1 and done["grade"] == "quick"  # the runs never counted
+    assert SLUG not in state.load()["open"]
+
+
+def test_run_is_free_and_submit_is_the_one_that_counts():
+    _api(_run_is_free_and_submit_is_the_one_that_counts)
+
+
+async def _deps_on_the_task_payload(api, _path):
+    """The task payload carries both directions of the prereq edge, resolved against the
+    ladder — and `passed` is box 1, not a `done` status."""
+    gated = (await api.get(f"/api/task/{GATED}")).json()
+    assert gated["requires"] == [
+        {
+            "slug": PREREQ,
+            "topic": 48,
+            "title": tasks()[PREREQ]["title"],
+            "tags": tasks()[PREREQ]["tags"],
+            "state": "blocked",
+            "box": 0,
+        }
+    ]
+    assert gated["unlocks"] == []
+    prereq = (await api.get(f"/api/task/{PREREQ}")).json()
+    assert prereq["requires"] == []
+    # `also` is what still gates the unlocked task besides this one — nothing, here
+    assert prereq["unlocks"] == [
+        {
+            "slug": GATED,
+            "topic": 49,
+            "title": tasks()[GATED]["title"],
+            "tags": tasks()[GATED]["tags"],
+            "also": [],
+        }
+    ]
+
+    st = state.load()
+    st["cards"][PREREQ] = {"box": 1, "due": "2999-01-01", "seen": 1}
+    state.save(st)
+    gated = (await api.get(f"/api/task/{GATED}")).json()
+    assert (
+        gated["requires"][0]["state"] == "passed" and gated["requires"][0]["box"] == 1
+    )
+
+
+def test_deps_on_the_task_payload():
+    _api(_deps_on_the_task_payload, extra=(PREREQ, GATED))
