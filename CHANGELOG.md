@@ -4,6 +4,32 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.6.0 — 2026-09-06
+
+- Running a task and submitting it are now separate actions. Run executes the tests without
+  spending an attempt or moving the card; Submit is the deliberate grading action. Task headers
+  and catalogue rows also expose the full prerequisite lineage, so a learner can see what a task
+  builds on and open every dependency directly. The built client now revalidates its entry page,
+  so returning after an upgrade no longer leaves an old interface in the browser cache.
+- The catalogue is now a curriculum rather than a collection with incidental numbers. The 182
+  tasks put the fundamentals first, every declared prerequisite points backward, and `drillion
+  doctor` enforces that invariant. Twelve new coding tasks teach `while`, `match`, inheritance,
+  `heapq.merge`, variadic and keyword-only arguments, lazy `map`/`filter`, class and static
+  methods, `bisect`, exact prefix and suffix removal, assignment expressions, `yield from`, and
+  `frozenset`. The interview take-home quiz and its private-project framing are gone, as is the
+  imported tutorial prose that duplicated each task's own specification and bypassed gated hints.
+  This reordering changes task slugs, so progress recorded against an old slug can become orphaned.
+- A saved progress file is now stamped with the schema of the build that last wrote it, rather
+  than keeping the stamp from the build that first created it. Compatibility tests use frozen
+  copies of every shipped schema, so a future format change cannot silently leave a new file
+  claiming to be old.
+- Installation and safety documentation now starts from the reader's operating system, explains
+  that uv can obtain Python, and states exactly what running learner code may access on Linux,
+  macOS, and Windows. Artifact verification covers GitHub Releases, PyPI, and ghcr.
+- CI builds and scans the image once, skips the expensive matrix for prose-only changes, and
+  overlaps image scanning with smoke tests without dropping checks. The Python, web, image, and
+  workflow dependencies are current for this release.
+
 ## 0.5.1 — 2026-08-28
 
 - A release can now be checked without trusting the index it came from. The wheel and the sdist
