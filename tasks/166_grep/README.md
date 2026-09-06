@@ -3,7 +3,7 @@ title: files-text — search many files at once, with five flags that change the
 difficulty: hard
 tier: core
 minutes: 25
-prereqs: [38, 96, 115]
+prereqs: [11, 35, 74]
 tags: [files-text]
 source: exercism/python practice/grep (MIT, adapted)
 ---

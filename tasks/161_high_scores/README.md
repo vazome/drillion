@@ -3,7 +3,7 @@ title: classes — a score list that answers three questions
 difficulty: medium
 tier: core
 minutes: 20
-prereqs: [115]
+prereqs: [35]
 tags: [classes]
 source: exercism/python practice/high-scores (MIT, adapted)
 ---

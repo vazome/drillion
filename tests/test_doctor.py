@@ -128,6 +128,20 @@ def test_the_rules_that_need_the_whole_set():
     assert len(cycle) == 1 and "042" in cycle[0] and "043" in cycle[0]
 
 
+def test_a_prereq_that_comes_later_is_reported():
+    """The number is the curriculum position, so a task cannot be gated by a later one."""
+    reasons = _reasons(
+        **{
+            "042_thing": {
+                "README.md": README.replace("prereqs: []", "prereqs: [99]"),
+                "task.py": TASK,
+            },
+            "099_later": {"README.md": README, "task.py": TASK},
+        }
+    )
+    assert reasons["042_thing"] == ["prereqs names task 99, which comes later"]
+
+
 def test_a_duplicate_task_number_is_reported():
     """Two folders numbered 042: one silently shadows the other in every ordering."""
     reasons = _reasons(

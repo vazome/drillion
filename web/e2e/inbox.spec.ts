@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 const search = /^Search tasks by title/;
 
 test("`/` from the task page lands in the catalogue's search box", async ({ page }) => {
-  await page.goto("/#/task/017_fstrings");
+  await page.goto("/#/task/009_fstrings");
   await expect(page.getByRole("button", { name: "Run tests" })).toBeVisible();
 
   await page.keyboard.press("/");

@@ -3,7 +3,7 @@ title: regular-expressions — add up a word's letter values
 difficulty: easy
 tier: core
 minutes: 15
-prereqs: [96, 106]
+prereqs: [11, 25]
 tags: [regular-expressions]
 source: exercism/python practice/scrabble-score (MIT, adapted)
 ---

@@ -7,7 +7,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { port, repoRoot, scratchRoot } from "../playwright.config";
 
 /** Not 001: `screens.spec.ts` photographs a clean pass on that one. */
-const SLUG = "018_slicing";
+const SLUG = "008_slicing";
 const TASK_PY = join(scratchRoot, "tasks", SLUG, "task.py");
 const MARKER = "# ══ machinery";
 /** `region.py`'s `splice`, over the checkout's copy — the scratch file is what we rewrite. */

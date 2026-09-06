@@ -3,7 +3,7 @@ title: conditionals — are the brackets balanced and nested right?
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [101]
+prereqs: [18]
 tags: [conditionals]
 source: exercism/python practice/matching-brackets (MIT, adapted)
 ---

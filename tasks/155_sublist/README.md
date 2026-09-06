@@ -3,7 +3,7 @@ title: comparisons — say how two lists relate to each other
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [93, 97]
+prereqs: [6, 13]
 tags: [comparisons]
 source: exercism/python practice/sublist (MIT, adapted)
 ---

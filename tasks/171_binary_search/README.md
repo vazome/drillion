@@ -3,7 +3,7 @@ title: loops — find a value in a sorted list by halving
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [96, 101]
+prereqs: [11, 18]
 tags: [loops]
 source: exercism/python practice/binary-search (MIT, adapted)
 ---

@@ -3,7 +3,7 @@ title: class-customization — a robot that turns and advances on an infinite gr
 difficulty: medium
 tier: advanced
 minutes: 20
-prereqs: [115]
+prereqs: [35]
 tags: [class-customization, decorators, dict-methods]
 source: exercism/python practice/robot-simulator (MIT, adapted)
 ---

@@ -110,7 +110,7 @@ def test_smoke_reaches_volume_check_and_propagates_failures(tmp_path, failure):
     )
     curl = tmp_path / "curl"
     curl.write_text(
-        '#!/usr/bin/env bash\necho "$*" >> "$CALLS"\necho "{\\"tasks\\":174}"\n'
+        '#!/usr/bin/env bash\necho "$*" >> "$CALLS"\necho "{\\"tasks\\":182}"\n'
     )
     for command in (docker, curl):
         command.chmod(0o755)
@@ -130,4 +130,4 @@ def test_smoke_reaches_volume_check_and_propagates_failures(tmp_path, failure):
     )
     assert result.returncode == (7 if failure else 0), result.stdout + result.stderr
     if not failure:
-        assert "/api/task/017_fstrings/open" in calls.read_text()
+        assert "/api/task/009_fstrings/open" in calls.read_text()

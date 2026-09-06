@@ -3,7 +3,7 @@ title: loops — break a number into the primes it is built from
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [90, 101]
+prereqs: [3, 18]
 tags: [loops, numbers]
 source: exercism/python practice/prime-factors (MIT, adapted)
 ---

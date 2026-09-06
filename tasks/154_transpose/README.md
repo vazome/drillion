@@ -3,7 +3,7 @@ title: unpacking-and-multiple-assignment — turn the rows of a block of text in
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [96, 110]
+prereqs: [11, 30]
 tags: [unpacking-and-multiple-assignment]
 source: exercism/python practice/transpose (MIT, adapted)
 ---

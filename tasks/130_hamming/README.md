@@ -3,7 +3,7 @@ title: generator-expressions — how many positions do two strands differ in?
 difficulty: medium
 tier: advanced
 minutes: 10
-prereqs: [90, 101]
+prereqs: [3, 18]
 tags: [generator-expressions, raising-and-handling-errors, sequences]
 source: exercism/python practice/hamming (MIT, adapted)
 ---

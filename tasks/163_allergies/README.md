@@ -3,7 +3,7 @@ title: classes — unpack one test score into a list of allergies
 difficulty: medium
 tier: core
 minutes: 20
-prereqs: [115]
+prereqs: [35]
 tags: [classes, bitwise]
 source: exercism/python practice/allergies (MIT, adapted)
 ---

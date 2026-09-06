@@ -152,8 +152,8 @@ jobs:
               print(f"::error::the sdist contains {len(banned)} files it should not, e.g. {banned[:3]}")
               sys.exit(1)
           tasks = {n.split("/")[2] for n in names if "/tasks/" in n and n.count("/") > 2}
-          if len(tasks) != 174:
-              print(f"::error::the sdist carries {len(tasks)} task folders, expected 174")
+          if len(tasks) != 182:
+              print(f"::error::the sdist carries {len(tasks)} task folders, expected 182")
               sys.exit(1)
           if not any("/web/dist/" in n for n in names):
               print("::error::the sdist has no web/dist, so a wheel built from it serves no page")

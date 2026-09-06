@@ -3,7 +3,7 @@ title: strings — ROT-n the letters, leave everything else alone
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [90, 95]
+prereqs: [3, 10]
 tags: [strings]
 source: exercism/python practice/rotational-cipher (MIT, adapted)
 ---

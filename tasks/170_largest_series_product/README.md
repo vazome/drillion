@@ -3,7 +3,7 @@ title: generators — the biggest product of adjacent digits
 difficulty: medium
 tier: advanced
 minutes: 25
-prereqs: [90, 101]
+prereqs: [3, 18]
 tags: [generators]
 source: exercism/python practice/largest-series-product (MIT, adapted)
 ---

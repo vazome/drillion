@@ -52,6 +52,6 @@ for _ in $(seq 30); do
   esac
   sleep 2
 done
-test "$(curl -fsS http://127.0.0.1:8765/api/health | jq .tasks)" = 174
+test "$(curl -fsS http://127.0.0.1:8765/api/health | jq .tasks)" = 182
 curl -fsS -o /dev/null http://127.0.0.1:8765/
-curl -fsS -o /dev/null -X POST http://127.0.0.1:8765/api/task/017_fstrings/open
+curl -fsS -o /dev/null -X POST http://127.0.0.1:8765/api/task/009_fstrings/open
