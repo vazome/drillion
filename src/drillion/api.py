@@ -68,6 +68,8 @@ app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 class Edit(BaseModel):
     code: str
     etag: str
+    # a plain Run executes the tests and grades nothing; only a Submit costs an attempt
+    submit: bool = True
 
 
 class Etag(BaseModel):
@@ -173,6 +175,42 @@ def _status(st, slug):
     return "due" if c["due"] <= today() else "done"
 
 
+def _deps(st, all_tasks, meta):
+    """Prereq edges resolved against the ladder: what this task requires, and the one hop
+    it unlocks.
+
+    `passed` is box 1 — the same bar `blocked()` uses, and not the same thing as a `done`
+    status once a card has lapsed back down."""
+    by_topic = {m["topic"]: (s, m) for s, m in all_tasks.items()}
+
+    def ref(slug, m, **extra):
+        # `tags` so a node can say which corner of Python it is, the way a catalogue row does
+        return {
+            "slug": slug,
+            "topic": m["topic"],
+            "title": m["title"],
+            "tags": m.get("tags", []),
+            **extra,
+        }
+
+    requires = []
+    for topic in meta.get("prereqs", ()):
+        if topic in by_topic:
+            slug, m = by_topic[topic]
+            box = card(st, slug)["box"]
+            state = "passed" if box >= 1 else "blocked"
+            requires.append(ref(slug, m, state=state, box=box))
+    # `also` is what else still gates that task: passing this one is not always enough,
+    # and a node that says so is the difference between a graph and a decoration
+    unlocks = []
+    for slug, m in all_tasks.items():
+        prereqs = m.get("prereqs", ())
+        if meta["topic"] in prereqs:
+            also = [p for p in prereqs if p != meta["topic"] and p in by_topic]
+            unlocks.append(ref(slug, m, also=also))
+    return {"requires": requires, "unlocks": unlocks}
+
+
 def _payload(st, slug, meta, src):
     """Everything the task page needs, and nothing the answer lives in."""
     body = cut(src).body
@@ -193,8 +231,11 @@ def _payload(st, slug, meta, src):
         "status": status,
         # not a fifth `status`: a buried card is still exactly `due`, just not offered today
         "buried": buried(st, slug),
+        "seen": c["seen"],
+        "box": c["box"],
         "lapses": c["lapses"],
         "lapse_limit": LAPSE_LIMIT,
+        **_deps(st, tasks(), meta),
         "ladder": LADDER,
         "note": st["notes"].get(slug, ""),
         "reference": solution_text(meta["path"]) if reveal else None,
@@ -320,7 +361,11 @@ def save_task(slug: str, edit: Edit):
 
 @app.post("/api/task/{slug}/run")
 def run_task(slug: str, edit: Edit):
-    """Save, then run. A rejected save is a 400 and costs no attempt."""
+    """Save, then run. A rejected save is a 400 and costs no attempt.
+
+    `submit` is the learner saying they are done: only then does the run cost an attempt
+    and, on green, grade the pass. A plain Run is free and repeatable — it reports the same
+    pytest output and moves nothing."""
     with writing() as st:
         meta = _task(slug)
         o = current(st, slug)
@@ -329,15 +374,25 @@ def run_task(slug: str, edit: Edit):
         new_src = validate(edit.code, src)
         write_region(meta["path"], new_src)
         passed, out = run_tests(meta["path"], o["seed"])
-        o["attempts"] += 1  # pytest ran; that is what an attempt is
+        if edit.submit:
+            o["attempts"] += 1
+        else:
+            o["runs"] = o.get("runs", 0) + 1  # not graded, but it answers the nudge
         body = cut(new_src).body
         resp = {
             "passed": passed,
+            "graded": edit.submit,
             "attempts": o["attempts"],
             **summarise(out, bounds(new_src)),
         }
-        log.info("%s passed=%s attempts=%s", slug, passed, o["attempts"])
-        if passed:
+        log.info(
+            "%s passed=%s graded=%s attempts=%s",
+            slug,
+            passed,
+            edit.submit,
+            o["attempts"],
+        )
+        if passed and edit.submit:
             was = card(st, slug)["box"]
             grade, gap, box, reason = record_pass(
                 st, slug, meta, body

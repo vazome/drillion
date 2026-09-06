@@ -22,67 +22,6 @@ source: exercism/python practice/secret-handshake (MIT, adapted)
 ## Why
 A bitmask is how a system packs a set of yes/no options into one small value: Linux file permissions, feature flags in a config integer, the status word a device driver hands back, the `flags` column somebody added to a table instead of six booleans. Decoding one is always the same job — walk the bits from the least significant end, and for each bit that is set, add the thing it stands for. The twist here is a bit that does not name an action but changes how the others are assembled, which is exactly how a real protocol grows a "reverse order" or "negate" flag. Once you have done this by hand, `chmod 0755` stops being a magic number.
 
-## Introduction
-You are starting a secret coding club with some friends and friends-of-friends.
-Not everyone knows each other, so you and your friends have decided to create a secret handshake that you can use to recognize that someone is a member.
-You don't want anyone who isn't in the know to be able to crack the code.
-
-You've designed the code so that one person says a number between 1 and 31, and the other person turns it into a series of actions.
-
-## Instructions
-Your task is to convert a number between 1 and 31 to a sequence of actions in the secret handshake.
-
-The sequence of actions is chosen by looking at the rightmost five digits of the number once it's been converted to binary.
-Start at the right-most digit and move left.
-
-The actions for each number place are:
-
-```plaintext
-00001 = wink
-00010 = double blink
-00100 = close your eyes
-01000 = jump
-10000 = Reverse the order of the operations in the secret handshake.
-```
-
-Let's use the number `9` as an example:
-
-- 9 in binary is `1001`.
-- The digit that is farthest to the right is 1, so the first action is `wink`.
-- Going left, the next digit is 0, so there is no double-blink.
-- Going left again, the next digit is 0, so you leave your eyes open.
-- Going left again, the next digit is 1, so you jump.
-
-That was the last digit, so the final code is:
-
-```plaintext
-wink, jump
-```
-
-Given the number 26, which is `11010` in binary, we get the following actions:
-
-- double blink
-- jump
-- reverse actions
-
-The secret handshake for 26 is therefore:
-
-```plaintext
-jump, double blink
-```
-
-> [!NOTE]
-> If you aren't sure what binary is or how it works, check out [this binary tutorial][intro-to-binary].
->
-> [intro-to-binary]: https://medium.com/basecs/bits-bytes-building-with-binary-13cb4289aafa
-
-To keep things simple (_and to let you focus on the important part of this exercise_), the tests will supply your function with _binary strings_ as arguments:
-
-```python
->>> commands("00011")
-["wink", "double blink"]
-```
-
 ## You get
 `binary_str` — a string of exactly five characters, each `"0"` or `"1"`, most significant bit first:
 

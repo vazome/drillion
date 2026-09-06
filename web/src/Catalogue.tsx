@@ -146,7 +146,9 @@ function ListRow({ row, blocked, ladder, limit, first = false }: { row: Row; blo
       <span style={{ ...MONO, width: COL.num, textAlign: "right" }}>{num(row.topic)}</span>
       <span style={{ flex: 1, display: "flex", alignItems: "baseline", gap: 10, overflow: "hidden" }}>
         <span style={{ fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.title}</span>
-        <RowFlags needs={blocked} buried={row.buried} lapses={row.lapses} lapseLimit={limit} />
+        {/* the flag is the second way into the lineage; the rest of the row still opens the task */}
+        <RowFlags needs={blocked} onNeedsClick={() => { location.hash = `${href(row)}/deps`; }}
+          buried={row.buried} lapses={row.lapses} lapseLimit={limit} />
       </span>
       <span style={{ width: COL.path, display: "flex", overflow: "hidden" }}><TaskPath tier={row.tier} tags={row.tags} /></span>
       <span style={{ width: COL.difficulty }}><StatusBadge status={row.difficulty} /></span>

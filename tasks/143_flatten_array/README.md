@@ -22,29 +22,6 @@ source: exercism/python practice/flatten-array (MIT, adapted)
 ## Why
 Nested data arrives from everywhere: a JSON API that wraps results in results, a config file where a group can contain groups, a Terraform output whose lists hold lists. The consumer almost never wants the shape — it wants the items, in order, ready to iterate once. Flattening is also where "unknown depth" first bites: you cannot write two `for` loops when tomorrow's payload has four levels. Getting comfortable with a function that calls itself for the nested case is worth more than this task, because directory trees, org charts and dependency graphs all have the same shape.
 
-## Introduction
-A shipment of emergency supplies has arrived, but there's a problem.
-To protect from damage, the items — flashlights, first-aid kits, blankets — are packed inside boxes, and some of those boxes are nested several layers deep inside other boxes!
-
-To be prepared for an emergency, everything must be easily accessible in one box.
-Can you unpack all the supplies and place them into a single box, so they're ready when needed most?
-
-## Instructions
-Take a nested array of any depth and return a fully flattened array.
-
-Note that some language tracks may include null-like values in the input array, and the way these values are represented varies by track.
-Such values should be excluded from the flattened array.
-
-Additionally, the input may be of a different data type and contain different types, depending on the track.
-
-Check the test suite for details.
-
-### Example
-
-input: `[1, [2, 6, null], [[null, [4]], 5]]`
-
-output: `[1, 2, 6, 4, 5]`
-
 ## You get
 `iterable` — a list that may contain numbers, `None`, and more lists, nested to any depth:
 

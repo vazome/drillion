@@ -4,6 +4,7 @@ import { api, type Health } from "./api";
 import { Catalogue } from "./Catalogue";
 import { Task } from "./Task";
 import { Progress } from "./Progress";
+import { Deps } from "./Deps";
 
 /** Hash routing, whole implementation. */
 export function useHash() {
@@ -83,12 +84,15 @@ export function App() {
       .catch(() => {});                    // a header without its counts is not worth an error
   }, []);
 
-  const slug = route.startsWith("/task/") ? decodeURIComponent(route.slice(6)) : null;
+  // `/task/<slug>` is the task; `/task/<slug>/deps` is its lineage as a screen of its own
+  const tail = route.startsWith("/task/") ? route.slice(6) : null;
+  const deps = !!tail?.endsWith("/deps");
+  const slug = tail ? decodeURIComponent(deps ? tail.slice(0, -"/deps".length) : tail) : null;
   return (
     <>
       <Header route={route} dark={dark} setDark={setDark} {...head} />
       <main style={{ padding: "24px" }}>
-        {slug ? <Task key={slug} slug={slug} dark={dark} />
+        {slug ? (deps ? <Deps key={slug} slug={slug} /> : <Task key={slug} slug={slug} dark={dark} />)
           : route === "/progress" ? <Progress />
           : <Catalogue />}
       </main>

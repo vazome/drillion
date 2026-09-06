@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Button, Card, Collapsible, ConflictBanner, EmptyState, LadderMeter, NoteField, NoticeBanner, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
+import { Button, Card, Collapsible, ConflictBanner, DepLineage, EmptyState, LadderMeter, NoteField, NoticeBanner, RequiresTag, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
 import { ApiError, api, post, type Task as TaskData, type RunResult } from "./api";
+import { depsHref, prefetch } from "./Deps";
 import { DiffView, Editor } from "./Editor";
 import { useDraft } from "./useDraft";
 
@@ -27,9 +28,12 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 /** A refused action, shown beside the control that asked for it. */
 type Gate = { at: "hints" | "solution" | "editor" | "note"; message: string } | null;
 
+/** `ran` is an ungraded Run that came back green: the tests pass, nothing moved. Only
+ *  `passed` is a graded pass, and only it ends the attempt. */
 type Result =
   | { state: "idle" | "running" }
-  | { state: "failed"; attempts: number; headline: string; output: string }
+  | { state: "ran"; output: string }
+  | { state: "failed"; graded: boolean; attempts: number; headline: string; output: string }
   | { state: "passed"; grade: string; box: number; stepped: boolean; fromBox: number; reason: string; dueIn: number; attempts: number; code: string };
 
 /** The pass banner's one line about the card: `stepped` is the server's answer to whether
@@ -39,6 +43,22 @@ export function stepLine(grade: string, box: number, fromBox: number, stepped: b
   if (box === boxes - 1) return "the card is already in the top box and stays there";
   if (box === 0) return "the card is already in the first box and stays there";
   return `${grade} keeps the card where it is`;
+}
+
+/** The header chips: `requires ✓019 ▲040`. Titles are dropped past two — the row is
+ *  already crowded, and a number-only tag still links. */
+function RequiresChips({ requires }: { requires: TaskData["requires"] }) {
+  if (!requires.length) return null;
+  const withTitles = requires.length <= 2 && requires.every((r) => r.title.length < 30);
+  return (
+    <>
+      <span style={{ ...LABEL, fontSize: 11, color: "var(--text-faint)", marginLeft: 4 }}>requires</span>
+      {requires.map((r) => (
+        <RequiresTag key={r.slug} topic={r.topic} title={withTitles ? r.title : undefined}
+          state={r.state} href={depsHref(r.slug)} onPointerEnter={() => { void prefetch(r.slug); }} />
+      ))}
+    </>
+  );
 }
 
 export function Task({ slug, dark }: { slug: string; dark: boolean }) {
@@ -52,9 +72,13 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [busy, setBusy] = useState(false);          // a hint spent twice cannot be un-spent
   const [nudge, setNudge] = useState(false);        // the server's offer of a hint, not ours
   const [nudgeOff, setNudgeOff] = useState(false);
+  const [inflight, setInflight] = useState<"run" | "submit" | null>(null);
+  const [lineage, setLineage] = useState(false);
   const narrow = useSyncExternalStore(watchNarrow, isNarrow);
 
   const gateTimer = useRef<number | undefined>(undefined);
+  const unlocksBtn = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
   const dropped = useRef(false);             // discarded here: do not re-open the attempt behind them
   const hasAttempt = !!task?.attempt;
   const passed = result.state === "passed";
@@ -121,29 +145,48 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     return () => { clearInterval(tick); clearInterval(beat); };
   }, [hasAttempt, passed, slug]);
 
-  const run = async () => {
+  /** Run and Submit are the same round trip; `submit` is the learner saying they are done.
+   *  Only a submitted run costs an attempt and moves the card — a Run is free, repeatable,
+   *  and grades nothing however green it comes back. */
+  const go = async (submit: boolean) => {
+    setInflight(submit ? "submit" : "run");
     setResult({ state: "running" });
     try {
       await settle();                // ride the etag the pending PUT returns
       await ensureOpen();
-      const r = await post<RunResult>(`${url}/run`, current());
-      landed(r.etag, r.passed ? r.code : undefined);
+      const r = await post<RunResult>(`${url}/run`, { ...current(), submit });
+      landed(r.etag, r.passed && r.graded ? r.code : undefined);
       setNudge(false);                     // a run answers the nudge, whichever way it went
-      if (r.passed) {
+      if (r.passed && r.graded) {
         setResult({ state: "passed", grade: r.grade, box: r.box, stepped: r.stepped, fromBox: r.from_box, reason: r.reason, dueIn: r.due_in, attempts: r.attempts, code: r.code });
         setTask((p) => p && ({ ...p, reference: r.reference, lapses: r.lapses }));
         setNextSlug(r.next);
+      } else if (r.passed) {
+        setResult({ state: "ran", output: r.output });
       } else {
-        setResult({ state: "failed", attempts: r.attempts, headline: r.headline.join("\n") || "The tests did not pass.", output: r.output });
+        setResult({ state: "failed", graded: r.graded, attempts: r.attempts, headline: r.headline.join("\n") || "The tests did not pass.", output: r.output });
         setTask((p) => p && p.attempt ? { ...p, attempt: { ...p.attempt, attempts: r.attempts } } : p);
       }
     } catch (e) {
       const err = e as ApiError, bad = err.status === 400;
       if (absorb(err) && !bad) setResult({ state: "idle" });      // the conflict banner has it now
-      else setResult({ state: "failed", attempts: 0, output: "",
+      else setResult({ state: "failed", graded: submit, attempts: 0, output: "",
         headline: bad ? `${err.detail?.error}${err.detail?.line != null ? ` (line ${err.detail.line})` : ""}` : err.message });
-    }
+    } finally { setInflight(null); }
   };
+  const run = () => { void go(false); };
+  const submit = () => { void go(true); };
+
+  /** The lineage panel, not a navigation: it opens mid-attempt, so the editor buffer, the
+   *  run state and the timer all have to survive it. */
+  const closeLineage = useCallback(() => { setLineage(false); unlocksBtn.current?.focus(); }, []);
+  useEffect(() => {
+    if (!lineage) return;
+    panel.current?.focus();
+    const on = (e: globalThis.KeyboardEvent) => { if (e.key === "Escape") closeLineage(); };
+    addEventListener("keydown", on);
+    return () => removeEventListener("keydown", on);
+  }, [lineage, closeLineage]);
 
   const hint = async () => {
     if (busy) return;
@@ -238,8 +281,10 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     </div>
   );
 
-  const runNo = passed ? result.attempts : attempt ? attempt.attempts + 1 : 0;   // the run you are on
-  const resultNo = "attempts" in result ? result.attempts : 0;                   // the run this result came from
+  const runNo = passed ? result.attempts : attempt ? attempt.attempts + 1 : 0;   // the attempt you are on
+  // an ungraded Run cost no attempt, so the card must not number it as one
+  const ungraded = result.state === "ran" || (result.state === "failed" && !result.graded);
+  const resultNo = !ungraded && "attempts" in result ? result.attempts : 0;   // the attempt this result came from
   const fell = passed && result.stepped && result.box < result.fromBox;
 
   return (
@@ -249,12 +294,37 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
         <h1 style={{ margin: 0, fontSize: "var(--fs-h)", fontWeight: 600 }}>{meta.title}</h1>
         <StatusBadge status={task.status} />
         <StatusBadge status={meta.difficulty} />
+        <RequiresChips requires={task.requires} />
         <RowFlags buried={task.buried} lapses={task.lapses} lapseLimit={task.lapse_limit} />
         <div style={{ flex: 1 }} />
         {meta.track ? <TagChip label={meta.track} small /> : null}
+        {task.unlocks.length ? (
+          <button type="button" ref={unlocksBtn} onClick={() => setLineage(true)} aria-expanded={lineage}
+            style={{ background: "transparent", border: "none", padding: 0, font: "inherit", fontSize: 12.5, color: "var(--accent)", cursor: "pointer" }}>
+            unlocks {task.unlocks.length} →
+          </button>
+        ) : null}
         <TaskPath tier={meta.tier} tags={meta.tags} />
         {meta.source ? <span style={ASIDE}>{meta.source}</span> : null}
       </div>
+
+      {lineage ? (
+        <div role="dialog" aria-label={`Lineage of ${meta.title}`} onClick={closeLineage} className="m-fade"
+          style={{ position: "fixed", inset: 0, zIndex: 40, background: "color-mix(in srgb, var(--text) 28%, transparent)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "72px 24px", overflow: "hidden" }}>
+          {/* the scroll lives on the animated element, not around it: `m-rise` starts the
+            * panel 6px low, and inside a scrolling parent those 6px are overflow — one frame
+            * of scrollbar on the way in. An element's own transform never adds to its own
+            * scroll content, so putting the two on one box makes the flash impossible. */}
+          <div ref={panel} tabIndex={-1} onClick={(e) => e.stopPropagation()} className="m-rise"
+            style={{ width: "min(1040px, 100%)", maxHeight: "100%", overflowY: "auto", outline: "none" }}>
+            <Card label={`Lineage · ${task.slug}`} style={{ boxShadow: "var(--shadow-pop)" }}>
+              <DepLineage task={{ topic: meta.topic, title: meta.title, tags: meta.tags, box: task.box, aside: "attempt still open behind this" }}
+                requires={task.requires} unlocks={task.unlocks} ladder={task.ladder}
+                hrefOf={(r) => depsHref(r.slug)} onPrefetch={(r) => { void prefetch(r.slug); }} onClose={closeLineage} />
+            </Card>
+          </div>
+        </div>
+      ) : null}
 
       <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", gap: 20, alignItems: narrow ? "stretch" : "flex-start" }}>
         <div style={narrow
@@ -358,8 +428,13 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
           {task.has_given ? <NoticeBanner message="This task ships given code above solve() — read it, but leave it alone." actions={[]} /> : null}
 
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-            <Button kbdHint="Ctrl/⌘+Enter" onClick={run} disabled={result.state === "running" || passed}>
-              {result.state === "running" ? "Running…" : "Run tests"}
+            {/* Run executes and grades nothing; Submit is the committing act, so it is the
+              * one primary in the row and the only one that costs an attempt */}
+            <Button variant="secondary" kbdHint="Ctrl/⌘+Enter" onClick={run} disabled={!!inflight || passed}>
+              {inflight === "run" ? "Running…" : "Run"}
+            </Button>
+            <Button kbdHint="Ctrl/⌘+⇧+Enter" onClick={submit} disabled={!!inflight || passed}>
+              {inflight === "submit" ? "Submitting…" : "Submit"}
             </Button>
             <Timer seconds={active} paused={!hasAttempt || passed} />
             <span className="tabular" style={{ fontSize: 13, color: "var(--text-muted)" }}>
@@ -380,22 +455,31 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             )}
           </div>
 
-          <Editor value={code} onChange={edit} onRun={run} readOnly={passed} dark={dark} height={narrow ? "60vh" : "calc(100vh - 364px)"} />
+          <Editor value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} height={narrow ? "60vh" : "calc(100vh - 364px)"} />
 
-          <Card label={resultNo ? `Result · attempt ${resultNo}` : "Result"} padding={16}>
+          <Card label={ungraded ? "Output · your run" : resultNo ? `Result · attempt ${resultNo}` : "Result"} padding={16}>
             {/* the region stays mounted and only the banner inside it is keyed: a live region
               * that arrives with its text already in place is never announced */}
             <div role="status">
               <div className="m-rise" key={result.state}>
-                <ResultBanner
-                  state={result.state}
-                  headline={result.state === "failed" ? result.headline : undefined}
-                  gradeLine={passed ? `${result.grade.toUpperCase()} · ${secs(active)} · ${plural(result.attempts, "attempt")} · box ${result.box + 1} of ${task.ladder.length}` : undefined}
-                  backIn={passed ? plural(result.dueIn, "day") : undefined} />
+                {result.state === "ran" ? (
+                  <div style={{ borderRadius: "var(--radius)", padding: "12px 16px", fontSize: 14, background: "var(--pass-bg)", borderLeft: "3px solid var(--pass)" }}>
+                    <span style={{ fontWeight: 600, color: "var(--pass)", letterSpacing: ".04em" }}>✓ TESTS PASS</span>
+                    <span style={{ marginLeft: 10, fontSize: 13, color: "var(--text-muted)" }}>
+                      nothing graded and no attempt used — Submit when you want it to count
+                    </span>
+                  </div>
+                ) : (
+                  <ResultBanner
+                    state={result.state}
+                    headline={result.state === "failed" ? result.headline : undefined}
+                    gradeLine={passed ? `${result.grade.toUpperCase()} · ${secs(active)} · ${plural(result.attempts, "attempt")} · box ${result.box + 1} of ${task.ladder.length}` : undefined}
+                    backIn={passed ? plural(result.dueIn, "day") : undefined} />
+                )}
               </div>
             </div>
 
-            {result.state === "failed" && result.output ? (
+            {(result.state === "failed" || result.state === "ran") && result.output ? (
               <Collapsible label="Full output" meta={`pytest · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
                 {result.output}
               </Collapsible>

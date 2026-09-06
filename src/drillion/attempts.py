@@ -61,6 +61,7 @@ def open_attempt(st, slug):
     st["open"][slug] = {
         "seed": random.randint(1000, 9999),
         "attempts": 0,
+        "runs": 0,
         "hints": 0,
         "new": card(st, slug)["seen"] == 0,
         "started": now,
@@ -93,9 +94,14 @@ def grade_reason(o, par, grade):
 def nudge_due(o):
     """Half an hour of active reading with nothing run and no hint taken: offer one.
 
-    Taking a hint or running the tests answers it, so the nudge clears itself."""
+    Taking a hint or running the tests answers it, so the nudge clears itself — an ungraded
+    Run counts, which is why `runs` is tracked at all."""
     return (
-        bool(o) and not o["attempts"] and not o["hints"] and o["active"] >= NUDGE_SECS
+        bool(o)
+        and not o["attempts"]
+        and not o.get("runs")
+        and not o["hints"]
+        and o["active"] >= NUDGE_SECS
     )
 
 

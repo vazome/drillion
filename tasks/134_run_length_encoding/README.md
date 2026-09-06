@@ -22,26 +22,6 @@ source: exercism/python practice/run-length-encoding (MIT, adapted)
 ## Why
 Run-length encoding is the compression you meet before you meet compression: it is how fax machines, old bitmap formats and plenty of wire protocols shrink long stretches of the same value. The reason it is worth an hour is not the algorithm, it is the shape — two functions that have to be exact inverses. Serialise/deserialise, encrypt/decrypt, marshal/unmarshal: whenever you write one of a pair, the round trip is the test that finds the bug, and it finds it on the boring case (a run of length one) rather than the clever one.
 
-## Instructions
-Implement run-length encoding and decoding.
-
-Run-length encoding (RLE) is a simple form of data compression, where runs (consecutive data elements) are replaced by just one data value and count.
-
-For example we can represent the original 53 characters with only 13.
-
-```text
-"WWWWWWWWWWWWBWWWWWWWWWWWWBBBWWWWWWWWWWWWWWWWWWWWWWWWB"  ->  "12WB12W3B24WB"
-```
-
-RLE allows the original data to be perfectly reconstructed from the compressed data, which makes it a lossless data compression.
-
-```text
-"AABCCCDEEEE"  ->  "2AB3CD4E"  ->  "AABCCCDEEEE"
-```
-
-For simplicity, you can assume that the unencoded string will only contain the letters A through Z (either lower or upper case) and whitespace.
-This way data to be encoded will never contain any numbers and numbers inside data to be decoded always represent the count for the following character.
-
 ## You get
 Nothing. Text arrives as an argument to your functions.
 

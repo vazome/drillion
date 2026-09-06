@@ -141,11 +141,18 @@ _Avoid_: filter, mode, goal, theme
 **Attempt**:
 One sitting at one task, from the first time you open it until you pass or abandon it. It
 carries the timer, the data seed and the hints taken.
-_Avoid_: session, try; and never the count of **runs** inside it
+_Avoid_: session, try; and never the count of **runs** inside it — an attempt is one **submit**
 
 **Run**:
-One execution of a task's test.
+One execution of a task's test that grades nothing. Free and repeatable: it moves no card
+and costs no **attempt**, however green it comes back.
 _Avoid_: attempt, submission, execution
+
+**Submit**:
+Saying you are done: the same execution as a **Run**, but it costs an **attempt** and, on
+green, is what grades the pass and moves the card. The number after "attempt" counts these
+and nothing else.
+_Avoid_: commit, finish, hand in
 
 **Active seconds**:
 Time actually spent on an **attempt**: each touch adds the gap since the last one, capped at

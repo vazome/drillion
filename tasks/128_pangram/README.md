@@ -22,29 +22,6 @@ source: exercism/python practice/pangram (MIT, adapted)
 ## Why
 A shop that sells fonts wants a different sample sentence each time someone previews a typeface, and every sample has to show off all 26 letters — otherwise a customer never sees what the font's "q" looks like. Sentences are crowdsourced, so submissions need screening. The check itself ("does this thing contain everything on my required list?") is the same one you run against required config keys or required IAM permissions.
 
-## Introduction
-You work for a company that sells fonts through their website.
-They'd like to show a different sentence each time someone views a font on their website.
-To give a comprehensive sense of the font, the random sentences should use **all** the letters in the English alphabet.
-
-They're running a competition to get suggestions for sentences that they can use.
-You're in charge of checking the submissions to see if they are valid.
-
-> [!NOTE]
-> Pangram comes from Greek, παν γράμμα, pan gramma, which means "every letter".
->
-> The best known English pangram is:
->
-> > The quick brown fox jumps over the lazy dog.
-
-## Instructions
-Your task is to figure out if a sentence is a pangram.
-
-A pangram is a sentence using every letter of the alphabet at least once.
-It is case insensitive, so it doesn't matter if a letter is lower-case (e.g. `k`) or upper-case (e.g. `K`).
-
-For this exercise, a sentence is a pangram if it contains each of the 26 letters in the English alphabet.
-
 ## You get
 `sentence` — a string, e.g. `"the quick brown fox jumps over the lazy dog"`. It may be empty and may contain digits, underscores, punctuation and mixed case.
 

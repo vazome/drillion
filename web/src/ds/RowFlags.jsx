@@ -1,15 +1,16 @@
 import React from "react";
 const numFlag = (n) => "#" + String(n).padStart(3, "0");
 const asRef = (t) => (typeof t === "object" ? t : { topic: t });
-export function RowFlags({ needs = [], buried = false, lapses = 0, lapseLimit = 0, style }) {
+export function RowFlags({ needs = [], onNeedsClick, buried = false, lapses = 0, lapseLimit = 0, style }) {
   const marks = [];
   if (needs.length) {
     const refs = needs.map(asRef);
-    marks.push(
-      <span key="needs" title={"Not offered as a new pick until these are passed: " + refs.map((r) => numFlag(r.topic) + (r.title ? " " + r.title : "")).join(", ")}>
-        needs {refs.map((r) => numFlag(r.topic)).join(" ")}
-      </span>
-    );
+    const label = "needs " + refs.map((r) => numFlag(r.topic)).join(" ");
+    const why = "Not offered as a new pick until these are passed: " + refs.map((r) => numFlag(r.topic) + (r.title ? " " + r.title : "")).join(", ");
+    marks.push(onNeedsClick
+      ? <button key="needs" type="button" title={why + " — opens the lineage"} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNeedsClick(e); }}
+          style={{ background: "transparent", border: "none", padding: 0, font: "inherit", color: "inherit", cursor: "pointer", textDecoration: "underline", textDecorationStyle: "dotted", textUnderlineOffset: "2px" }}>{label}</button>
+      : <span key="needs" title={why}>{label}</span>);
   }
   if (buried) {
     marks.push(

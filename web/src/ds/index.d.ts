@@ -378,6 +378,8 @@ export declare function TaskPath(props: TaskPathProps): El;
 export interface RowFlagsProps {
   /** prereqs not yet passed (`blocked`) — task numbers, or `{topic, title}` for the tooltip */
   needs?: Array<number | { topic: number; title?: string }>;
+  /** turns the `needs` text into a button to the lineage; it stops the row's own click */
+  onNeedsClick?: (e: React.MouseEvent) => void;
   /** put aside for today only; the box, the due date and the counts are untouched */
   buried?: boolean;
   /** how many times this task has been failed back down the ladder */
@@ -387,3 +389,63 @@ export interface RowFlagsProps {
   style?: Style;
 }
 export declare function RowFlags(props: RowFlagsProps): El | null;
+
+/** One prereq or one unlocked task, as a small tag: the number is the link, the mark is the
+ *  only colour difference. `✓ 018` passed, `▲ 040` not passed and therefore blocking, plain
+ *  `061` for anything that carries no judgement (the *unlocks* side). Drop `title` in tight
+ *  rows — the number alone still links. */
+export interface RequiresTagProps {
+  /** task number, zero-padded for display */
+  topic: number;
+  /** the task's title; omit for a number-only tag */
+  title?: string;
+  /** `passed` ✓, `blocked` ▲, `neutral` — no mark, used for *unlocks* */
+  state?: "passed" | "blocked" | "neutral";
+  /** where the number goes — the task's own screen, not the lineage view */
+  href?: string;
+  onClick?: (e: React.MouseEvent) => void;
+  /** also wired to focus: somewhere to fetch what the tag points at before it is clicked */
+  onPointerEnter?: () => void;
+  style?: Style;
+}
+export declare function RequiresTag(props: RequiresTagProps): El;
+
+/** One task's lineage, read left to right the same way the dependency graph reads: what it
+ *  needs, where you are, what it opens. The whole view behind the `unlocks N →` link in the
+ *  task header and behind a catalogue row's `needs` flag — a panel over the task screen when
+ *  you open it mid-attempt, a screen of its own when you open it from the catalogue. */
+export interface DepLineageRef {
+  slug: string;
+  topic: number;
+  title: string;
+  /** prereqs only: a solid wire when `passed`, a dashed warn one when `blocked` */
+  state?: "passed" | "blocked";
+  /** prereqs only: that card's rung, for the meter on its node */
+  box?: number;
+  /** unlocks only: the task's *other* prereq numbers — "also needs 027" */
+  also?: number[];
+  /** the concepts the task practises; the node wears the first as a chip */
+  tags?: string[];
+}
+export interface DepLineageProps {
+  /** the task in the middle; `aside` is the one faint line under its title */
+  task: { topic: number; title: string; tags?: string[]; box?: number; aside?: string };
+  /** prereqs — mark each `passed` or `blocked`; an empty column says so in words */
+  requires?: DepLineageRef[];
+  /** what passing this opens up */
+  unlocks?: DepLineageRef[];
+  /** the scheduler's return intervals; without it the nodes draw no ladder meter */
+  ladder?: number[];
+  /** where a node goes when clicked; omit for a board nothing links out of */
+  hrefOf?: (ref: DepLineageRef) => string;
+  /** called on hover and focus of a node, early enough to make the click feel instant */
+  onPrefetch?: (ref: DepLineageRef) => void;
+  /** optional footer: the fewest tasks from here to an open dimension */
+  shortestPath?: DepLineageRef[];
+  /** the whole-graph screen, positioned at this task */
+  graphHref?: string;
+  /** shown as `Close` — pass it in the panel case, leave it out on a screen */
+  onClose?: () => void;
+  style?: Style;
+}
+export declare function DepLineage(props: DepLineageProps): El;

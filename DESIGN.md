@@ -119,8 +119,11 @@ Data: `GET /api/task/{slug}` →
 - `attempt` — null, or `{attempts, hints, active (seconds), seed, solution_shown}`
 - `hints` — `{total: 3, shown[]: Markdown already revealed, next_in: seconds}`, rendered the same
   way as the spec
-- also `ladder`, `lapses`, `lapse_limit`, `nudge`, `reference`, `buried` — `web/src/api.ts` is the
-  field-for-field contract for every payload
+- `requires[]` / `unlocks[]` — the prereq edge in both directions, `{slug, topic, title}` and
+  `state: passed | blocked` on the requires side, resolved server-side against the ladder
+  (`passed` is box 1, which a `done` status is not once a card has lapsed)
+- also `seen`, `ladder`, `lapses`, `lapse_limit`, `nudge`, `reference`, `buried` — `web/src/api.ts`
+  is the field-for-field contract for every payload
 - `solution` — `{unlocked, need_attempts, need_secs}`
 - `archive[]` — previous passes `{date, grade, code?}` (code shown only when allowed)
 - `note` — the learner's own words about this task, `""` when there is none
@@ -136,12 +139,27 @@ the only way out it needs. Nothing reads notes outside the task they belong to �
 evidence yet that anyone wants to.
 
 Layout: two panes (spec left, editor right; resizable). Toolbar above/below the editor: **Run**
-(primary), timer (active time), attempts count, seed,
+(secondary, `Ctrl/⌘+Enter` — executes and grades nothing) and **Submit** (the one primary,
+`Ctrl/⌘+⇧+Enter` — the only thing that costs an attempt and moves the card), timer (active
+time), attempts count, seed,
 **Hint** (with countdown until the next level; disabled when exhausted), **Solution** (locked
 state shows what is still needed), **Abandon**, archive access.
 
+The header carries the prereq edges: `requires ✓019 ▲040` as linked tags after the badges
+(titles dropped past two, or past a 30-character one), and `unlocks N →` at the right, which
+opens the **lineage** as a panel *over* the screen, because it is opened mid-attempt and the
+editor buffer, the run state and the timer have to survive it. The lineage is a graph, not a
+list: fixed-size cards in three columns — what gates this task, the task, what it gates — joined
+by curves, solid for a prereq you have passed and dashed for one still blocking. A column folds
+past eight nodes and says how many it folded. Every card links to *that* task's lineage, so the
+graph is walkable; `Open NNN →` is the way out into the editor.
+A catalogue row's `needs #040` flag is the other way in, and it goes to `#/task/{slug}/deps`,
+the same view as a screen of its own. Prereqs are information and a shorter way in, never a
+gate: nothing here refuses a task, and there is no whole-catalogue graph.
+
 Results panel (below or beside the editor), states:
-- idle (never run) · running · **failed** (headline lines — the assertion/exception — plus a
+- idle (never run) · running · **ran** (an ungraded Run that came back green: says so, and says
+  no attempt was used) · **failed** (headline lines — the assertion/exception — plus a
   collapsible full pytest output; line numbers refer to the editor) ·
   **passed**: grade line `QUICK · 4m12s · 1 attempt · box 3 of 7` — elapsed time, never time
   against par — the ladder visibly stepping, the passing code read-only, a way to go to the

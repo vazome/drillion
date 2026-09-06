@@ -23,38 +23,6 @@ source: exercism/python practice/scrabble-score (MIT, adapted)
 ## Why
 "Score this thing by summing a per-item weight" is a whole genre: a risk score for a pull request, a cost estimate from a bill of materials, a priority number built from a set of labels, a relevance score for a search hit. The interesting decision is never the addition — it is where the weights live. Written as a chain of `if` statements they are unreadable and unchangeable; written as a table they are data, and data can be swapped for a different language, loaded from a file, or reviewed by someone who does not read Python. This task is the smallest possible version of that choice.
 
-## Introduction
-[Scrabble][wikipedia] is a word game where players place letter tiles on a board to form words.
-Each letter has a value.
-A word's score is the sum of its letters' values.
-
-[wikipedia]: https://en.wikipedia.org/wiki/Scrabble
-
-## Instructions
-Your task is to compute a word's Scrabble score by summing the values of its letters.
-
-The letters are valued as follows:
-
-| Letter                       | Value |
-| ---------------------------- | ----- |
-| A, E, I, O, U, L, N, R, S, T | 1     |
-| D, G                         | 2     |
-| B, C, M, P                   | 3     |
-| F, H, V, W, Y                | 4     |
-| K                            | 5     |
-| J, X                         | 8     |
-| Q, Z                         | 10    |
-
-For example, the word "cabbage" is worth 14 points:
-
-- 3 points for C
-- 1 point for A
-- 3 points for B
-- 3 points for B
-- 1 point for A
-- 2 points for G
-- 1 point for E
-
 ## You get
 `word` — a single word of ASCII letters, in any mix of upper and lower case, possibly empty:
 

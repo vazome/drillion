@@ -23,26 +23,6 @@ source: exercism/python practice/nth-prime (MIT, adapted)
 ## Why
 You cannot precompute this one, because nobody tells you how far to go: asked for the 10001st prime, you have no idea in advance where it lives. That is the same position you are in when you page through an API until you find the record you want, or read a log stream until the error appears — the source is effectively endless, so you produce values one at a time and stop when the condition is met. Doing it any other way means guessing an upper bound, and guessing an upper bound is how "it worked in staging" becomes "it ran out of memory in production".
 
-## Instructions
-Given a number n, determine what the nth prime is.
-
-By listing the first six prime numbers: 2, 3, 5, 7, 11, and 13, we can see that the 6th prime is 13.
-
-If your language provides methods in the standard library to deal with prime numbers, pretend they don't exist and implement them yourself.
-
-### Exception messages
-
-Sometimes it is necessary to [raise an exception](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://devdocs.io/python~3.14/library/exceptions#base-classes), but should still include a meaningful message.
-
-This particular exercise requires that you use the [raise statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement) to "throw" a `ValueError` when the `prime()` function receives malformed input. Since this exercise deals only with _positive_ numbers, any number < 1 is malformed.  The tests will only pass if you both `raise` the `exception` and include a message with it.
-
-To raise a `ValueError` with a message, write the message as an argument to the `exception` type:
-
-```python
-# when the prime function receives malformed input
-raise ValueError('there is no zeroth prime')
-```
-
 ## You get
 `number` — which prime is wanted, counting from 1:
 

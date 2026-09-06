@@ -22,61 +22,6 @@ source: exercism/python practice/word-count (MIT, adapted)
 ## Why
 Every "what are people actually saying?" question ends up here: the top terms in a week of support tickets, the most common error phrase in a log file, the words a search index should not bother storing. The counting is trivial — a dict of word to number. The work is deciding what a *word* is when the text is full of commas, tabs, capital letters and apostrophes, and getting that decision written down once instead of re-guessing it in five places.
 
-## Introduction
-You teach English as a foreign language to high school students.
-
-You've decided to base your entire curriculum on TV shows.
-You need to analyze which words are used, and how often they're repeated.
-
-This will let you choose the simplest shows to start with, and to gradually increase the difficulty as time passes.
-
-## Instructions
-Your task is to count how many times each word occurs in a subtitle of a drama.
-
-The subtitles from these dramas use only ASCII characters.
-
-The characters often speak in casual English, using contractions like _they're_ or _it's_.
-Though these contractions come from two words (e.g. _we are_), the contraction (_we're_) is considered a single word.
-
-Words can be separated by any form of punctuation (e.g. ":", "!", or "?") or whitespace (e.g. "\t", "\n", or " ").
-The only punctuation that does not separate words is the apostrophe in contractions.
-
-Numbers are considered words.
-If the subtitles say _It costs 100 dollars._ then _100_ will be its own word.
-
-Words are case insensitive.
-For example, the word _you_ occurs three times in the following sentence:
-
-> You come back, you hear me? DO YOU HEAR ME?
-
-The ordering of the word counts in the results doesn't matter.
-
-Here's an example that incorporates several of the elements discussed above:
-
-- simple words
-- contractions
-- numbers
-- case insensitive words
-- punctuation (including apostrophes) to separate words
-- different forms of whitespace to separate words
-
-`"That's the password: 'PASSWORD 123'!", cried the Special Agent.\nSo I fled.`
-
-The mapping for this subtitle would be:
-
-```text
-123: 1
-agent: 1
-cried: 1
-fled: 1
-i: 1
-password: 2
-so: 1
-special: 1
-that's: 1
-the: 2
-```
-
 ## You get
 `subtitle` — one line of subtitle text, e.g.
 
@@ -117,50 +62,6 @@ solve("hey,my_spacebar_is_broken")   # -> {"hey": 1, "my": 1, "spacebar": 1, "is
 
 > [!WARNING]
 > `"''hey''"` must give `{"hey": 1}`, not `{"'hey'": 1}` — stripping punctuation only from the outside of each split piece is not enough, because `don't` has to survive.
-
-## Exercism hints
-### General
-
-This exercise has many potential solutions and many paths you can take along the way.
-No path is manifestly "better" than another, although a particular path may be more interesting or better suited to what you want to learn or explore right now.
-Some paths may trade speed for clarity, others might take up more memory but be more scalable or maintainable.
-We encourage you to try out more than one strategy to see what happens.
-
-_______
--  Python has a robust set of tools to work with strings. [`str.split`][str.split] [`str.replace`][str.replace] [`str.lower`][str.lower] and [`str.strip`][str.strip] can be particularly helpful with this challenge.
--  String methods can be chained together (_as long as the method returns a `str`_))
--  While `str.split()` is very _specific_, `str.strip()` behaves differently, and allows multiple combinations.
--  The [`string`][string] module (as opposed to `str`) has some constants that can be useful for filtering and comparison when processing strings.
-________
-
--  [Dictionaries][dict] can be helpful for tabulating when items (keys) appear more than once in a string.
--  [`dict.setdefault()`][dict.setdefault] can help in processing when a key might be missing from a dictionary.
--  The [Collections][collections] module implements some really useful subtypes to the core `dict` (dictionary), purpose-built to do things like [tally][collections.counter].
-________
--  Exploring the [`re`][re] module and regular expressions can be fun, but is by no means necessary to solve this challenge.
--  [Regex101][regex101] is very helpful for experimenting with regular expression logic.
--  Both [`re.sub`][re.sub] and [`re.findall`][re.findall] can be interesting strategies to employ.
-________
--  [Comprehensions][comprehensions] can often "flatten" loops where items are being appended to a list or inserted into a dictionary.
--  [Generator expressions][generator expressions] can often "stand in" for a list comprehension when an iterable is needed.
-  Generator expressions are evaluated in a "lazy" fashion, and take up less space in memory than a corresponding list comprehension.
-
-
-[collections.counter]: https://devdocs.io/python~3.14/library/collections#collections.Counter
-[collections]: https://devdocs.io/python~3.14/library/collections#collections-container-datatypes
-[comprehensions]: https://treyhunner.com/2015/12/python-list-comprehensions-now-in-color/
-[dict.setdefault]: https://devdocs.io/python~3.14/library/stdtypes#dict.setdefault
-[dict]: https://devdocs.io/python~3.14/library/stdtypes#mapping-types-dict
-[generator expressions]: https://dbader.org/blog/python-generator-expressions
-[re.findall]: https://devdocs.io/python~3.14/library/re#re.findall
-[re.sub]: https://devdocs.io/python~3.14/library/re#re.sub
-[re]: https://devdocs.io/python~3.14/library/re#re-regular-expression-operations
-[regex101]: https://regex101.com/
-[str.lower]: https://devdocs.io/python~3.14/library/stdtypes#str.lower
-[str.replace]: https://devdocs.io/python~3.14/library/stdtypes#str.replace
-[str.split]: https://devdocs.io/python~3.14/library/stdtypes#str.split
-[str.strip]: https://devdocs.io/python~3.14/library/stdtypes#str.strip
-[string]: https://devdocs.io/python~3.14/library/string
 
 ## Hints
 ### Hint 1

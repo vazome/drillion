@@ -55,10 +55,23 @@ export interface Progress {
   per_tag: Record<string, { seen: number; total: number; boxes: number[]; lapses: number; due7: number }>;
   log: { date: string; slug: string; grade: Grade; attempts: number; secs: number; new: boolean }[];
 }
+/** One end of a prereq edge, already resolved server-side: the browser never maps a slug
+ *  to a title itself. */
+export interface DepRef { slug: string; topic: number; title: string; tags: string[] }
 export interface Task {
   slug: string; meta: Meta;
   spec_md: string; code: string; etag: string; has_given: boolean;
   status: Status; buried: boolean;
+  /** passes on this card, ever — the lineage screen's `seen N×` line */
+  seen: number;
+  /** this card's rung, 0 when it is not on the ladder — the lineage draws it */
+  box: number;
+  /** every prereq, not just the unpassed ones. `passed` is box 1, the bar `blocked` uses —
+   *  never re-derive it from `status`, which says `done` on a card that has lapsed. */
+  requires: (DepRef & { state: "passed" | "blocked"; box: number })[];
+  /** the direct reverse edge, one hop: what passing this opens up. `also` is what else
+   *  still gates that task — passing this one is not always enough. */
+  unlocks: (DepRef & { also: number[] })[];
   attempt: { attempts: number; active: number; seed: number; solution_shown: boolean } | null;
   /** at `lapse_limit` the task is flagged as one that keeps beating you */
   lapses: number; lapse_limit: number;
@@ -76,12 +89,16 @@ export interface Task {
   note: string;
 }
 interface RunBase { attempts: number; headline: string[]; output: string; etag: string }
-/** The grade and everything it decided exist iff `passed`. `stepped` is the scheduler's
- *  answer to whether the card moved — never re-derive it from `box`. */
+/** The grade and everything it decided exist iff `passed && graded`. A plain Run is
+ *  `graded: false`: it costs no attempt and moves no card, however green it came back.
+ *  `stepped` is the scheduler's answer to whether the card moved — never re-derive it
+ *  from `box`. */
 export type RunResult =
-  | (RunBase & { passed: false })
+  | (RunBase & { passed: false; graded: boolean })
+  | (RunBase & { passed: true; graded: false })
   | (RunBase & {
-      passed: true; grade: Grade; box: number; stepped: boolean; from_box: number;
+      passed: true; graded: true;
+      grade: Grade; box: number; stepped: boolean; from_box: number;
       due_in: number; code: string; reason: string; reference: string; lapses: number;
       next: string | null;
     });
