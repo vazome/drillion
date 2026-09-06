@@ -22,34 +22,6 @@ source: exercism/python practice/grade-school (MIT, adapted)
 ## Why
 A school office enrols a child on one screen, and three other screens then ask that same record different questions: who is in year 2, who is enrolled at all, and did that last enrolment actually take. The mistake that costs the office a morning is keeping a separate list behind each screen — a name typed twice lands in two of them, and the printed register stops agreeing with the class list. Keep one fact per student, decide the ordering at the moment you *read*, and the three screens can never disagree. Tenant directories, on-call rotas and feature-flag audiences are all this shape: one write path, several sorted views.
 
-## Instructions
-Given students' names along with the grade they are in, create a roster for the school.
-
-In the end, you should be able to:
-
-- Add a student's name to the roster for a grade:
-  - "Add Jim to grade 2."
-  - "OK."
-- Get a list of all students enrolled in a grade:
-  - "Which students are in grade 2?"
-  - "We've only got Jim right now."
-- Get a sorted list of all students in all grades.
-  Grades should be sorted as 1, 2, 3, etc., and students within a grade should be sorted alphabetically by name.
-  - "Who is enrolled in school right now?"
-  - "Let me think.
-    We have Anna, Barb, and Charlie in grade 1, Alex, Peter, and Zoe in grade 2, and Jim in grade 5.
-    So the answer is: Anna, Barb, Charlie, Alex, Peter, Zoe, and Jim."
-
-Note that all our students only have one name (it's a small town, what do you want?), and each student cannot be added more than once to a grade or the roster.
-If a test attempts to add the same student more than once, your implementation should indicate that this is incorrect.
-
-### How this exercise is structured for the Python track
-
-The tests for this exercise expect your solution to be implemented as a School `class` in Python.
-If you are unfamiliar with `class`es in Python, [concept:python/classes]() and [`classes` in the official Python documentation][classes in python] are good places to start.
-
-[classes in python]: https://devdocs.io/python~3.14/tutorial/classes
-
 ## You get
 Nothing to start — you return a **class**. The grader builds it with no arguments, `School()`, and then drives it with the four members below. Names are plain strings with no spaces, e.g. `"Aimee"`; grades are plain `int`s from `1` upwards, e.g. `2`.
 

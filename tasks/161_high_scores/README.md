@@ -22,21 +22,6 @@ source: exercism/python practice/high-scores (MIT, adapted)
 ## Why
 This is every metrics object you will ever write: something collects a series of numbers in the order they happened — request latencies, deploy durations, daily error counts — and the rest of the program asks it a small set of questions. What was the last one? What is the worst? Show me the top three. The trap is not the questions, it is that the easiest way to answer the third one is to sort, and if you sort the list you were handed, the *order it arrived in* is gone forever and the "last one" answer silently starts lying. Answering a question must not damage the data it was asked about.
 
-## Instructions
-Manage a game player's High Score list.
-
-Your task is to build a high-score component of the classic Frogger game, one of the highest selling and most addictive games of all time, and a classic of the arcade era.
-Your task is to write methods that return the highest score from the list, the last added score and the three highest scores.
-
-In this exercise, you're going to use and manipulate [`lists`][lists].
-Python lists are very versatile, and you'll find yourself using them again and again in problems both simple and complex.
-
-- [**Data Structures (Python 3 Documentation Tutorial)**](https://devdocs.io/python~3.14/tutorial/datastructures)
-- [**Lists and Tuples in Python (Real Python)**](https://realpython.com/python-lists-tuples/)
-- [**Python Lists (Google for Education)**](https://developers.google.com/edu/python/lists)
-
-[lists]: https://devdocs.io/python~3.14/library/stdtypes#lists
-
 ## You get
 Nothing to start — you return a **class**. The grader builds it as `HighScores(scores)`, where `scores` is a non-empty list of `int` scores in the order the player set them, e.g. `[30, 50, 20, 70]`.
 

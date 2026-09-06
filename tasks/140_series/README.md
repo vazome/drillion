@@ -22,47 +22,6 @@ source: exercism/python practice/series (MIT, adapted)
 ## Why
 A sliding window is the shape behind "the last five minutes of latency", "any three consecutive failed health checks", "every 4-byte frame in this payload". Getting the count of windows right — and it is `len - n + 1`, not `len // n` and not `len - n` — is the kind of off-by-one that ships. The other half of this task is the guard clauses: four impossible inputs, four exact messages, checked before any work is done.
 
-## Instructions
-Given a string of digits, output all the contiguous substrings of length `n` in that string in the order that they appear.
-
-For example, the string "49142" has the following 3-digit series:
-
-- "491"
-- "914"
-- "142"
-
-And the following 4-digit series:
-
-- "4914"
-- "9142"
-
-And if you ask for a 6-digit series from a 5-digit string, you deserve whatever you get.
-
-Note that these series are only required to occupy _adjacent positions_ in the input;
-the digits need not be _numerically consecutive_.
-
-### Exception messages
-
-Sometimes it is necessary to [raise an exception](https://devdocs.io/python~3.14/tutorial/errors#raising-exceptions). When you do this, you should always include a **meaningful error message** to indicate what the source of the error is. This makes your code more readable and helps significantly with debugging. For situations where you know that the error source will be a certain type, you can choose to raise one of the [built in error types](https://devdocs.io/python~3.14/library/exceptions#base-classes), but should still include a meaningful message.
-
-This particular exercise requires that you use the [raise statement](https://devdocs.io/python~3.14/reference/simple_stmts#the-raise-statement) to "throw" a `ValueError` if the series and/or length parameters input into the `slice()` function are empty or out of range. The tests will only pass if you both `raise` the `exception` and include a message with it.
-
-To raise a `ValueError` with a message, write the message as an argument to the `exception` type:
-
-```python
-# if the slice length is zero.
-raise ValueError("slice length cannot be zero")
-
-# if the slice length is negative.
-raise ValueError("slice length cannot be negative")
-
-# if the series provided is empty.
-raise ValueError("series cannot be empty")
-
-# if the slice length is longer than the series.
-raise ValueError("slice length cannot be greater than series length")
-```
-
 ## You get
 - `series` — a string of digits, e.g. `"49142"`. It may be empty.
 - `length` — how long each window should be, e.g. `3`. It may be zero, negative, or longer than the series.

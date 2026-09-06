@@ -22,31 +22,6 @@ source: exercism/python practice/robot-simulator (MIT, adapted)
 ## Why
 Before a warehouse robot is allowed anywhere near a warehouse, the firmware that reads its command stream is replayed against a model of the robot in software: feed in `"RAALAL"`, check it ends up where the plan said. That model has to be cheap enough to run thousands of times in a test suite, so it is not a robot at all — it is a position, a facing, and a rule for what each letter does. Plotters, turtle graphics, CNC paths, the movement code in a game, a cursor walking a document: same object every time. The part worth getting right is the facing, because the obvious representation — four names, or four strings — turns "turn left" into a table of special cases, and the right one turns it into a remainder.
 
-## Instructions
-Write a robot simulator.
-
-A robot factory's test facility needs a program to verify robot movements.
-
-The robots have three possible movements:
-
-- turn right
-- turn left
-- advance
-
-Robots are placed on a hypothetical infinite grid, facing a particular direction (north, east, south, or west) at a set of {x,y} coordinates,
-e.g., {3,8}, with coordinates increasing to the north and east.
-
-The robot then receives a number of instructions, at which point the testing facility verifies the robot's new position, and in which direction it is pointing.
-
-- The letter-string "RAALAL" means:
-  - Turn right
-  - Advance twice
-  - Turn left
-  - Advance once
-  - Turn left yet again
-- Say a robot starts at {7, 3} facing north.
-  Then running this stream of instructions should leave it at {9, 4} facing west.
-
 ## You get
 Nothing to start — you return a **class**. The four compass names are **already written for you** at the top of `task.py`, marked `# given — do not edit`:
 

@@ -22,19 +22,6 @@ source: exercism/python practice/matching-brackets (MIT, adapted)
 ## Why
 Your editor greys out a mismatched brace, your JSON parser says "unexpected end of input", your shell complains about an unterminated quote — all of them are running this check. It is also the smallest honest example of a stack: a problem where you must remember what you opened, in order, and match the most recent one first. Counting alone cannot do it, and finding out *why* counting fails is the point of the task.
 
-## Introduction
-You're given the opportunity to write software for the Bracketeer™, an ancient but powerful mainframe.
-The software that runs on it is written in a proprietary language.
-Much of its syntax is familiar, but you notice _lots_ of brackets, braces and parentheses.
-Despite the Bracketeer™ being powerful, it lacks flexibility.
-If the source code has any unbalanced brackets, braces or parentheses, the Bracketeer™ crashes and must be rebooted.
-To avoid such a scenario, you start writing code that can verify that brackets, braces, and parentheses are balanced before attempting to run it on the Bracketeer™.
-
-## Instructions
-Given a string containing brackets `[]`, braces `{}`, parentheses `()`, or any combination thereof, verify that any and all pairs are matched and nested correctly.
-Any other characters should be ignored.
-For example, `"{what is (42)}?"` is balanced and `"[text}"` is not.
-
 ## You get
 `text` — a string that may contain `()`, `[]`, `{}` and any other characters at all, e.g. `"(((185 + 223.85) * 15) - 543)/2"`. It may be empty.
 

@@ -22,23 +22,6 @@ source: exercism/python practice/acronym (MIT, adapted)
 ## Why
 Naming things is half of infrastructure work: a service called "Customer Identity And Access Management" becomes `ciam` in the repo name, the DNS entry, the IAM role and the dashboard title, and someone has to generate that consistently rather than by taste. The same three lines turn a ticket title into a slug or a column header into a short key. The interesting part is not the initials — it is that "word" has to be defined precisely enough that `metal-oxide` gives two letters and `Halley's` gives one.
 
-## Instructions
-Convert a phrase to its acronym.
-
-Techies love their TLA (Three Letter Acronyms)!
-
-Help generate some jargon by writing a program that converts a long name like Portable Network Graphics to its acronym (PNG).
-
-Punctuation is handled as follows: hyphens are word separators (like whitespace); all other punctuation can be removed from the input.
-
-For example:
-
-| Input                     | Output |
-| ------------------------- | ------ |
-| As Soon As Possible       | ASAP   |
-| Liquid-crystal display    | LCD    |
-| Thank George It's Friday! | TGIF   |
-
 ## You get
 `phrase` — a long name, e.g. `"Portable Network Graphics"`. Words may be separated by spaces or hyphens, may carry punctuation such as commas, exclamation marks or underscores, and may be lower case, capitalised or already in capitals.
 

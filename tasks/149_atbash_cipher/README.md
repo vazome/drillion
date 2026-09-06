@@ -23,33 +23,6 @@ source: exercism/python practice/atbash-cipher (MIT, adapted)
 ## Why
 Two habits come out of this one. The first is normalising input before you transform it: strip what does not matter — case, spaces, punctuation — so the interesting code only ever sees one clean shape, instead of every function re-deciding what to do with a comma. The second is chunking a sequence into fixed-size groups, which you will write again for pagination, for batching API calls, for splitting a long token into readable segments, and for every "insert a space every four digits" card field. The cipher itself is a lookup table; the reusable parts are on either side of it.
 
-## Instructions
-Create an implementation of the Atbash cipher, an ancient encryption system created in the Middle East.
-
-The Atbash cipher is a simple substitution cipher that relies on transposing all the letters in the alphabet such that the resulting alphabet is backwards.
-The first letter is replaced with the last letter, the second with the second-last, and so on.
-
-An Atbash cipher for the Latin alphabet would be as follows:
-
-```text
-Plain:  abcdefghijklmnopqrstuvwxyz
-Cipher: zyxwvutsrqponmlkjihgfedcba
-```
-
-It is a very weak cipher because it only has one possible key, and it is a simple mono-alphabetic substitution cipher.
-However, this may not have been an issue in the cipher's time.
-
-Ciphertext is written out in groups of fixed length, the traditional group size being 5 letters, leaving numbers unchanged, and punctuation is excluded.
-This is to make it harder to guess things based on word boundaries.
-All text will be encoded as lowercase letters.
-
-### Examples
-
-- Encoding `test` gives `gvhg`
-- Encoding `x123 yes` gives `c123b vh`
-- Decoding `gvhg` gives `test`
-- Decoding `gsvjf rxpyi ldmul cqfnk hlevi gsvoz abwlt` gives `thequickbrownfoxjumpsoverthelazydog`
-
 ## You get
 Nothing. `solve()` takes **no arguments**; the text arrives as an argument to each of the functions you hand back.
 

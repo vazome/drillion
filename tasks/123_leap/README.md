@@ -22,24 +22,6 @@ source: exercism/python practice/leap (MIT, adapted)
 ## Why
 Anything that plans ahead — a shift rota, a billing cycle, a backup that runs "on the last day of February" — has to know whether the year has 366 days. The rule looks like one line of arithmetic but it is really a rule with an exception and then an exception to the exception, which is exactly the shape people get wrong. 1900 was not a leap year; 2000 was. Software that assumed "every four years" shipped bugs that only surfaced once a century.
 
-## Introduction
-A leap year (in the Gregorian calendar) occurs:
-
-- In every year that is evenly divisible by 4.
-- Unless the year is evenly divisible by 100, in which case it's only a leap year if the year is also evenly divisible by 400.
-
-Some examples:
-
-- 1997 was not a leap year as it's not divisible by 4.
-- 1900 was not a leap year as it's not divisible by 400.
-- 2000 was a leap year!
-
-> [!NOTE]
-> For a delightful, four-minute explanation of the whole phenomenon of leap years, check out [this YouTube video](https://www.youtube.com/watch?v=xX96xng7sAE).
-
-## Instructions
-Your task is to determine whether a given year is a leap year.
-
 ## You get
 `year` — a whole number, e.g. `1996`.
 

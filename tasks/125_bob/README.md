@@ -21,35 +21,6 @@ source: exercism/python practice/bob (MIT, adapted)
 ## Why
 An out-of-hours chat widget answers with one of five canned lines, and picking the right one is pure classification: shouted question, shouted statement, plain question, silence, everything else. The order you ask the questions in *is* the program — ask "is it a question?" before "is it shouted?" and the combined case can never be reached. Every routing rule and every alert filter you write later has this exact shape, so it is worth getting the reflex now.
 
-## Introduction
-Bob is a [lackadaisical][] teenager.
-He likes to think that he's very cool.
-And he definitely doesn't get excited about things.
-That wouldn't be cool.
-
-When people talk to him, his responses are pretty limited.
-
-[lackadaisical]: https://www.collinsdictionary.com/dictionary/english/lackadaisical
-
-## Instructions
-Your task is to determine what Bob will reply to someone when they say something to him or ask him a question.
-
-Bob only ever answers one of five things:
-
-- **"Sure."**
-  This is his response if you ask him a question, such as "How are you?"
-  The convention used for questions is that it ends with a question mark.
-- **"Whoa, chill out!"**
-  This is his answer if you YELL AT HIM.
-  The convention used for yelling is ALL CAPITAL LETTERS.
-- **"Calm down, I know what I'm doing!"**
-  This is what he says if you yell a question at him.
-- **"Fine. Be that way!"**
-  This is how he responds to silence.
-  The convention used for silence is nothing, or various combinations of whitespace characters.
-- **"Whatever."**
-  This is what he answers to anything else.
-
 ## You get
 `message` — the text someone typed, e.g. `"WATCH OUT!"`. It may be empty, may be nothing but spaces, tabs or newlines, and may have whitespace stuck on either end.
 
