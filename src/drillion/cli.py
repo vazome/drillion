@@ -73,10 +73,23 @@ def serve():
 
     from .api import app
 
+    class Revalidated(StaticFiles):
+        """The built page, always revalidated. The bundler reuses one filename for the
+        entry chunk however much its contents changed, so a browser that has ever loaded
+        drillion holds `assets/index-<name>.js` under whatever freshness it invented for a
+        response that carried no `cache-control` — and serves yesterday's app after an
+        upgrade. `no-cache` is revalidate-before-use, not don't-store: the ETag already
+        here answers 304 in a few bytes."""
+
+        def file_response(self, *args, **kwargs):
+            resp = super().file_response(*args, **kwargs)
+            resp.headers["cache-control"] = "no-cache"
+            return resp
+
     build_web()
     # mounted after every /api route, so an unmatched /api/... 404s as JSON
     if settings.web_dist.is_dir():
-        app.mount("/", StaticFiles(directory=settings.web_dist, html=True), name="web")
+        app.mount("/", Revalidated(directory=settings.web_dist, html=True), name="web")
     url = f"http://{settings.host}:{settings.port}/"
     print(f"drillion → {url}   (ctrl-c to stop)", flush=True)  # piped output too
     if settings.open_browser and settings.host == "127.0.0.1":  # not from a container
