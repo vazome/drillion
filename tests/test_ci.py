@@ -108,9 +108,11 @@ def test_smoke_reaches_volume_check_and_propagates_failures(tmp_path, failure):
         'if [[ "$1" == inspect ]]; then echo healthy; fi\n'
         'if [[ "$*" == *"$FAIL_ON"* && -n "$FAIL_ON" ]]; then exit 7; fi\n'
     )
+    # the script checks the served count against the checkout, so the fake has to agree
+    served = len(list((WORKFLOW.parents[2] / "tasks").glob("*/task.py")))
     curl = tmp_path / "curl"
     curl.write_text(
-        '#!/usr/bin/env bash\necho "$*" >> "$CALLS"\necho "{\\"tasks\\":182}"\n'
+        f'#!/usr/bin/env bash\necho "$*" >> "$CALLS"\necho \'{{"tasks":{served}}}\'\n'
     )
     for command in (docker, curl):
         command.chmod(0o755)
@@ -123,6 +125,7 @@ def test_smoke_reaches_volume_check_and_propagates_failures(tmp_path, failure):
             "FAIL_ON": failure,
             "CALLS": str(calls),
         },
+        cwd=WORKFLOW.parents[2],
         check=False,
         capture_output=True,
         text=True,
