@@ -33,6 +33,13 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
   await shot(page, "2-task");
 
+  // The reading grace. Dismissed straight after, or it sits in the corner of the next two shots.
+  const grace = page.getByText(/The clock starts in \d+ seconds/);
+  await expect(grace).toBeVisible();
+  await shot(page, "2b-task-reading-time");
+  await page.getByRole("button", { name: "Dismiss" }).click();
+  await expect(grace).toBeHidden();
+
   // both verdicts get photographed; the stub raises NotImplementedError, so attempt 1 really fails
   await submit.click();
   await expect(page.getByText("Result · attempt 1")).toBeVisible();
@@ -49,9 +56,9 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await page.locator(".monaco-diff-editor").scrollIntoViewIfNeeded();
   await shot(page, "4-task-tests-passed");
 
-  // Last, so the ladder and the session table have something in them.
+  // Last, so the strength counts and the session table have something in them.
   await page.goto("/#/progress");
-  await expect(page.getByText("The ladder", { exact: true })).toBeVisible();
+  await expect(page.getByText("How well you know them", { exact: true })).toBeVisible();
   await shot(page, "5-progress");
 
   // The panes stack below 1000px. After the others, so each of those keeps the fixed viewport.

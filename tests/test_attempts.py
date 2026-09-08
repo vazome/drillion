@@ -55,6 +55,26 @@ def test_touch_never_runs_the_timer_backwards():
     assert attempts.touch(o) == 500  # a step back is worth nothing, never less
 
 
+def test_the_first_minute_is_free():
+    """The reading grace: `last` opens in the future, and nothing spends it early."""
+    st = _st()
+    o = attempts.open_attempt(st, "001_a")
+    # opening, reading and touching, and still nothing on the clock
+    assert attempts.touch(o) == 0
+    assert 55 <= attempts.grace_left(o) <= attempts.GRACE_SECS
+    # a touch during the grace must not drag `last` back to now and hand out a second minute
+    before = o["last"]
+    attempts.touch(o)
+    assert o["last"] == before
+
+
+def test_the_clock_runs_once_the_grace_is_spent():
+    st = _st()
+    o = attempts.open_attempt(st, "001_a")
+    o["last"] = (datetime.now() - timedelta(seconds=30)).isoformat()  # noqa: DTZ005
+    assert attempts.touch(o) == 30 and attempts.grace_left(o) == 0
+
+
 def test_attempt_lifecycle():
     st, all_tasks = _st(), _exs()
     o = attempts.open_attempt(st, "001_a")

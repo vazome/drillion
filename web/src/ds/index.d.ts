@@ -130,12 +130,22 @@ export declare function Table(props: TableProps): El;
 
 /** Status / grade pill. Words carry the meaning; colour is never the only signal. */
 export interface StatusBadgeProps {
-  status?: "new" | "due" | "open" | "done" | "easy" | "medium" | "hard" | "quick" | "pass" | "struggled" | "abandoned";
+  status?: "new" | "due" | "open" | "done" | "easy" | "medium" | "hard" | "quick" | "pass" | "struggled" | "abandoned" | "learning" | "familiar" | "solid";
   /** override label (e.g. "done 6 d") */
   children?: React.ReactNode;
   style?: Style;
 }
 export declare function StatusBadge(props: StatusBadgeProps): El;
+
+/** The corner notice that explains a clock still reading 00:00, during the reading grace.
+ *  Counts down; the page drops it when the grace is spent. */
+export interface GraceNoticeProps {
+  /** seconds of grace left, straight from the payload */
+  seconds?: number;
+  onDismiss?: () => void;
+  style?: Style;
+}
+export declare function GraceNotice(props: GraceNoticeProps): El;
 
 /** Tag chip: filter (interactive, aria-pressed) or row annotation (small, static). */
 export interface TagChipProps {
@@ -147,26 +157,6 @@ export interface TagChipProps {
   style?: Style;
 }
 export declare function TagChip(props: TagChipProps): El;
-
-/** Miniature Leitner meter for rows and banners, one cell per rung. box 0 = all empty. */
-export interface LadderMeterProps {
-  /** which rung to fill, 0–7; 0 is a card that is not on the ladder yet */
-  box?: number;
-  intervals?: number[];
-  style?: Style;
-}
-export declare function LadderMeter(props: LadderMeterProps): El;
-
-/** Full-size ladder for the Progress page: one box per rung, with counts and return intervals. */
-export interface LadderProps {
-  /** card count per box, one entry per rung */
-  boxes?: number[];
-  /** index of the box to outline (most recent pass) */
-  highlight?: number;
-  intervals?: number[];
-  style?: Style;
-}
-export declare function Ladder(props: LadderProps): El;
 
 /** Active-time display. Muted under par, warn past par, fail past 2× par. */
 export interface TimerProps {
@@ -262,7 +252,7 @@ export interface PracticeHeatmapProps {
 export declare function PracticeHeatmap(props: PracticeHeatmapProps): El;
 
 /** Topic depth: one strip per tag. Strip width is the topic's size, its segments are the
- *  tasks in each ladder box (pale box 1 → accent box 7) followed by the unseen remainder,
+ *  tasks it knows, shakiest (pale) to most solid (accent), followed by the not-started remainder,
  *  with lapses, due-in-7 and seen/total beside it. Sortable — stuck first by default —
  *  and each tag links to the catalogue filtered by that tag. Handles the full tag list
  *  by scrolling inside its card. */
@@ -272,7 +262,7 @@ export interface TopicStripsTag {
   total: number;
   /** tasks seen at least once — the strip's coloured part */
   seen: number;
-  /** 7 counts: tasks with this tag sitting in each ladder box */
+  /** one count per return interval, shakiest first — the strip's segments */
   boxes: number[];
   /** struggles across the tag's tasks */
   lapses: number;
@@ -281,8 +271,6 @@ export interface TopicStripsTag {
 }
 export interface TopicStripsProps {
   tags?: TopicStripsTag[];
-  /** how many ladder boxes a strip is divided into, for the footer legend — seven as the scheduler ships */
-  boxes?: number;
   defaultSort?: "stuck first" | "neglected first" | "most lapses" | "a–z";
   /** scroll height of the row list, px */
   maxHeight?: number;
@@ -382,7 +370,7 @@ export interface RowFlagsProps {
   onNeedsClick?: (e: React.MouseEvent) => void;
   /** put aside for today only; the box, the due date and the counts are untouched */
   buried?: boolean;
-  /** how many times this task has been failed back down the ladder */
+  /** how many times this task has been struggled back to a sooner return */
   lapses?: number;
   /** `stats.lapse_limit` — the flag appears at or above it; 0 turns the flag off */
   lapseLimit?: number;
@@ -420,22 +408,18 @@ export interface DepLineageRef {
   title: string;
   /** prereqs only: a solid wire when `passed`, a dashed warn one when `blocked` */
   state?: "passed" | "blocked";
-  /** prereqs only: that card's rung, for the meter on its node */
-  box?: number;
   /** unlocks only: the task's *other* prereq numbers — "also needs 027" */
   also?: number[];
   /** the concepts the task practises; the node wears the first as a chip */
   tags?: string[];
 }
 export interface DepLineageProps {
-  /** the task in the middle; `aside` is the one faint line under its title */
-  task: { topic: number; title: string; tags?: string[]; box?: number; aside?: string };
+  /** the task in the middle; `strength` is the badge on it, `aside` the faint line under the title */
+  task: { topic: number; title: string; tags?: string[]; strength?: "learning" | "familiar" | "solid" | null; aside?: string };
   /** prereqs — mark each `passed` or `blocked`; an empty column says so in words */
   requires?: DepLineageRef[];
   /** what passing this opens up */
   unlocks?: DepLineageRef[];
-  /** the scheduler's return intervals; without it the nodes draw no ladder meter */
-  ladder?: number[];
   /** where a node goes when clicked; omit for a board nothing links out of */
   hrefOf?: (ref: DepLineageRef) => string;
   /** called on hover and focus of a node, early enough to make the click feel instant */

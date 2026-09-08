@@ -1,5 +1,5 @@
 import React from "react";
-import { LadderMeter } from "./LadderMeter.jsx";
+import { StatusBadge } from "./StatusBadge.jsx";
 import { TagChip } from "./TagChip.jsx";
 
 /** Fixed geometry, so the wires are arithmetic rather than a measured layout: every node is
@@ -67,7 +67,7 @@ function Node({ node, x, y, w, tone, href, footer, onPrefetch, children }) {
  *  right, wired to the task in the middle. A solid line is a prereq you have passed, a
  *  dashed one is what is still blocking. Nothing here refuses a task — a blocked prereq is
  *  information and a shorter way in. */
-export function DepLineage({ task, requires = [], unlocks = [], ladder, hrefOf, onPrefetch, shortestPath, graphHref, onClose, style }) {
+export function DepLineage({ task, requires = [], unlocks = [], hrefOf, onPrefetch, shortestPath, graphHref, onClose, style }) {
   const [unfolded, setUnfolded] = React.useState({});
   const fold = (list, key) => (unfolded[key] || list.length <= FOLD ? list : list.slice(0, FOLD));
   const req = fold(requires, "requires");
@@ -149,7 +149,7 @@ export function DepLineage({ task, requires = [], unlocks = [], ladder, hrefOf, 
             : empty("nothing — this one stands on its own", colX[0])}
 
           <Node node={task} x={colX[1]} y={(H - BIG_H) / 2} w={BIG_W} tone="this" footer={task.aside}>
-            {ladder ? <LadderMeter box={task.box ?? 0} intervals={ladder} /> : null}
+            {task.strength ? <StatusBadge status={task.strength} /> : null}
           </Node>
 
           {unl.length

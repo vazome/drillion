@@ -4,8 +4,8 @@
      leaving   → ease-in
      changing in place → ease-in-out
    Nothing runs past 280ms. Only transform and opacity are animated, so every
-   frame is compositor-only. The one overshoot in the system is the ladder step:
-   the moment a card climbs a box is the one moment worth watching.
+   frame is compositor-only. The one overshoot in the system is the step:
+   the moment a task moves further out is the one moment worth watching.
    Everything collapses to near-instant under prefers-reduced-motion. */
 
 :root {
@@ -48,7 +48,7 @@ button:not([disabled]):active,
 @keyframes dsFade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes dsDrop { from { opacity: 0; transform: translateY(-7px); } to { opacity: 1; transform: none; } }
 @keyframes dsExpand { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
-@keyframes dsStep { 0% { transform: scaleY(.35); opacity: .25; } 62% { transform: scaleY(1.14); opacity: 1; } 100% { transform: none; } }
+@keyframes dsStep { 0% { transform: scale(.86); opacity: .25; } 62% { transform: scale(1.08); opacity: 1; } 100% { transform: none; } }
 @keyframes dsPulse { 0%, 100% { opacity: .32; } 50% { opacity: 1; } }
 @keyframes dsSweep { from { transform: translateX(-40%); } to { transform: translateX(340%); } }
 
@@ -76,12 +76,8 @@ button:not([disabled]):active,
 .m-stagger > *:nth-child(10) { animation-delay: calc(var(--stagger) * 9); }
 .m-stagger > *:nth-child(n + 11) { animation-delay: calc(var(--stagger) * 10); }
 
-/* The ladder step. Cells fill left to right with a single soft overshoot. */
-.m-step i { animation: dsStep var(--dur-slow) var(--ease-step) both; transform-origin: bottom; }
-.m-step i:nth-child(2) { animation-delay: 45ms; }
-.m-step i:nth-child(3) { animation-delay: 90ms; }
-.m-step i:nth-child(4) { animation-delay: 135ms; }
-.m-step i:nth-child(5) { animation-delay: 180ms; }
+/* The step out. The new standing arrives with a single soft overshoot. */
+.m-step { animation: dsStep var(--dur-slow) var(--ease-step) both; }
 
 /* Work in flight. */
 .m-pulse { animation: dsPulse 1.15s var(--ease-inout) infinite; }

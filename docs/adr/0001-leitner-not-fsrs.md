@@ -45,6 +45,14 @@ discovered:
   monthly cycle. `LADDER` now runs on to 60 and 120, which sheds that load without inventing a
   status for "retired" — a done card you keep getting right simply comes back rarely.
   `REVIEWS_PER_DAY` (#7) bounds what any one day can cost you on top of that.
+- **"Ladder", "box" and "card" stop at the API.** They are Leitner's words, from a 1970s
+  index-card drawer, and a learner has met them nowhere — not at university, not at work, not in
+  general culture. Seven numbered boxes also read as seven levels to climb, which is a thing to
+  be intimidated by rather than a fact about your practice. The payloads still carry `box`,
+  `boxes` and `ladder`; `web/src/strength.ts` is the one place that turns a rung into the word a
+  screen shows — *learning* (back within a few days), *familiar* (a week to a month), *solid*
+  (two months or more), read off the live `LADDER` so a changed interval cannot make the label
+  lie. Change `LADDER` freely; the three words follow.
 - **`difficulty` deliberately does not reach the scheduler.** Every task declares
   `easy`/`medium`/`hard`, graded against `docs/difficulty-rubric.md`, and the ladder treats all
   three identically. This is the one place drillion declines FSRS's shape on purpose rather than

@@ -137,7 +137,9 @@ async def _stub_to_pass(api, path):
 
     again = (await api.post(f"/api/task/{SLUG}/open")).json()
     assert again["reference"] is None  # ...and a new sitting starts clean
-    assert again["attempt"] == {
+    fresh = again["attempt"]
+    assert 55 <= fresh.pop("grace") <= 60  # every open buys a fresh reading minute
+    assert fresh == {
         "attempts": 0,
         "active": 0,
         "seed": again["attempt"]["seed"],

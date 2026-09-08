@@ -58,14 +58,50 @@ def test_seeding_never_overwrites_saved_code():
     _seeding(check)
 
 
-def test_a_root_that_has_tasks_is_left_alone():
-    """Nothing is added either — not `_lib.py`, not a folder only the package has."""
+def test_an_upgrade_reaches_a_root_that_was_already_seeded():
+    """The reason this runs every time: a root seeded by an older drillion still gets the
+    files that version never shipped."""
 
     def check(root, _template):
         (root / "tasks" / "009_fstrings").mkdir(parents=True)
-        before = sorted(p.relative_to(root) for p in root.rglob("*"))
         cli.seed()
-        assert sorted(p.relative_to(root) for p in root.rglob("*")) == before
+        assert (root / "tasks" / "_lib.py").is_file()
+        assert (root / "tasks" / "009_fstrings" / "task.py").is_file()
+
+    _seeding(check)
+
+
+def test_drillions_own_files_follow_the_installed_version():
+    """Everything that is not task.py — READMEs, tests, `_lib.py` — is overwritten, so a
+    rewritten prompt reaches a learner who is already using the task."""
+
+    def check(root, template):
+        (root / "tasks" / "009_fstrings").mkdir(parents=True)
+        (root / "tasks" / "009_fstrings" / "README.md").write_text(
+            "stale\n", encoding="utf-8"
+        )
+        (template / "009_fstrings" / "README.md").write_text(
+            "current\n", encoding="utf-8"
+        )
+        cli.seed()
+        assert (root / "tasks" / "009_fstrings" / "README.md").read_text(
+            encoding="utf-8"
+        ) == "current\n"
+
+    _seeding(check)
+
+
+def test_a_task_this_version_no_longer_ships_is_removed():
+    """Renumbering a task renames its folder; without the prune the old slug lives on in
+    the root forever and the ladder shows both."""
+
+    def check(root, _template):
+        gone = root / "tasks" / "001_fstrings"
+        gone.mkdir(parents=True)
+        (gone / "task.py").write_text("mine\n", encoding="utf-8")
+        cli.seed()
+        assert not gone.exists()
+        assert (root / "tasks" / "009_fstrings").is_dir()
 
     _seeding(check)
 
