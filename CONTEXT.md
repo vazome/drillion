@@ -14,7 +14,7 @@ words mean.
 
 **Task**:
 The unit of practice: one folder under `tasks/`, holding one spec, one stub to fill in, and one
-test that grades it. There are 171.
+test that grades it. There are 189.
 _Avoid_: exercise, drill, problem, kata, question
 
 **Slug**:
@@ -196,3 +196,11 @@ Everything a learner would lose, as one file they keep: their cards, **notes**, 
 it replaced to a backup of its own first. Distinct from the **archive**, which is drillion's
 own record inside one root.
 _Avoid_: export, sync, save file, snapshot
+
+**Erase**:
+Going back to a first run by hand: the stored progress is deleted rather than emptied, and
+every task file goes back to its stub. It writes a **backup** first, which is the only way
+back, and it is confirmed by typing a phrase rather than by clicking. The one action in
+drillion that destroys something.
+_Avoid_: reset, clear, wipe, factory reset; and never as a synonym for **abandon**, which
+costs one attempt and keeps everything else
