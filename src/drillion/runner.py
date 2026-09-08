@@ -90,9 +90,7 @@ def printed(out):
     for line in lines:
         if _CAPTURED.match(line):
             keeping = True
-        elif _SECTION.match(line):
-            keeping = False
-        elif keeping and _TOTALS.match(line):
+        elif _SECTION.match(line) or (keeping and _TOTALS.match(line)):
             keeping = False
         elif keeping:
             kept.append(line)
