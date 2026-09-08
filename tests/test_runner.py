@@ -105,6 +105,38 @@ def test_a_warning_in_the_learners_code_is_not_a_failure(tmp_path, monkeypatch):
     assert passed, out
 
 
+@pytest.mark.parametrize("verdict", ["assert True", "assert 1 == 2"])
+def test_what_the_learner_printed_comes_back_either_way(tmp_path, monkeypatch, verdict):
+    """A print() is the one debugging tool a learner reaches for. pytest replays a captured
+    stream only for a failing test, so without `-rP` the same print vanishes the moment the
+    solution starts working, which reads as the print never having run."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    task = tmp_path / "task.py"
+    task.write_text(
+        f"def test_solve():\n    print('rows =', 3)\n    {verdict}\n", encoding="utf-8"
+    )
+    _, out = runner.run_tests(task, seed=1)
+    assert runner.summarise(out, marker_line=1)["printed"] == "rows = 3"
+
+
+def test_a_silent_run_has_nothing_to_show_and_says_so_with_nothing(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setattr(settings, "root", tmp_path)
+    task = tmp_path / "task.py"
+    task.write_text("def test_solve():\n    assert True\n", encoding="utf-8")
+    _, out = runner.run_tests(task, seed=1)
+    assert runner.summarise(out, marker_line=1)["printed"] == ""
+
+
+def test_a_solution_that_prints_in_a_loop_is_capped():
+    body = "\n".join(str(n) for n in range(runner.PRINTED_LINES + 40))
+    out = f"----- Captured stdout call -----\n{body}\n1 passed in 0.01s\n"
+    lines = runner.printed(out).split("\n")
+    assert len(lines) == runner.PRINTED_LINES + 1
+    assert lines[-1] == "… 40 more lines"
+
+
 def test_a_failure_names_the_task_the_short_way(tmp_path, monkeypatch):
     """The scratch cwd sits inside the data root, so pytest reports the task relative to it
     and the output panel never shows a host path."""

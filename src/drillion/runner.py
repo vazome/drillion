@@ -22,6 +22,11 @@ _PY_PATH = re.compile(r"[\w.\\/-]*\.py")
 # regardless of the tty, and the escapes land in the learner's output panel
 _PYTEST = [
     "-q",
+    # `P` replays a passing test's captured stdout too: without it a learner's own print()
+    # reaches them only when the tests fail, which reads as the print not having run. `fE`
+    # is pytest's own default and has to be restated here, or the `FAILED`/`ERROR` summary
+    # lines that `summarise` and `selfcheck` both read would go away with it.
+    "-rfEP",
     "--no-header",
     "--color=no",
     "-p",
@@ -68,6 +73,37 @@ def _posix(out):
     return _PY_PATH.sub(lambda m: m.group(0).replace("\\", "/"), out)
 
 
+# the banner pytest puts above each test's captured stream, and the rules that end a block
+_CAPTURED = re.compile(r"^-+ Captured (stdout|stderr) \w+ -+$")
+_SECTION = re.compile(r"^[-=_!]{5,}")
+# pytest's own last line, which follows a captured block with no rule between them
+_TOTALS = re.compile(r"^\d+ \w+.* in [\d.]+s$")
+PRINTED_LINES = 200
+
+
+def printed(out):
+    """What the learner's own code wrote, lifted out of pytest's report.
+
+    Their print() is the one debugging tool they reach for, so it gets a place of its own
+    rather than being findable somewhere inside the grader's output."""
+    lines, keeping, kept = out.split("\n"), False, []
+    for line in lines:
+        if _CAPTURED.match(line):
+            keeping = True
+        elif _SECTION.match(line):
+            keeping = False
+        elif keeping and _TOTALS.match(line):
+            keeping = False
+        elif keeping:
+            kept.append(line)
+    while kept and not kept[-1].strip():
+        kept.pop()
+    if len(kept) > PRINTED_LINES:
+        dropped = len(kept) - PRINTED_LINES
+        kept = kept[:PRINTED_LINES] + [f"… {dropped} more lines"]
+    return "\n".join(kept)
+
+
 def summarise(out, marker_line):
     """pytest output for the browser: the assertion lines, in editor coordinates."""
     out = _posix(out)
@@ -83,6 +119,7 @@ def summarise(out, marker_line):
         "headline": head
         or [ln for ln in lines if ln.startswith(("FAILED", "ERROR"))][:6],
         "output": text[-8192:],
+        "printed": printed(text),
     }
 
 
