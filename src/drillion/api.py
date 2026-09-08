@@ -8,13 +8,13 @@ import logging
 from collections import Counter
 from datetime import date, timedelta
 
-from fastapi import FastAPI, HTTPException, WebSocket
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import Body, FastAPI, HTTPException, WebSocket
+from fastapi.responses import FileResponse, JSONResponse, Response
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from . import __version__
+from . import __version__, backup
 from .attempts import (
     Gated,
     NoAttempt,
@@ -71,6 +71,9 @@ from .state import (
 
 log = logging.getLogger(__name__)
 MAX_BODY = 256 * 1024
+# a whole practice history, not one edit: the restore route is exempt from MAX_BODY
+MAX_BUNDLE = 64 * 1024 * 1024
+RESTORE = "/api/restore"
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -102,6 +105,11 @@ class Note(BaseModel):
 async def _rejected(_request, exc):
     """A refused edit is the learner's problem, not a crash: 400 with the line."""
     return JSONResponse({"error": exc.msg, "line": exc.line}, 400)
+
+
+@app.exception_handler(backup.Rejected)
+async def _rejected(_request, exc):
+    return JSONResponse({"error": str(exc)}, 400)
 
 
 @app.exception_handler(TooNew)
@@ -151,7 +159,10 @@ async def _same_origin(request, call_next):
 async def _limit_body(request, call_next):
     """Refuse an oversized body by its declared length; a chunked body is not measured here."""
     length = request.headers.get("content-length", "")
-    if length.isdigit() and int(length) > MAX_BODY:
+    if request.url.path == RESTORE:
+        if length.isdigit() and int(length) > MAX_BUNDLE:
+            return JSONResponse({"error": "that backup is too large to read"}, 413)
+    elif length.isdigit() and int(length) > MAX_BODY:
         return JSONResponse({"error": "that is more code than any task needs"}, 413)
     return await call_next(request)
 
@@ -293,6 +304,42 @@ def health():
     """Is the app up and pointed at the tasks? No lock, no state, no writes —
     a container health check must never queue behind a 60 s pytest run."""
     return {"version": __version__, "tasks": len(tasks())}
+
+
+@app.get("/api/settings")
+def settings_view():
+    """Where this environment keeps the learner's files, for Settings to show and copy."""
+    return {
+        "root": str(settings.root),
+        "progress": str(settings.state_path),
+        "tasks": str(settings.tasks_dir),
+        "version": __version__,
+    }
+
+
+@app.get("/api/backup")
+def download_backup():
+    """The learner's whole practice history as one file they can keep anywhere."""
+    name = f"drillion-backup-{date.today().isoformat()}.zip"
+    return Response(
+        backup.bundle(),
+        media_type="application/zip",
+        headers={"content-disposition": f'attachment; filename="{name}"'},
+    )
+
+
+@app.post("/api/restore/preview")
+def preview_restore(payload: bytes = Body(...)):
+    """What a bundle holds, before anything is replaced."""
+    return backup.inspect(payload)
+
+
+@app.post(RESTORE)
+def apply_restore(payload: bytes = Body(...)):
+    """Replace progress and saved code from a bundle. The current data is kept first."""
+    summary = backup.restore(payload)
+    log.info("restored %s, kept %s", summary["brings"], summary["kept"])
+    return summary
 
 
 @app.get("/api/catalogue")

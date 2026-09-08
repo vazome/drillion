@@ -61,6 +61,12 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await expect(page.getByText("How well you know them", { exact: true })).toBeVisible();
   await shot(page, "5-progress");
 
+  // Settings: the data locations and both halves of the backup workflow.
+  await page.goto("/#/settings");
+  await expect(page.getByText("Download a backup", { exact: true })).toBeVisible();
+  await expect(page.getByText(scratchRoot, { exact: true })).toBeVisible();
+  await shot(page, "5b-settings");
+
   // The panes stack below 1000px. After the others, so each of those keeps the fixed viewport.
   await page.setViewportSize({ width: 900, height: 1200 });
   await page.goto(`/#/task/${SLUG}`);
