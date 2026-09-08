@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from . import __version__, backup
+from . import __version__, backup, sandbox
 from .attempts import (
     Gated,
     NoAttempt,
@@ -37,6 +37,7 @@ from .region import (
     cut,
     etag,
     has_given,
+    revision,
     splice,
     stub,
     validate,
@@ -267,6 +268,8 @@ def _payload(st, slug, meta, src):
                 "date": a["date"],
                 "grade": a["grade"],
                 "code": a["code"] if reveal else None,
+                # absent on a pass archived before a run said what produced it
+                **{k: a[k] for k in ("python", "seed", "revision") if k in a},
             }
             for a in st["archive"].get(slug, [])
         ],
@@ -299,7 +302,11 @@ def _recent(st, all_tasks):
 def health():
     """Is the app up and pointed at the tasks? No lock, no state, no writes —
     a container health check must never queue behind a 60 s pytest run."""
-    return {"version": __version__, "tasks": len(tasks())}
+    return {
+        "version": __version__,
+        "tasks": len(tasks()),
+        "python": sandbox.grading_python(),
+    }
 
 
 @app.get("/api/settings")
@@ -464,7 +471,7 @@ def run_task(slug: str, edit: Edit):
         if passed and edit.submit:
             was = card(st, slug)["box"]
             grade, gap, box, reason = record_pass(
-                st, slug, meta, body
+                st, slug, meta, body, revision(new_src)
             )  # drops the attempt
             log.info("%s %s box=%s due in %sd (%s)", slug, grade, box, gap, reason)
             stubbed = splice(new_src, stub(body))

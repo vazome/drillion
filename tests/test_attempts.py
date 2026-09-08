@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from drillion import attempts, region, scheduler, state
+from drillion import attempts, region, sandbox, scheduler, state
 from drillion.settings import settings
 
 SRC = (settings.tasks_dir / "009_fstrings" / "task.py").read_text(encoding="utf-8")
@@ -82,7 +82,7 @@ def test_attempt_lifecycle():
     assert attempts.open_attempt(st, "001_a") is o  # reopening keeps the timer
     o["attempts"], o["active"] = 1, 30
     grade, gap, box, reason = attempts.record_pass(
-        st, "001_a", all_tasks["001_a"], "def solve(x):\n    return x"
+        st, "001_a", all_tasks["001_a"], "def solve(x):\n    return x", "a1b2c3d4e5f6"
     )
     assert (grade, gap, box, reason) == ("quick", 8, 2, "one run, inside par")
     assert st["open"] == {} and st["cards"]["001_a"]["seen"] == 1
@@ -94,7 +94,11 @@ def test_attempt_lifecycle():
         "secs": 30,
         "new": True,
     }
-    assert st["archive"]["001_a"][0]["code"].startswith("def solve(")
+    archived = st["archive"]["001_a"][0]
+    assert archived["code"].startswith("def solve(")
+    # enough to run this attempt again: the cases, the grader and the interpreter
+    assert archived["seed"] == o["seed"] and archived["revision"] == "a1b2c3d4e5f6"
+    assert archived["python"] == sandbox.grading_python()
     assert (
         attempts.open_attempt(st, "001_a")["new"] is False
     )  # a review, not a new pick

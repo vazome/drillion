@@ -53,8 +53,8 @@ function useTheme(): [boolean, (v: boolean) => void] {
   return [dark, (v) => { applyTheme(v); setDark(v); }];
 }
 
-function Header({ route, dark, setDark, total, version }: {
-  route: string; dark: boolean; setDark: (v: boolean) => void; total: number; version: string;
+function Header({ route, dark, setDark, total, version, python }: {
+  route: string; dark: boolean; setDark: (v: boolean) => void; total: number; version: string; python: string;
 }) {
   const link = (href: string, text: string) => (
     <a href={href} style={{ fontSize: 14, fontWeight: route === href.slice(1) ? 600 : 400, color: route === href.slice(1) ? "var(--text)" : "var(--text-muted)" }}>{text}</a>
@@ -65,6 +65,11 @@ function Header({ route, dark, setDark, total, version }: {
         <span style={{ fontSize: 17, fontWeight: 600, color: "var(--text)" }}>drillion</span>
         {total ? <span style={{ fontSize: 13, color: "var(--text-faint)" }}>{total} tasks</span> : null}
         {version ? <span style={{ fontSize: 13, color: "var(--text-faint)" }}>v{version}</span> : null}
+        {python ? (
+          <span style={{ fontSize: 13, color: "var(--text-faint)" }} title="every task is graded on this interpreter">
+            Python {python}
+          </span>
+        ) : null}
       </a>
       <div style={{ flex: 1 }} />
       {link("#/", "Catalogue")}
@@ -78,11 +83,11 @@ function Header({ route, dark, setDark, total, version }: {
 export function App() {
   const route = useHash();
   const [dark, setDark] = useTheme();
-  const [head, setHead] = useState({ total: 0, version: "" });
+  const [head, setHead] = useState({ total: 0, version: "", python: "" });
   useSlashToSearch();
   useEffect(() => {
     api<Health>("/health")
-      .then((h) => setHead({ total: h.tasks, version: h.version }))
+      .then((h) => setHead({ total: h.tasks, version: h.version, python: h.python }))
       .catch(() => {});                    // a header without its counts is not worth an error
   }, []);
 

@@ -113,11 +113,15 @@ def problems():
 
 
 def doctor():
-    """Print what is confining graded code and every problem under tasks/, one line each,
+    """Print what is confining graded code, which interpreter grades it, and every problem
+    under tasks/, one line each,
     and return how many problems there were. Non-zero from the CLI on any, so CI can gate a
     contribution on it — the sandbox line is information, never a failure."""
     tier, why = sandbox.status()
     print(f"sandbox: {tier} — {why}")
+    print(
+        f"python: {sandbox.grading_python()} — every task is graded on this interpreter"
+    )
     found = problems()
     if found:
         width = max(len(name) for name, _ in found) + 8

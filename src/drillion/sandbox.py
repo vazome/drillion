@@ -28,6 +28,7 @@ a `HOME` and `TMPDIR` pointed at the scratch directory, and POSIX resource limit
 
 import ctypes
 import os
+import platform
 import struct
 import subprocess
 import sys
@@ -547,6 +548,12 @@ def preexec(scratch, targets, cpu):
             _restrict(plan)
 
     return child
+
+
+def grading_python():
+    """The interpreter every graded run uses: `run` builds its command from sys.executable,
+    so the version that answers here is the version that decides a verdict."""
+    return platform.python_version()
 
 
 def run(args, scratch, cpu, **env):
