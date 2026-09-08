@@ -99,56 +99,12 @@ def test_a_card_written_before_the_newest_fields_existed_still_reads():
     way out."""
     old = _st(cards={"001_a": {"box": 3, "due": "2020-01-01", "seen": 7}})
     assert state.card(old, "001_a")["lapses"] == 0
-    assert state.card(old, "001_a")["buried"] == ""  # never buried, not buried today
-    assert not scheduler.buried(old, "001_a")
     assert state.card(old, "002_b") == {
         "box": 0,
         "due": state.today(),
         "seen": 0,
         "lapses": 0,
-        "buried": "",
     }
-
-
-def test_a_buried_card_leaves_todays_queue_and_comes_back_tomorrow():
-    """Bury is "not today": the card stays due, both bands drop it, and tomorrow it is back."""
-    yesterday = (date.today() - timedelta(days=1)).isoformat()  # noqa: DTZ011
-    cards = {
-        "001_a": {"box": 2, "due": "2020-01-01", "seen": 3},  # due for review
-        "002_b": {"box": 1, "due": "2020-01-01", "seen": 1},  # due for review
-    }
-    st = _st(cards=cards)
-    q = scheduler.queue(st, _exs())
-    assert q["review"] == ["001_a", "002_b"] and q["new"] == ["003_c"]
-
-    st["cards"]["001_a"]["buried"] = state.today()  # a review: not today
-    st["cards"]["003_c"] = {
-        "box": 0,
-        "due": state.today(),
-        "seen": 0,
-        "buried": state.today(),
-    }
-    q = scheduler.queue(st, _exs())
-    assert q["review"] == ["002_b"] and q["new"] == []  # both bands drop it
-    assert (
-        q["due_total"] == 1
-    )  # ...and the backlog agrees: a buried card is not due today
-    assert scheduler.due_today(st, _exs()) == ["002_b"]
-
-    for slug in ("001_a", "003_c"):  # the next day, with nobody having touched anything
-        st["cards"][slug]["buried"] = yesterday
-    q = scheduler.queue(st, _exs())
-    assert q["review"] == ["001_a", "002_b"] and q["new"] == ["003_c"]
-
-
-def test_burying_a_card_changes_nothing_about_its_schedule():
-    """A bury moves no box, no due date, no seen count and no lapse count: forgetting one
-    costs exactly one day of not being asked."""
-    was = {"box": 3, "due": "2020-01-01", "seen": 5, "lapses": 2}
-    st = _st(cards={"001_a": dict(was)})
-    state.own(st, "001_a")["buried"] = state.today()
-    scheduler.queue(st, _exs())  # and reading the queue must not write to it either
-    assert {k: st["cards"]["001_a"][k] for k in was} == was
 
 
 def test_unseen_respects_prereqs():
@@ -170,15 +126,10 @@ def test_focus_ignores_out_of_focus_prereqs():
     assert scheduler.unseen(_st(focus="llm"), _exs()) == ["003_c"]
 
 
-def test_an_empty_day_names_the_one_reason_and_a_bury_is_one():
-    """`no_new` names the rule that actually bit. Burying the only task left is not "that is
-    today's new material, 0 done" — it is "you put it off"."""
+def test_an_empty_day_names_the_one_reason():
+    """`no_new` names the rule that actually bit, rather than reporting a bare zero."""
     st = _st(focus="core")  # 002_b waits on 001_a; 003_c is out of focus
     assert scheduler.queue(st, _exs())["no_new"] is None  # 001_a is on offer
-
-    state.own(st, "001_a")["buried"] = state.today()
-    q = scheduler.queue(st, _exs())
-    assert q["new"] == [] and q["no_new"] == {"why": "buried"}
 
     st["log"] = [_new_pass() for _ in range(scheduler.NEW_PER_DAY)]  # the cap bit first
     assert scheduler.queue(st, _exs())["no_new"] == {"why": "cap", "ready": 1}
@@ -195,14 +146,6 @@ def test_an_empty_day_names_the_one_reason_and_a_bury_is_one():
     st["focus"] = None
     st["cards"]["003_c"] = {"box": 0, "due": "2999-01-01", "seen": 1}
     assert scheduler.queue(st, _exs())["no_new"] == {"why": "done"}
-
-
-def test_the_ready_count_includes_what_you_buried():
-    """The count of what waits for tomorrow is a count of unlocked tasks, and a bury is one day, not a
-    withdrawal: leaving it out of the count reads as material that has gone missing."""
-    st = _st(log=[_new_pass() for _ in range(scheduler.NEW_PER_DAY)])
-    state.own(st, "001_a")["buried"] = state.today()  # 003_c is the one still on offer
-    assert scheduler.queue(st, _exs())["no_new"] == {"why": "cap", "ready": 2}
 
 
 def test_queue_caps_new_picks_and_skips_open_attempts():
@@ -311,13 +254,12 @@ def test_a_read_of_the_ladder_writes_nothing_to_the_cards():
 
 def test_owning_a_card_back_fills_it_in_place():
     st = _st(cards={"001_a": {"box": 1, "due": "2000-01-01", "seen": 1}})
-    state.own(st, "001_a")["buried"] = state.today()
+    state.own(st, "001_a")["lapses"] += 1
     assert st["cards"]["001_a"] == {
         "box": 1,
         "due": "2000-01-01",
         "seen": 1,
-        "lapses": 0,
-        "buried": state.today(),
+        "lapses": 1,
     }
 
 

@@ -94,14 +94,14 @@ def _fields(record):
     for key in ("new", "solution_shown"):
         if key in record and type(record[key]) is not bool:
             raise Unreadable(f"Progress {key} must be a boolean.")
-    for key in ("date", "due", "buried", "last", "started", "grade", "slug", "code"):
+    for key in ("date", "due", "last", "started", "grade", "slug", "code"):
         if key not in record:
             continue
         value = record[key]
         if not isinstance(value, str):
             raise Unreadable(f"Progress {key} must be text.")
         try:
-            if key in ("date", "due") or (key == "buried" and value):
+            if key in ("date", "due"):
                 date.fromisoformat(value)
             elif key in ("last", "started"):
                 datetime.fromisoformat(value)
@@ -367,7 +367,6 @@ def card(st, slug):
         "due": today(),
         "seen": 0,
         "lapses": 0,
-        "buried": "",
         **st["cards"].get(slug, {}),
     }
 

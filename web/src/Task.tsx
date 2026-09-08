@@ -246,28 +246,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     }
   };
 
-  /** Not today: the task keeps its standing, due date and counts, and tomorrow puts it back.
-   * The catalogue's Buried band is the other end of this control. */
-  const bury = async () => {
-    if (!task) return;
-    try {
-      const r = await post<{ buried: boolean }>(`/task/${encodeURIComponent(slug)}/bury`, { buried: !task.buried });
-      setTask({ ...task, buried: r.buried });
-    } catch (e) {
-      setGate({ at: "editor", message: (e as ApiError).message });
-    }
-  };
-
-  /** The nudge's second offer: put the task aside for today and go read up. */
-  const buryAndLeave = async () => {
-    try {
-      await post(`/task/${encodeURIComponent(slug)}/bury`, { buried: true });
-      location.hash = "#/";
-    } catch (e) {
-      setGate({ at: "editor", message: (e as ApiError).message });
-    }
-  };
-
   if (error) return <EmptyState message={`Could not load ${slug}: ${error}`} actionLabel="Back to Today" onAction={() => { location.hash = "#/"; }} />;
   if (!task) return <EmptyState message="Loading…" />;
 
@@ -304,7 +282,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
         <StatusBadge status={task.status} />
         <StatusBadge status={meta.difficulty} />
         <RequiresChips requires={task.requires} />
-        <RowFlags buried={task.buried} lapses={task.lapses} lapseLimit={task.lapse_limit} />
+        <RowFlags lapses={task.lapses} lapseLimit={task.lapse_limit} />
         <div style={{ flex: 1 }} />
         {meta.track ? <TagChip label={meta.track} small /> : null}
         {task.unlocks.length ? (
@@ -436,7 +414,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
           {nudge && !nudgeOff && !passed ? (
             <div style={{ position: "fixed", right: 24, left: narrow ? 24 : undefined, bottom: 24, zIndex: 30 }}>
               <StuckNudge minutes={Math.round(active / 60)} hintsShown={hints.shown.length} hintsTotal={hints.total} hintReady={hintReady}
-                onHint={() => { setNudgeOff(true); hint(); }} onBury={buryAndLeave} onDismiss={() => setNudgeOff(true)} />
+                onHint={() => { setNudgeOff(true); hint(); }} onDismiss={() => setNudgeOff(true)} />
             </div>
           ) : null}
           {task.has_given ? <NoticeBanner message="This task ships given code above solve() — read it, but leave it alone." actions={[]} /> : null}
@@ -466,11 +444,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               ) : null}
             </div>
             {hasAttempt && !passed ? <Button variant="quiet" onClick={abandon} style={{ fontSize: 13 }}>Abandon</Button> : null}
-            {passed ? null : (
-              <Button variant="quiet" onClick={bury} style={{ fontSize: 13 }}>
-                {task.buried ? "Unbury" : "Bury for today"}
-              </Button>
-            )}
           </div>
 
           <Editor value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} vim={vimMode()} height={narrow ? "60vh" : "calc(100vh - 364px)"} />

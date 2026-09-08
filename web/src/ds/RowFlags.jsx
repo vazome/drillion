@@ -1,7 +1,7 @@
 import React from "react";
 const numFlag = (n) => "#" + String(n).padStart(3, "0");
 const asRef = (t) => (typeof t === "object" ? t : { topic: t });
-export function RowFlags({ needs = [], onNeedsClick, buried = false, lapses = 0, lapseLimit = 0, style }) {
+export function RowFlags({ needs = [], onNeedsClick, lapses = 0, lapseLimit = 0, style }) {
   const marks = [];
   if (needs.length) {
     const refs = needs.map(asRef);
@@ -11,13 +11,6 @@ export function RowFlags({ needs = [], onNeedsClick, buried = false, lapses = 0,
       ? <button key="needs" type="button" title={why + " — opens the lineage"} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNeedsClick(e); }}
           style={{ background: "transparent", border: "none", padding: 0, font: "inherit", color: "inherit", cursor: "pointer", textDecoration: "underline", textDecorationStyle: "dotted", textUnderlineOffset: "2px" }}>{label}</button>
       : <span key="needs" title={why}>{label}</span>);
-  }
-  if (buried) {
-    marks.push(
-      <span key="buried" title="Put aside for today. It is back in the queue tomorrow, in the same box and on the same due date — unbury it from the Today panel to have it back sooner.">
-        buried today
-      </span>
-    );
   }
   if (lapseLimit && lapses >= lapseLimit) {
     marks.push(

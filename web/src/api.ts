@@ -16,8 +16,6 @@ export interface Row extends Meta {
   status: Status; box: number; due: string; seen: number;
   /** Struggles on this card, never reset. At `stats.lapse_limit` the row says so. */
   lapses: number;
-  /** Not offered today — `POST /api/task/{slug}/bury`. The schedule is untouched. */
-  buried: boolean;
   /** the spec flattened and already lowercased for the search box */
   text: string;
   /** prereqs not yet passed, so the task is not offered as a new pick */
@@ -35,7 +33,7 @@ export interface Catalogue {
     recent: string[]; done_today: number;
     due_total: number; behind: boolean;
     /** the one reason `new` is empty, named by `queue()`; null when there is something to offer */
-    no_new: { why: "behind" | "focus" | "done" | "buried" } | { why: "cap"; ready: number }
+    no_new: { why: "behind" | "focus" | "done" } | { why: "cap"; ready: number }
       | { why: "prereqs"; nearest: string } | null;
   };
   /** `due` is the whole backlog, not `review.length` — the two differ once `behind`.
@@ -61,7 +59,7 @@ export interface DepRef { slug: string; topic: number; title: string; tags: stri
 export interface Task {
   slug: string; meta: Meta;
   spec_md: string; code: string; etag: string; has_given: boolean;
-  status: Status; buried: boolean;
+  status: Status;
   /** passes on this card, ever — the lineage screen's `seen N×` line */
   seen: number;
   /** the scheduler's 0-based rung; src/strength.ts turns it into a word for the screens */

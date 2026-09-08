@@ -264,7 +264,6 @@ async def _struggled_first_sighting(api, _path):
         "due": state.today(),
         "seen": 0,
         "lapses": 0,
-        "buried": "",
     }
 
     etag = task["etag"]
@@ -419,37 +418,6 @@ async def _health(api, _path):
     assert health == {"version": drillion.__version__, "tasks": 1}
 
 
-async def _bury(api, _path):
-    """Bury from the API's side: out of today, back by itself, and reversible before then —
-    with box, due date, seen count and lapses all reading back identical."""
-    st = state.load()
-    st["cards"][SLUG] = {"box": 2, "due": "2020-01-01", "seen": 4, "lapses": 1}
-    state.save(st)
-    was = dict(st["cards"][SLUG])
-
-    cat = (await api.get("/api/catalogue")).json()
-    assert cat["today"]["review"] == [SLUG] and cat["tasks"][0]["buried"] is False
-
-    assert (await api.post(f"/api/task/{SLUG}/bury", json={})).json() == {
-        "buried": True
-    }
-    cat = (await api.get("/api/catalogue")).json()
-    assert cat["today"]["review"] == [] and cat["today"]["due_total"] == 0
-    # the way to see it: still `due`, never a fifth status, and the row says it is buried
-    assert cat["tasks"][0]["status"] == "due" and cat["tasks"][0]["buried"] is True
-    assert (await api.get(f"/api/task/{SLUG}")).json()["buried"] is True
-    assert {k: state.card(state.load(), SLUG)[k] for k in was} == was  # nothing moved
-
-    # the way out, taken early — the other way out is tomorrow arriving
-    resp = await api.post(f"/api/task/{SLUG}/bury", json={"buried": False})
-    assert resp.json() == {"buried": False}
-    cat = (await api.get("/api/catalogue")).json()
-    assert cat["today"]["review"] == [SLUG] and cat["tasks"][0]["buried"] is False
-    assert {k: state.card(state.load(), SLUG)[k] for k in was} == was
-
-    assert (await api.post("/api/task/nope_9999/bury", json={})).status_code == 404
-
-
 async def _note(api, _path):
     """One note per task, edited in place — and it belongs to the task, not to the sitting:
     a `struggled` grade, a fresh attempt and an abandon all leave it exactly as it was."""
@@ -562,15 +530,15 @@ async def _the_ladder_rides_the_payload(api, _path):
 
 
 async def _progress_looks_behind_and_ahead(api, _path):
-    """The forecast is a count, not an estimate: overdue folds into today, a buried card
-    lands on tomorrow, and the far future falls off the end. Every pass is in `days`."""
+    """The forecast is a count, not an estimate: overdue folds into today and the far
+    future falls off the end. Every pass is in `days`."""
 
     def day(n):
         return (date.fromisoformat(state.today()) + timedelta(days=n)).isoformat()
 
     st = state.load()
-    st["cards"][SLUG] = {"box": 2, "due": day(3), "seen": 1, "lapses": 2, "buried": ""}
-    st["cards"][PREREQ] = {"box": 0, "due": day(-40), "seen": 1, "buried": day(0)}
+    st["cards"][SLUG] = {"box": 2, "due": day(3), "seen": 1, "lapses": 2}
+    st["cards"][PREREQ] = {"box": 0, "due": day(-40), "seen": 1}
     st["cards"][GATED] = {"box": 6, "due": day(120), "seen": 1}
     st["log"] = [
         {
@@ -601,7 +569,7 @@ async def _progress_looks_behind_and_ahead(api, _path):
     state.save(st)
     prog = (await api.get("/api/progress")).json()
     assert prog["today"] == day(0) and prog["cap"] == scheduler.REVIEWS_PER_DAY
-    assert prog["forecast"] == [0, 1, 0, 1] + [0] * 10
+    assert prog["forecast"] == [1, 0, 0, 1] + [0] * 10
     assert prog["days"] == {day(-1): 1, day(0): 2}
     tag = tasks()[SLUG]["tags"][0]
     boxes = [0] * len(scheduler.LADDER)
@@ -657,10 +625,6 @@ def test_the_api_serves_a_tasks_assets():
 
 def test_the_api_reports_its_health():
     _api(_health)
-
-
-def test_burying_takes_a_card_out_of_today_and_leaves_its_schedule_alone():
-    _api(_bury)
 
 
 def test_a_note_belongs_to_the_task_and_outlives_every_attempt_on_it():

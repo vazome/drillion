@@ -6,9 +6,8 @@
    new tasks whose prerequisites you have passed. While the backlog is deeper than that review
    cap you are *behind*, and drillion offers nothing new until you are not — starting new
    material while already behind only makes the backlog worse. The whole catalogue is open
-   either way; the queue is a suggestion. Not in the mood for one of them? **Bury** it and it
-   is gone for the day and back tomorrow, at the same standing and on the same due date. The Buried
-   band in Today undoes it early.
+   either way; the queue is a suggestion, so not being in the mood for one of them costs
+   nothing — open another, or open none.
 2. Opening a task starts an **attempt**: a fresh seed and an active-seconds timer that pauses
    when the tab is hidden. The first minute of it is free — the clock sits at 00:00 while you
    read, and a corner notice says so ten seconds in. The left pane renders the task's `README.md` — Why / You get /
