@@ -4,6 +4,38 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.7.0 — 2026-09-08
+
+- Seven new tasks bring the catalogue to 189 and close the last of the single-exposure
+  concepts: every concept the curriculum teaches is now practised in at least two different
+  contexts. `heapq`, `functools.cache`, `pathlib`, enums, `match`, dataclasses and the walrus
+  operator each get a second task that is not a restatement of the first.
+- A prerequisite that pointed at the first half of a split exercise now points at the last
+  half. Thirteen tasks were the second half of a split and gated nothing at all, so a learner
+  could reach the task that depends on them having done only half the material. 58 tasks
+  changed one number each; `drillion doctor` still enforces that every edge points backward.
+- Whatever your own `print()` wrote comes back in the results panel whether the tests passed
+  or failed. It used to appear only on a failure, which read as the print never having run.
+  On Windows it did not appear at all: the restricted-token sandbox handed its output back
+  with the line endings the child wrote, and every other tier had them translated.
+- Settings can turn on Vim keys in the editor, off by default, with the current mode shown
+  under the editor. Run and Submit keep their shortcuts in either mode. The setting lives in
+  the browser rather than in your progress, so a backup does not carry it.
+- Settings has a danger zone that erases all progress and puts every task back to its stub.
+  It is confirmed by typing `erase progress` rather than by clicking, the server checks the
+  same phrase, and it writes `backup-before-reset.zip` in your root first, which is the only
+  way back. It deletes the stored progress rather than emptying it, so nothing survives to be
+  imported on the next read.
+- Burying a task is gone, along with `POST /api/task/{slug}/bury` and the `buried` field on
+  every payload. It bought a queue you could rearrange rather than one you could work, and it
+  cost a control on every row and a band under the Today panel. Progress written by an older
+  build still loads; the stored field is ignored.
+- The task toolbar no longer re-wraps and pushes the editor down when the unsaved marker
+  appears mid-keystroke, and two prerequisites arriving at one task no longer share a single
+  arrowhead in the lineage graph.
+- CI counts the shipped tasks from the checkout instead of a written-down number, so adding a
+  task no longer fails the packaging jobs on a figure the author had no reason to know about.
+
 ## 0.6.0 — 2026-09-06
 
 - Running a task and submitting it are now separate actions. Run executes the tests without
