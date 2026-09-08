@@ -1,6 +1,6 @@
 import React from "react";
-/* StuckNudge — arrives once a task has been open a long while. Advises a hint first,
-   burying and reading the material second. Never blocks the editor; dismissible for good. */
+/* StuckNudge — arrives once a task has been open a long while. Advises a hint first and
+   the material second. Never blocks the editor; dismissible for good. */
 const NUDGE_LABEL = { fontSize: "11px", fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--text-muted)" };
 function NudgeButton({ variant, onClick, disabled, children }) {
   const [hover, setHover] = React.useState(false);
@@ -12,7 +12,7 @@ function NudgeButton({ variant, onClick, disabled, children }) {
       : { background: hover ? "var(--surface-2)" : "var(--surface)", color: "var(--text)", borderColor: "var(--border-strong)", fontSize: "14px", padding: "8px 14px" };
   return <button type="button" className="m-press" disabled={disabled} onClick={onClick} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} style={{ ...base, ...look }}>{children}</button>;
 }
-export function StuckNudge({ minutes = 30, hintsShown = 0, hintsTotal = 3, hintReady = true, onHint, onBury, onDismiss, placement = "corner", style }) {
+export function StuckNudge({ minutes = 30, hintsShown = 0, hintsTotal = 3, hintReady = true, onHint, onDismiss, placement = "corner", style }) {
   const corner = placement === "corner";
   return (
     <div className="m-rise" role="status" style={{
@@ -28,11 +28,10 @@ export function StuckNudge({ minutes = 30, hintsShown = 0, hintsTotal = 3, hintR
         Take a hint. It opens the next step, not the answer, and the pass still counts.
       </p>
       <p style={{ margin: "0 0 12px", fontSize: "13.5px", lineHeight: 1.5, color: "var(--text-muted)", textWrap: "pretty" }}>
-        If the problem still doesn't come apart after one, bury the task and go read the material. It comes back tomorrow, and you will be reading with a question in hand.
+        If the problem still doesn't come apart after one, go and read the material. You will be reading with a question in hand, which is the only way it sticks.
       </p>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
         <NudgeButton onClick={onHint} disabled={!hintReady}>Show hint {hintsShown + 1}</NudgeButton>
-        <NudgeButton variant="quiet" onClick={onBury}>Bury and read up</NudgeButton>
         <div style={{ flex: 1 }} />
         <span style={{ fontSize: "12px", color: "var(--text-faint)", whiteSpace: "nowrap" }}>{hintsShown} of {hintsTotal} shown</span>
       </div>

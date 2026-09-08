@@ -49,7 +49,6 @@ from .scheduler import (
     REVIEWS_PER_DAY,
     WINDOW,
     blocked,
-    buried,
     by_tag,
     forecast,
     pick,
@@ -62,7 +61,6 @@ from .state import (
     TooNew,
     Unreadable,
     card,
-    own,
     reading,
     reset_after_commit,
     today,
@@ -91,10 +89,6 @@ class Etag(BaseModel):
 
 class Focus(BaseModel):
     tag: str | None = None
-
-
-class Bury(BaseModel):
-    buried: bool = True
 
 
 class Note(BaseModel):
@@ -259,8 +253,6 @@ def _payload(st, slug, meta, src):
         "etag": etag(src),
         "has_given": has_given(body),
         "status": status,
-        # not a fifth `status`: a buried card is still exactly `due`, just not offered today
-        "buried": buried(st, slug),
         "seen": c["seen"],
         "box": c["box"],
         "lapses": c["lapses"],
@@ -373,7 +365,6 @@ def catalogue():
                 **public(m),
                 "text": m["search_text"],
                 "status": _status(st, slug),
-                "buried": buried(st, slug),
                 "blocked": held.get(slug, []),
                 **{k: card(st, slug)[k] for k in ("box", "due", "seen", "lapses")},
             }
@@ -552,17 +543,6 @@ def abandon_task(slug: str, sent: Etag):
         log.info("%s abandoned", slug)
         reset_after_commit(st, meta["path"], src, new_src)
         return _payload(st, slug, meta, new_src)
-
-
-@app.post("/api/task/{slug}/bury")
-def bury_task(slug: str, want: Bury):
-    """Not today: the card keeps its box, its due date, its seen count and its lapses.
-    Tomorrow un-buries it, and `{"buried": false}` is the same door, taken early."""
-    with writing() as st:
-        _task(slug)  # a slug that is not a task is a 404, not a stored card
-        own(st, slug)["buried"] = today() if want.buried else ""
-        log.info("%s %s", slug, "buried" if want.buried else "unburied")
-        return {"buried": buried(st, slug)}
 
 
 @app.put("/api/task/{slug}/note")

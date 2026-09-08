@@ -279,7 +279,7 @@ export interface TopicStripsProps {
 export declare function TopicStrips(props: TopicStripsProps): El;
 
 /** A nudge for a task that has been open a long while (30 minutes by default): take a hint,
- *  and if that doesn't open it, bury the task and go read the material. A `role="status"`
+ *  and if that doesn't open it, go and read the material. A `role="status"`
  *  card, never a modal — it does not block the editor and the × dismisses it for good.
  *  No countdown and no semantic colour: an accent rule, `--shadow-pop` in the corner. */
 export interface StuckNudgeProps {
@@ -291,7 +291,6 @@ export interface StuckNudgeProps {
   /** false when the next hint is still time-locked; disables the hint button */
   hintReady?: boolean;
   onHint?: () => void;
-  onBury?: () => void;
   onDismiss?: () => void;
   /** "corner" — 360px and elevated, for a fixed bottom-right wrapper; "inline" — full width above the task */
   placement?: "corner" | "inline";
@@ -368,8 +367,6 @@ export interface RowFlagsProps {
   needs?: Array<number | { topic: number; title?: string }>;
   /** turns the `needs` text into a button to the lineage; it stops the row's own click */
   onNeedsClick?: (e: React.MouseEvent) => void;
-  /** put aside for today only; the box, the due date and the counts are untouched */
-  buried?: boolean;
   /** how many times this task has been struggled back to a sooner return */
   lapses?: number;
   /** `stats.lapse_limit` — the flag appears at or above it; 0 turns the flag off */

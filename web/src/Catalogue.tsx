@@ -59,10 +59,6 @@ function noPicks(no: NonNullable<Payload["today"]["no_new"]>, today: Payload["to
       act: null,
       message: <>Nothing unseen is left: you have opened every task in the catalogue. Reviews are the work now.</>,
     };
-    case "buried": return {
-      act: null,
-      message: <>Every task that was up next is buried. Unbury one to carry on.</>,
-    };
   }
   return no satisfies never;
 }
@@ -114,9 +110,8 @@ function useHover() {
 
 const href = (row: Row) => `#/task/${encodeURIComponent(row.slug)}`;
 
-/** A row of the Today card: when it is due, how well you know it, and one way in.
- * `onBury` puts a real button on it, so the row holds the link rather than being the link. */
-function TodayRow({ row, ladder, limit, onBury }: { row: Row; ladder: number[]; limit: number; onBury?: (buried: boolean) => void }) {
+/** A row of the Today card: when it is due, how well you know it, and one way in. */
+function TodayRow({ row, ladder, limit }: { row: Row; ladder: number[]; limit: number }) {
   const [hover, hoverProps] = useHover();
   return (
     <div {...hoverProps}
@@ -128,16 +123,11 @@ function TodayRow({ row, ladder, limit, onBury }: { row: Row; ladder: number[]; 
         <span style={{ ...MONO, width: 30, textAlign: "right" }}>{num(row.topic)}</span>
         <span style={{ fontSize: 14.5, fontWeight: 500, flex: 1, display: "flex", alignItems: "baseline", gap: 10 }}>
           {/* nothing in this card is blocked: a new pick is offered only once its prereqs clear */}
-          {row.title}<RowFlags buried={row.buried} lapses={row.lapses} lapseLimit={limit} />
+          {row.title}<RowFlags lapses={row.lapses} lapseLimit={limit} />
         </span>
         {/* the whole row is the link; the button is the affordance, so it takes no focus of its own */}
         <span inert aria-hidden="true"><Button variant="secondary" style={{ padding: "6px 12px", fontSize: 13 }}>Open</Button></span>
       </a>
-      {onBury ? (
-        <Button variant="quiet" onClick={() => onBury(!row.buried)} style={{ fontSize: 13, marginLeft: 12 }}>
-          {row.buried ? "Unbury" : "Bury"}
-        </Button>
-      ) : null}
     </div>
   );
 }
@@ -154,7 +144,7 @@ function ListRow({ row, blocked, ladder, limit, first = false }: { row: Row; blo
         <span style={{ fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.title}</span>
         {/* the flag is the second way into the lineage; the rest of the row still opens the task */}
         <RowFlags needs={blocked} onNeedsClick={() => { location.hash = `${href(row)}/deps`; }}
-          buried={row.buried} lapses={row.lapses} lapseLimit={limit} />
+          lapses={row.lapses} lapseLimit={limit} />
       </span>
       <span style={{ width: COL.path, display: "flex", overflow: "hidden" }}><TaskPath tier={row.tier} tags={row.tags} /></span>
       <span style={{ width: COL.difficulty }}><StatusBadge status={row.difficulty} /></span>
@@ -238,13 +228,6 @@ export function Catalogue() {
     post("/focus", { tag }).then(load).catch((e) => setNotice(`Focus is still “${focus ?? "any"}” — the change did not save: ${e.message}`));
   };
 
-  // a bury moves the queue, the counts and the row at once — reload rather than patch three
-  const setBuried = (row: Row, buried: boolean) => {
-    setNotice(null);
-    post(`/task/${encodeURIComponent(row.slug)}/bury`, { buried }).then(load)
-      .catch((e) => setNotice(`#${num(row.topic)} ${row.title} is still ${row.buried ? "buried" : "in today’s queue"} — the change did not save: ${e.message}`));
-  };
-
   const by = useMemo(() => new Map((data?.tasks ?? []).map((e) => [e.slug, e])), [data]);
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -264,10 +247,6 @@ export function Catalogue() {
   const { today, stats } = data;
   const pick = (slugs: string[]) => slugs.map((s) => by.get(s)).filter(Boolean) as Row[];
   const review = pick(today.review), fresh = pick(today.new), recent = pick(today.recent);
-  // every buried card, not just today's: a bury made from the task page shows up here too
-  const buried = data.tasks.filter((e) => e.buried);
-  // ...and only there: one card on two rows of the same panel is noise
-  const stillOffered = recent.filter((e) => !e.buried);
   const filtered = !!(q || status || activeTags.length || focus);
   const unsorted = sort.key === DEFAULT_SORT.key && sort.dir === DEFAULT_SORT.dir;
   const clear = () => { setQ(""); setStatus(""); setActiveTags([]); if (focus) setFocus(null); };
@@ -328,19 +307,15 @@ export function Catalogue() {
       <Card padding="0 18px" style={{ overflow: "hidden" }}>
         <div className="m-stagger">
           <Band label="Recent activity" aside={`last ${stats.window} days`} first />
-          {stillOffered.length
-            ? stillOffered.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)
+          {recent.length
+            ? recent.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} />)
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
                 message="Nothing yet this week. Whatever you open collects here, passed or not." />}
           <Band label="New picks" aside={today.behind ? "paused — catching up" : focus ? `from ${focus}` : "any"} />
           {fresh.length
-            ? fresh.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)
+            ? fresh.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} />)
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
                 message={empty!.message} actionLabel={act?.label} onAction={act?.run} />}
-          {buried.length ? <>
-            <Band label="Buried" aside="not today — back in the queue tomorrow" />
-            {buried.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} onBury={(b) => setBuried(e, b)} />)}
-          </> : null}
           {stuck ? <>
             <Band label="Worth a focus" />
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 14, padding: "0 0 12px" }}>

@@ -17,19 +17,11 @@ FORECAST_DAYS = 14  # how far ahead the progress page looks
 GRADES = {"struggled": -1, "pass": +1, "quick": +2}
 
 
-def buried(st, slug):
-    """Is this card out of today's queue by hand? Bury is "not today", never "not ever": it
-    stores the single day it applies to, and touches no box, no due date and no count."""
-    return card(st, slug)["buried"] == today()
-
-
 def due_today(st, all_tasks):
     return [
         s
         for s in all_tasks
-        if card(st, s)["seen"] > 0
-        and card(st, s)["due"] <= today()
-        and not buried(st, s)
+        if card(st, s)["seen"] > 0 and card(st, s)["due"] <= today()
     ]
 
 
@@ -64,9 +56,7 @@ def unseen(st, all_tasks, held=None):
     return [
         slug
         for slug, prereqs in (blocked(st, all_tasks) if held is None else held).items()
-        if not prereqs
-        and not buried(st, slug)
-        and (not focus or focus in _facets(all_tasks[slug]))
+        if not prereqs and (not focus or focus in _facets(all_tasks[slug]))
     ]
 
 
@@ -99,9 +89,9 @@ def queue(st, all_tasks):
 def _no_new(st, all_tasks, held, fresh, *, behind, done_today):
     """The one reason there is nothing new to offer, for the page to name rather than guess.
 
-    Ordered the way the rules bite: the backlog, then today's cap, then a bury, then a
-    prereq, then a focus. `ready` counts what is unlocked and waiting for tomorrow, buried
-    or not; `nearest` is the task closest to opening."""
+    Ordered the way the rules bite: the backlog, then today's cap, then a prereq, then a
+    focus. `ready` counts what is unlocked and waiting for tomorrow; `nearest` is the task
+    closest to opening."""
     focus = st.get("focus")
     if behind:
         return {"why": "behind"}
@@ -111,12 +101,8 @@ def _no_new(st, all_tasks, held, fresh, *, behind, done_today):
             continue
         if prereqs:
             waiting[slug] = prereqs
-        elif buried(st, slug):  # unlocked and in focus: the bury is what holds it back
-            ready += 1
     if fresh or done_today >= NEW_PER_DAY:
         return {"why": "cap", "ready": ready}
-    if ready:  # nothing fresh, so every unlocked task left is one you buried
-        return {"why": "buried"}
     if waiting:
         nearest = min(waiting, key=lambda s: (len(waiting[s]), all_tasks[s]["topic"]))
         return {"why": "prereqs", "nearest": nearest}
@@ -169,7 +155,7 @@ def stats(st, all_tasks, due=None):
 
 def forecast(st, all_tasks):
     """Reviews landing on each of the next FORECAST_DAYS days. Day 0 carries everything
-    overdue, except what is buried: that is tomorrow's."""
+    overdue."""
     start = date.fromisoformat(today())
     out = [0] * FORECAST_DAYS
     for slug in all_tasks:
@@ -178,7 +164,7 @@ def forecast(st, all_tasks):
             continue
         ahead = (date.fromisoformat(c["due"]) - start).days
         if ahead < FORECAST_DAYS:
-            out[max(ahead, 1 if buried(st, slug) else 0)] += 1
+            out[max(ahead, 0)] += 1
     return out
 
 
