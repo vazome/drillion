@@ -284,6 +284,23 @@ def _transaction():
 
 
 @contextmanager
+def frozen(replacement=None):
+    """Exclusive access to progress and the task files together, for backup and restore.
+
+    Holds the same lock and transaction every other change goes through, so no commit and
+    no task-file autosave can land while a snapshot is taken. Given a `replacement`, the
+    whole state is validated and swapped inside that transaction, so restored progress and
+    the code the caller writes beside it land together or not at all."""
+    with _LOCK, _transaction() as db:
+        st, before = _read(db)
+        if replacement is not None:
+            st.clear()
+            st.update(_checked(replacement))
+        yield st
+        _store(db, st, before)
+
+
+@contextmanager
 def writing():
     """One process-safe read/modify/commit, followed by recoverable task resets."""
     with _LOCK, _transaction() as db:

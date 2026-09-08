@@ -151,8 +151,13 @@ See [docs/configuration.md](docs/configuration.md) for the environment variables
 bind-mount recipe.
 
 Existing `progress.json` files are imported automatically on first access and kept untouched.
-After import, SQLite is the source of truth. Stop drillion and copy the whole root for a backup;
-the retained JSON is only a snapshot from before the upgrade.
+After import, SQLite is the source of truth, and the retained JSON is only a snapshot from before
+the upgrade.
+
+**Settings → Back up** writes everything you would miss to one file: your cards, notes, log and
+archive, plus the code you have written in every task. Restore it on another machine or after a
+reinstall and you pick up where you left off. A restore replaces what is there now, and saves
+what it replaced to `backup-before-restore.zip` in the same root first.
 
 ## What running it does to your machine
 

@@ -197,3 +197,10 @@ _Avoid_: streak, consistency, days in a row
 **Window**:
 The trailing span, in days, that **recent** and **practised** are measured over.
 _Avoid_: period, range, lookback
+
+**Backup**:
+Everything a learner would lose, as one file they keep: their cards, **notes**, **log** and
+**archive**, plus the code saved in every task. Restoring replaces all of it, and writes what
+it replaced to a backup of its own first. Distinct from the **archive**, which is drillion's
+own record inside one root.
+_Avoid_: export, sync, save file, snapshot

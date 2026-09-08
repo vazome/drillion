@@ -5,6 +5,7 @@ import { Catalogue } from "./Catalogue";
 import { Task } from "./Task";
 import { Progress } from "./Progress";
 import { Deps } from "./Deps";
+import { Settings } from "./Settings";
 
 /** Hash routing, whole implementation. */
 export function useHash() {
@@ -68,6 +69,7 @@ function Header({ route, dark, setDark, total, version }: {
       <div style={{ flex: 1 }} />
       {link("#/", "Catalogue")}
       {link("#/progress", "Progress")}
+      {link("#/settings", "Settings")}
       <Toggle checked={dark} onChange={setDark} label={dark ? "Dark" : "Light"} />
     </header>
   );
@@ -94,6 +96,7 @@ export function App() {
       <main style={{ padding: "24px" }}>
         {slug ? (deps ? <Deps key={slug} slug={slug} /> : <Task key={slug} slug={slug} dark={dark} />)
           : route === "/progress" ? <Progress />
+          : route === "/settings" ? <Settings />
           : <Catalogue />}
       </main>
     </>

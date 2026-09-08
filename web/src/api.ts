@@ -119,10 +119,26 @@ export class ApiError extends Error {
 }
 
 /** The one fetch wrapper. Non-2xx raises ApiError so callers can branch on 409/423/400. */
+/** GET /api/settings — where this environment keeps the learner's files. */
+export interface Paths { root: string; progress: string; tasks: string; version: string }
+/** What a backup holds: `brings` is the bundle, `replaces` is what is here now. */
+export interface Bundle {
+  created: string | null; drillion: string | null;
+  brings: { cards: number; notes: number; archive: number; tasks: number };
+  replaces: { cards: number; notes: number; archive: number };
+  /** slugs the bundle saved code for that this version does not ship */
+  unknown: string[];
+}
+/** POST /api/restore — `kept` is the backup of whatever the restore replaced. */
+export interface Restored {
+  brings: { cards: number; notes: number; archive: number; tasks: number };
+  unknown: string[]; failed: string[]; kept: string;
+}
+
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch("/api" + path, {
     ...init,
-    headers: init?.body ? { "content-type": "application/json" } : undefined,
+    headers: init?.headers ?? (init?.body ? { "content-type": "application/json" } : undefined),
   });
   const body = await res.json().catch(() => null);
   if (!res.ok) throw new ApiError(res.status, body?.detail ?? body);
