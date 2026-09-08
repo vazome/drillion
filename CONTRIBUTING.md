@@ -7,7 +7,7 @@ uv sync                                      # dependencies (runtime + dev)
 uv run drillion                              # serve on http://127.0.0.1:8765, opens the browser
 uv run pytest tests -q                       # the app's own tests
 uv run ruff check .                          # lint — CI fails if this fails
-uv run drillion selfcheck                    # solve every task with its reference; must say 186/186
+uv run drillion selfcheck                    # solve every task with its reference; must say 189/189
 ```
 
 Requirements: Python 3.13 and [uv](https://docs.astral.sh/uv/). The frontend (React + Vite, in

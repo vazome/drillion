@@ -10,7 +10,7 @@ TL;DR: self-hosted Python practice with a UI that stays out of your way. No stre
 no leaderboard nonsense, no badges and no engagement bait. Made by a neurodivergent
 engineer. It is simple, and it runs your code in a sandbox.
 
-Longer: drillion is a local web app with 186 short Python tasks, each tagged with the
+Longer: drillion is a local web app with 189 short Python tasks, each tagged with the
 concept it drills so you can go straight at whatever you're worst at. No login, no
 account, no server except the one on your laptop. Tasks are folders of Markdown and
 Python. Your progress is a single JSON file.
@@ -162,7 +162,7 @@ what it replaced to `backup-before-restore.zip` in the same root first.
 ## What running it does to your machine
 
 drillion runs Python on your computer: the code you write, and the code that ships inside the
-186 tasks. So it is worth saying plainly what that costs you.
+189 tasks. So it is worth saying plainly what that costs you.
 
 - **Your submissions are confined by the kernel.** Landlock on Linux, an
   `sandbox-exec` profile on macOS, a restricted token at low integrity on Windows. On Linux and
@@ -204,6 +204,6 @@ against, and [AGENTS.md](AGENTS.md) for how the project decides things. Bugs and
 
 ## License
 
-MIT. See [LICENSE](LICENSE). 88 of the 186 tasks carry Markdown adapted from Exercism's Python
-track (also MIT); each names its origin in a `source:` field and an attribution footer, and
-[NOTICE](NOTICE) reproduces the notice that travels with them.
+MIT. See [LICENSE](LICENSE). 89 of the 189 tasks adapt a problem from Exercism's Python track
+(also MIT) and one from MBPP (CC-BY-4.0); each names its origin in a `source:` field and an
+attribution footer, and [NOTICE](NOTICE) reproduces the notices that travel with them.
