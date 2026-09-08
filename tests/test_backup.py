@@ -155,6 +155,8 @@ def test_the_routes_download_preview_and_restore(root):
 
 def test_erasing_clears_progress_and_puts_every_task_back_to_its_stub(root):
     stub = _body(SLUG)
+    # a leftover from before SQLite: a fresh database imports it, so an erase has to take it
+    (root / "progress.json").write_text('{"version": 1, "notes": {}}', encoding="utf-8")
     with state.writing() as st:
         st["notes"][SLUG] = "my note"
         st["cards"][SLUG] = {"box": 3, "due": "2030-01-01", "seen": 2, "lapses": 0}
@@ -165,6 +167,9 @@ def test_erasing_clears_progress_and_puts_every_task_back_to_its_stub(root):
 
     assert summary["cleared"] == 1 and summary["failed"] == []
     assert _body(SLUG) == stub
+    # the storage goes too, or the next read imports the legacy JSON straight back
+    assert not settings.state_path.exists()
+    assert not (settings.root / "progress.json").exists()
     st = state.load()
     assert st["cards"] == {} and st["notes"] == {} and st["archive"] == {}
 

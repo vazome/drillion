@@ -51,8 +51,9 @@ function DangerZone() {
         <div style={{ flex: 1, minWidth: 280 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fail)" }}>Erase all progress</div>
           <p style={{ margin: "4px 0 0", fontSize: 14, color: "var(--text-muted)" }}>
-            Clears your schedule, your history and your notes, and empties every task back to
-            a <code>solve()</code> that raises, the way Abandon does for one. A backup of
+            Deletes the progress database itself, so your schedule, your history and your
+            notes are gone rather than emptied, and puts every task back to a{" "}
+            <code>solve()</code> that raises, the way Abandon does for one. A backup of
             everything is written first, so a restore can undo it. Nothing else can.
           </p>
         </div>

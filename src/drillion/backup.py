@@ -145,7 +145,9 @@ def erase():
 
     Emptying is what `abandon` does to one task, applied to all of them: the body of
     `solve` goes back to `raise NotImplementedError`. It is the file's own stub, so a
-    signature the learner changed and saved stays changed.
+    signature the learner changed and saved stays changed. The progress rows are cleared
+    inside the transaction, then the storage itself is deleted, so nothing survives to be
+    imported back on the next read.
 
     A backup of everything is written before the transaction opens, because the only undo
     for this is a restore. A task whose region no longer parses cannot be stubbed from its
@@ -167,4 +169,6 @@ def erase():
             except (OSError, SyntaxError, region.Invalid) as exc:
                 log.warning("Could not clear the code for %s: %s", slug, exc)
                 failed.append(slug)
+    # the transaction emptied every row; this takes the database and the legacy JSON with it
+    state.wipe()
     return {"cleared": cleared, "failed": failed, "kept": str(keep)}
