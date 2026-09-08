@@ -101,6 +101,10 @@ class Note(BaseModel):
     text: str
 
 
+class Erase(BaseModel):
+    confirm: str
+
+
 @app.exception_handler(Invalid)
 async def _rejected(_request, exc):
     """A refused edit is the learner's problem, not a crash: 400 with the line."""
@@ -339,6 +343,18 @@ def apply_restore(payload: bytes = Body(...)):
     """Replace progress and saved code from a bundle. The current data is kept first."""
     summary = backup.restore(payload)
     log.info("restored %s, kept %s", summary["brings"], summary["kept"])
+    return summary
+
+
+@app.post("/api/reset")
+def erase_everything(want: Erase):
+    """Everything back to a first run. The typed phrase is the guard: this route can be
+    reached by a bookmark or a stray script, and it is the one route with nothing behind
+    it to undo the damage except the backup it writes first."""
+    if want.confirm.strip() != backup.PHRASE:
+        raise backup.Rejected(f"Type {backup.PHRASE!r} to confirm.")
+    summary = backup.erase()
+    log.info("erased everything, kept %s", summary["kept"])
     return summary
 
 

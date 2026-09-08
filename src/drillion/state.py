@@ -300,6 +300,26 @@ def frozen(replacement=None):
         _store(db, st, before)
 
 
+def wipe():
+    """Delete the stored progress outright, so the next read starts from a first run.
+
+    Emptying every row would leave the database and the legacy JSON behind, and the JSON is
+    what a fresh database imports from — so a reset that says everything is gone has to take
+    the files too. Under the same lock as every other write, and after the caller has
+    already taken its backup."""
+    with _LOCK:
+        path = settings.state_path
+        for gone in (
+            path,
+            path.with_name(path.name + "-journal"),
+            path.with_name(path.name + "-wal"),
+            path.with_name(path.name + "-shm"),
+            settings.root / "progress.json",
+        ):
+            gone.unlink(missing_ok=True)
+        log.info("removed the stored progress under %s", settings.root)
+
+
 @contextmanager
 def writing():
     """One process-safe read/modify/commit, followed by recoverable task resets."""

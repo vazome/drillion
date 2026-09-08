@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Card, EmptyState, NoticeBanner, Toggle } from "./ds/index.js";
-import { api, type Paths, type Bundle, type Restored } from "./api";
+import { Button, Card, EmptyState, Input, NoticeBanner, Toggle } from "./ds/index.js";
+import { api, type Paths, type Bundle, type Erased, type Restored } from "./api";
 import { setVimMode, vimMode } from "./editorMode";
 
 /** A path plus the one thing anyone wants to do with it. */
@@ -18,6 +18,84 @@ function Location({ label, path }: { label: string; path: string }) {
       <code style={{ flex: 1, fontSize: 13, overflowWrap: "anywhere" }}>{path}</code>
       <Button variant="quiet" onClick={copy}>{copied ? "Copied" : "Copy"}</Button>
     </div>
+  );
+}
+
+/** Typed exactly, or the button stays off. The server checks the same phrase, because this
+ *  route is reachable without the screen in front of it. */
+const PHRASE = "erase progress";
+
+/** The one screen area that destroys data, drawn so it cannot be mistaken for the rest of
+ *  Settings: red frame, red heading, and a confirmation that has to be typed rather than
+ *  clicked through. */
+function DangerZone() {
+  const [open, setOpen] = useState(false);
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState<Erased | null>(null);
+
+  const close = () => { setOpen(false); setTyped(""); setError(null); };
+  const erase = async () => {
+    setBusy(true);
+    try {
+      setDone(await api<Erased>("/reset", { method: "POST", body: JSON.stringify({ confirm: typed }) }));
+      close();
+    } catch (e) { setError((e as Error).message); }
+    setBusy(false);
+  };
+
+  return (
+    <Card label="Danger zone" style={{ border: "1px solid var(--fail)", boxShadow: "none" }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ flex: 1, minWidth: 280 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fail)" }}>Erase all progress</div>
+          <p style={{ margin: "4px 0 0", fontSize: 14, color: "var(--text-muted)" }}>
+            Deletes the progress database itself, so your schedule, your history and your
+            notes are gone rather than emptied, and puts every task back to a{" "}
+            <code>solve()</code> that raises, the way Abandon does for one. A backup of
+            everything is written first, so a restore can undo it. Nothing else can.
+          </p>
+        </div>
+        {open ? null : (
+          <Button variant="secondary" style={{ color: "var(--fail)", borderColor: "var(--fail)" }} onClick={() => setOpen(true)}>
+            Erase all progress
+          </Button>
+        )}
+      </div>
+
+      {open ? (
+        <div style={{ marginTop: 14, padding: 14, borderRadius: "var(--radius)", background: "var(--fail-bg)", display: "grid", gap: 10 }}>
+          <div style={{ fontSize: 14 }}>
+            To confirm, type <code style={{ fontWeight: 600 }}>{PHRASE}</code> below.
+          </div>
+          <Input
+            value={typed} onChange={setTyped} mono placeholder={PHRASE}
+            ariaLabel={`Type ${PHRASE} to confirm`} style={{ maxWidth: 280 }}
+          />
+          {error ? <NoticeBanner message={error} /> : null}
+          <div style={{ display: "flex", gap: 10 }}>
+            <Button
+              variant="secondary" disabled={busy || typed.trim() !== PHRASE} onClick={erase}
+              style={typed.trim() === PHRASE && !busy ? { background: "var(--fail)", borderColor: "var(--fail)", color: "#FFFFFF" } : undefined}>
+              {busy ? "Erasing…" : "I understand, erase everything"}
+            </Button>
+            <Button variant="quiet" disabled={busy} onClick={close}>Cancel</Button>
+          </div>
+        </div>
+      ) : null}
+
+      {done ? (
+        <div style={{ marginTop: 14, display: "grid", gap: 8 }}>
+          <div style={{ fontSize: 14 }}>Erased. {done.cleared} task files went back to their stub.</div>
+          {done.failed.length ? <NoticeBanner message={`The code could not be cleared for: ${done.failed.join(", ")}`} /> : null}
+          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+            What you had is at <code>{done.kept}</code>.
+          </div>
+          <div><Button onClick={() => location.assign("#/")}>Back to the catalogue</Button></div>
+        </div>
+      ) : null}
+    </Card>
   );
 }
 
@@ -149,6 +227,8 @@ export function Settings() {
           </div>
         ) : null}
       </Card>
+
+      <DangerZone />
     </div>
   );
 }

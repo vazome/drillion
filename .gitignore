@@ -33,6 +33,7 @@ progress.json
 progress.json.bak
 progress.sqlite3*
 backup-before-restore.zip
+backup-before-reset.zip
 drillion-backup-*.zip
 
 # agent worktrees: real checkouts of other branches, so every repo-wide tool

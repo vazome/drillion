@@ -151,3 +151,59 @@ def test_the_routes_download_preview_and_restore(root):
             assert bad.status_code == 400 and "error" in bad.json()
 
     asyncio.run(drive())
+
+
+def test_erasing_clears_progress_and_puts_every_task_back_to_its_stub(root):
+    stub = _body(SLUG)
+    # a leftover from before SQLite: a fresh database imports it, so an erase has to take it
+    (root / "progress.json").write_text('{"version": 1, "notes": {}}', encoding="utf-8")
+    with state.writing() as st:
+        st["notes"][SLUG] = "my note"
+        st["cards"][SLUG] = {"box": 3, "due": "2030-01-01", "seen": 2, "lapses": 0}
+        st["archive"][SLUG] = [{"date": "2026-01-01", "grade": "PASS"}]
+    _write(SLUG, stub.replace("raise NotImplementedError", "return 'mine'"))
+
+    summary = backup.erase()
+
+    assert summary["cleared"] == 1 and summary["failed"] == []
+    assert _body(SLUG) == stub
+    # the storage goes too, or the next read imports the legacy JSON straight back
+    assert not settings.state_path.exists()
+    assert not (settings.root / "progress.json").exists()
+    st = state.load()
+    assert st["cards"] == {} and st["notes"] == {} and st["archive"] == {}
+
+
+def test_what_an_erase_destroys_is_in_the_backup_it_writes_first(root):
+    with state.writing() as st:
+        st["notes"][SLUG] = "my note"
+    _write(SLUG, _body(SLUG).replace("raise NotImplementedError", "return 'mine'"))
+
+    kept = Path(backup.erase()["kept"])
+
+    assert kept.name == "backup-before-reset.zip"
+    backup.restore(kept.read_bytes())
+    assert state.load()["notes"][SLUG] == "my note"
+    assert "return 'mine'" in _body(SLUG)
+
+
+def test_the_reset_route_refuses_anything_but_the_phrase(root):
+    async def drive():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://127.0.0.1"
+        ) as api:
+            with state.writing() as st:
+                st["notes"][SLUG] = "still here"
+
+            for confirm in ("", "yes", "Erase Progress!"):
+                refused = await api.post("/api/reset", json={"confirm": confirm})
+                assert refused.status_code == 400, confirm
+                assert state.load()["notes"][SLUG] == "still here"
+
+            done = (
+                await api.post("/api/reset", json={"confirm": backup.PHRASE})
+            ).json()
+            assert done["cleared"] == 0 and done["failed"] == []
+            assert state.load()["notes"] == {}
+
+    asyncio.run(drive())
