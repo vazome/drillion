@@ -10,7 +10,9 @@ import inspect
 from _lib import rng
 from langchain_core.runnables import RunnableLambda
 
-FAST, SLOW, LIMIT = 0.005, 0.05, 0.03
+# a fast call has to finish well inside the limit and a slow one has to miss it by a mile:
+# at 5ms against 30ms a loaded CI runner scheduled the fast call late and it graded TIMEOUT
+FAST, SLOW, LIMIT = 0.01, 2.0, 0.25
 
 
 def _gen(r):

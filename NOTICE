@@ -3,11 +3,11 @@ Third-party notices
 
 drillion (this repository) is MIT licensed — see LICENSE.
 
-84 of the 171 tasks under `tasks/` are adapted from Exercism's Python track and
-carry Exercism's own Markdown verbatim in their `README.md`, by design (see
-`README.md`). Each of those 84 files names its origin in a `source:`
-frontmatter field and closes with an "Adapted from exercism/python — MIT"
-line; run `grep -rl '^source:' tasks/*/README.md` to list them.
+89 of the 189 tasks under `tasks/` are adapted from Exercism's Python track:
+the problem each one poses is theirs, restated in drillion's own words. Each
+of those 89 files names its origin in a `source:` frontmatter field and closes
+with an "Adapted from exercism/python — MIT" line; run
+`grep -rl '^source: exercism' tasks/*/README.md` to list them.
 
 That content is drawn from:
 
@@ -41,8 +41,14 @@ Both are MIT licensed:
 This file reproduces that copyright and permission notice so it travels with
 the repository, as MIT requires for a substantial portion of borrowed work.
 It does not replace the per-file `source:` field and attribution footer on
-each of the 84 tasks — those stay as the finer-grained record of exactly what
+each of the 89 tasks — those stay as the finer-grained record of exactly what
 came from where.
+
+One further task, `187_job_spacing`, restates a problem from MBPP (Mostly
+Basic Python Problems), published by Google Research at
+https://github.com/google-research/google-research/tree/master/mbpp under
+CC-BY-4.0. It carries the same `source:` field and a closing attribution line.
+The full licence text is at https://creativecommons.org/licenses/by/4.0/.
 
 The client ships two webfonts under `web/public/fonts/`, both licensed under the
 SIL Open Font License 1.1, whose full text sits beside them:

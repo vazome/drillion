@@ -52,6 +52,7 @@ for _ in $(seq 30); do
   esac
   sleep 2
 done
-test "$(curl -fsS http://127.0.0.1:8765/api/health | jq .tasks)" = 182
+# counted from the checkout: a number written down here fails the next PR that adds a task
+test "$(curl -fsS http://127.0.0.1:8765/api/health | jq .tasks)" = "$(ls tasks/*/task.py | wc -l | tr -d " ")"
 curl -fsS -o /dev/null http://127.0.0.1:8765/
 curl -fsS -o /dev/null -X POST http://127.0.0.1:8765/api/task/009_fstrings/open
