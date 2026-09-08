@@ -1,5 +1,7 @@
 import React from "react";
-/* Topic depth — one strip per tag: box distribution as a stacked bar, lapses, due7, seen/total. */
+/* Topic depth — one strip per tag: how well its tasks are known, as a stacked bar, plus
+   lapses, due7, seen/total. Segments run shakiest to most solid; the scheduler's boxes stay
+   behind the API, see src/strength.ts. */
 const STRIP_MONO = { fontFamily: "var(--font-mono)", fontVariantNumeric: "tabular-nums" };
 const STRIP_LABEL = { fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--text-muted)" };
 const STRIP_GRID = { display: "grid", gridTemplateColumns: "156px minmax(0, 1fr) 52px 44px 66px", gap: 12, alignItems: "center" };
@@ -21,28 +23,28 @@ function TopicStripsSort({ value, onChange }) {
   );
 }
 
-export function TopicStrips({ tags = [], boxes = 7, defaultSort = "stuck first", maxHeight = 520, style }) {
+export function TopicStrips({ tags = [], defaultSort = "stuck first", maxHeight = 520, style }) {
   const [sort, setSort] = React.useState(defaultSort);
   const rows = [...tags].sort(STRIP_SORTS[sort]);
   const widest = Math.max(1, ...tags.map((t) => t.total));
   return (
     <div style={style}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>One strip per topic: its tasks spread across the ladder, pale on the left, deep on the right.</span>
+        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>One strip per topic: how well you know its tasks, shakiest on the left, most solid on the right.</span>
         <div style={{ flex: 1 }} /><TopicStripsSort value={sort} onChange={setSort} />
       </div>
       <div style={{ ...STRIP_GRID, paddingBottom: 6, paddingRight: 10, borderBottom: "1px solid var(--border)" }}>
-        <div style={STRIP_LABEL}>Tag</div><div style={STRIP_LABEL}>Ladder spread</div>
+        <div style={STRIP_LABEL}>Tag</div><div style={STRIP_LABEL}>Spread</div>
         <div style={{ ...STRIP_LABEL, textAlign: "right" }}>Lapses</div>
         <div style={{ ...STRIP_LABEL, textAlign: "right" }}>Due 7</div>
         <div style={{ ...STRIP_LABEL, textAlign: "right" }}>Seen</div>
       </div>
-      <div role="table" aria-label="Ladder spread per topic" style={{ maxHeight, overflow: "auto", marginTop: 4, paddingRight: 10 }}>
+      <div role="table" aria-label="Practice spread per topic" style={{ maxHeight, overflow: "auto", marginTop: 4, paddingRight: 10 }}>
         {rows.map((t) => (
           <div key={t.tag} style={{ ...STRIP_GRID, height: 26 }}>
             <a href={"#/?tag=" + encodeURIComponent(t.tag)} title={t.tag} style={{ fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.tag}</a>
             <div style={{ display: "flex", gap: 1, width: (t.total / widest) * 100 + "%", minWidth: 8 }}
-              title={t.tag + " — " + t.boxes.map((n, i) => "box " + (i + 1) + ": " + n).join(", ") + ", unseen: " + (t.total - t.seen)}>
+              title={t.tag + " — " + t.seen + " of " + t.total + " practised, " + (t.total - t.seen) + " not started"}>
               {t.boxes.map((n, i) => (n ? <div key={i} style={{ flex: n, height: 10, borderRadius: 1, background: STRIP_RAMP[i] }} /> : null))}
               {t.total - t.seen > 0 ? <div style={{ flex: t.total - t.seen, height: 10, borderRadius: 1, background: "var(--surface-2)", boxShadow: "inset 0 0 0 1px var(--border)" }} /> : null}
             </div>
@@ -53,13 +55,13 @@ export function TopicStrips({ tags = [], boxes = 7, defaultSort = "stuck first",
         ))}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
-        <span style={{ fontSize: 12.5, color: "var(--text-faint)" }}>{tags.length} tags · strip width is the topic's size, segments are boxes 1–{boxes} then unseen</span>
+        <span style={{ fontSize: 12.5, color: "var(--text-faint)" }}>{tags.length} tags · strip width is the topic's size, segments run shakiest to most solid, then not started</span>
         <div style={{ flex: 1 }} />
         <div style={{ display: "flex", gap: 2, alignItems: "center" }}>
-          {STRIP_RAMP.map((c, i) => <div key={i} style={{ width: 12, height: 10, borderRadius: 1, background: c }} title={"box " + (i + 1)} />)}
-          <div style={{ width: 12, height: 10, borderRadius: 1, background: "var(--surface-2)", boxShadow: "inset 0 0 0 1px var(--border)", marginLeft: 3 }} title="unseen" />
+          {STRIP_RAMP.map((c, i) => <div key={i} style={{ width: 12, height: 10, borderRadius: 1, background: c }} />)}
+          <div style={{ width: 12, height: 10, borderRadius: 1, background: "var(--surface-2)", boxShadow: "inset 0 0 0 1px var(--border)", marginLeft: 3 }} title="not started" />
         </div>
-        <span style={{ fontSize: 11, color: "var(--text-faint)" }}>box 1 → 7 → unseen</span>
+        <span style={{ fontSize: 11, color: "var(--text-faint)" }}>shaky → solid → not started</span>
       </div>
     </div>
   );

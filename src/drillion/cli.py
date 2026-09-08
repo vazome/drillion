@@ -17,17 +17,32 @@ log = logging.getLogger(__name__)
 
 
 def seed():
-    """Fill an empty root from the tasks baked into the wheel, once.
+    """Bring root's tasks/ in line with the tasks baked into the wheel, on every run.
 
-    A root that already has `tasks/` is left alone: it is a checkout, or a learner's own
-    copy with their code saved inside the task files. Tasks added by a later drillion never
-    reach a root that was already seeded."""
-    if settings.tasks_dir.is_dir() or not TASKS_TEMPLATE.is_dir():
+    `task.py` is the learner's — it is never written over. Everything else under tasks/ is
+    drillion's, so READMEs, `_lib.py` and the test files follow the installed version, new
+    tasks arrive on upgrade, and a task this version no longer ships is removed rather than
+    left as a slug nothing links to. A checkout has no template and is untouched."""
+    if not TASKS_TEMPLATE.is_dir():
         return
-    log.info(
-        "first run: seeding %s from the tasks that ship with drillion", settings.root
-    )
-    shutil.copytree(TASKS_TEMPLATE, settings.tasks_dir)
+    dest = settings.tasks_dir
+    if not dest.is_dir():
+        log.info("first run: seeding %s from the tasks that ship with drillion", dest)
+    dest.mkdir(parents=True, exist_ok=True)
+    for src in TASKS_TEMPLATE.rglob("*"):
+        out = dest / src.relative_to(TASKS_TEMPLATE)
+        if src.is_dir():
+            out.mkdir(parents=True, exist_ok=True)
+        elif not (out.name == "task.py" and out.is_file()):
+            shutil.copy2(src, out)
+    # deepest first, so a directory is empty by the time its own turn comes
+    for out in sorted(dest.rglob("*"), reverse=True):
+        if (TASKS_TEMPLATE / out.relative_to(dest)).exists():
+            continue
+        if out.is_dir():
+            shutil.rmtree(out, ignore_errors=True)
+        else:
+            out.unlink(missing_ok=True)
 
 
 def _open_browser(url):

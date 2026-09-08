@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Button, Card, Collapsible, ConflictBanner, DepLineage, EmptyState, LadderMeter, NoteField, NoticeBanner, RequiresTag, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
+import { Button, Card, Collapsible, ConflictBanner, DepLineage, EmptyState, NoteField, GraceNotice, NoticeBanner, RequiresTag, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
 import { ApiError, api, post, type Task as TaskData, type RunResult } from "./api";
 import { depsHref, prefetch } from "./Deps";
+import { inDays, strength } from "./strength";
 import { DiffView, Editor } from "./Editor";
 import { useDraft } from "./useDraft";
 
@@ -36,13 +37,13 @@ type Result =
   | { state: "failed"; graded: boolean; attempts: number; headline: string; output: string }
   | { state: "passed"; grade: string; box: number; stepped: boolean; fromBox: number; reason: string; dueIn: number; attempts: number; code: string };
 
-/** The pass banner's one line about the card: `stepped` is the server's answer to whether
- *  the card moved, and `box` against `fromBox` says which way. */
+/** The pass banner's one line about where the task now sits: `stepped` is the server's answer
+ *  to whether it moved, and `box` against `fromBox` says which way. */
 export function stepLine(grade: string, box: number, fromBox: number, stepped: boolean, boxes: number) {
-  if (stepped) return box < fromBox ? "the card stepped back a box — it comes back sooner" : "the card stepped up";
-  if (box === boxes - 1) return "the card is already in the top box and stays there";
-  if (box === 0) return "the card is already in the first box and stays there";
-  return `${grade} keeps the card where it is`;
+  if (stepped) return box < fromBox ? "it comes back sooner than last time" : "it comes back later than last time";
+  if (box === boxes - 1) return "it is as far out as it goes and stays there";
+  if (box === 0) return "it is as close in as it goes and stays there";
+  return `${grade} leaves it where it is`;
 }
 
 /** The header chips: `requires ✓019 ▲040`. Titles are dropped past two — the row is
@@ -67,6 +68,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [result, setResult] = useState<Result>({ state: "idle" });
   const [gate, setGate] = useState<Gate>(null);
   const [active, setActive] = useState(0);
+  const [grace, setGrace] = useState(0);           // the server's reading minute, ticked down locally
+  const [readFirstOff, setReadFirstOff] = useState(false);
   const [nextHintIn, setNextHintIn] = useState<number | null>(null);
   const [nextSlug, setNextSlug] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);          // a hint spent twice cannot be un-spent
@@ -76,6 +79,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [lineage, setLineage] = useState(false);
   const narrow = useSyncExternalStore(watchNarrow, isNarrow);
 
+  const graceRef = useRef(0);                // read inside the tick, so it is not a dep
   const gateTimer = useRef<number | undefined>(undefined);
   const unlocksBtn = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -88,6 +92,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const onPayload = useCallback((p: TaskData) => {
     setTask(p);
     setActive(p.attempt?.active ?? 0);
+    setGrace(p.attempt?.grace ?? 0);
     setNextHintIn(p.hints.next_in);
     setNudge(p.nudge);
   }, []);
@@ -132,18 +137,21 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   useEffect(() => {
     if (!hasAttempt || passed) return;
     const tick = setInterval(() => {
-      if (document.visibilityState === "visible") {
-        setActive((s) => s + 1);
-        setNextHintIn((n) => (n === null ? null : Math.max(0, n - 1)));
-      }
+      if (document.visibilityState !== "visible") return;
+      // the grace is the server's, and it holds `active` at rest until it is spent
+      if (graceRef.current > 0) { setGrace((g) => g - 1); return; }
+      setActive((s) => s + 1);
+      setNextHintIn((n) => (n === null ? null : Math.max(0, n - 1)));
     }, 1000);
     const beat = setInterval(() => {
       if (document.visibilityState !== "visible") return;
-      post<{ active: number; nudge: boolean }>(`/task/${encodeURIComponent(slug)}/touch`)
-        .then((r) => { setActive(r.active); setNudge(r.nudge); }).catch(() => {});
+      post<{ active: number; nudge: boolean; grace: number }>(`/task/${encodeURIComponent(slug)}/touch`)
+        .then((r) => { setActive(r.active); setNudge(r.nudge); setGrace(r.grace); }).catch(() => {});
     }, HEARTBEAT_MS);
     return () => { clearInterval(tick); clearInterval(beat); };
   }, [hasAttempt, passed, slug]);
+
+  useEffect(() => { graceRef.current = grace; }, [grace]);
 
   /** Run and Submit are the same round trip; `submit` is the learner saying they are done.
    *  Only a submitted run costs an attempt and moves the card — a Run is free, repeatable,
@@ -237,7 +245,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     }
   };
 
-  /** Not today: the card keeps its box, due date and counts, and tomorrow puts it back.
+  /** Not today: the task keeps its standing, due date and counts, and tomorrow puts it back.
    * The catalogue's Buried band is the other end of this control. */
   const bury = async () => {
     if (!task) return;
@@ -318,8 +326,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
           <div ref={panel} tabIndex={-1} onClick={(e) => e.stopPropagation()} className="m-rise"
             style={{ width: "min(1040px, 100%)", maxHeight: "100%", overflowY: "auto", outline: "none" }}>
             <Card label={`Lineage · ${task.slug}`} style={{ boxShadow: "var(--shadow-pop)" }}>
-              <DepLineage task={{ topic: meta.topic, title: meta.title, tags: meta.tags, box: task.box, aside: "attempt still open behind this" }}
-                requires={task.requires} unlocks={task.unlocks} ladder={task.ladder}
+              <DepLineage task={{ topic: meta.topic, title: meta.title, tags: meta.tags, strength: strength(task.box, !!task.seen, task.ladder), aside: "attempt still open behind this" }}
+                requires={task.requires} unlocks={task.unlocks}
                 hrefOf={(r) => depsHref(r.slug)} onPrefetch={(r) => { void prefetch(r.slug); }} onClose={closeLineage} />
             </Card>
           </div>
@@ -367,10 +375,10 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               {reference ? (
                 <div style={{ display: "grid", gap: 8 }}>
                   {peeked
-                    ? <NoticeBanner message="Solution shown — this pass won’t promote the card. It grades as struggled and stays in its box." actions={[]} />
+                    ? <NoticeBanner message="Solution shown — this pass won’t move the task further out. It grades as struggled and comes back just as soon." actions={[]} />
                     : <div style={ASIDE}>{mine
-                        ? "Your solution on the left, the reference on the right. It closes again when this card comes back."
-                        : "The reference answer, for comparison with what you wrote. It closes again when this card comes back."}</div>}
+                        ? "Your solution on the left, the reference on the right. It closes again when this task comes back."
+                        : "The reference answer, for comparison with what you wrote. It closes again when this task comes back."}</div>}
                   {mine
                     ? <DiffView mine={mine} reference={reference} dark={dark} maxHeight="46vh" />
                     : <SpecText text={"```python\n" + reference + "\n```"} slug={slug} />}
@@ -419,6 +427,11 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             </div>
           ) : null}
           {notice("editor")}
+          {grace > 0 && !readFirstOff && !passed ? (
+            <div style={{ position: "fixed", right: 24, left: narrow ? 24 : undefined, bottom: 24, zIndex: 30 }}>
+              <GraceNotice seconds={grace} onDismiss={() => setReadFirstOff(true)} />
+            </div>
+          ) : null}
           {nudge && !nudgeOff && !passed ? (
             <div style={{ position: "fixed", right: 24, left: narrow ? 24 : undefined, bottom: 24, zIndex: 30 }}>
               <StuckNudge minutes={Math.round(active / 60)} hintsShown={hints.shown.length} hintsTotal={hints.total} hintReady={hintReady}
@@ -473,7 +486,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                   <ResultBanner
                     state={result.state}
                     headline={result.state === "failed" ? result.headline : undefined}
-                    gradeLine={passed ? `${result.grade.toUpperCase()} · ${secs(active)} · ${plural(result.attempts, "attempt")} · box ${result.box + 1} of ${task.ladder.length}` : undefined}
+                    gradeLine={passed ? `${result.grade.toUpperCase()} · ${secs(active)} · ${plural(result.attempts, "attempt")} · back ${inDays(result.dueIn)}` : undefined}
                     backIn={passed ? plural(result.dueIn, "day") : undefined} />
                 )}
               </div>
@@ -491,8 +504,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
 
             {passed ? (
               <div style={{ marginTop: 10, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                {/* the climb animation would read as a promotion on a card that just fell */}
-                <span className={result.stepped ? (fell ? "m-fade" : "m-step") : undefined} style={{ display: "inline-flex" }}><LadderMeter box={result.box + 1} intervals={task.ladder} /></span>
+                {/* the step animation would read as a promotion on a task that just fell back */}
+                <span className={result.stepped ? (fell ? "m-fade" : "m-step") : undefined} style={{ display: "inline-flex" }}><StatusBadge status={strength(result.box, true, task.ladder)!} /></span>
                 <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
                   {stepLine(result.grade, result.box, result.fromBox, result.stepped, task.ladder.length)} — code archived, stub restored for next time
                 </span>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button, Card, DepLineage, EmptyState } from "./ds/index.js";
 import { api, type Task as TaskData } from "./api";
+import { strength } from "./strength";
 
 export const taskHref = (slug: string) => `#/task/${encodeURIComponent(slug)}`;
 /** Every prereq link goes to that task's own lineage, not to the task: you follow these to
@@ -56,8 +57,8 @@ export function Deps({ slug }: { slug: string }) {
       </div>
       <Card label={`Lineage · ${task.slug}`}>
         <DepLineage
-          task={{ topic, title, tags: task.meta.tags, box: task.box, aside: `${task.status} · ${task.seen ? `seen ${task.seen}×` : "never seen"}` }}
-          requires={task.requires} unlocks={task.unlocks} ladder={task.ladder}
+          task={{ topic, title, tags: task.meta.tags, strength: strength(task.box, !!task.seen, task.ladder), aside: `${task.status} · ${task.seen ? `seen ${task.seen}×` : "never seen"}` }}
+          requires={task.requires} unlocks={task.unlocks}
           hrefOf={(r) => depsHref(r.slug)} onPrefetch={(r) => { void prefetch(r.slug); }} />
       </Card>
     </div>

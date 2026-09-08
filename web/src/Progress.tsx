@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Card, DueForecast, EmptyState, Ladder, PracticeHeatmap, StatusBadge, Table, TopicStrips } from "./ds/index.js";
+import { Card, DueForecast, EmptyState, PracticeHeatmap, StatusBadge, Table, TopicStrips } from "./ds/index.js";
 import { api, type Progress as Payload } from "./api";
 import { Stats } from "./Stats";
+import { bands, tally } from "./strength";
 
 const mmss = (s: number) => `${Math.floor(s / 60)}m${String(s % 60).padStart(2, "0")}s`;
 /** "2026-08-26" → "26 Aug". Parsed at local midnight so the day never slips a timezone. */
@@ -26,19 +27,29 @@ export function Progress() {
   if (!data) return <EmptyState message="Loading…" />;
 
   const tags = Object.entries(data.per_tag).map(([tag, t]) => ({ tag, ...t }));
+  const known = tally(data.boxes, data.ladder);
+  const band = bands(data.ladder);
   const logRows = [...data.log].reverse().map((row, i) => ({ ...row, id: i, time: mmss(row.secs), kind: row.new ? "new" : "review" }));
 
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", display: "grid", gap: 18 }}>
       <Stats boxes={data.boxes} ladder={data.ladder} due={data.due} seen={data.seen} total={data.total} practised={data.practised} outOf={data.window} />
 
-      <Card label="The ladder">
-        <Ladder boxes={data.boxes} intervals={data.ladder} />
+      <Card label="How well you know them">
+        <div style={{ display: "flex", gap: 8 }}>
+          {(["learning", "familiar", "solid"] as const).map((k) => (
+            <div key={k} style={{ flex: 1, background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "10px 12px" }}>
+              <StatusBadge status={k} />
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 15, margin: "6px 0 2px" }}>{known[k]} {known[k] === 1 ? "task" : "tasks"}</div>
+              <div style={{ fontSize: 11, color: "var(--text-faint)" }}>{band[k]}</div>
+            </div>
+          ))}
+        </div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 12 }}>
-          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>A quick pass climbs two boxes, a pass one, and a struggle costs one — box {data.ladder.length} is the ceiling. Each box returns on its own interval.</span>
+          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Every task you pass moves further out, so it comes back later; one you struggle through moves back in and returns sooner. A sailing pass counts double.</span>
           <div style={{ flex: 1 }} />
           <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--text-faint)" }}>
-            {data.seen} cards on the ladder · {data.total - data.seen} untouched
+            {data.seen} practised · {data.total - data.seen} not started
           </span>
         </div>
       </Card>
