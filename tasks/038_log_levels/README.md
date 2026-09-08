@@ -3,7 +3,7 @@ title: enums — name the six log levels once
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [11, 35]
+prereqs: [11, 36]
 tags: [enums]
 source: exercism/python concept/log-levels (MIT, adapted)
 ---

@@ -3,7 +3,7 @@ title: classes — the checksum that catches a mistyped card number
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [11, 35]
+prereqs: [11, 36]
 tags: [classes]
 source: exercism/python practice/luhn (MIT, adapted)
 ---

@@ -3,7 +3,7 @@ title: tuples — reading the treasure coordinates
 difficulty: easy
 tier: core
 minutes: 12
-prereqs: [3, 18]
+prereqs: [4, 19]
 tags: [tuples]
 source: exercism/python concept/tisbury-treasure-hunt (MIT, adapted)
 ---

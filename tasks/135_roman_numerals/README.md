@@ -3,7 +3,7 @@ title: tuples — write a number the way Rome would
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [11, 23]
+prereqs: [11, 24]
 tags: [tuples]
 source: exercism/python practice/roman-numerals (MIT, adapted)
 ---

@@ -3,7 +3,7 @@ title: generators — seat every passenger on the plane
 difficulty: hard
 tier: advanced
 minutes: 15
-prereqs: [35]
+prereqs: [36]
 tags: [generators]
 source: exercism/python concept/plane-tickets (MIT, adapted)
 ---

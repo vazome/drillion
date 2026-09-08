@@ -3,7 +3,7 @@ title: list-methods — pick the rearrangements out of a word list
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [11, 18, 49]
+prereqs: [11, 19, 49]
 tags: [list-methods]
 source: exercism/python practice/anagram (MIT, adapted)
 ---

@@ -3,7 +3,7 @@ title: none — lay the dining room out with empty seats
 difficulty: medium
 tier: core
 minutes: 13
-prereqs: [27]
+prereqs: [28]
 tags: [none]
 source: exercism/python concept/restaurant-rozalynn (MIT, adapted)
 ---

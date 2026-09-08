@@ -3,7 +3,7 @@ title: numbers — doubling on every chessboard square
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [3]
+prereqs: [4]
 tags: [numbers]
 source: exercism/python practice/grains (MIT, adapted)
 ---

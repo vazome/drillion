@@ -3,7 +3,7 @@ title: list-methods — joining the coaster queue
 difficulty: medium
 tier: core
 minutes: 12
-prereqs: [12, 13]
+prereqs: [12, 14]
 tags: [list-methods]
 source: exercism/python concept/chaitanas-colossal-coaster (MIT, adapted)
 ---

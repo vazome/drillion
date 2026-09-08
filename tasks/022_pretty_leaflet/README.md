@@ -3,7 +3,7 @@ title: string-formatting — Erin's event leaflet
 difficulty: hard
 tier: core
 minutes: 15
-prereqs: [18]
+prereqs: [19]
 tags: [string-formatting]
 source: exercism/python concept/pretty-leaflet (MIT, adapted)
 ---

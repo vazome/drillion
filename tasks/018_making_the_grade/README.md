@@ -3,7 +3,7 @@ title: loops — rounding and counting exam scores
 difficulty: medium
 tier: core
 minutes: 12
-prereqs: [6, 15]
+prereqs: [7, 16]
 tags: [loops]
 source: exercism/python concept/making-the-grade (MIT, adapted)
 ---

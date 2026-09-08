@@ -3,7 +3,7 @@ title: dict-methods — filling the shopping cart
 difficulty: medium
 tier: core
 minutes: 14
-prereqs: [25]
+prereqs: [26]
 tags: [dict-methods]
 source: exercism/python concept/mecha-munch-management (MIT, adapted)
 ---

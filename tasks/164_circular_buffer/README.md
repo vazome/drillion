@@ -3,7 +3,7 @@ title: class-inheritance — a fixed-size queue that reuses its own slots
 difficulty: hard
 tier: core
 minutes: 20
-prereqs: [35]
+prereqs: [36]
 tags: [class-inheritance, function-arguments, user-defined-errors]
 source: exercism/python practice/circular-buffer (MIT, adapted)
 ---

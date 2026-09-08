@@ -3,7 +3,7 @@ title: unpacking-and-multiple-assignment — packing and reordering wagons
 difficulty: medium
 tier: core
 minutes: 13
-prereqs: [25]
+prereqs: [26]
 tags: [unpacking-and-multiple-assignment]
 source: exercism/python concept/locomotive-engineer (MIT, adapted)
 ---
