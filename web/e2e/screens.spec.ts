@@ -84,6 +84,24 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await page.getByRole("button", { name: "unlocks" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await shot(page, "8-task-lineage-panel");
+
+  // Vim mode last: it is a browser preference, so switching it on would follow the page
+  // into every shot above. Turned back off before the run ends.
+  await page.goto("/#/settings");
+  await page.getByRole("switch").filter({ hasText: "Regular keys" }).click();
+  await page.goto(`/#/task/${GATED}`);
+  const modeLine = page.locator(".monaco-editor").locator("..").locator("..").getByText("--", { exact: false });
+  await expect(page.getByText("NORMAL", { exact: false }).first()).toBeVisible();
+  await shot(page, "9-task-vim");
+
+  // The page's own chords must survive the binding: Vim swallowing Run would be the bug.
+  await page.locator(".monaco-editor .view-lines").first().click();
+  await page.keyboard.press("ControlOrMeta+Enter");
+  await expect(page.getByText(/Result|Output/).first()).toBeVisible();
+  await expect(modeLine.first()).toBeVisible();
+
+  await page.goto("/#/settings");
+  await page.getByRole("switch").filter({ hasText: "Vim keys" }).click();
 });
 
 test("the run cannot have touched the repository's own state", async ({ request }) => {

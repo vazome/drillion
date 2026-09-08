@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Card, EmptyState, NoticeBanner } from "./ds/index.js";
+import { Button, Card, EmptyState, NoticeBanner, Toggle } from "./ds/index.js";
 import { api, type Paths, type Bundle, type Restored } from "./api";
+import { setVimMode, vimMode } from "./editorMode";
 
 /** A path plus the one thing anyone wants to do with it. */
 function Location({ label, path }: { label: string; path: string }) {
@@ -30,6 +31,7 @@ export function Settings() {
   const [preview, setPreview] = useState<Bundle | null>(null);
   const [done, setDone] = useState<Restored | null>(null);
   const [busy, setBusy] = useState(false);
+  const [vim, setVim] = useState(vimMode);
   const picker = useRef<HTMLInputElement>(null);
 
   useEffect(() => { api<Paths>("/settings").then(setPaths).catch((e) => setError(e.message)); }, []);
@@ -75,6 +77,25 @@ export function Settings() {
             <Location label="Tasks" path={paths.tasks} />
           </>
         ) : <EmptyState message="Loading…" align="left" />}
+      </Card>
+
+      <Card label="Editor">
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <Toggle
+            checked={vim}
+            onChange={(on) => { setVimMode(on); setVim(on); }}
+            label={vim ? "Vim keys" : "Regular keys"}
+          />
+          <span style={{ fontSize: 14, color: "var(--text-muted)" }}>
+            {vim
+              ? "Modal editing, with the mode shown under the editor. Turn this off to go back to ordinary typing."
+              : "Ordinary typing. Turn this on if you use Vim motions everywhere else."}
+          </span>
+        </div>
+        <p style={{ margin: "10px 0 0", fontSize: 13, color: "var(--text-faint)" }}>
+          Ctrl+Enter still runs and Ctrl+Shift+Enter still submits, in either mode. This
+          setting lives in this browser, so it is not part of a backup.
+        </p>
       </Card>
 
       <Card label="Back up">

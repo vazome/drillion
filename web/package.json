@@ -14,6 +14,7 @@
     "@codingame/monaco-vscode-editor-api": "36.2.5",
     "@codingame/monaco-vscode-standalone-languages": "36.2.5",
     "monaco-languageclient": "11.0.0-next.1",
+    "monaco-vim": "^0.4.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",

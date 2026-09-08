@@ -5,6 +5,7 @@ import { depsHref, prefetch } from "./Deps";
 import { inDays, strength } from "./strength";
 import { DiffView, Editor } from "./Editor";
 import { useDraft } from "./useDraft";
+import { vimMode } from "./editorMode";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
 const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };
@@ -468,7 +469,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             )}
           </div>
 
-          <Editor value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} height={narrow ? "60vh" : "calc(100vh - 364px)"} />
+          <Editor value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} vim={vimMode()} height={narrow ? "60vh" : "calc(100vh - 364px)"} />
 
           <Card label={ungraded ? "Output · your run" : resultNo ? `Result · attempt ${resultNo}` : "Result"} padding={16}>
             {/* the region stays mounted and only the banner inside it is keyed: a live region
