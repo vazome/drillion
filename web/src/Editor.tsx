@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import * as monaco from "@codingame/monaco-vscode-editor-api";
 // classic mode highlights with Monarch, and the editor API ships no grammars. The package
 // index pulls all ~90 languages; drillion is a Python trainer, so it takes the one.
@@ -7,6 +7,7 @@ import { EditorApp } from "monaco-languageclient/editorApp";
 import { MonacoVscodeApiWrapper } from "monaco-languageclient/vscodeApiWrapper";
 import { LanguageClientWrapper } from "monaco-languageclient/lcwrapper";
 import { configureDefaultWorkerFactory } from "monaco-languageclient/workerFactory";
+import { initVimMode } from "monaco-vim";
 
 const token = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const bare = (name: string) => token(name).replace("#", "");
@@ -114,6 +115,15 @@ const frame = {
   overflow: "hidden",
 };
 
+/** Vim's mode line, pending keys and `:` prompt. It has to be a real element outside the
+ *  editor, so the binding has somewhere to render and the editor keeps its full height. */
+const statusStyle: CSSProperties = {
+  height: 22, display: "flex", alignItems: "center", padding: "0 10px",
+  font: "var(--fs-sm)/22px var(--font-mono)", fontSize: 12,
+  color: "var(--text-muted)", background: "var(--surface-2)",
+  borderTop: "1px solid var(--border)",
+};
+
 /** A failed editor says so. Blank boxes are the one outcome worth ruling out: the learner
  *  cannot tell them from a task with nothing in it. */
 function Failed({ height }: { height: string }) {
@@ -128,13 +138,16 @@ function Failed({ height }: { height: string }) {
   );
 }
 
-export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, height }: {
+export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, height, vim }: {
   value: string; onChange: (v: string) => void; onRun: () => void; onSubmit: () => void;
-  readOnly?: boolean; dark: boolean; height: string;
+  readOnly?: boolean; dark: boolean; height: string; vim?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
+  const status = useRef<HTMLDivElement>(null);
   const app = useRef<EditorApp>(null);
   const [failed, setFailed] = useState(false);
+  // the vim binding needs the editor instance, which only exists once `start()` resolved
+  const [ready, setReady] = useState(false);
   // the editor reads these when the user acts, so it must never close over a stale one
   const latest = useRef({ onChange, onRun, onSubmit });
   useEffect(() => { latest.current = { onChange, onRun, onSubmit }; }, [onChange, onRun, onSubmit]);
@@ -166,6 +179,7 @@ export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, heigh
           monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter,
           () => latest.current.onSubmit(),
         );
+        if (live && editor) setReady(true);
       })
       .catch((err: unknown) => {
         console.error("editor failed to start", err);
@@ -189,8 +203,24 @@ export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, heigh
   // theming early touches Monaco's standalone services, which makes `start()` throw
   useEffect(() => { void api?.then(() => applyTheme(dark)).catch(() => {}); }, [dark]);
 
+  // Vim, attached and detached without rebuilding the editor: the binding only ever reads
+  // and writes through the editor instance, so the model, the draft and the undo stack all
+  // survive a learner changing their mind. Turning it off leaves a plain editor behind.
+  useEffect(() => {
+    const editor = app.current?.getEditor();
+    if (!vim || !ready || !editor || !status.current) return;
+    const mode = initVimMode(editor, status.current);
+    return () => mode.dispose();
+  }, [vim, ready]);
+
   if (failed) return <Failed height={height} />;
-  return <div ref={host} style={{ height, fontSize: "var(--fs-code)", ...frame }} />;
+  return (
+    <div style={{ ...frame, display: "flex", flexDirection: "column", height }}>
+      <div ref={host} style={{ flex: 1, minHeight: 0, fontSize: "var(--fs-code)" }} />
+      {/* always mounted, so the binding has a node the moment it is switched on */}
+      <div ref={status} style={{ ...statusStyle, display: vim ? "flex" : "none" }} />
+    </div>
+  );
 }
 
 /** Two read-only panes with the changed lines marked: what the learner wrote on the left,
