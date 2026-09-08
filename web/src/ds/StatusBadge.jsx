@@ -11,6 +11,11 @@ const LOOKS = {
   medium: { color: "var(--warn)", background: "var(--warn-bg)" },
   hard: { color: "var(--fail)", background: "var(--fail-bg)" },
 
+  // strength — how well you know the task, read off its return interval by src/strength.ts
+  learning: { color: "var(--warn)", background: "var(--warn-bg)" },
+  familiar: { color: "var(--accent)", background: "var(--accent-tint)" },
+  solid: { color: "var(--pass)", background: "var(--pass-bg)" },
+
   // grades — how the attempt went; scheduler.grade_of() plus the abandoned case
   quick: { color: "var(--pass)", background: "var(--pass-bg)" },
   pass: { color: "var(--pass)", background: "var(--pass-bg)" },

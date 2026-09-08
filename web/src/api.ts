@@ -64,7 +64,7 @@ export interface Task {
   status: Status; buried: boolean;
   /** passes on this card, ever — the lineage screen's `seen N×` line */
   seen: number;
-  /** this card's rung, 0 when it is not on the ladder — the lineage draws it */
+  /** the scheduler's 0-based rung; src/strength.ts turns it into a word for the screens */
   box: number;
   /** every prereq, not just the unpassed ones. `passed` is box 1, the bar `blocked` uses —
    *  never re-derive it from `status`, which says `done` on a card that has lapsed. */
@@ -72,7 +72,8 @@ export interface Task {
   /** the direct reverse edge, one hop: what passing this opens up. `also` is what else
    *  still gates that task — passing this one is not always enough. */
   unlocks: (DepRef & { also: number[] })[];
-  attempt: { attempts: number; active: number; seed: number; solution_shown: boolean } | null;
+  /** `grace` is the reading minute still owed: while it runs, `active` stays put */
+  attempt: { attempts: number; active: number; seed: number; solution_shown: boolean; grace: number } | null;
   /** at `lapse_limit` the task is flagged as one that keeps beating you */
   lapses: number; lapse_limit: number;
   /** the scheduler's return intervals, one per box */

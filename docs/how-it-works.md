@@ -7,7 +7,7 @@
    cap you are *behind*, and drillion offers nothing new until you are not — starting new
    material while already behind only makes the backlog worse. The whole catalogue is open
    either way; the queue is a suggestion. Not in the mood for one of them? **Bury** it and it
-   is gone for the day and back tomorrow, in the same box and on the same due date. The Buried
+   is gone for the day and back tomorrow, at the same standing and on the same due date. The Buried
    band in Today undoes it early.
 2. Opening a task starts an **attempt**: a fresh seed and an active-seconds timer that pauses
    when the tab is hidden. The left pane renders the task's `README.md` — Why / You get /
@@ -16,15 +16,15 @@
    seed. Failures come back with the assertion lines mapped to editor line numbers. A Run
    grades nothing — it is free and repeatable, however green it comes back. **Submit** is the
    same execution plus the claim that you are done: it costs an attempt, and on green it is
-   what grades the pass and moves the card.
+   what grades the pass and sets when the task comes back.
 4. **Hints** are three levels deep. The first is there from the start; the second opens at two
    minutes of active time and the third at three. Half an hour of reading with nothing run and
    no hint taken, and the page offers one unprompted — the gate opens silently, which is no use
    to someone who is not looking at the panel, and you cannot brute-force something nobody has
    told you about. The **solution** opens after 3 submitted attempts and 10 active minutes,
-   and taking it means the pass cannot promote the card.
-5. **Pass** → computed grade → the card moves on the ladder → your code is archived into
-   `progress.json` → the file is reset to the stub, so the next review starts blank.
+   and taking it means the pass cannot push the task further out.
+5. **Pass** → computed grade → the task's next sighting moves in or out → your code is archived
+   into `progress.json` → the file is reset to the stub, so the next review starts blank.
 6. The spec pane carries a **note**, one free-text box per task, saved as you type. It belongs
    to the task and not to the sitting: it survives a grade, a re-attempt and an abandon.
 
@@ -35,17 +35,19 @@ task comes back in 8 days the IPs, names and numbers are different. You can't re
 because that exact answer never existed. This is the one feature that stops spaced repetition
 from degrading into memorising files.
 
-**A fixed ladder, not a fancy algorithm.** Seven boxes and seven numbers: pass a task and it
-returns in 2 days, then 4, 8, 16, 28, 60, 120. The tail past 28 is what keeps review load from
-growing without bound — while 28 was the ceiling, every card you had mastered still came back
-monthly. FSRS was the obvious choice and was tried and rejected; see
+**A fixed schedule, not a fancy algorithm.** Seven numbers: pass a task and it returns in 2
+days, then 4, 8, 16, 28, 60, 120. The screens never show you those seven — they say *learning*
+(back within a few days), *familiar* (a week to a month) or *solid* (two months or more), because
+a seven-rung climb is a thing to be intimidated by and "how well do I know this" is the only
+question the number answers. The tail past 28 is what keeps review load from growing without
+bound — while 28 was the ceiling, everything you had mastered still came back monthly. FSRS was the obvious choice and was tried and rejected; see
 [ADR 0001](adr/0001-leitner-not-fsrs.md) for the four reasons.
 
-**Grades are computed, not self-reported.** First try under par = `quick`, worth +2 boxes. Two
-tries, or one slow one, = `pass`, worth +1. Anything slower or past two tries = `struggled`,
-worth −1, with box 0 as the floor. Looking at the solution grades `struggled` however green the
+**Grades are computed, not self-reported.** First try under par = `quick`, worth two steps
+further out. Two tries, or one slow one, = `pass`, worth one. Anything slower or past two tries =
+`struggled`, worth one step back in, with the shortest interval as the floor. Looking at the solution grades `struggled` however green the
 tests go — that last rule is the important one, because hint-assisted passes are how people
-finish a curriculum and still can't code. A struggle is also counted on the card, and four of
+finish a curriculum and still can't code. A struggle is also counted against the task, and four of
 them flag the task as beating you: at that point the task is the problem, not the sitting.
 
 **Par time is the grader's, not yours.** `minutes:` lives in each task's frontmatter because

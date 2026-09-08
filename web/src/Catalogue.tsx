@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
-import { Band, Button, Card, EmptyState, Input, Kbd, LadderMeter, NoticeBanner, RowFlags, Select, SortReset, StatusBadge, TagChip, TaskPath } from "./ds/index.js";
+import { Band, Button, Card, EmptyState, Input, Kbd, NoticeBanner, RowFlags, Select, SortReset, StatusBadge, TagChip, TaskPath } from "./ds/index.js";
 import { api, post, type Catalogue as Payload, type Row } from "./api";
 import { Stats } from "./Stats";
+import { inDays, strength } from "./strength";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)", whiteSpace: "nowrap" as const };
 const FAINT = { fontSize: 12.5, color: "var(--text-faint)", whiteSpace: "nowrap" as const };
@@ -10,7 +11,7 @@ const STATUSES = ["new", "due", "open", "done"];
 const DIFFICULTY = ["easy", "medium", "hard"];     // the order the word means, not the alphabet
 const DAY = 86400000;
 // one column geometry for the header and the rows; the uppercase labels set the widths
-const COL = { num: 30, path: 230, difficulty: 104, box: 56, status: 78, reset: 28 };
+const COL = { num: 30, path: 230, difficulty: 104, strength: 92, status: 78, reset: 28 };
 // below this the list card scrolls sideways rather than squeezing the columns
 const LIST_MIN = 840;
 const FIRST_RUN = "drillion-first-run";
@@ -74,10 +75,14 @@ function dueText(row: Row) {
   return days < 0 ? `${plural(-days, "day")} overdue` : `due in ${plural(days, "day")}`;
 }
 
-// the API numbers boxes from 0; the meter fills from 1, and an unseen card sits on no rung
-const rung = (row: Row) => (row.seen ? row.box + 1 : 0);
+// how well the row is known, or nothing at all: an unpractised task already reads NEW in
+// the status column, and a second grey badge saying the same is noise
+const Known = ({ row, ladder }: { row: Row; ladder: number[] }) => {
+  const s = strength(row.box, !!row.seen, ladder);
+  return s ? <StatusBadge status={s} /> : null;
+};
 
-type SortKey = "topic" | "title" | "path" | "difficulty" | "box" | "status";
+type SortKey = "topic" | "title" | "path" | "difficulty" | "strength" | "status";
 type Sort = { key: SortKey; dir: "asc" | "desc" };
 const DEFAULT_SORT: Sort = { key: "topic", dir: "asc" };
 
@@ -87,7 +92,8 @@ const SORT_ON: Record<SortKey, (row: Row) => string | number> = {
   title: (r) => r.title.toLowerCase(),
   path: (r) => `${r.tier}/${r.tags.join(" ")}`,
   difficulty: (r) => DIFFICULTY.indexOf(r.difficulty),
-  box: rung,
+  // an unpractised task sorts below every practised one, whichever way the column goes
+  strength: (r) => (r.seen ? r.box + 1 : 0),
   status: (r) => STATUSES.indexOf(r.status),
 };
 
@@ -108,7 +114,7 @@ function useHover() {
 
 const href = (row: Row) => `#/task/${encodeURIComponent(row.slug)}`;
 
-/** A row of the Today card: when it is due, where it sits on the ladder, and one way in.
+/** A row of the Today card: when it is due, how well you know it, and one way in.
  * `onBury` puts a real button on it, so the row holds the link rather than being the link. */
 function TodayRow({ row, ladder, limit, onBury }: { row: Row; ladder: number[]; limit: number; onBury?: (buried: boolean) => void }) {
   const [hover, hoverProps] = useHover();
@@ -118,7 +124,7 @@ function TodayRow({ row, ladder, limit, onBury }: { row: Row; ladder: number[]; 
       <a href={href(row)} className="m-tint"
         style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0, textDecoration: "none", color: "inherit", padding: "9px 0" }}>
         <span style={{ ...FAINT, width: 110, color: "var(--text-muted)" }}>{dueText(row)}</span>
-        <LadderMeter box={rung(row)} intervals={ladder} />
+        <span style={{ width: COL.strength }}><Known row={row} ladder={ladder} /></span>
         <span style={{ ...MONO, width: 30, textAlign: "right" }}>{num(row.topic)}</span>
         <span style={{ fontSize: 14.5, fontWeight: 500, flex: 1, display: "flex", alignItems: "baseline", gap: 10 }}>
           {/* nothing in this card is blocked: a new pick is offered only once its prereqs clear */}
@@ -152,7 +158,7 @@ function ListRow({ row, blocked, ladder, limit, first = false }: { row: Row; blo
       </span>
       <span style={{ width: COL.path, display: "flex", overflow: "hidden" }}><TaskPath tier={row.tier} tags={row.tags} /></span>
       <span style={{ width: COL.difficulty }}><StatusBadge status={row.difficulty} /></span>
-      <span style={{ width: COL.box, height: 16, display: "flex", alignItems: "center" }}><LadderMeter box={rung(row)} intervals={ladder} /></span>
+      <span style={{ width: COL.strength, height: 16, display: "flex", alignItems: "center" }}><Known row={row} ladder={ladder} /></span>
       <span style={{ width: COL.status }}><StatusBadge status={row.status} /></span>
       <span style={{ width: COL.reset }} />
     </a>
@@ -282,7 +288,7 @@ export function Catalogue() {
     fresh.length ? `${fresh.length} new ${fresh.length === 1 ? "pick" : "picks"}` : null,
     `${today.done_today} done today`,
   ].filter(Boolean).join(" · ");
-  // nothing passed and nothing open: the ladder has never shown itself, so say what it is
+  // nothing passed and nothing open: the scheduling has never shown itself, so say what it is
   const showFirstRun = firstRun && stats.seen === 0 && today.recent.length === 0;
   const dismissFirstRun = () => { localStorage.setItem(FIRST_RUN, "1"); setFirstRun(false); };
   const stuck = stats.stuck;
@@ -297,7 +303,7 @@ export function Catalogue() {
 
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", display: "grid", gap: 18 }}>
-      <Stats boxes={stats.boxes} ladder={stats.ladder} due={stats.due} seen={stats.seen} total={stats.total} practised={stats.practised} outOf={stats.window} ladderHref="#/progress" />
+      <Stats boxes={stats.boxes} ladder={stats.ladder} due={stats.due} seen={stats.seen} total={stats.total} practised={stats.practised} outOf={stats.window} progressHref="#/progress" />
 
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <span style={LABEL}>Today</span>
@@ -309,11 +315,11 @@ export function Catalogue() {
       {/* a welcome, not a warning: NoticeBanner's own `--warn-bg` is what a save failure uses */}
       {showFirstRun ? <div className="m-drop"><NoticeBanner
         style={{ background: "var(--surface-2)" }}
-        message={<>Every task you pass climbs a ladder of seven boxes and comes back on that
-          box’s own interval — {stats.ladder[0]} days at the first, {stats.ladder.at(-1)} at the
-          last — and a sitting you struggle through drops it a box instead. Only two new tasks
-          are offered a day. Reviews come first: while the backlog is over the day’s cap, new
-          picks pause until you have caught up.</>}
+        message={<>Every task you pass comes back later than the last time — {inDays(stats.ladder[0])} at
+          first, {inDays(stats.ladder.at(-1)!)} once it is solid — and a sitting you struggle
+          through brings it back sooner instead. Only two new tasks are offered a day. Reviews
+          come first: while the backlog is over the day’s cap, new picks pause until you have
+          caught up.</>}
         actions={[
           { label: "How it works", onClick: () => window.open(HOW_IT_WORKS, "_blank", "noopener") },
           { label: "Got it", onClick: dismissFirstRun },
@@ -376,7 +382,7 @@ export function Catalogue() {
                 <SortHead label="Task" col="title" sort={sort} onSort={setSort} style={{ flex: 1 }} />
                 <SortHead label="tier/tag" col="path" sort={sort} onSort={setSort} style={{ width: COL.path }} />
                 <SortHead label="Difficulty" col="difficulty" sort={sort} onSort={setSort} style={{ width: COL.difficulty }} />
-                <SortHead label="Box" col="box" sort={sort} onSort={setSort} style={{ width: COL.box }} />
+                <SortHead label="Known" col="strength" sort={sort} onSort={setSort} style={{ width: COL.strength }} />
                 <SortHead label="Status" col="status" sort={sort} onSort={setSort} style={{ width: COL.status }} />
                 <SortReset disabled={unsorted} onClick={() => setSort(DEFAULT_SORT)} style={{ width: COL.reset }} />
               </div>

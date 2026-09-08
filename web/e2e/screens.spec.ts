@@ -49,9 +49,9 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await page.locator(".monaco-diff-editor").scrollIntoViewIfNeeded();
   await shot(page, "4-task-tests-passed");
 
-  // Last, so the ladder and the session table have something in them.
+  // Last, so the strength counts and the session table have something in them.
   await page.goto("/#/progress");
-  await expect(page.getByText("The ladder", { exact: true })).toBeVisible();
+  await expect(page.getByText("How well you know them", { exact: true })).toBeVisible();
   await shot(page, "5-progress");
 
   // The panes stack below 1000px. After the others, so each of those keeps the fixed viewport.
