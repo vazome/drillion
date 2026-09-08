@@ -123,5 +123,14 @@ def validate(edited, disk_src):
 def write_region(path, new_src):
     """Atomic write: a crash mid-save cannot leave half a task on disk."""
     tmp = path.with_suffix(".tmp")
-    tmp.write_text(new_src, encoding="utf-8")
+    with tmp.open("w", encoding="utf-8") as stream:
+        stream.write(new_src)
+        stream.flush()
+        os.fsync(stream.fileno())
     os.replace(tmp, path)
+    if os.name != "nt":
+        directory = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)

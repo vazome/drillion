@@ -39,7 +39,7 @@ pnpm --dir web screens                            # → web/screenshots/, both g
 ```
 
 It starts and stops the server itself on port 8766, against a throwaway copy of `tasks/` in
-your temp directory — never the checkout, so your own `progress.json` and task files cannot be
+your temp directory — never the checkout, so your own progress database and task files cannot be
 touched. The last test in `web/e2e/screens.spec.ts` asserts exactly that. Nothing has to be
 running first, and a dev server on 8765 is left alone.
 
@@ -122,7 +122,7 @@ see [NOTICE](NOTICE) for how the 84 Exercism-derived tasks already do this.
 ## Versioning
 
 drillion is on `0.x`, which means anything may change. `1.0` will be a claim that the
-`progress.json` schema has settled, not a badge.
+progress storage format has settled, not a badge.
 
 The version is declared in **exactly one place**, `version` in `pyproject.toml`, and bumped by
 hand. `drillion --version`, `GET /api/health` and the page's header all read it back from the
@@ -131,14 +131,15 @@ derived from git tags: the container build context carries the source but no git
 VCS-derived version would build as a development placeholder inside the image.
 
 Semantic versioning, defined against drillion's real public surface — the CLI, the HTTP API,
-the `progress.json` schema, and the task-folder format:
+the progress storage format, and the task-folder format:
 
-- **MAJOR** — an existing `progress.json` stops loading or needs migrating, existing task
+- **MAJOR** — existing progress stops loading or needs migrating, existing task
   folders stop being valid, or a CLI/HTTP contract breaks. A learner's saved progress is the
   thing they cannot afford to lose, so it is the thing MAJOR is about. The schema half of that
-  promise is a number in the code and in every file written: `SCHEMA` in
-  `src/drillion/state.py`, stamped as `"version"`. A MAJOR is what bumps it, and a build
-  refuses a file from a schema above its own rather than rewriting it.
+  promise is `DB_SCHEMA` in `src/drillion/state.py`, stored in SQLite's `user_version`.
+  `SCHEMA` and the JSON `"version"` retain their meaning for legacy imports. A build refuses
+  a format above its own rather than rewriting it. Historical JSON fixtures in `tests/schema/`
+  must keep importing losslessly; do not regenerate them from current code.
 - **MINOR** — new features, new payload fields, new tasks. Task content is content; adding
   drills is not a breaking change.
 - **PATCH** — fixes, no new surface.

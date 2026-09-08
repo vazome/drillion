@@ -24,7 +24,7 @@
    told you about. The **solution** opens after 3 submitted attempts and 10 active minutes,
    and taking it means the pass cannot promote the card.
 5. **Pass** → computed grade → the card moves on the ladder → your code is archived into
-   `progress.json` → the file is reset to the stub, so the next review starts blank.
+   `progress.sqlite3` → the file is reset to the stub, so the next review starts blank.
 6. The spec pane carries a **note**, one free-text box per task, saved as you type. It belongs
    to the task and not to the sitting: it survives a grade, a re-attempt and an abandon.
 

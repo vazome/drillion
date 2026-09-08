@@ -71,7 +71,7 @@ def test_the_output_panel_never_shows_terminal_escapes(tmp_path, monkeypatch):
 
 def test_the_learners_code_cannot_litter_the_data_root(tmp_path, monkeypatch):
     """pytest runs in a scratch directory, so a stray `open(\"out.txt\", \"w\")` lands somewhere
-    nobody minds losing rather than next to `progress.json`."""
+    nobody minds losing rather than next to `progress.sqlite3`."""
     monkeypatch.setattr(settings, "root", tmp_path)
     task = tmp_path / "task.py"
     task.write_text(

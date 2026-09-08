@@ -49,7 +49,7 @@ whole ruleset fail.
   `/dev`, `tasks/`, the task being graded and the scratch directory. Your home directory,
   every other user's files, and everything else on the disk are denied. The data root is
   listable — pytest builds its collection tree from there — but the files under it, including
-  `progress.json`, are not readable.
+  `progress.sqlite3`, are not readable.
 - **Writes** are confined to the scratch directory.
 - **TCP** — every bind and connect is refused, on ABI 4 and above. UDP and Unix sockets are
   not covered by Landlock; on ABI 6 and above, abstract Unix sockets and signals are scoped
