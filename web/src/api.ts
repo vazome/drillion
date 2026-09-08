@@ -134,7 +134,7 @@ export interface Bundle {
 /** POST /api/restore — `kept` is the backup of whatever the restore replaced. */
 export interface Restored {
   brings: { cards: number; notes: number; archive: number; tasks: number };
-  unknown: string[]; failed: string[]; kept: string;
+  unknown: string[]; kept: string;
 }
 /** POST /api/reset — `kept` is the backup taken of everything that was just erased. */
 export interface Erased { cleared: number; failed: string[]; kept: string }
