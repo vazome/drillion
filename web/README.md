@@ -1,6 +1,6 @@
 # web — the frontend
 
-React 19 + TypeScript + Vite. Three hash routes — catalogue, task, progress — over `src/api.ts`,
+React 19 + TypeScript + Vite. Four hash routes, catalogue, task, progress and settings, over `src/api.ts`,
 the one `fetch` wrapper and every response shape from `src/drillion/api.py`. The editor is
 Monaco, themed from the design tokens in both modes, with completions and diagnostics from a
 basedpyright that the API runs locally and serves over `/lsp`.
@@ -11,7 +11,7 @@ uv run drillion                 # API on 8765 (and it builds web/dist if stale)
 pnpm --dir web dev              # Vite on 5173, proxying /api to 8765
 pnpm --dir web lint             # runs in CI
 pnpm --dir web build            # emits web/dist, which the server serves at /
-pnpm --dir web screens          # Playwright: renders all 171 task pages, photographs the rest
+pnpm --dir web screens          # Playwright: renders all 189 task pages, photographs the rest
 ```
 
 `web/dist` is generated and git-ignored: `serve()` builds it when it is missing or older than

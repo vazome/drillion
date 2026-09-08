@@ -13,7 +13,7 @@ engineer. It is simple, and it runs your code in a sandbox.
 Longer: drillion is a local web app with 189 short Python tasks, each tagged with the
 concept it drills so you can go straight at whatever you're worst at. No login, no
 account, no server except the one on your laptop. Tasks are folders of Markdown and
-Python. Your progress is a single JSON file.
+Python. Your progress is a single SQLite file you can copy, back up and carry.
 
 | | Light | Dark |
 | --- | --- | --- |
@@ -52,12 +52,13 @@ Core ideas I'm keeping in mind during the development:
   same idea worked through on different data. After half an hour with no submission,
   drillion suggests taking one as you cannot brute-force something you are unaware of.
 - **Grading is the real.** Your code is spliced into the task's own pytest file and run.
-- **YOUR progress** One JSON file on your disk. drillion stamps it with a schema version
-  and refuses to rewrite a file a newer version wrote, rather than quietly mangling it.
+- **YOUR progress.** One SQLite file on your disk, stamped with a schema version, and a
+  build refuses to rewrite a file a newer one wrote rather than quietly mangling it. Settings
+  turns it into a backup you can carry, and can erase the lot if you want to start over.
 - **It is free, and it stays free.** No tier, no voucher, no account, no telemetry,
   open-source.
 
-One consequence worth stating plainly: 186 tasks ship as executable Python, and `task.py`
+One consequence worth stating plainly: 189 tasks ship as executable Python, and `task.py`
 runs on import. Shipping tasks as code is what makes the sandbox necessary, so graded code
 is confined by the kernel and you do not have to take my word for it. **What running it
 does to your machine**, below, is the detail.
@@ -158,6 +159,14 @@ the upgrade.
 archive, plus the code you have written in every task. Restore it on another machine or after a
 reinstall and you pick up where you left off. A restore replaces what is there now, and saves
 what it replaced to `backup-before-restore.zip` in the same root first.
+
+**Settings → Danger zone** is the way back to a first run: it deletes the stored progress and
+puts every task back to its stub. You confirm it by typing `erase progress`, and it writes
+`backup-before-reset.zip` in the same root before it does anything, which is the only way to
+undo it.
+
+**Settings → Editor** turns Vim keys on if you use them everywhere else. That one lives in the
+browser rather than in your progress, so a backup does not carry it.
 
 ## What running it does to your machine
 

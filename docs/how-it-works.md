@@ -13,8 +13,9 @@
    read, and a corner notice says so ten seconds in. The left pane renders the task's `README.md` — Why / You get /
    You return / Rules / Read first — and the right pane is the editor with the stub.
 3. **Run** saves your region into the file and runs that file's pytest test with the attempt's
-   seed. Failures come back with the assertion lines mapped to editor line numbers. A Run
-   grades nothing — it is free and repeatable, however green it comes back. **Submit** is the
+   seed. Failures come back with the assertion lines mapped to editor line numbers, and
+   whatever your own `print()` wrote is shown above them whether the tests passed or failed.
+   A Run grades nothing — it is free and repeatable, however green it comes back. **Submit** is the
    same execution plus the claim that you are done: it costs an attempt, and on green it is
    what grades the pass and sets when the task comes back.
 4. **Hints** are three levels deep. The first is there from the start; the second opens at two
@@ -86,7 +87,7 @@ issue that says "make it 20" needs it.
 - **`REVIEWS_PER_DAY = 12`.** Unbounded, the day you come back from three weeks away is 100 rows
   deep and the ladder never recovers. Anki ships 200 reviews against 20 new, a 10:1 ratio; a
   drillion review is a whole coding task rather than a flashcard, so 12 against 2 is roughly the
-  same hour. A constant, not a setting — there is no settings screen.
+  same hour. A constant: Settings holds your data and your editor keys, not the scheduler's.
 - **`LAPSE_LIMIT = 4`.** Anki suspends a flashcard at 8 lapses; a drillion lapse costs a sitting
   rather than seconds, so the same wasted time arrives around 4. It is a flag only: nothing is
   suspended, hidden or rescheduled by it.
@@ -95,3 +96,14 @@ issue that says "make it 20" needs it.
   120-day gap forever, on the same schedule as one you have aced. −1 rather than back to box 0
   because `struggled` is the grade for anything slow, anything over two runs and anything
   peeked — it is common — and a repeated struggle still walks the card all the way down.
+
+## What Settings can do to all of it
+
+**Back up** writes your cards, notes, log, archive and the code in every task to one file, and
+**Restore** reads one back after telling you what it brings and what it replaces. Both keep a
+copy of what they overwrote.
+
+**Erase all progress**, under the danger zone, is the one action that destroys something. It
+deletes the stored progress instead of emptying it and puts every task back to its stub, so
+the next run is a first run. It asks you to type `erase progress`, and it writes
+`backup-before-reset.zip` in your root before it starts, which is the only way back.

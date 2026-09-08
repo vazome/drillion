@@ -1,6 +1,6 @@
 # Design handoff — drillion
 
-This file is the brief for designing the web UI: the product, the three screens, the data each
+This file is the brief for designing the web UI: the product, the four screens, the data each
 screen has, every state the UI must show, and the hard constraints. It was written before any
 visual direction existed and is kept as the contract the UI is measured against.
 
@@ -11,7 +11,7 @@ cards on a desk") was not taken.
 
 ## Product in one paragraph
 
-A single-user, local web app for practising Python. A catalogue of 171 short tasks, each
+A single-user, local web app for practising Python. A catalogue of 189 short tasks, each
 with a spec, a code editor, and a test that grades the code on fresh random data.
 A spaced-repetition scheduler decides what comes back when (7-box ladder: 2/4/8/16/28/60/120 days). Hints
 unlock with time; the solution unlocks after real effort. Sessions are 20–40 minutes a day, on a
@@ -37,6 +37,9 @@ emotional core: cards climbing boxes and returning on schedule.
   Monaco in classic mode (themeable: background, gutter, selection, caret, syntax colours for
   keyword/string/number/comment/function/variable), talking to a local language server for
   completions and diagnostics — see `docs/adr/0004-monaco-and-a-local-language-server.md`.
+  Vim keys are an option in Settings, off by default, and show the current mode under the
+  editor. Run and Submit keep their shortcuts in either mode: an editor setting may not take
+  a way of grading away.
 
 ## Screens
 
@@ -54,7 +57,7 @@ Data: `GET /api/catalogue` →
   included and leading, and a task whose last act was abandoning it left out; never filtered
   against the other two, since a card worked on Friday and due again today is both things at
   once; `today.done_today` (count); `today.no_new` — null while there are new picks, else the one
-  reason there are none (`behind`, `cap`, `buried`, `prereqs` with the nearest task, `focus`, `done`)
+  reason there are none (`behind`, `cap`, `prereqs` with the nearest task, `focus`, `done`)
 - `stats` — `boxes` (7 counts, one per ladder box), `ladder` (the return intervals, one per box), `due` (the whole backlog, not the capped
   list), `lapse_limit` (the lapse count a task is flagged at), `stuck` (the tag with the most
   flagged tasks, or null), `seen`, `total`, and `practised` of
@@ -66,7 +69,7 @@ Data: `GET /api/catalogue` →
   `status` ∈ `new | due | open | done`, `box` (0–6, the ladder has seven), `due` (date),
   `seen` (count), `lapses` (count — at `stats.lapse_limit` the row is flagged as a task that
   keeps beating you: "you have struggled with this four times; the hints or the prereqs may be
-  the problem, not you"), `buried` (boolean — put aside for today only).
+  the problem, not you").
   **No `minutes`**: par time never leaves the server.
 
 Elements: Today panel (recent activity, then new picks, focus selector), search, filter chips (tier, track,
@@ -82,14 +85,11 @@ back to the task number. The tag map shows every tag reachable under the current
 than scrolled — pick `advanced` and 76 chips become the 11 that are actually under it. A tag
 already switched on never drops out, or a filter that matched nothing could not be undone.
 
-A **buried** card is out of today's queue and nothing else: it keeps its box, its due date and
-its counts, and the bury ends by itself tomorrow. Because it can lose nothing, it needs no
-confirmation — but it does need the two reverse states. The Today panel's rows each carry a quiet
-`Bury`, and a **Buried** band appears under them on any day something is buried, listing what is
-put aside with `Unbury` on each row; the band is absent on a day with nothing in it. In the task
-list a buried row is annotated in the same muted way the lapse flag is — `buried today` — and
-keeps the status it actually has. The task page carries the same control beside `Abandon`: they
-are the two ways of not finishing a task today, and only one of them costs the attempt.
+There is one way of not finishing a task today, and it is `Abandon`. Putting a card aside by
+hand was tried and taken out again: it cost a control on every row, a band under the Today
+panel and a field on every payload, and what it bought was a queue you could rearrange rather
+than one you could work. Nothing here should grow a second one without a reason the first
+lacked.
 
 Every group in the Today panel sits under a band that names it, and the rows carry no status
 badge as a result. Recent activity leads and is always present, empty line and all: coming back mid-week, the way
@@ -98,7 +98,7 @@ because it is the way back into work already started, not a ration of new materi
 
 Tier and tag render as one filesystem-style path, `core/f-strings`, with the tier segment muted —
 one column, not two. Whatever `focus` a row is filtered by, the UI must be able to show it: a
-filter the screen cannot display is a screen that says "0 of 171" with no way to explain itself.
+filter the screen cannot display is a screen that says "0 of 189" with no way to explain itself.
 
 ### 2. Task (`#/task/:slug`)
 
@@ -122,7 +122,7 @@ Data: `GET /api/task/{slug}` →
 - `requires[]` / `unlocks[]` — the prereq edge in both directions, `{slug, topic, title}` and
   `state: passed | blocked` on the requires side, resolved server-side against the ladder
   (`passed` is box 1, which a `done` status is not once a card has lapsed)
-- also `seen`, `ladder`, `lapses`, `lapse_limit`, `nudge`, `reference`, `buried` — `web/src/api.ts`
+- also `seen`, `ladder`, `lapses`, `lapse_limit`, `nudge`, `reference` — `web/src/api.ts`
   is the field-for-field contract for every payload
 - `solution` — `{unlocked, need_attempts, need_secs}`
 - `archive[]` — previous passes `{date, grade, code?}` (code shown only when allowed)
@@ -157,6 +157,10 @@ A catalogue row's `needs #040` flag is the other way in, and it goes to `#/task/
 the same view as a screen of its own. Prereqs are information and a shorter way in, never a
 gate: nothing here refuses a task, and there is no whole-catalogue graph.
 
+Whatever the learner's own `print()` wrote has a place of its own above the pytest output,
+on a pass as much as on a failure. It is the one debugging tool they reach for, and a panel
+that shows it only when the tests fail reads as the print never having run.
+
 Results panel (below or beside the editor), states:
 - idle (never run) · running · **ran** (an ungraded Run that came back green: says so, and says
   no attempt was used) · **failed** (headline lines — the assertion/exception — plus a
@@ -185,6 +189,31 @@ intervals), the 14-day due-load forecast, the practice heatmap, one strip per to
 its spread across the ladder, the recent log. The three figures are specified in
 [`docs/design/progress-visualisations.md`](docs/design/progress-visualisations.md).
 
+### 4. Settings (`#/settings`)
+
+Answers: *where is my work, and how do I move it?*
+
+Data: `GET /api/settings` → the three paths (`root`, `progress`, `tasks`), each with a copy
+control, because the honest answer to "where is my progress" is a path the learner can open.
+
+Five cards, in the order a learner needs them:
+
+- **Your data** — the paths.
+- **Editor** — Vim keys on or off. It lives in this browser rather than in a **backup**, and
+  the card says so, since a setting that a restore silently drops is worse than one that was
+  never offered.
+- **Back up** — one file holding cards, notes, log, archive and the code saved in every task.
+- **Restore** — reading the bundle is its own step: the summary of what it brings and what it
+  replaces is shown first, and nothing is touched until that summary is accepted. What it
+  replaced is written to a backup of its own.
+- **Danger zone** — the one place on any screen that destroys data, and drawn so it cannot be
+  mistaken for the rest: a red frame, a red heading, and a confirmation that has to be typed
+  (`erase progress`) rather than clicked through. The button stays disabled until the phrase
+  matches exactly, and the server checks the same phrase, since the route is reachable without
+  the screen in front of it. It deletes the stored progress rather than emptying it, puts every
+  task back to its stub, and writes a backup first, which is the only way back. Say where that
+  backup is on the way out, by path, not "a backup was made".
+
 ## Vocabulary (use these words)
 
 Every term — task, tier, difficulty, track, tag, card, box, attempt, grade, status, focus — is
@@ -199,10 +228,8 @@ attempt timer counts up and changes no colour at any threshold. Nothing on any s
 learner how long they were supposed to take.
 
 **`status` has exactly four members** — `new` · `due` · `open` · `done`. `_status()` in `api.py`
-has no fifth branch, so a filter offering a fifth matches nothing. **Bury** deliberately does not
-widen this: a buried card is still exactly `due`, and `buried` rides alongside as its own boolean.
-Anything that genuinely is a fifth state — suspend, which no timer ever ends — has to reopen this
-rule on purpose rather than widen it quietly.
+has no fifth branch, so a filter offering a fifth matches nothing. Anything that genuinely is a
+fifth state, suspend above all, has to reopen this rule on purpose rather than widen it quietly.
 
 Boxes render 1–7 although state stores them 0–6. Hints are "levels". The solution "unlocks".
 Showing up is counted as days practised.
