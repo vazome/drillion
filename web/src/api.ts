@@ -134,6 +134,8 @@ export interface Restored {
   brings: { cards: number; notes: number; archive: number; tasks: number };
   unknown: string[]; failed: string[]; kept: string;
 }
+/** POST /api/reset — `kept` is the backup taken of everything that was just erased. */
+export interface Erased { cleared: number; failed: string[]; kept: string }
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch("/api" + path, {

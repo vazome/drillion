@@ -16,6 +16,9 @@ from .catalogue import tasks
 from .settings import settings
 
 FORMAT = 1
+# What the Settings screen makes you type before an erase runs. It is deliberately a
+# sentence rather than "yes": the point is that it cannot be reached by muscle memory.
+PHRASE = "erase progress"
 MANIFEST = "manifest.json"
 PROGRESS = "progress.json"
 REGIONS = "regions/"
@@ -135,3 +138,33 @@ def restore(data):
         "failed": failed,
         "kept": str(keep),
     }
+
+
+def erase():
+    """Back to a first run: no progress at all, and every task emptied out.
+
+    Emptying is what `abandon` does to one task, applied to all of them: the body of
+    `solve` goes back to `raise NotImplementedError`. It is the file's own stub, so a
+    signature the learner changed and saved stays changed.
+
+    A backup of everything is written before the transaction opens, because the only undo
+    for this is a restore. A task whose region no longer parses cannot be stubbed from its
+    own text, so it is reported rather than left cleared-looking and unchanged."""
+    keep = settings.root / "backup-before-reset.zip"
+    keep.write_bytes(bundle())
+    log.info("wrote %s before erasing", keep)
+    cleared, failed = 0, []
+    with state.frozen({}):
+        for slug, meta in tasks().items():
+            path = meta["path"]
+            try:
+                src = path.read_text(encoding="utf-8")
+                body = region.cut(src).body
+                stubbed = region.stub(body)
+                if stubbed != body:
+                    region.write_region(path, region.splice(src, stubbed))
+                    cleared += 1
+            except (OSError, SyntaxError, region.Invalid) as exc:
+                log.warning("Could not clear the code for %s: %s", slug, exc)
+                failed.append(slug)
+    return {"cleared": cleared, "failed": failed, "kept": str(keep)}

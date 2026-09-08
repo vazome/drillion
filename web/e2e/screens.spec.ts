@@ -67,6 +67,17 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await expect(page.getByText(scratchRoot, { exact: true })).toBeVisible();
   await shot(page, "5b-settings");
 
+  // The guard, up to the last click and no further: this suite runs against the repository's
+  // own tasks, so the one thing it must never do is press the button it is checking.
+  await page.getByRole("button", { name: "Erase all progress" }).click();
+  const erase = page.getByRole("button", { name: "I understand, erase everything" });
+  await expect(erase).toBeDisabled();
+  await page.getByRole("textbox", { name: "Type erase progress to confirm" }).fill("erase progress");
+  await expect(erase).toBeEnabled();
+  await shot(page, "5c-danger-zone");
+  await page.getByRole("button", { name: "Cancel" }).click();
+  await expect(erase).toHaveCount(0);
+
   // The panes stack below 1000px. After the others, so each of those keeps the fixed viewport.
   await page.setViewportSize({ width: 900, height: 1200 });
   await page.goto(`/#/task/${SLUG}`);
