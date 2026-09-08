@@ -47,11 +47,11 @@ def test_import_is_once_and_keeps_every_legacy_byte(root):
 )
 def test_invalid_import_is_retryable_and_never_replaced_with_empty_progress(root, raw):
     legacy = root / "progress.json"
-    legacy.write_text(raw)
+    legacy.write_text(raw, encoding="utf-8")
     with pytest.raises(state.Unreadable):
         state.load()
-    assert legacy.read_text() == raw
-    legacy.write_text('{"focus": "core"}')
+    assert legacy.read_text(encoding="utf-8") == raw
+    legacy.write_text('{"focus": "core"}', encoding="utf-8")
     assert state.load()["focus"] == "core"
 
 
@@ -125,7 +125,7 @@ def test_reset_failure_keeps_archive_and_recovers_on_next_access(
     path.parent.mkdir(parents=True)
     source = f"def solve():\n    return 42\n\n\n{region.MARKER}\n"
     replacement = region.splice(source, region.stub(region.cut(source).body))
-    path.write_text(source)
+    path.write_text(source, encoding="utf-8")
     with monkeypatch.context() as patch:
 
         def fail(*args):
@@ -140,7 +140,7 @@ def test_reset_failure_keeps_archive_and_recovers_on_next_access(
                 {"date": "2026-09-08", "grade": "pass", "code": "return 42"}
             ]
             state.reset_after_commit(st, path, source, replacement)
-        assert path.read_text() == source
+        assert path.read_text(encoding="utf-8") == source
         with closing(sqlite3.connect(settings.state_path)) as db:
             assert db.execute("SELECT count(*) FROM pending_resets").fetchone()[0] == 1
             assert (
@@ -151,12 +151,12 @@ def test_reset_failure_keeps_archive_and_recovers_on_next_access(
             )
     if external_edit == "region":
         replacement = source.replace("return 42", "return 43")
-        path.write_text(replacement)
+        path.write_text(replacement, encoding="utf-8")
     elif external_edit == "machinery":
-        path.write_text(source + "# updated machinery\n")
+        path.write_text(source + "# updated machinery\n", encoding="utf-8")
         replacement += "# updated machinery\n"
     assert state.load()["archive"]["task"][0]["code"] == "return 42"
-    assert path.read_text() == replacement
+    assert path.read_text(encoding="utf-8") == replacement
 
 
 def test_newer_database_is_refused_untouched(root):
@@ -205,7 +205,7 @@ def test_process_death_rolls_back_uncommitted_progress(root):
 def test_interrupted_import_rolls_back_schema_and_can_retry(root, monkeypatch):
     legacy = root / "progress.json"
     raw = '{"focus": "core", "future_field": {"keep": true}}'
-    legacy.write_text(raw)
+    legacy.write_text(raw, encoding="utf-8")
     store = state._store
     with monkeypatch.context() as patch:
 
@@ -219,4 +219,4 @@ def test_interrupted_import_rolls_back_schema_and_can_retry(root, monkeypatch):
     st = state.load()
     assert st["focus"] == "core"
     assert st["future_field"] == {"keep": True}
-    assert legacy.read_text() == raw
+    assert legacy.read_text(encoding="utf-8") == raw
