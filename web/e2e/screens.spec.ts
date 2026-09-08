@@ -33,6 +33,13 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
   await shot(page, "2-task");
 
+  // The reading grace. Dismissed straight after, or it sits in the corner of the next two shots.
+  const grace = page.getByText(/The clock starts in \d+ seconds/);
+  await expect(grace).toBeVisible();
+  await shot(page, "2b-task-reading-time");
+  await page.getByRole("button", { name: "Dismiss" }).click();
+  await expect(grace).toBeHidden();
+
   // both verdicts get photographed; the stub raises NotImplementedError, so attempt 1 really fails
   await submit.click();
   await expect(page.getByText("Result · attempt 1")).toBeVisible();

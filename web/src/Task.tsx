@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Button, Card, Collapsible, ConflictBanner, DepLineage, EmptyState, NoteField, NoticeBanner, RequiresTag, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
+import { Button, Card, Collapsible, ConflictBanner, DepLineage, EmptyState, NoteField, GraceNotice, NoticeBanner, RequiresTag, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
 import { ApiError, api, post, type Task as TaskData, type RunResult } from "./api";
 import { depsHref, prefetch } from "./Deps";
 import { inDays, strength } from "./strength";
@@ -68,6 +68,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [result, setResult] = useState<Result>({ state: "idle" });
   const [gate, setGate] = useState<Gate>(null);
   const [active, setActive] = useState(0);
+  const [grace, setGrace] = useState(0);           // the server's reading minute, ticked down locally
+  const [readFirstOff, setReadFirstOff] = useState(false);
   const [nextHintIn, setNextHintIn] = useState<number | null>(null);
   const [nextSlug, setNextSlug] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);          // a hint spent twice cannot be un-spent
@@ -77,6 +79,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const [lineage, setLineage] = useState(false);
   const narrow = useSyncExternalStore(watchNarrow, isNarrow);
 
+  const graceRef = useRef(0);                // read inside the tick, so it is not a dep
   const gateTimer = useRef<number | undefined>(undefined);
   const unlocksBtn = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -89,6 +92,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const onPayload = useCallback((p: TaskData) => {
     setTask(p);
     setActive(p.attempt?.active ?? 0);
+    setGrace(p.attempt?.grace ?? 0);
     setNextHintIn(p.hints.next_in);
     setNudge(p.nudge);
   }, []);
@@ -133,18 +137,21 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   useEffect(() => {
     if (!hasAttempt || passed) return;
     const tick = setInterval(() => {
-      if (document.visibilityState === "visible") {
-        setActive((s) => s + 1);
-        setNextHintIn((n) => (n === null ? null : Math.max(0, n - 1)));
-      }
+      if (document.visibilityState !== "visible") return;
+      // the grace is the server's, and it holds `active` at rest until it is spent
+      if (graceRef.current > 0) { setGrace((g) => g - 1); return; }
+      setActive((s) => s + 1);
+      setNextHintIn((n) => (n === null ? null : Math.max(0, n - 1)));
     }, 1000);
     const beat = setInterval(() => {
       if (document.visibilityState !== "visible") return;
-      post<{ active: number; nudge: boolean }>(`/task/${encodeURIComponent(slug)}/touch`)
-        .then((r) => { setActive(r.active); setNudge(r.nudge); }).catch(() => {});
+      post<{ active: number; nudge: boolean; grace: number }>(`/task/${encodeURIComponent(slug)}/touch`)
+        .then((r) => { setActive(r.active); setNudge(r.nudge); setGrace(r.grace); }).catch(() => {});
     }, HEARTBEAT_MS);
     return () => { clearInterval(tick); clearInterval(beat); };
   }, [hasAttempt, passed, slug]);
+
+  useEffect(() => { graceRef.current = grace; }, [grace]);
 
   /** Run and Submit are the same round trip; `submit` is the learner saying they are done.
    *  Only a submitted run costs an attempt and moves the card — a Run is free, repeatable,
@@ -420,6 +427,11 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             </div>
           ) : null}
           {notice("editor")}
+          {grace > 0 && !readFirstOff && !passed ? (
+            <div style={{ position: "fixed", right: 24, left: narrow ? 24 : undefined, bottom: 24, zIndex: 30 }}>
+              <GraceNotice seconds={grace} onDismiss={() => setReadFirstOff(true)} />
+            </div>
+          ) : null}
           {nudge && !nudgeOff && !passed ? (
             <div style={{ position: "fixed", right: 24, left: narrow ? 24 : undefined, bottom: 24, zIndex: 30 }}>
               <StuckNudge minutes={Math.round(active / 60)} hintsShown={hints.shown.length} hintsTotal={hints.total} hintReady={hintReady}

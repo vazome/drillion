@@ -10,7 +10,8 @@
    is gone for the day and back tomorrow, at the same standing and on the same due date. The Buried
    band in Today undoes it early.
 2. Opening a task starts an **attempt**: a fresh seed and an active-seconds timer that pauses
-   when the tab is hidden. The left pane renders the task's `README.md` — Why / You get /
+   when the tab is hidden. The first minute of it is free — the clock sits at 00:00 while you
+   read, and a corner notice says so ten seconds in. The left pane renders the task's `README.md` — Why / You get /
    You return / Rules / Read first — and the right pane is the editor with the stub.
 3. **Run** saves your region into the file and runs that file's pytest test with the attempt's
    seed. Failures come back with the assertion lines mapped to editor line numbers. A Run
@@ -77,6 +78,12 @@ issue that says "make it 20" needs it.
   at ~6 reviews a day before a single new pick. 60 and 120 shed that load without a fifth status
   for "retired" — the card is simply `done`, and a done card you keep getting right comes back
   rarely.
+- **`GRACE_SECS = 60`.** Reading is not the work. Without it the clock is running while you
+  are still finding out what the task wants, which prices reading into the grade and teaches
+  the one habit the spec pane exists to prevent — skimming and typing. A minute is enough for
+  a spec of this size and small enough that it cannot be farmed: it is granted once per open,
+  not once per sitting, and the same grace applies to the hint and solution gates, so nothing
+  in the attempt disagrees about what time it is.
 - **`REVIEWS_PER_DAY = 12`.** Unbounded, the day you come back from three weeks away is 100 rows
   deep and the ladder never recovers. Anki ships 200 reviews against 20 new, a 10:1 ratio; a
   drillion review is a whole coding task rather than a flashcard, so 12 against 2 is roughly the

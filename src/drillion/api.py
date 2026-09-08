@@ -21,6 +21,7 @@ from .attempts import (
     abandon,
     attempt_view,
     current,
+    grace_left,
     next_hint,
     nudge_due,
     open_attempt,
@@ -420,7 +421,7 @@ def run_task(slug: str, edit: Edit):
 def touch_task(slug: str):
     with writing() as st:  # no catalogue lookup: only a known slug can be open
         o = current(st, slug)
-        return {"active": o["active"], "nudge": nudge_due(o)}
+        return {"active": o["active"], "nudge": nudge_due(o), "grace": grace_left(o)}
 
 
 @app.post("/api/task/{slug}/hint")

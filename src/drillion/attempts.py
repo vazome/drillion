@@ -1,15 +1,21 @@
 """The attempt: one timer per task, from the first open until the pass.
 
 Time is *active* seconds: every touch adds the gap since the last one, capped at two
-minutes, and grades, hints and the solution gate all price themselves in that currency."""
+minutes, and grades, hints and the solution gate all price themselves in that currency.
+The first minute is free — see `GRACE_SECS`."""
 
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from .region import cut, splice, stub
 from .scheduler import grade_of, reschedule
 from .state import card, own, today
 
+# Reading is not the work. The clock starts a minute after the attempt opens, so the spec
+# can be read through without it counting against the grade or the hint gates — the whole
+# point of a spec pane is that you read it before you write. One clock: the seconds shown
+# and the seconds graded are the same seconds.
+GRACE_SECS = 60
 HINT_GAP = 60  # active seconds between hints, times the level
 SOLUTION_GATE = (3, 600)  # attempts, active seconds
 NUDGE_SECS = 1800  # active seconds of reading before a hint is offered
@@ -34,12 +40,20 @@ def touch(o):
     Clamped at both ends: a wall clock is not monotonic, and a negative tick would run
     the timer down."""
     now = datetime.now()
-    o["active"] += max(
-        0,
-        int(min((now - datetime.fromisoformat(o["last"])).total_seconds(), 120)),
-    )
-    o["last"] = now.isoformat()
+    last = datetime.fromisoformat(o["last"])
+    o["active"] += max(0, int(min((now - last).total_seconds(), 120)))
+    # `last` ahead of now is the reading grace still owed; touching must not spend it
+    if now > last:
+        o["last"] = now.isoformat()
     return o["active"]
+
+
+def grace_left(o):
+    """Seconds of free reading still owed, for the page to count down. 0 once it is spent."""
+    if not o:
+        return 0
+    gap = (datetime.fromisoformat(o["last"]) - datetime.now()).total_seconds()
+    return max(0, int(gap))
 
 
 def current(st, slug):
@@ -57,15 +71,17 @@ def open_attempt(st, slug):
     if o:
         touch(o)
         return o
-    now = datetime.now().isoformat()
+    now = datetime.now()
     st["open"][slug] = {
         "seed": random.randint(1000, 9999),
         "attempts": 0,
         "runs": 0,
         "hints": 0,
         "new": card(st, slug)["seen"] == 0,
-        "started": now,
-        "last": now,
+        "started": now.isoformat(),
+        # the grace, stored rather than derived: `touch` already reads `last`, and one
+        # timestamp in the future is a smaller thing to carry than a second field
+        "last": (now + timedelta(seconds=GRACE_SECS)).isoformat(),
         "active": 0,
         "solution_shown": False,
     }
@@ -197,7 +213,10 @@ def attempt_view(o, hints):
     if o and shown < len(hints):
         next_in = max(0, HINT_GAP * (shown + 1) - o["active"]) if shown else 0
     return {
-        "attempt": {k: o[k] for k in ("attempts", "active", "seed", "solution_shown")}
+        "attempt": {
+            **{k: o[k] for k in ("attempts", "active", "seed", "solution_shown")},
+            "grace": grace_left(o),
+        }
         if o
         else None,
         "nudge": nudge_due(o),
