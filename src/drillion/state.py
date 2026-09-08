@@ -240,6 +240,13 @@ def _recover(db):
                 log.warning(
                     "Preserving externally edited %s after a committed reset", path
                 )
+        except FileNotFoundError:
+            # No file to reset and the progress it belonged to is already committed, so
+            # keeping the intent would only fail every later access. Repairable errors
+            # below still raise, because those can be retried.
+            log.warning(
+                "Dropping a committed reset for %s: the task file is gone", path
+            )
         except (OSError, UnicodeError, region.Invalid) as exc:
             raise Unreadable(
                 f"Progress is saved, but {path} could not be reset. "

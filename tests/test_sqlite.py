@@ -2,6 +2,7 @@
 
 import multiprocessing
 import os
+import shutil
 import sqlite3
 from contextlib import closing
 from pathlib import Path
@@ -157,6 +158,33 @@ def test_reset_failure_keeps_archive_and_recovers_on_next_access(
         replacement += "# updated machinery\n"
     assert state.load()["archive"]["task"][0]["code"] == "return 42"
     assert path.read_text(encoding="utf-8") == replacement
+
+
+def test_a_reset_for_a_task_that_is_gone_clears_itself(root, monkeypatch):
+    """An upgrade that drops a task, or a folder deleted by hand, must not brick progress."""
+    path = root / "tasks" / "task" / "task.py"
+    path.parent.mkdir(parents=True)
+    source = f"def solve():\n    return 42\n\n\n{region.MARKER}\n"
+    replacement = region.splice(source, region.stub(region.cut(source).body))
+    path.write_text(source, encoding="utf-8")
+    with monkeypatch.context() as patch:
+
+        def fail(*args):
+            raise OSError("disk unavailable")
+
+        patch.setattr(region, "write_region", fail)
+        with (
+            pytest.raises(state.Unreadable),
+            state.writing() as st,
+        ):
+            st["archive"]["task"] = [
+                {"date": "2026-09-08", "grade": "pass", "code": "return 42"}
+            ]
+            state.reset_after_commit(st, path, source, replacement)
+    shutil.rmtree(path.parent)
+    assert state.load()["archive"]["task"][0]["code"] == "return 42"
+    with closing(sqlite3.connect(settings.state_path)) as db:
+        assert db.execute("SELECT count(*) FROM pending_resets").fetchone()[0] == 0
 
 
 def test_newer_database_is_refused_untouched(root):
