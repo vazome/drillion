@@ -3,7 +3,7 @@ title: match — route an event by its shape
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [5, 25]
+prereqs: [5, 26]
 tags: [match, dicts]
 ---
 # match — route an event by its shape

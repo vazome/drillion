@@ -3,7 +3,7 @@ title: dicts — building and topping up an inventory
 difficulty: medium
 tier: core
 minutes: 14
-prereqs: [23]
+prereqs: [24]
 tags: [dicts]
 source: exercism/python concept/inventory-management (MIT, adapted)
 ---

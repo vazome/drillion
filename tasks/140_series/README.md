@@ -3,7 +3,7 @@ title: sequences — every window of n digits, in order
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [3, 18]
+prereqs: [4, 19]
 tags: [sequences]
 source: exercism/python practice/series (MIT, adapted)
 ---

@@ -3,7 +3,7 @@ title: sets — award energy points for a finished level
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [32]
+prereqs: [34]
 tags: [sets]
 source: exercism/python practice/sum-of-multiples (MIT, adapted)
 ---

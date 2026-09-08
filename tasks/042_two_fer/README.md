@@ -3,7 +3,7 @@ title: function-arguments — the bakery's one-for-you line
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [32]
+prereqs: [34]
 tags: [function-arguments]
 source: exercism/python practice/two-fer (MIT, adapted)
 ---

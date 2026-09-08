@@ -3,7 +3,7 @@ title: list-methods — turn a five-bit code into a list of actions
 difficulty: medium
 tier: core
 minutes: 10
-prereqs: [3, 11, 18]
+prereqs: [4, 11, 19]
 tags: [list-methods]
 source: exercism/python practice/secret-handshake (MIT, adapted)
 ---

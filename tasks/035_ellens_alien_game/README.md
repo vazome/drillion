@@ -3,7 +3,7 @@ title: classes — Ellen's alien, its own health and its own position
 difficulty: medium
 tier: core
 minutes: 15
-prereqs: [32]
+prereqs: [34]
 tags: [classes]
 source: exercism/python concept/ellens-alien-game (MIT, adapted)
 ---

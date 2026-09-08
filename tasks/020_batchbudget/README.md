@@ -3,7 +3,7 @@ title: while — fill a batch until the budget is spent
 difficulty: easy
 tier: core
 minutes: 10
-prereqs: [18]
+prereqs: [19]
 tags: [while, loops]
 ---
 # while — fill a batch until the budget is spent

@@ -3,7 +3,7 @@ title: sets — dedupe the recipes, build the shopping list
 difficulty: easy
 tier: core
 minutes: 14
-prereqs: [25]
+prereqs: [26]
 tags: [sets]
 source: exercism/python concept/cater-waiter (MIT, adapted)
 ---
