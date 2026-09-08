@@ -59,7 +59,7 @@ class Settings:
 
     @property
     def state_path(self):
-        return self.root / "progress.json"
+        return self.root / "progress.sqlite3"
 
     @property
     def web_dist(self):

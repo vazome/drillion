@@ -244,7 +244,7 @@ def _roots(scratch, targets):
         # pytest builds its collection tree downwards from `--rootdir`, which the runner
         # pins to the data root. Listing it is all pytest needs — its config comes from the
         # `-c` file inside the scratch dir — so every file under the root stays closed,
-        # `progress.json` and a checkout's `.git/config` included.
+        # `progress.sqlite3` and a checkout's `.git/config` included.
         (settings.root, ("read_dir",)),
         *((t, _READ) for t in targets),
         ("/etc", _READ),

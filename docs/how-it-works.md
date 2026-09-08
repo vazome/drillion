@@ -25,7 +25,7 @@
    told you about. The **solution** opens after 3 submitted attempts and 10 active minutes,
    and taking it means the pass cannot push the task further out.
 5. **Pass** → computed grade → the task's next sighting moves in or out → your code is archived
-   into `progress.json` → the file is reset to the stub, so the next review starts blank.
+   into `progress.sqlite3` → the file is reset to the stub, so the next review starts blank.
 6. The spec pane carries a **note**, one free-text box per task, saved as you type. It belongs
    to the task and not to the sitting: it survives a grade, a re-attempt and an abandon.
 

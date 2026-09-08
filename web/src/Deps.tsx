@@ -10,7 +10,7 @@ export const depsHref = (slug: string) => `${taskHref(slug)}/deps`;
 
 /** Payloads already fetched, so walking the graph swaps a board rather than reloading a
  *  screen. Task payloads are read-only here and cheap; a session-lived map is the whole
- *  cache, and a `progress.json` write anywhere else in the app never reaches this screen. */
+ *  cache, and a `progress.sqlite3` write anywhere else in the app never reaches this screen. */
 const seen = new Map<string, TaskData>();
 const inflight = new Map<string, Promise<TaskData>>();
 

@@ -143,12 +143,16 @@ drillion doctor       # say why a task folder would be skipped
 ## Your progress
 
 Everything drillion owns lives under one root: `tasks/`, which is where your code is saved, and
-`progress.json`, which holds your cards, notes and archived solutions. From a clone that root is
+`progress.sqlite3`, which holds your cards, notes and archived solutions. From a clone that root is
 the checkout. Installed, it is a per-user data directory that the first run seeds from the tasks
 inside the wheel. In Docker it is the volume at `/data`. An upgrade never writes over a root that
 already has tasks in it, so nothing you have written is at risk.
 See [docs/configuration.md](docs/configuration.md) for the environment variables and the Docker
 bind-mount recipe.
+
+Existing `progress.json` files are imported automatically on first access and kept untouched.
+After import, SQLite is the source of truth. Stop drillion and copy the whole root for a backup;
+the retained JSON is only a snapshot from before the upgrade.
 
 ## What running it does to your machine
 

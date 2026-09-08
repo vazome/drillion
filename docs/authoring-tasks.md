@@ -48,7 +48,7 @@ So reach for an existing tag before minting a synonym — `sets` not `set`, `str
 `str-stuff` — and when nothing fits, name the concept, not the task. `GET /api/catalogue`
 returns the whole vocabulary under `tags`.
 
-**focus** in `progress.json` is a single string, and the scheduler matches it against a task's
+**focus** in `progress.sqlite3` is a single string, and the scheduler matches it against a task's
 tier, track and tags alike (`scheduler.py:_facets`): `advanced` and `recursion` are both
 valid. It restricts which *new* tasks are offered — reviews and the open catalogue ignore
 it — and `POST /api/focus` sets it.

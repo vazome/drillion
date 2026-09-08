@@ -35,7 +35,7 @@ def _api(flow, extra=()):
     shutil.copy(TASKS / "_lib.py", taskdir / "_lib.py")
     (taskdir / SLUG / "assets").mkdir()
     (taskdir / SLUG / "assets" / "shape.svg").write_text("<svg/>", encoding="utf-8")
-    settings.root = tmp  # tasks/ and progress.json move together
+    settings.root = tmp  # tasks/ and progress.sqlite3 move together
 
     async def drive():
         async with httpx.AsyncClient(
@@ -170,7 +170,7 @@ async def _stub_to_pass(api, path):
 
 async def _guards(api, path):
     assert (await api.get("/api/catalogue")).status_code == 200
-    assert not settings.state_path.exists()  # a GET never writes progress.json
+    assert not settings.state_path.exists()  # a fresh GET creates no practice history
 
     missing = await api.get("/api/task/_lib")  # a real file, but not in the catalogue
     assert missing.status_code == 404 and missing.json()["error"] == "no task '_lib'"
@@ -782,14 +782,13 @@ def test_a_progress_file_from_a_newer_drillion_answers_409_not_500():
     """state.TooNew is refused politely: the page's {"error": ...} shape, not a traceback."""
 
     async def flow(api, path):
-        settings.state_path.write_text(
-            f'{{"version": {state.SCHEMA + 1}}}', encoding="utf-8"
-        )
-        before = settings.state_path.read_bytes()
+        legacy = settings.root / "progress.json"
+        legacy.write_text(f'{{"version": {state.SCHEMA + 1}}}', encoding="utf-8")
+        before = legacy.read_bytes()
         reply = await api.get("/api/progress")
         assert reply.status_code == 409
         assert "upgrade drillion" in reply.json()["error"]
-        assert settings.state_path.read_bytes() == before
+        assert legacy.read_bytes() == before
 
     _api(flow)
 
@@ -864,3 +863,48 @@ async def _deps_on_the_task_payload(api, _path):
 
 def test_deps_on_the_task_payload():
     _api(_deps_on_the_task_payload, extra=(PREREQ, GATED))
+
+
+@pytest.mark.parametrize("action", ["run", "abandon"])
+def test_failed_progress_commit_never_resets_unarchived_code(action, monkeypatch):
+    from drillion import api as routes
+
+    monkeypatch.setattr(routes, "run_tests", lambda *args: (True, "1 passed"))
+
+    async def flow(api, path):
+        task = (await api.post(f"/api/task/{SLUG}/open")).json()
+        code = task["code"].replace("raise NotImplementedError", PASSING)
+        saved = (
+            await api.put(
+                f"/api/task/{SLUG}", json={"code": code, "etag": task["etag"]}
+            )
+        ).json()
+        before = path.read_bytes()
+        with monkeypatch.context() as patch:
+
+            def fail(*args):
+                raise state.Unreadable("simulated failed commit")
+
+            patch.setattr(state, "_store", fail)
+            reply = await api.post(
+                f"/api/task/{SLUG}/{action}", json={"code": code, "etag": saved["etag"]}
+            )
+        assert reply.status_code == 503
+        assert path.read_bytes() == before
+        st = state.load()
+        assert SLUG in st["open"]
+        assert st["archive"] == {} and st["log"] == []
+
+    _api(flow)
+
+
+def test_damaged_database_returns_an_actionable_error(monkeypatch):
+    async def flow(api, path):
+        settings.state_path.write_bytes(b"not a SQLite database")
+        before = settings.state_path.read_bytes()
+        reply = await api.get("/api/progress")
+        assert reply.status_code == 503
+        assert "backup" in reply.json()["error"]
+        assert settings.state_path.read_bytes() == before
+
+    _api(flow)

@@ -4,5 +4,8 @@ web/node_modules
 drafts
 __pycache__
 .pytest_cache
+progress.json
+progress.json.bak
+progress.sqlite3*
 # the generated prep pages at the root; `*` never crosses a /, so web/*.html stays
 *.html

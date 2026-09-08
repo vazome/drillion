@@ -1,6 +1,6 @@
 """JSON API over the task core, and the built page that drives it.
 
-Every route is a plain `def` that touches progress.json inside a `state.writing()` or
+Every route is a plain `def` that touches progress inside a `state.writing()` or
 `state.reading()` block: an `async def` blocking on that lock would freeze the whole
 server, while FastAPI runs sync handlers in a threadpool."""
 
@@ -58,7 +58,16 @@ from .scheduler import (
     stuck,
 )
 from .settings import settings
-from .state import TooNew, card, own, reading, today, writing
+from .state import (
+    TooNew,
+    Unreadable,
+    card,
+    own,
+    reading,
+    reset_after_commit,
+    today,
+    writing,
+)
 
 log = logging.getLogger(__name__)
 MAX_BODY = 256 * 1024
@@ -105,6 +114,11 @@ async def _too_new(_request, exc):
 async def _no_attempt(_request, _exc):
     """Acting on a task nobody opened: the learner's problem, not a crash."""
     return JSONResponse({"error": "no open attempt — open the task first"}, 409)
+
+
+@app.exception_handler(Unreadable)
+async def _unreadable(_request, exc):
+    return JSONResponse({"error": str(exc)}, 503)
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -399,8 +413,9 @@ def run_task(slug: str, edit: Edit):
                 st, slug, meta, body
             )  # drops the attempt
             log.info("%s %s box=%s due in %sd (%s)", slug, grade, box, gap, reason)
-            new_src = splice(new_src, stub(body))
-            write_region(meta["path"], new_src)
+            stubbed = splice(new_src, stub(body))
+            reset_after_commit(st, meta["path"], new_src, stubbed)
+            new_src = stubbed
             # `from_box` is the direction: `struggled` steps a card *down*
             resp |= {
                 "grade": grade,
@@ -472,7 +487,7 @@ def abandon_task(slug: str, sent: Etag):
         _check_etag(src, sent.etag)
         new_src = abandon(st, slug, src)
         log.info("%s abandoned", slug)
-        write_region(meta["path"], new_src)
+        reset_after_commit(st, meta["path"], src, new_src)
         return _payload(st, slug, meta, new_src)
 
 
@@ -481,7 +496,7 @@ def bury_task(slug: str, want: Bury):
     """Not today: the card keeps its box, its due date, its seen count and its lapses.
     Tomorrow un-buries it, and `{"buried": false}` is the same door, taken early."""
     with writing() as st:
-        _task(slug)  # a slug that is not a task is a 404, not a card in progress.json
+        _task(slug)  # a slug that is not a task is a 404, not a stored card
         own(st, slug)["buried"] = today() if want.buried else ""
         log.info("%s %s", slug, "buried" if want.buried else "unburied")
         return {"buried": buried(st, slug)}
@@ -494,7 +509,7 @@ def note_task(slug: str, note: Note):
     It belongs to the task and not to the attempt, and needs no open attempt. Emptying the
     box is how you delete it."""
     with writing() as st:
-        _task(slug)  # a slug that is not a task is a 404, not a key in progress.json
+        _task(slug)  # a slug that is not a task is a 404, not a stored note
         text = note.text.strip()
         if text:
             st["notes"][slug] = text

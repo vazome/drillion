@@ -207,7 +207,7 @@ def test_abandon_does_not_archive_an_untouched_stub():
 def test_load_fills_in_the_keys_an_older_file_lacks():
     tmp, keep = Path(tempfile.mkdtemp()), settings.root
     try:
-        settings.root = tmp  # progress.json lives under root
+        settings.root = tmp  # progress.sqlite3 lives under root
         assert state.load() == {
             "version": state.SCHEMA,
             "focus": None,

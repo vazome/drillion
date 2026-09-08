@@ -80,17 +80,20 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await shot(page, "8-task-lineage-panel");
 });
 
-test("the run cannot have touched the repository's own state", () => {
+test("the run cannot have touched the repository's own state", async ({ request }) => {
   // the server was handed DRILLION_ROOT; this asserts the checkout itself was left alone
   const untouched = (path: string) =>
     !existsSync(path) || statSync(path).mtimeMs < runStart;
 
   for (const slug of readdirSync(join(repoRoot, "tasks")))
     expect(untouched(join(repoRoot, "tasks", slug, "task.py")), `${slug} was written`).toBe(true);
-  for (const name of ["progress.json", "progress.json.bak"])
+  for (const name of ["progress.json", "progress.json.bak", "progress.sqlite3", "progress.sqlite3-journal", "progress.sqlite3-wal", "progress.sqlite3-shm"])
     expect(untouched(join(repoRoot, name)), `${name} was written`).toBe(true);
 
   // ...and the same writes landed in the scratch root, so the checks above are not vacuous
   expect(statSync(join(scratchRoot, "tasks", SLUG, "task.py")).mtimeMs).toBeGreaterThan(runStart);
-  expect(readFileSync(join(scratchRoot, "progress.json"), "utf8")).toContain(SLUG);
+  expect(readFileSync(join(scratchRoot, "progress.sqlite3")).subarray(0, 16).toString()).toBe("SQLite format 3\0");
+  const progress = await request.get("/api/progress");
+  expect(progress.ok()).toBe(true);
+  expect((await progress.json()).log.some((entry: { slug: string }) => entry.slug === SLUG)).toBe(true);
 });

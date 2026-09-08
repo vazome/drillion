@@ -1,9 +1,11 @@
-"""progress.json: a clone brings none, and an upgrade never touches the one you have."""
+"""Historical JSON imports into SQLite without losing or rewriting legacy data."""
 
 import json
 import shutil
+import sqlite3
 import subprocess
 import tempfile
+from contextlib import closing
 from pathlib import Path
 
 import pytest
@@ -45,8 +47,7 @@ def test_a_fresh_clone_starts_with_an_empty_ladder():
 
 
 def test_an_existing_progress_file_upgrades_untouched():
-    """An older progress.json reads back whole, with any newer key defaulted blank beside
-    it, and no migration step between the two."""
+    """An older progress.json imports whole, with newer keys defaulted blank beside it."""
     stored = {
         "focus": "class-inheritance",
         "cards": {"012_sortkey": {"box": 3, "due": "2026-09-01", "seen": 4}},
@@ -78,7 +79,9 @@ def test_an_existing_progress_file_upgrades_untouched():
     }
 
     def check(_tmp):
-        settings.state_path.write_text(json.dumps(stored), encoding="utf-8")
+        (settings.root / "progress.json").write_text(
+            json.dumps(stored), encoding="utf-8"
+        )
         assert state.load() == {**stored, "notes": {}, "version": state.SCHEMA}
         with state.writing() as st:
             st["focus"] = None
@@ -92,6 +95,16 @@ def test_an_existing_progress_file_upgrades_untouched():
     _root(check)
 
 
+def _stored_version():
+    with closing(sqlite3.connect(settings.state_path)) as db:
+        assert db.execute("PRAGMA user_version").fetchone()[0] == state.DB_SCHEMA
+        return json.loads(
+            db.execute(
+                "SELECT data FROM progress WHERE section = 'meta' AND key = 'version'"
+            ).fetchone()[0]
+        )
+
+
 def test_a_saved_progress_file_says_which_schema_it_is():
     """What this build writes stamps its own shape, so a later drillion never has to guess
     what an unversioned file was."""
@@ -99,8 +112,7 @@ def test_a_saved_progress_file_says_which_schema_it_is():
     def check(_tmp):
         with state.writing() as st:
             st["focus"] = "class-inheritance"
-        stored = json.loads(settings.state_path.read_text(encoding="utf-8"))
-        assert stored["version"] == state.SCHEMA
+        assert _stored_version() == state.SCHEMA
 
     _root(check)
 
@@ -112,14 +124,15 @@ def test_a_progress_file_from_a_newer_drillion_is_refused_untouched():
 
     def check(_tmp):
         raw = json.dumps({"version": state.SCHEMA + 1, "focus": "generators"})
-        settings.state_path.write_text(raw, encoding="utf-8")
-        before = settings.state_path.read_bytes()
+        legacy = settings.root / "progress.json"
+        legacy.write_text(raw, encoding="utf-8")
+        before = legacy.read_bytes()
         with pytest.raises(state.TooNew) as refusal:
             state.load()
         assert "upgrade drillion" in str(refusal.value)
         with pytest.raises(state.TooNew), state.writing() as st:
             st["focus"] = None  # never reached: the load raises first
-        assert settings.state_path.read_bytes() == before
+        assert legacy.read_bytes() == before
 
     _root(check)
 
@@ -130,7 +143,7 @@ def test_a_hand_edited_version_is_read_as_no_version_at_all():
 
     def check(_tmp):
         raw = json.dumps({"version": "one-ish", "focus": "class-inheritance"})
-        settings.state_path.write_text(raw, encoding="utf-8")
+        (settings.root / "progress.json").write_text(raw, encoding="utf-8")
         assert state.load()["focus"] == "class-inheritance"
 
     _root(check)
@@ -139,7 +152,7 @@ def test_a_hand_edited_version_is_read_as_no_version_at_all():
 def test_the_repo_does_not_ship_anybody_s_progress():
     """progress.json is ignored *and* untracked: a file already in the index still travels."""
     tracked = subprocess.run(
-        ["git", "ls-files", "progress.json", "progress.json.bak"],
+        ["git", "ls-files", "progress.json", "progress.json.bak", "progress.sqlite3*"],
         cwd=REPO,
         capture_output=True,
         text=True,
@@ -154,10 +167,10 @@ SCHEMA_DIR = Path(__file__).resolve().parent / "schema"
 
 
 def _frozen(name, tmp):
-    """Lay a frozen historical progress.json down in the throwaway root. Always a copy: a
-    load can rewrite the file, and a fixture that gets rewritten stops being frozen."""
-    shutil.copyfile(SCHEMA_DIR / name, settings.state_path)
-    return settings.state_path
+    """Copy historical JSON to the throwaway root; fixtures must stay byte-for-byte frozen."""
+    path = settings.root / "progress.json"
+    shutil.copyfile(SCHEMA_DIR / name, path)
+    return path
 
 
 @pytest.mark.parametrize("frozen", ["unversioned.json", "v1.json"])
@@ -199,7 +212,6 @@ def test_an_upgraded_progress_file_is_restamped_by_the_build_that_wrote_it(
         monkeypatch.setattr(state, "SCHEMA", state.SCHEMA + 1)
         with state.writing() as st:
             st["focus"] = None
-        stored = json.loads(settings.state_path.read_text(encoding="utf-8"))
-        assert stored["version"] == state.SCHEMA
+        assert _stored_version() == state.SCHEMA
 
     _root(check)
