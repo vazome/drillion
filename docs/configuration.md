@@ -19,8 +19,13 @@ Run it from a clone and the checkout is the root: the tasks you practise are the
 `tasks/`, edited in place, and nothing is copied anywhere. Run an installed drillion with no
 `tasks/` in sight and the first command copies the tasks that ship inside the wheel into a
 per-user data directory (`XDG_DATA_HOME`, `~/Library/Application Support`, `LOCALAPPDATA`),
-once. A root that already has `tasks/` is never written over, so an upgrade cannot touch code
-you saved. [ADR 0003](adr/0003-ship-the-tasks-and-seed-a-writable-root.md) has the reasoning.
+once. Every later run brings that root back in line with the installed version: drillion's files
+follow the version, and each `task.py` gets the new machinery spliced around the code you wrote,
+so a grader fix reaches you without touching your region. A task drillion no longer ships moves to
+`tasks/_retired/<slug>/` rather than being deleted, and a task you added yourself is never touched
+— `tasks/.shipped` records what drillion put there, and that is all it takes back.
+[ADR 0003](adr/0003-ship-the-tasks-and-seed-a-writable-root.md) has the reasoning, and
+[ADR 0008](adr/0008-an-upgrade-keeps-the-region-and-nothing-else.md) how upgrades behave.
 
 `progress.sqlite3` holds your cards, open attempts, log, archived solutions and notes. It and
 its SQLite journal files are git-ignored, so a fresh clone starts with an empty ladder. SQLite
