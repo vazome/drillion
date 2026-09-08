@@ -3,9 +3,9 @@ Third-party notices
 
 drillion (this repository) is MIT licensed — see LICENSE.
 
-84 of the 171 tasks under `tasks/` are adapted from Exercism's Python track and
+88 of the 186 tasks under `tasks/` are adapted from Exercism's Python track and
 carry Exercism's own Markdown verbatim in their `README.md`, by design (see
-`README.md`). Each of those 84 files names its origin in a `source:`
+`README.md`). Each of those 88 files names its origin in a `source:`
 frontmatter field and closes with an "Adapted from exercism/python — MIT"
 line; run `grep -rl '^source:' tasks/*/README.md` to list them.
 
@@ -41,7 +41,7 @@ Both are MIT licensed:
 This file reproduces that copyright and permission notice so it travels with
 the repository, as MIT requires for a substantial portion of borrowed work.
 It does not replace the per-file `source:` field and attribution footer on
-each of the 84 tasks — those stay as the finer-grained record of exactly what
+each of the 88 tasks — those stay as the finer-grained record of exactly what
 came from where.
 
 The client ships two webfonts under `web/public/fonts/`, both licensed under the

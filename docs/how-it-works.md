@@ -30,7 +30,7 @@
 
 ## Why
 
-**Fresh data every sitting.** Nearly every task ships a generator — 178 of the 182 — so when a
+**Fresh data every sitting.** Nearly every task ships a generator — 182 of the 186 — so when a
 task comes back in 8 days the IPs, names and numbers are different. You can't recall the answer
 because that exact answer never existed. This is the one feature that stops spaced repetition
 from degrading into memorising files.
