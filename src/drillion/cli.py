@@ -10,39 +10,107 @@ import threading
 import webbrowser
 from pathlib import Path
 
-from . import __version__
+from . import __version__, region
 from .settings import TASKS_TEMPLATE, settings
 
 log = logging.getLogger(__name__)
 
 
+SHIPPED = ".shipped"
+RETIRED = "_retired"
+
+
+def _merge(packaged, out):
+    """Take the version's machinery, keep whatever the learner has in the region.
+
+    A file whose region no longer fits the new machinery — a signature that moved, a task
+    the learner has edited outside the region — is left exactly as it is and named in the
+    log, because a broken task is recoverable and overwritten work is not."""
+    current = out.read_text(encoding="utf-8")
+    try:
+        merged = region.validate(
+            region.cut(current).body, packaged.read_text(encoding="utf-8")
+        )
+    except region.Invalid as exc:
+        log.warning("kept %s as it is: %s", out, exc)
+        return
+    if merged != current:
+        region.write_region(out, merged)
+
+
+def _retire(dest, shipped):
+    """Take back what drillion used to ship and no longer does, and nothing else.
+
+    `.shipped` is the record of what the last run put here, so a task the learner wrote
+    themselves is never in it and is never touched. A task drillion has dropped keeps the
+    code written for it: the folder moves under `_retired/`, which the catalogue skips,
+    rather than being deleted. A root seeded before this record existed has nothing to
+    compare against, so it loses nothing and gets the record for next time."""
+    manifest = dest / SHIPPED
+    if not manifest.is_file():
+        return
+    gone = [
+        rel
+        for rel in manifest.read_text(encoding="utf-8").split()
+        if rel not in shipped
+    ]
+    slugs = {rel.split("/")[0] for rel in shipped}
+    for rel in gone:
+        folder = rel.split("/")[0]
+        if "/" in rel and folder not in slugs:
+            _move_aside(dest / folder, dest / RETIRED / folder)
+        else:
+            (dest / rel).unlink(missing_ok=True)
+    for rel in gone:
+        parent = (dest / rel).parent
+        if parent != dest and parent.is_dir() and not any(parent.iterdir()):
+            parent.rmdir()
+
+
+def _move_aside(folder, out):
+    if not folder.is_dir():
+        return  # already moved, or never arrived
+    if out.exists():
+        log.warning(
+            "%s is no longer shipped, and %s is taken: left where it is", folder, out
+        )
+        return
+    out.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(folder), str(out))
+    log.info(
+        "%s is no longer shipped; what you wrote for it is at %s", folder.name, out
+    )
+
+
 def seed():
     """Bring root's tasks/ in line with the tasks baked into the wheel, on every run.
 
-    `task.py` is the learner's — it is never written over. Everything else under tasks/ is
-    drillion's, so READMEs, `_lib.py` and the test files follow the installed version, new
-    tasks arrive on upgrade, and a task this version no longer ships is removed rather than
-    left as a slug nothing links to. A checkout has no template and is untouched."""
+    Everything under tasks/ is drillion's except the learner's region inside each
+    `task.py`, so READMEs, `_lib.py` and the test files follow the installed version, a
+    task file gets this version's machinery spliced around the code the learner wrote, and
+    new tasks arrive on upgrade. A task drillion no longer ships is moved aside rather than
+    deleted, and a task the learner added themselves is left alone. A checkout has no
+    template and is untouched."""
     if not TASKS_TEMPLATE.is_dir():
         return
     dest = settings.tasks_dir
     if not dest.is_dir():
         log.info("first run: seeding %s from the tasks that ship with drillion", dest)
     dest.mkdir(parents=True, exist_ok=True)
-    for src in TASKS_TEMPLATE.rglob("*"):
-        out = dest / src.relative_to(TASKS_TEMPLATE)
+    shipped = []
+    for src in sorted(TASKS_TEMPLATE.rglob("*")):
+        rel = src.relative_to(TASKS_TEMPLATE)
+        out = dest / rel
         if src.is_dir():
             out.mkdir(parents=True, exist_ok=True)
-        elif not (out.name == "task.py" and out.is_file()):
-            shutil.copy2(src, out)
-    # deepest first, so a directory is empty by the time its own turn comes
-    for out in sorted(dest.rglob("*"), reverse=True):
-        if (TASKS_TEMPLATE / out.relative_to(dest)).exists():
             continue
-        if out.is_dir():
-            shutil.rmtree(out, ignore_errors=True)
+        shipped.append(rel.as_posix())
+        if out.name == "task.py" and out.is_file():
+            _merge(src, out)
         else:
-            out.unlink(missing_ok=True)
+            shutil.copy2(src, out)
+    _retire(dest, set(shipped))
+    (dest / SHIPPED).write_text("\n".join(shipped) + "\n", encoding="utf-8")
 
 
 def _open_browser(url):
