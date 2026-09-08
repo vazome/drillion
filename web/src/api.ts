@@ -87,7 +87,11 @@ export interface Task {
   /** The learner's one note on the task, `""` when there is none — `PUT /api/task/{slug}/note`. */
   note: string;
 }
-interface RunBase { attempts: number; headline: string[]; output: string; etag: string }
+interface RunBase {
+  attempts: number; headline: string[]; output: string; etag: string;
+  /** what the learner's own code printed, lifted out of pytest's report; "" when silent */
+  printed: string;
+}
 /** The grade and everything it decided exist iff `passed && graded`. A plain Run is
  *  `graded: false`: it costs no attempt and moves no card, however green it came back.
  *  `stepped` is the scheduler's answer to whether the card moved — never re-derive it

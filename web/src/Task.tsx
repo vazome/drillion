@@ -34,8 +34,8 @@ type Gate = { at: "hints" | "solution" | "editor" | "note"; message: string } | 
  *  `passed` is a graded pass, and only it ends the attempt. */
 type Result =
   | { state: "idle" | "running" }
-  | { state: "ran"; output: string }
-  | { state: "failed"; graded: boolean; attempts: number; headline: string; output: string }
+  | { state: "ran"; output: string; printed: string }
+  | { state: "failed"; graded: boolean; attempts: number; headline: string; output: string; printed: string }
   | { state: "passed"; grade: string; box: number; stepped: boolean; fromBox: number; reason: string; dueIn: number; attempts: number; code: string };
 
 /** The pass banner's one line about where the task now sits: `stepped` is the server's answer
@@ -171,15 +171,15 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
         setTask((p) => p && ({ ...p, reference: r.reference, lapses: r.lapses }));
         setNextSlug(r.next);
       } else if (r.passed) {
-        setResult({ state: "ran", output: r.output });
+        setResult({ state: "ran", output: r.output, printed: r.printed });
       } else {
-        setResult({ state: "failed", graded: r.graded, attempts: r.attempts, headline: r.headline.join("\n") || "The tests did not pass.", output: r.output });
+        setResult({ state: "failed", graded: r.graded, attempts: r.attempts, headline: r.headline.join("\n") || "The tests did not pass.", output: r.output, printed: r.printed });
         setTask((p) => p && p.attempt ? { ...p, attempt: { ...p.attempt, attempts: r.attempts } } : p);
       }
     } catch (e) {
       const err = e as ApiError, bad = err.status === 400;
       if (absorb(err) && !bad) setResult({ state: "idle" });      // the conflict banner has it now
-      else setResult({ state: "failed", graded: submit, attempts: 0, output: "",
+      else setResult({ state: "failed", graded: submit, attempts: 0, output: "", printed: "",
         headline: bad ? `${err.detail?.error}${err.detail?.line != null ? ` (line ${err.detail.line})` : ""}` : err.message });
     } finally { setInflight(null); }
   };
@@ -469,6 +469,13 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                 )}
               </div>
             </div>
+
+            {/* the learner's own print() first, open: it is the one line of the report they wrote */}
+            {(result.state === "failed" || result.state === "ran") && result.printed ? (
+              <Collapsible label="What you printed" meta={plural(result.printed.split("\n").length, "line")} defaultOpen style={{ marginTop: 8 }}>
+                {result.printed}
+              </Collapsible>
+            ) : null}
 
             {(result.state === "failed" || result.state === "ran") && result.output ? (
               <Collapsible label="Full output" meta={`pytest · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>

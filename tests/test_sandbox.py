@@ -285,3 +285,16 @@ def test_a_windows_child_that_runs_long_is_killed_and_raises(tmp_path):
             tmp_path,
             timeout=2,
         )
+
+
+@windows_only
+def test_the_windows_child_hands_back_unix_line_endings(tmp_path):
+    """Every other tier goes through `subprocess.run(text=True)`, which translates them, and
+    the code reading this output assumes it: one stray `\r` is enough to stop a `$`-anchored
+    pattern matching, which is how a learner's print() went missing from the results panel."""
+    from drillion import winsandbox
+
+    done = winsandbox.run(
+        [sys.executable, "-c", "print('a'); print('b')"], tmp_path, timeout=60
+    )
+    assert done.stdout == "a\nb\n"

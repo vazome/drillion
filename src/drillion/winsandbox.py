@@ -336,8 +336,12 @@ def run(command, scratch, timeout=None, memory_bytes=4 << 30, **env):
 
 
 def _text(path):
-    """The child wrote UTF-8 because the environment told it to; never fail on a stray byte."""
-    return path.read_bytes().decode("utf-8", "replace")
+    """The child wrote UTF-8 because the environment told it to; never fail on a stray byte.
+
+    Line endings are translated because that is what `subprocess.run(text=True)` hands back
+    on every other tier, and the code reading this output is written against that: a `\r`
+    left on the end of a line is enough to stop a `$`-anchored pattern matching it."""
+    return path.read_bytes().decode("utf-8", "replace").replace("\r\n", "\n")
 
 
 _READ_BACK = (
