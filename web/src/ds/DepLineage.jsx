@@ -9,7 +9,11 @@ const NODE_W = 216, NODE_H = 96, GAP = 16;
 const BIG_W = 272, BIG_H = 118;
 const WIRE = 96;                                  // the gutter the lines are drawn in
 const BOARD_W = NODE_W * 2 + BIG_W + WIRE * 2;
-const FAN = 9;                                     // vertical spread of the centre anchors
+/** Spacing between the centre card's anchors. At 9px two prereqs arrived under a single
+ *  arrowhead and read as one edge; it opens up to this and closes again only once the
+ *  column is deep enough to need the card's whole edge. */
+const FAN = 26;
+const EDGE = BIG_H - 28;                           // the run of that edge the anchors may use
 /** A task can unlock twenty others. Past this the column is a wall rather than a graph, so
  *  it folds — and says how many it folded, with the way back open. */
 const FOLD = 8;
@@ -79,7 +83,7 @@ export function DepLineage({ task, requires = [], unlocks = [], hrefOf, onPrefet
   const colX = [0, NODE_W + WIRE, NODE_W + WIRE + BIG_W + WIRE];
   const link = (r) => (hrefOf ? hrefOf(r) : undefined);
   /** The centre card's anchors fan out, or a column of five leaves as one thick line. */
-  const fan = (i, n) => midY + (i - (n - 1) / 2) * FAN;
+  const fan = (i, n) => (n < 2 ? midY : midY + (i - (n - 1) / 2) * Math.min(FAN, EDGE / (n - 1)));
 
   /** What a folded column hides, and the way back. A column that silently drops twelve
    *  tasks is a one-way door. */

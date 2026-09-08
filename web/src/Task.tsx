@@ -455,12 +455,16 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               {runNo ? `attempt ${runNo}` : "not started"}
             </span>
             {attempt ? <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--text-faint)" }}>seed {attempt.seed}</span> : null}
-            <div style={{ flex: 1 }} />
-            {dirty || syntaxBad ? (
-              <span style={{ fontSize: 12.5, color: syntaxBad ? "var(--warn)" : "var(--text-faint)" }}>
-                ● {syntaxBad ? "not saved — syntax" : "unsaved"}
-              </span>
-            ) : null}
+            {/* the marker lives inside the spacer, which is allowed to shrink below its own
+              * content: a status that appears while you type must not re-wrap the row and
+              * push the editor down under the cursor */}
+            <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textAlign: "right", whiteSpace: "nowrap" }}>
+              {dirty || syntaxBad ? (
+                <span style={{ fontSize: 12.5, color: syntaxBad ? "var(--warn)" : "var(--text-faint)" }}>
+                  ● {syntaxBad ? "syntax error, not saved" : "unsaved"}
+                </span>
+              ) : null}
+            </div>
             {hasAttempt && !passed ? <Button variant="quiet" onClick={abandon} style={{ fontSize: 13 }}>Abandon</Button> : null}
             {passed ? null : (
               <Button variant="quiet" onClick={bury} style={{ fontSize: 13 }}>
