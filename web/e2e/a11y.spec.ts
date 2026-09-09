@@ -67,6 +67,7 @@ test("Settings opens from the keyboard, keeps focus, and Escape gives it back", 
 
   const dialog = page.getByRole("dialog", { name: "Settings" });
   await expect(dialog).toBeVisible();
+  await dialog.getByRole("tab", { name: "Data" }).click();
   await expect(dialog.getByText("Data folder")).toBeVisible();   // its paths have arrived
   expect(listed((await audit(page)).violations), "settings").toBe("");
   // the modal owns the focus: tabbing cycles inside it and never reaches the screen behind

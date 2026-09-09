@@ -33,3 +33,12 @@ code,pre{font-family:var(--font-mono)}
    front of the page instead of on it; the dim alone keeps it legible where the browser has
    no backdrop-filter. */
 dialog::backdrop{background:rgb(0 0 0 / .38);backdrop-filter:blur(3px)}
+
+/* One three-position choice, shaped like a single control rather than a dropdown. Native
+   radios keep arrow-key movement and form semantics; the spans are only their visible faces. */
+.key-binding-segmented{display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:2px;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2)}
+.key-binding-segmented label{position:relative;cursor:pointer}
+.key-binding-segmented input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.key-binding-segmented span{display:block;min-width:56px;padding:7px 8px;border-radius:var(--radius-sm);color:var(--text-muted);font-size:13px;font-weight:600;text-align:center}
+.key-binding-segmented input:checked+span{background:var(--accent);color:var(--on-accent)}
+.key-binding-segmented input:focus-visible+span{box-shadow:var(--focus-ring)}
