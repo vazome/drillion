@@ -1,6 +1,6 @@
 # web — the frontend
 
-React 19 + TypeScript + Vite. Four hash routes, catalogue, task, progress and settings, over `src/api.ts`,
+React 19 + TypeScript + Vite. Three hash routes, catalogue, task and progress, plus Settings as a dialog, over `src/api.ts`,
 the one `fetch` wrapper and every response shape from `src/drillion/api.py`. The editor is
 Monaco, themed from the design tokens in both modes, with completions and diagnostics from a
 basedpyright that the API runs locally and serves over `/lsp`.

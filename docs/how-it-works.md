@@ -102,6 +102,13 @@ issue that says "make it 20" needs it.
 
 ## What Settings can do to all of it
 
+Settings is a dialog over whatever you are looking at, so changing something does not cost
+you the task you had open. **The editor card** holds the font, its size, ligatures, the key
+binding, tab size, word wrap and relative line numbers, plus whether the practice timer is on
+screen — hiding it changes nothing about the time, which is still counted and still decides
+the grade. Those are preferences of the browser, not of your practice, so they are not in a
+backup.
+
 **Back up** writes your cards, notes, log, archive and the code in every task to one file, and
 **Restore** reads one back after telling you what it brings and what it replaces. Both keep a
 copy of what they overwrote.

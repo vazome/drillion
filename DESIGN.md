@@ -189,9 +189,16 @@ intervals), the 14-day due-load forecast, the practice heatmap, one strip per to
 its spread across the ladder, the recent log. The three figures are specified in
 [`docs/design/progress-visualisations.md`](docs/design/progress-visualisations.md).
 
-### 4. Settings (`#/settings`)
+### 4. Settings (a dialog, and `#/settings`)
 
-Answers: *where is my work, and how do I move it?*
+Answers: *where is my work, how do I move it, and how do I set the editor up?*
+
+It is a dialog over the current screen rather than a screen of its own: the preferences a
+learner changes are the ones they want while looking at their code, and a screen means a
+navigation out and a second one back. A native `<dialog>` opened with `showModal()`, so the
+focus trap, Escape, the inert background and the blurred backdrop are the platform's. The
+header opens it from anywhere, and `#/settings` still works as a link — it opens the dialog
+and hands the route straight back.
 
 Data: `GET /api/settings` → the three paths (`root`, `progress`, `tasks`), each with a copy
 control, because the honest answer to "where is my progress" is a path the learner can open.
@@ -199,9 +206,12 @@ control, because the honest answer to "where is my progress" is a path the learn
 Five cards, in the order a learner needs them:
 
 - **Your data** — the paths.
-- **Editor** — Vim keys on or off. It lives in this browser rather than in a **backup**, and
-  the card says so, since a setting that a restore silently drops is worse than one that was
-  never offered.
+- **Editor** — how the editor is set: font, size, ligatures, key binding, tab size, word
+  wrap, relative line numbers, and whether the practice timer is on screen. Every row has a
+  visible default and one button that puts all of them back, so no setting can strand
+  anyone; hiding the timer changes nothing about the time, which is still counted and still
+  grades. These live in this browser rather than in a **backup**, and the card says so, since
+  a setting that a restore silently drops is worse than one that was never offered.
 - **Back up** — one file holding cards, notes, log, archive and the code saved in every task.
 - **Restore** — reading the bundle is its own step: the summary of what it brings and what it
   replaces is shown first, and nothing is touched until that summary is accepted. What it
