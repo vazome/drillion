@@ -23,13 +23,24 @@ const runStart = statSync(join(scratchRoot, "tasks")).mtimeMs;
 const shot = (page: Page, name: string) =>
   page.screenshot({ path: join(SHOTS, `${name}.png`), fullPage: true, animations: "disabled" });
 
-test("captures the screens a reviewer needs", async ({ page }) => {
+test("captures the screens a reviewer needs", async ({ page, request }) => {
   await page.goto("/#/");
   await expect(page.getByText("Today", { exact: true })).toBeVisible();
   await shot(page, "1-catalogue");
 
   await page.goto(`/#/task/${SLUG}`);
   const submit = page.getByRole("button", { name: "Submit" });
+  await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
+  // an earlier spec in this run may have opened this task and spent its reading minute, so
+  // the attempt is dropped and reopened: these shots are of a task being met for the first
+  // time, and that has to be true however long the run took to get here. Through the API
+  // rather than the button, which asks a native confirm() first.
+  const meta = async () => (await request.get(`/api/task/${SLUG}`)).json();
+  // the attempt opens on a timer rather than on mount, the same wait races.spec.ts makes
+  await expect.poll(async () => !!(await meta()).attempt, { timeout: 15_000 }).toBe(true);
+  const dropped = await request.post(`/api/task/${SLUG}/abandon`, { data: { etag: (await meta()).etag } });
+  expect(dropped.status()).toBe(200);
+  await page.reload();
   await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
   await shot(page, "2-task");
 
