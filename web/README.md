@@ -11,7 +11,7 @@ uv run drillion                 # API on 8765 (and it builds web/dist if stale)
 pnpm --dir web dev              # Vite on 5173, proxying /api to 8765
 pnpm --dir web lint             # runs in CI
 pnpm --dir web build            # emits web/dist, which the server serves at /
-pnpm --dir web screens          # Playwright: renders all 189 task pages, photographs the rest
+pnpm --dir web screens          # Playwright: renders all 201 task pages, photographs the rest
 ```
 
 `web/dist` is generated and git-ignored: `serve()` builds it when it is missing or older than

@@ -11,7 +11,7 @@ cards on a desk") was not taken.
 
 ## Product in one paragraph
 
-A single-user, local web app for practising Python. A catalogue of 189 short tasks, each
+A single-user, local web app for practising Python. A catalogue of 201 short tasks, each
 with a spec, a code editor, and a test that grades the code on fresh random data.
 A spaced-repetition scheduler decides what comes back when (7-box ladder: 2/4/8/16/28/60/120 days). Hints
 unlock with time; the solution unlocks after real effort. Sessions are 20–40 minutes a day, on a
@@ -98,7 +98,7 @@ because it is the way back into work already started, not a ration of new materi
 
 Tier and tag render as one filesystem-style path, `core/f-strings`, with the tier segment muted —
 one column, not two. Whatever `focus` a row is filtered by, the UI must be able to show it: a
-filter the screen cannot display is a screen that says "0 of 189" with no way to explain itself.
+filter the screen cannot display is a screen that says "0 of 201" with no way to explain itself.
 
 ### 2. Task (`#/task/:slug`)
 

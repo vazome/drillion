@@ -3,7 +3,7 @@ Third-party notices
 
 drillion (this repository) is MIT licensed — see LICENSE.
 
-89 of the 189 tasks under `tasks/` are adapted from Exercism's Python track:
+89 of the 201 tasks under `tasks/` are adapted from Exercism's Python track:
 the problem each one poses is theirs, restated in drillion's own words. Each
 of those 89 files names its origin in a `source:` frontmatter field and closes
 with an "Adapted from exercism/python — MIT" line; run
