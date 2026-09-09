@@ -7,6 +7,7 @@ The first minute is free — see `GRACE_SECS`."""
 import random
 from datetime import datetime, timedelta
 
+from . import sandbox
 from .region import cut, splice, stub
 from .scheduler import grade_of, reschedule
 from .state import card, own, today
@@ -121,9 +122,14 @@ def nudge_due(o):
     )
 
 
-def record_pass(st, slug, meta, code):
+def record_pass(st, slug, meta, code, grader):
     """Grade, reschedule, log and archive a pass; return (grade, gap_days, box, reason).
-    The caller writes stub(body) back to the file."""
+    The caller writes stub(body) back to the file.
+
+    `grader` is `region.revision` of the file this run was graded against. With the seed and
+    the interpreter it is what it would take to run this attempt again: the cases came from
+    the seed, the verdict from the interpreter, and an upgrade can splice a new grader
+    around a region between one pass and the next."""
     o = st["open"][slug]
     touch(o)
     c = own(st, slug)
@@ -142,7 +148,14 @@ def record_pass(st, slug, meta, code):
         }
     )
     st["archive"].setdefault(slug, []).append(
-        {"date": today(), "grade": grade, "code": code}
+        {
+            "date": today(),
+            "grade": grade,
+            "code": code,
+            "seed": o["seed"],
+            "python": sandbox.grading_python(),
+            "revision": grader,
+        }
     )
     del st["open"][slug]
     return grade, gap, c["box"], reason

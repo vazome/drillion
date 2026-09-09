@@ -25,7 +25,10 @@
    told you about. The **solution** opens after 3 submitted attempts and 10 active minutes,
    and taking it means the pass cannot push the task further out.
 5. **Pass** → computed grade → the task's next sighting moves in or out → your code is archived
-   into `progress.sqlite3` → the file is reset to the stub, so the next review starts blank.
+   into `progress.sqlite3` → the file is reset to the stub, so the next review starts blank. The
+   archive keeps what produced that grade beside the code: the seed the cases came from, the
+   Python that ran them, and which grader was on disk at the time. The header names that same
+   Python, and so does `drillion doctor`.
 6. The spec pane carries a **note**, one free-text box per task, saved as you type. It belongs
    to the task and not to the sitting: it survives a grade, a re-attempt and an abandon.
 

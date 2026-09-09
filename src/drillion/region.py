@@ -83,6 +83,12 @@ def etag(disk_src):
     return hashlib.sha256(cut(disk_src).body.encode()).hexdigest()[:12]
 
 
+def revision(disk_src):
+    """Which grader a run met: the same token as `etag`, over the machinery instead. An
+    upgrade splices a new grader around the region, so a recorded pass says which one."""
+    return hashlib.sha256(cut(disk_src).tail.encode()).hexdigest()[:12]
+
+
 def validate(edited, disk_src):
     """The write gate: return the new file source, or raise Invalid(msg, line)."""
     if not edited.strip():
