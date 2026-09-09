@@ -166,7 +166,7 @@ puts every task back to its stub. You confirm it by typing `erase progress`, and
 undo it.
 
 **Settings → Editor** sets the editor up the way you have it everywhere else: font and size,
-ligatures, Vim keys, tab size, word wrap, relative line numbers, and whether the practice
+ligatures, Vim or Emacs keys, tab size, word wrap, relative line numbers, and whether the practice
 timer is on screen. Those live in the browser rather than in your progress, so a backup does
 not carry them.
 

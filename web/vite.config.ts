@@ -7,8 +7,14 @@ const API = "http://127.0.0.1:8765";
 
 export default defineConfig({
   plugins: [react()],
-  // two copies of the vscode API register the same extension ids and assert at startup
-  resolve: { dedupe: ["vscode"] },
+  resolve: {
+    // two copies of the vscode API register the same extension ids and assert at startup
+    dedupe: ["vscode"],
+    // monaco-emacs imports the editor by the name the upstream package has. The @codingame
+    // build is that API, and drillion's editor is an instance of it: pointing the name at
+    // the build we ship is what keeps the binding and the editor in one monaco.
+    alias: { "monaco-editor": "@codingame/monaco-vscode-editor-api" },
+  },
   server: {
     // the server refuses a foreign Origin, and Vite forwards the browser's own (5173)
     // untouched — changeOrigin only rewrites Host. Present the proxied call as same-origin.

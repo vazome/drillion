@@ -206,8 +206,10 @@ control, because the honest answer to "where is my progress" is a path the learn
 Five cards, in the order a learner needs them:
 
 - **Your data** — the paths.
-- **Editor** — how the editor is set: font, size, ligatures, key binding, tab size, word
-  wrap, relative line numbers, and whether the practice timer is on screen. Every row has a
+- **Editor** — how the editor is set: font, size, ligatures, key binding (standard, Vim or Emacs), tab size, word
+  wrap, relative line numbers, and whether the practice timer is on screen. A binding is
+  never a trap: nobody arrives in one by accident, the way out is the same select, and C-g
+  clears a half-typed Emacs chord. Every row has a
   visible default and one button that puts all of them back, so no setting can strand
   anyone; hiding the timer changes nothing about the time, which is still counted and still
   grades. These live in this browser rather than in a **backup**, and the card says so, since

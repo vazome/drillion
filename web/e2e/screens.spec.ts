@@ -113,6 +113,21 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await expect(page.getByText(/Result|Output/).first()).toBeVisible();
   await expect(modeLine.first()).toBeVisible();
 
+  // Emacs is the third binding, and the same two rules: the page's chords survive it, and
+  // C-g gets you out of a half-typed one.
+  await page.goto("/#/settings");
+  await page.getByLabel("Key binding").selectOption("emacs");
+  await page.keyboard.press("Escape");
+  await page.goto(`/#/task/${GATED}`);
+  await page.locator(".monaco-editor .view-lines").first().click();
+  await page.keyboard.press("Control+x");
+  const pending = page.getByText("C-x", { exact: true });
+  await expect(pending).toBeVisible();
+  await page.keyboard.press("Control+g");
+  await expect(pending).toHaveCount(0);
+  await page.keyboard.press("ControlOrMeta+Enter");
+  await expect(page.getByText(/Result|Output/).first()).toBeVisible();
+
   await page.goto("/#/settings");
   await page.getByLabel("Key binding").selectOption("regular");
   await page.keyboard.press("Escape");

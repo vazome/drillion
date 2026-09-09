@@ -8,6 +8,7 @@ import { MonacoVscodeApiWrapper } from "monaco-languageclient/vscodeApiWrapper";
 import { LanguageClientWrapper } from "monaco-languageclient/lcwrapper";
 import { configureDefaultWorkerFactory } from "monaco-languageclient/workerFactory";
 import { initVimMode } from "monaco-vim";
+import { EmacsExtension } from "monaco-emacs";
 import { DEFAULTS, fontStack, type Prefs } from "./prefs";
 
 const token = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -124,8 +125,9 @@ const frame = {
   overflow: "hidden",
 };
 
-/** Vim's mode line, pending keys and `:` prompt. It has to be a real element outside the
- *  editor, so the binding has somewhere to render and the editor keeps its full height. */
+/** The binding's own line: Vim's mode, pending keys and `:` prompt, or the keys Emacs is
+ *  still waiting on. It has to be a real element outside the editor, so the binding has
+ *  somewhere to render and the editor keeps its full height. */
 const statusStyle: CSSProperties = {
   height: 22, display: "flex", alignItems: "center", padding: "0 10px",
   font: "var(--fs-sm)/22px var(--font-mono)", fontSize: 12,
@@ -155,6 +157,7 @@ export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, heigh
   const status = useRef<HTMLDivElement>(null);
   const app = useRef<EditorApp>(null);
   const [failed, setFailed] = useState(false);
+  const [pending, setPending] = useState("");   // Emacs's half-typed chord
   // a key binding needs the editor instance, which only exists once `start()` resolved
   const [ready, setReady] = useState(false);
   // the editor is built once, so construction reads the preferences of that moment; the
@@ -219,20 +222,31 @@ export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, heigh
   // Vim, attached and detached without rebuilding the editor: the binding only ever reads
   // and writes through the editor instance, so the model, the draft and the undo stack all
   // survive a learner changing their mind. Turning it off leaves a plain editor behind.
-  const vim = prefs.keys === "vim";
+  const keys = prefs.keys;
   useEffect(() => {
     const editor = app.current?.getEditor();
-    if (!vim || !ready || !editor || !status.current) return;
-    const mode = initVimMode(editor, status.current);
-    return () => mode.dispose();
-  }, [vim, ready]);
+    if (keys === "regular" || !ready || !editor || !status.current) return;
+    if (keys === "vim") {
+      const mode = initVimMode(editor, status.current);
+      return () => mode.dispose();
+    }
+    // Emacs reports its pending prefix as an event rather than owning a node, so the line
+    // is written here. C-g clears it, which is the binding's own way out of a half-typed
+    // chord and the reason it is never a trap.
+    const emacs = new EmacsExtension(editor);
+    emacs.onDidChangeKey(setPending);
+    emacs.start();
+    return () => { emacs.dispose(); setPending(""); };
+  }, [keys, ready]);
 
   if (failed) return <Failed height={height} />;
   return (
     <div style={{ ...frame, display: "flex", flexDirection: "column", height }}>
       <div ref={host} style={{ flex: 1, minHeight: 0, fontSize: prefs.fontSize }} />
       {/* always mounted, so the binding has a node the moment it is switched on */}
-      <div ref={status} style={{ ...statusStyle, display: vim ? "flex" : "none" }} />
+      <div ref={status} style={{ ...statusStyle, display: keys === "regular" ? "none" : "flex" }}>
+        {keys === "emacs" ? pending : null}
+      </div>
     </div>
   );
 }
