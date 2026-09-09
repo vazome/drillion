@@ -25,3 +25,11 @@ code,pre{font-family:var(--font-mono)}
 .markdown-alert-important{border-left-color:var(--accent-line);background:var(--surface-2)}
 .markdown-alert-important .markdown-alert-title{color:var(--text-muted)}
 .spec table{display:block;overflow-x:auto;max-width:100%}
+/* A link inside a paragraph is told apart by colour alone otherwise, which is exactly what
+   1.4.1 forbids. Only in prose: a link that is its own row or button reads as one already. */
+.spec a{text-decoration:underline}
+
+/* The modal backdrop. Blurred rather than merely dimmed, so a dialog reads as being in
+   front of the page instead of on it; the dim alone keeps it legible where the browser has
+   no backdrop-filter. */
+dialog::backdrop{background:rgb(0 0 0 / .38);backdrop-filter:blur(3px)}

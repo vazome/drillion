@@ -8,6 +8,8 @@ import { MonacoVscodeApiWrapper } from "monaco-languageclient/vscodeApiWrapper";
 import { LanguageClientWrapper } from "monaco-languageclient/lcwrapper";
 import { configureDefaultWorkerFactory } from "monaco-languageclient/workerFactory";
 import { initVimMode } from "monaco-vim";
+import { EmacsExtension } from "monaco-emacs";
+import { DEFAULTS, fontStack, type Prefs } from "./prefs";
 
 const token = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const bare = (name: string) => token(name).replace("#", "");
@@ -97,17 +99,25 @@ function applyTheme(dark: boolean) {
 }
 
 const editorOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
-  fontFamily: token("--font-mono"),
-  fontSize: parseInt(token("--fs-code")) || 13,
   minimap: { enabled: false },
   scrollBeyondLastLine: false,
-  wordWrap: "on",
-  tabSize: 4,
   automaticLayout: true,
   // the frame clips for its rounded corners, and suggest/hover/signature panels render
   // inside the editor by default — this reparents them so they are not cut off
   fixedOverflowWidgets: true,
 };
+
+/** The half of the editor's setup Settings owns. Applied at construction and again on every
+ *  change, so a preference edited while a task is open lands on the editor already there. */
+const looks = (p: Prefs): monaco.editor.IEditorOptions & monaco.editor.IGlobalEditorOptions => ({
+  fontFamily: fontStack(p.font),
+  fontSize: p.fontSize,
+  fontLigatures: p.ligatures,
+  tabSize: p.tabSize,
+  detectIndentation: false, // or the stub's own indentation decides, and the setting does nothing
+  wordWrap: p.wordWrap ? "on" : "off",
+  lineNumbers: p.relativeLines ? "relative" : "on",
+});
 
 const frame = {
   border: "1px solid var(--border)",
@@ -115,8 +125,9 @@ const frame = {
   overflow: "hidden",
 };
 
-/** Vim's mode line, pending keys and `:` prompt. It has to be a real element outside the
- *  editor, so the binding has somewhere to render and the editor keeps its full height. */
+/** The binding's own line: Vim's mode, pending keys and `:` prompt, or the keys Emacs is
+ *  still waiting on. It has to be a real element outside the editor, so the binding has
+ *  somewhere to render and the editor keeps its full height. */
 const statusStyle: CSSProperties = {
   height: 22, display: "flex", alignItems: "center", padding: "0 10px",
   font: "var(--fs-sm)/22px var(--font-mono)", fontSize: 12,
@@ -138,16 +149,20 @@ function Failed({ height }: { height: string }) {
   );
 }
 
-export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, height, vim }: {
+export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, height, prefs }: {
   value: string; onChange: (v: string) => void; onRun: () => void; onSubmit: () => void;
-  readOnly?: boolean; dark: boolean; height: string; vim?: boolean;
+  readOnly?: boolean; dark: boolean; height: string; prefs: Prefs;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const status = useRef<HTMLDivElement>(null);
   const app = useRef<EditorApp>(null);
   const [failed, setFailed] = useState(false);
-  // the vim binding needs the editor instance, which only exists once `start()` resolved
+  const [pending, setPending] = useState("");   // Emacs's half-typed chord
+  // a key binding needs the editor instance, which only exists once `start()` resolved
   const [ready, setReady] = useState(false);
+  // the editor is built once, so construction reads the preferences of that moment; the
+  // effect below owns every later change
+  const first = useRef(prefs);
   // the editor reads these when the user acts, so it must never close over a stale one
   const latest = useRef({ onChange, onRun, onSubmit });
   useEffect(() => { latest.current = { onChange, onRun, onSubmit }; }, [onChange, onRun, onSubmit]);
@@ -163,7 +178,7 @@ export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, heigh
         started = app.current = new EditorApp({
           id: "solve",
           codeResources: { modified: { text: value, uri: FILE } },
-          editorOptions,
+          editorOptions: { ...editorOptions, ...looks(first.current) },
         });
         started.registerOnTextChangedCallback((t) => latest.current.onChange(t.modified ?? ""));
         return started.start(host.current);
@@ -199,6 +214,7 @@ export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, heigh
   }, [value]);
 
   useEffect(() => { app.current?.getEditor()?.updateOptions({ readOnly: !!readOnly }); }, [readOnly]);
+  useEffect(() => { app.current?.getEditor()?.updateOptions(looks(prefs)); }, [prefs, ready]);
   // waits for the API rather than testing it: `api` is truthy while still pending, and
   // theming early touches Monaco's standalone services, which makes `start()` throw
   useEffect(() => { void api?.then(() => applyTheme(dark)).catch(() => {}); }, [dark]);
@@ -206,27 +222,39 @@ export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, heigh
   // Vim, attached and detached without rebuilding the editor: the binding only ever reads
   // and writes through the editor instance, so the model, the draft and the undo stack all
   // survive a learner changing their mind. Turning it off leaves a plain editor behind.
+  const keys = prefs.keys;
   useEffect(() => {
     const editor = app.current?.getEditor();
-    if (!vim || !ready || !editor || !status.current) return;
-    const mode = initVimMode(editor, status.current);
-    return () => mode.dispose();
-  }, [vim, ready]);
+    if (keys === "regular" || !ready || !editor || !status.current) return;
+    if (keys === "vim") {
+      const mode = initVimMode(editor, status.current);
+      return () => mode.dispose();
+    }
+    // Emacs reports its pending prefix as an event rather than owning a node, so the line
+    // is written here. C-g clears it, which is the binding's own way out of a half-typed
+    // chord and the reason it is never a trap.
+    const emacs = new EmacsExtension(editor);
+    emacs.onDidChangeKey(setPending);
+    emacs.start();
+    return () => { emacs.dispose(); setPending(""); };
+  }, [keys, ready]);
 
   if (failed) return <Failed height={height} />;
   return (
     <div style={{ ...frame, display: "flex", flexDirection: "column", height }}>
-      <div ref={host} style={{ flex: 1, minHeight: 0, fontSize: "var(--fs-code)" }} />
+      <div ref={host} style={{ flex: 1, minHeight: 0, fontSize: prefs.fontSize }} />
       {/* always mounted, so the binding has a node the moment it is switched on */}
-      <div ref={status} style={{ ...statusStyle, display: vim ? "flex" : "none" }} />
+      <div ref={status} style={{ ...statusStyle, display: keys === "regular" ? "none" : "flex" }}>
+        {keys === "emacs" ? pending : null}
+      </div>
     </div>
   );
 }
 
 /** Two read-only panes with the changed lines marked: what the learner wrote on the left,
  *  the reference on the right. Shares the editor's theme, so the two read as one surface. */
-export function DiffView({ mine, reference, dark, maxHeight }: {
-  mine: string; reference: string; dark: boolean; maxHeight: string;
+export function DiffView({ mine, reference, dark, maxHeight, prefs = DEFAULTS }: {
+  mine: string; reference: string; dark: boolean; maxHeight: string; prefs?: Prefs;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
@@ -247,7 +275,7 @@ export function DiffView({ mine, reference, dark, maxHeight }: {
             modified: { text: reference, uri: "file:///workspace/reference.py" },
           },
           diffEditorOptions: {
-            ...editorOptions, readOnly: true, renderSideBySide: true,
+            ...editorOptions, ...looks(prefs), readOnly: true, renderSideBySide: true,
             // Monaco drops to an inline diff below 900px and this pane is narrower than
             // that, which would contradict the "yours on the left, the reference on the
             // right" copy sitting directly above it
@@ -264,8 +292,8 @@ export function DiffView({ mine, reference, dark, maxHeight }: {
       live = false;
       void started?.dispose();
     };
-  }, [mine, reference, dark]);
+  }, [mine, reference, dark, prefs]);
 
   if (failed) return <Failed height={maxHeight} />;
-  return <div ref={host} style={{ height: maxHeight, fontSize: "var(--fs-code)", ...frame }} />;
+  return <div ref={host} style={{ height: maxHeight, fontSize: prefs.fontSize, ...frame }} />;
 }

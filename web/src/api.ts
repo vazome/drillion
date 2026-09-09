@@ -22,7 +22,7 @@ export interface Row extends Meta {
   blocked: string[];
 }
 /** GET /api/health — the version the header shows; never hardcode it here. */
-export interface Health { version: string; tasks: number }
+export interface Health { version: string; tasks: number; python: string }
 export interface Catalogue {
   focus: string | null; tags: string[]; tiers: string[]; tracks: string[];
   today: {
@@ -82,8 +82,13 @@ export interface Task {
   reference: string | null;
   hints: { total: number; shown: string[]; next_in: number | null };
   solution: { unlocked: boolean; need_attempts: number; need_secs: number };
-  /** `code` is the answer you wrote that day, null while the server keeps it closed */
-  archive: { date: string; grade: Grade; code: string | null }[];
+  /** `code` is the answer you wrote that day, null while the server keeps it closed.
+   *  `python`, `seed` and `revision` say what produced the grade, and are absent on a pass
+   *  archived before a run recorded it. */
+  archive: {
+    date: string; grade: Grade; code: string | null;
+    python?: string; seed?: number; revision?: string;
+  }[];
   /** The learner's one note on the task, `""` when there is none — `PUT /api/task/{slug}/note`. */
   note: string;
 }

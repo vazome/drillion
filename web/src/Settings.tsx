@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import { Button, Card, EmptyState, Input, NoticeBanner, Toggle } from "./ds/index.js";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Button, Card, EmptyState, Input, NoticeBanner, Select, Toggle } from "./ds/index.js";
 import { api, type Paths, type Bundle, type Erased, type Restored } from "./api";
-import { setVimMode, vimMode } from "./editorMode";
+import { DEFAULTS, FONTS, setPrefs, usePrefs } from "./prefs";
 
 /** A path plus the one thing anyone wants to do with it. */
 function Location({ label, path }: { label: string; path: string }) {
@@ -92,9 +92,76 @@ function DangerZone() {
           <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
             What you had is at <code>{done.kept}</code>.
           </div>
-          <div><Button onClick={() => location.assign("#/")}>Back to the catalogue</Button></div>
+          <div><Button onClick={() => { location.hash = "#/"; location.reload(); }}>Back to the catalogue</Button></div>
         </div>
       ) : null}
+    </Card>
+  );
+}
+
+/** One preference: what it is called, the control, and a line saying what it buys you. */
+function Row({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "7px 0", flexWrap: "wrap" }}>
+      <span style={{ fontSize: 14, minWidth: 150 }}>{label}</span>
+      {children}
+      {hint ? <span style={{ fontSize: 13, color: "var(--text-faint)", flex: 1, minWidth: 180 }}>{hint}</span> : null}
+    </div>
+  );
+}
+
+const SIZES = ["12", "13", "14", "16", "18"];
+const TABS = ["2", "4", "8"];
+
+/** How the editor is set, and whether the clock is on screen. Every row is a preference of
+ *  this browser: none of it is in your progress, and none of it travels in a backup. */
+function EditorSettings() {
+  const prefs = usePrefs();
+  const untouched = JSON.stringify(prefs) === JSON.stringify(DEFAULTS);
+  return (
+    <Card label="Editor">
+      <Row label="Font">
+        <Select value={prefs.font} ariaLabel="Editor font" style={{ minWidth: 190 }}
+          options={FONTS.map((f) => ({ value: f.value, label: f.label }))}
+          onChange={(v) => setPrefs({ font: v as typeof prefs.font })} />
+      </Row>
+      <Row label="Font size">
+        <Select value={String(prefs.fontSize)} options={SIZES} ariaLabel="Editor font size"
+          onChange={(v) => setPrefs({ fontSize: Number(v) })} style={{ minWidth: 90 }} />
+      </Row>
+      <Row label="Font ligatures" hint="Draws ==, != and -> as one glyph.">
+        <Toggle checked={prefs.ligatures} label={prefs.ligatures ? "On" : "Off"}
+          onChange={(on) => setPrefs({ ligatures: on })} />
+      </Row>
+      <Row label="Key binding" hint="Ctrl+Enter runs and Ctrl+Shift+Enter submits whichever you pick, and C-g always gets you out of a half-typed Emacs chord.">
+        <Select value={prefs.keys} ariaLabel="Key binding" style={{ minWidth: 140 }}
+          options={[{ value: "regular", label: "Standard" }, { value: "vim", label: "Vim" }, { value: "emacs", label: "Emacs" }]}
+          onChange={(v) => setPrefs({ keys: v as typeof prefs.keys })} />
+      </Row>
+      <Row label="Tab size">
+        <Select value={String(prefs.tabSize)} options={TABS} ariaLabel="Tab size"
+          onChange={(v) => setPrefs({ tabSize: Number(v) })} style={{ minWidth: 90 }} />
+      </Row>
+      <Row label="Word wrap" hint="Off puts long lines behind a horizontal scrollbar.">
+        <Toggle checked={prefs.wordWrap} label={prefs.wordWrap ? "On" : "Off"}
+          onChange={(on) => setPrefs({ wordWrap: on })} />
+      </Row>
+      <Row label="Relative line numbers" hint="Counts from the cursor, the way Vim motions do.">
+        <Toggle checked={prefs.relativeLines} label={prefs.relativeLines ? "On" : "Off"}
+          onChange={(on) => setPrefs({ relativeLines: on })} />
+      </Row>
+      <Row label="Practice timer" hint="Hiding it changes nothing about the time: it is still counted, and it still grades.">
+        <Toggle checked={prefs.showTimer} label={prefs.showTimer ? "Shown" : "Hidden"}
+          onChange={(on) => setPrefs({ showTimer: on })} />
+      </Row>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginTop: 6 }}>
+        {untouched ? null : (
+          <Button variant="quiet" onClick={() => setPrefs(DEFAULTS)}>Put these back to their defaults</Button>
+        )}
+        <span style={{ fontSize: 13, color: "var(--text-faint)" }}>
+          These live in this browser, so they are not part of a backup.
+        </span>
+      </div>
     </Card>
   );
 }
@@ -109,7 +176,6 @@ export function Settings() {
   const [preview, setPreview] = useState<Bundle | null>(null);
   const [done, setDone] = useState<Restored | null>(null);
   const [busy, setBusy] = useState(false);
-  const [vim, setVim] = useState(vimMode);
   const picker = useRef<HTMLInputElement>(null);
 
   useEffect(() => { api<Paths>("/settings").then(setPaths).catch((e) => setError(e.message)); }, []);
@@ -143,7 +209,7 @@ export function Settings() {
   if (error && !paths) return <EmptyState message={`Could not load settings: ${error}`} />;
 
   return (
-    <div style={{ maxWidth: 820, margin: "0 auto", display: "grid", gap: 18 }}>
+    <div style={{ display: "grid", gap: 18 }}>
       <Card label="Your data">
         <p style={{ margin: "0 0 8px", fontSize: 14, color: "var(--text-muted)" }}>
           Everything drillion knows about your practice lives on this machine, in these places.
@@ -157,24 +223,7 @@ export function Settings() {
         ) : <EmptyState message="Loading…" align="left" />}
       </Card>
 
-      <Card label="Editor">
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <Toggle
-            checked={vim}
-            onChange={(on) => { setVimMode(on); setVim(on); }}
-            label={vim ? "Vim keys" : "Regular keys"}
-          />
-          <span style={{ fontSize: 14, color: "var(--text-muted)" }}>
-            {vim
-              ? "Modal editing, with the mode shown under the editor. Turn this off to go back to ordinary typing."
-              : "Ordinary typing. Turn this on if you use Vim motions everywhere else."}
-          </span>
-        </div>
-        <p style={{ margin: "10px 0 0", fontSize: 13, color: "var(--text-faint)" }}>
-          Ctrl+Enter still runs and Ctrl+Shift+Enter still submits, in either mode. This
-          setting lives in this browser, so it is not part of a backup.
-        </p>
-      </Card>
+      <EditorSettings />
 
       <Card label="Back up">
         <p style={{ margin: "0 0 12px", fontSize: 14, color: "var(--text-muted)" }}>
@@ -194,6 +243,7 @@ export function Settings() {
         </p>
         <input
           ref={picker} type="file" accept=".zip,application/zip" disabled={busy}
+          aria-label="Choose a backup file to restore"
           onChange={(e) => choose(e.target.files?.[0] ?? null)}
           style={{ fontSize: 14, color: "var(--text-muted)" }}
         />
@@ -223,7 +273,7 @@ export function Settings() {
             <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
               What you had before is at <code>{done.kept}</code>.
             </div>
-            <div><Button onClick={() => location.assign("#/")}>Back to the catalogue</Button></div>
+            <div><Button onClick={() => { location.hash = "#/"; location.reload(); }}>Back to the catalogue</Button></div>
           </div>
         ) : null}
       </Card>

@@ -33,26 +33,34 @@ export function TopicStrips({ tags = [], defaultSort = "stuck first", maxHeight 
         <span style={{ fontSize: 13, color: "var(--text-muted)" }}>One strip per topic: how well you know its tasks, shakiest on the left, most solid on the right.</span>
         <div style={{ flex: 1 }} /><TopicStripsSort value={sort} onChange={setSort} />
       </div>
-      <div style={{ ...STRIP_GRID, paddingBottom: 6, paddingRight: 10, borderBottom: "1px solid var(--border)" }}>
-        <div style={STRIP_LABEL}>Tag</div><div style={STRIP_LABEL}>Spread</div>
-        <div style={{ ...STRIP_LABEL, textAlign: "right" }}>Lapses</div>
-        <div style={{ ...STRIP_LABEL, textAlign: "right" }}>Due 7</div>
-        <div style={{ ...STRIP_LABEL, textAlign: "right" }}>Seen</div>
+      {/* one table, header row included: a role="table" whose columns are a sibling div is a
+          table to nobody, and its rows need the rowgroup a scrolling box would otherwise break */}
+      <div role="table" aria-label="Practice spread per topic">
+      <div role="rowgroup">
+      <div role="row" style={{ ...STRIP_GRID, paddingBottom: 6, paddingRight: 10, borderBottom: "1px solid var(--border)" }}>
+        <div role="columnheader" style={STRIP_LABEL}>Tag</div><div role="columnheader" style={STRIP_LABEL}>Spread</div>
+        <div role="columnheader" style={{ ...STRIP_LABEL, textAlign: "right" }}>Lapses</div>
+        <div role="columnheader" style={{ ...STRIP_LABEL, textAlign: "right" }}>Due 7</div>
+        <div role="columnheader" style={{ ...STRIP_LABEL, textAlign: "right" }}>Seen</div>
       </div>
-      <div role="table" aria-label="Practice spread per topic" style={{ maxHeight, overflow: "auto", marginTop: 4, paddingRight: 10 }}>
+      </div>
+      <div role="rowgroup" style={{ maxHeight, overflow: "auto", marginTop: 4, paddingRight: 10 }}>
         {rows.map((t) => (
-          <div key={t.tag} style={{ ...STRIP_GRID, height: 26 }}>
-            <a href={"#/?tag=" + encodeURIComponent(t.tag)} title={t.tag} style={{ fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.tag}</a>
-            <div style={{ display: "flex", gap: 1, width: (t.total / widest) * 100 + "%", minWidth: 8 }}
+          <div key={t.tag} role="row" style={{ ...STRIP_GRID, height: 26 }}>
+            <div role="cell" style={{ overflow: "hidden" }}>
+              <a href={"#/?tag=" + encodeURIComponent(t.tag)} title={t.tag} style={{ fontSize: 13, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.tag}</a>
+            </div>
+            <div role="cell" style={{ display: "flex", gap: 1, width: (t.total / widest) * 100 + "%", minWidth: 8 }}
               title={t.tag + " — " + t.seen + " of " + t.total + " practised, " + (t.total - t.seen) + " not started"}>
               {t.boxes.map((n, i) => (n ? <div key={i} style={{ flex: n, height: 10, borderRadius: 1, background: STRIP_RAMP[i] }} /> : null))}
               {t.total - t.seen > 0 ? <div style={{ flex: t.total - t.seen, height: 10, borderRadius: 1, background: "var(--surface-2)", boxShadow: "inset 0 0 0 1px var(--border)" }} /> : null}
             </div>
-            <div style={{ ...STRIP_MONO, fontSize: 12, textAlign: "right", color: t.lapses ? "var(--warn)" : "var(--text-faint)" }}>{t.lapses || "—"}</div>
-            <div style={{ ...STRIP_MONO, fontSize: 12, textAlign: "right", color: "var(--text-muted)" }}>{t.due7}</div>
-            <div style={{ ...STRIP_MONO, fontSize: 12, textAlign: "right" }}>{t.seen}<span style={{ color: "var(--text-faint)" }}>/{t.total}</span></div>
+            <div role="cell" style={{ ...STRIP_MONO, fontSize: 12, textAlign: "right", color: t.lapses ? "var(--warn)" : "var(--text-faint)" }}>{t.lapses || "—"}</div>
+            <div role="cell" style={{ ...STRIP_MONO, fontSize: 12, textAlign: "right", color: "var(--text-muted)" }}>{t.due7}</div>
+            <div role="cell" style={{ ...STRIP_MONO, fontSize: 12, textAlign: "right" }}>{t.seen}<span style={{ color: "var(--text-faint)" }}>/{t.total}</span></div>
           </div>
         ))}
+      </div>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
         <span style={{ fontSize: 12.5, color: "var(--text-faint)" }}>{tags.length} tags · strip width is the topic's size, segments run shakiest to most solid, then not started</span>

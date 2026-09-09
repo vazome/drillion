@@ -13,6 +13,7 @@
   "dependencies": {
     "@codingame/monaco-vscode-editor-api": "36.2.5",
     "@codingame/monaco-vscode-standalone-languages": "36.2.5",
+    "monaco-emacs": "^0.3.0",
     "monaco-languageclient": "11.0.0-next.1",
     "monaco-vim": "^0.4.4",
     "react": "^19.2.0",
@@ -23,6 +24,7 @@
     "vscode": "npm:@codingame/monaco-vscode-extension-api@36.2.2"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "1.62.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.5",

@@ -5,7 +5,7 @@ import { depsHref, prefetch } from "./Deps";
 import { inDays, strength } from "./strength";
 import { DiffView, Editor } from "./Editor";
 import { useDraft } from "./useDraft";
-import { vimMode } from "./editorMode";
+import { usePrefs } from "./prefs";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
 const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };
@@ -64,6 +64,7 @@ function RequiresChips({ requires }: { requires: TaskData["requires"] }) {
 }
 
 export function Task({ slug, dark }: { slug: string; dark: boolean }) {
+  const prefs = usePrefs();
   const [task, setTask] = useState<TaskData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result>({ state: "idle" });
@@ -359,7 +360,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                         ? "Your solution on the left, the reference on the right. It closes again when this task comes back."
                         : "The reference answer, for comparison with what you wrote. It closes again when this task comes back."}</div>}
                   {mine
-                    ? <DiffView mine={mine} reference={reference} dark={dark} maxHeight="46vh" />
+                    ? <DiffView mine={mine} reference={reference} dark={dark} maxHeight="46vh" prefs={prefs} />
                     : <SpecText text={"```python\n" + reference + "\n```"} slug={slug} />}
                 </div>
               ) : (
@@ -386,6 +387,11 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                       <span className="tabular" style={{ fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>{a.date}</span>
                       <StatusBadge status={a.grade} />
                     </div>
+                    {a.python ? (
+                      <div className="tabular" style={{ fontSize: 12.5, color: "var(--text-faint)", fontFamily: "var(--font-mono)" }}>
+                        Python {a.python} · seed {a.seed} · grader {a.revision}
+                      </div>
+                    ) : null}
                     {a.code ? <pre style={{ margin: "6px 0 0", fontSize: 12.5, whiteSpace: "pre-wrap", color: "var(--text-muted)" }}>{a.code}</pre> : null}
                   </div>
                 ))}
@@ -428,7 +434,9 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             <Button kbdHint="Ctrl/⌘+⇧+Enter" onClick={submit} disabled={!!inflight || passed}>
               {inflight === "submit" ? "Submitting…" : "Submit"}
             </Button>
-            <Timer seconds={active} paused={!hasAttempt || passed} />
+            {/* hidden by preference only: the clock behind it keeps running, and the grade
+              * is the same one either way */}
+            {prefs.showTimer ? <Timer seconds={active} paused={!hasAttempt || passed} /> : null}
             <span className="tabular" style={{ fontSize: 13, color: "var(--text-muted)" }}>
               {runNo ? `attempt ${runNo}` : "not started"}
             </span>
@@ -446,7 +454,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             {hasAttempt && !passed ? <Button variant="quiet" onClick={abandon} style={{ fontSize: 13 }}>Abandon</Button> : null}
           </div>
 
-          <Editor value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} vim={vimMode()} height={narrow ? "60vh" : "calc(100vh - 364px)"} />
+          <Editor value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} height={narrow ? "60vh" : "calc(100vh - 364px)"} />
 
           <Card label={ungraded ? "Output · your run" : resultNo ? `Result · attempt ${resultNo}` : "Result"} padding={16}>
             {/* the region stays mounted and only the banner inside it is keyed: a live region

@@ -23,13 +23,24 @@ const runStart = statSync(join(scratchRoot, "tasks")).mtimeMs;
 const shot = (page: Page, name: string) =>
   page.screenshot({ path: join(SHOTS, `${name}.png`), fullPage: true, animations: "disabled" });
 
-test("captures the screens a reviewer needs", async ({ page }) => {
+test("captures the screens a reviewer needs", async ({ page, request }) => {
   await page.goto("/#/");
   await expect(page.getByText("Today", { exact: true })).toBeVisible();
   await shot(page, "1-catalogue");
 
   await page.goto(`/#/task/${SLUG}`);
   const submit = page.getByRole("button", { name: "Submit" });
+  await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
+  // an earlier spec in this run may have opened this task and spent its reading minute, so
+  // the attempt is dropped and reopened: these shots are of a task being met for the first
+  // time, and that has to be true however long the run took to get here. Through the API
+  // rather than the button, which asks a native confirm() first.
+  const meta = async () => (await request.get(`/api/task/${SLUG}`)).json();
+  // the attempt opens on a timer rather than on mount, the same wait races.spec.ts makes
+  await expect.poll(async () => !!(await meta()).attempt, { timeout: 15_000 }).toBe(true);
+  const dropped = await request.post(`/api/task/${SLUG}/abandon`, { data: { etag: (await meta()).etag } });
+  expect(dropped.status()).toBe(200);
+  await page.reload();
   await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
   await shot(page, "2-task");
 
@@ -61,7 +72,8 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await expect(page.getByText("How well you know them", { exact: true })).toBeVisible();
   await shot(page, "5-progress");
 
-  // Settings: the data locations and both halves of the backup workflow.
+  // Settings: a dialog over whatever is on screen, reached here by the link that still
+  // deep-links to it. The data locations and both halves of the backup workflow.
   await page.goto("/#/settings");
   await expect(page.getByText("Download a backup", { exact: true })).toBeVisible();
   await expect(page.getByText(scratchRoot, { exact: true })).toBeVisible();
@@ -99,7 +111,8 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   // Vim mode last: it is a browser preference, so switching it on would follow the page
   // into every shot above. Turned back off before the run ends.
   await page.goto("/#/settings");
-  await page.getByRole("switch").filter({ hasText: "Regular keys" }).click();
+  await page.getByLabel("Key binding").selectOption("vim");
+  await page.keyboard.press("Escape");
   await page.goto(`/#/task/${GATED}`);
   const modeLine = page.locator(".monaco-editor").locator("..").locator("..").getByText("--", { exact: false });
   await expect(page.getByText("NORMAL", { exact: false }).first()).toBeVisible();
@@ -111,8 +124,24 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await expect(page.getByText(/Result|Output/).first()).toBeVisible();
   await expect(modeLine.first()).toBeVisible();
 
+  // Emacs is the third binding, and the same two rules: the page's chords survive it, and
+  // C-g gets you out of a half-typed one.
   await page.goto("/#/settings");
-  await page.getByRole("switch").filter({ hasText: "Vim keys" }).click();
+  await page.getByLabel("Key binding").selectOption("emacs");
+  await page.keyboard.press("Escape");
+  await page.goto(`/#/task/${GATED}`);
+  await page.locator(".monaco-editor .view-lines").first().click();
+  await page.keyboard.press("Control+x");
+  const pending = page.getByText("C-x", { exact: true });
+  await expect(pending).toBeVisible();
+  await page.keyboard.press("Control+g");
+  await expect(pending).toHaveCount(0);
+  await page.keyboard.press("ControlOrMeta+Enter");
+  await expect(page.getByText(/Result|Output/).first()).toBeVisible();
+
+  await page.goto("/#/settings");
+  await page.getByLabel("Key binding").selectOption("regular");
+  await page.keyboard.press("Escape");
 });
 
 test("the run cannot have touched the repository's own state", async ({ request }) => {

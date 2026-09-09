@@ -57,7 +57,9 @@ export function SpecText({ text = "", hideTitle = true, slug, style }) {
       if (!className) {
         return <code style={{ fontFamily: "var(--font-mono)", fontSize: ".92em", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "3px", padding: "1px 4px" }}>{source}</code>;
       }
-      return <pre style={fence}>{/python/.test(className) ? highlight(source) : source}</pre>;
+      // a fence that scrolls sideways has to be reachable to be scrolled: without a tab
+      // stop the code past its right edge exists for pointers only
+      return <pre tabIndex={0} style={fence}>{/python/.test(className) ? highlight(source) : source}</pre>;
     },
   }), [hideTitle, slug]);
 

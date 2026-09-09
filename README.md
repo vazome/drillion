@@ -165,8 +165,10 @@ puts every task back to its stub. You confirm it by typing `erase progress`, and
 `backup-before-reset.zip` in the same root before it does anything, which is the only way to
 undo it.
 
-**Settings → Editor** turns Vim keys on if you use them everywhere else. That one lives in the
-browser rather than in your progress, so a backup does not carry it.
+**Settings → Editor** sets the editor up the way you have it everywhere else: font and size,
+ligatures, Vim or Emacs keys, tab size, word wrap, relative line numbers, and whether the practice
+timer is on screen. Those live in the browser rather than in your progress, so a backup does
+not carry them.
 
 ## What running it does to your machine
 

@@ -25,7 +25,10 @@
    told you about. The **solution** opens after 3 submitted attempts and 10 active minutes,
    and taking it means the pass cannot push the task further out.
 5. **Pass** → computed grade → the task's next sighting moves in or out → your code is archived
-   into `progress.sqlite3` → the file is reset to the stub, so the next review starts blank.
+   into `progress.sqlite3` → the file is reset to the stub, so the next review starts blank. The
+   archive keeps what produced that grade beside the code: the seed the cases came from, the
+   Python that ran them, and which grader was on disk at the time. The header names that same
+   Python, and so does `drillion doctor`.
 6. The spec pane carries a **note**, one free-text box per task, saved as you type. It belongs
    to the task and not to the sitting: it survives a grade, a re-attempt and an abandon.
 
@@ -98,6 +101,13 @@ issue that says "make it 20" needs it.
   peeked — it is common — and a repeated struggle still walks the card all the way down.
 
 ## What Settings can do to all of it
+
+Settings is a dialog over whatever you are looking at, so changing something does not cost
+you the task you had open. **The editor card** holds the font, its size, ligatures, the key
+binding — standard, Vim or Emacs — tab size, word wrap and relative line numbers, plus whether the practice timer is on
+screen — hiding it changes nothing about the time, which is still counted and still decides
+the grade. Those are preferences of the browser, not of your practice, so they are not in a
+backup.
 
 **Back up** writes your cards, notes, log, archive and the code in every task to one file, and
 **Restore** reads one back after telling you what it brings and what it replaces. Both keep a

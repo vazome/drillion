@@ -12,7 +12,7 @@ from fastapi import WebSocketDisconnect
 from fastapi.testclient import TestClient
 
 import drillion
-from drillion import region, scheduler, state
+from drillion import region, sandbox, scheduler, state
 from drillion.api import MAX_BODY, _recent, app
 from drillion.catalogue import tasks
 from drillion.settings import settings
@@ -415,7 +415,11 @@ async def _assets(api, path):
 async def _health(api, _path):
     """The container health check: up, pointed at the tasks, and cheap."""
     health = (await api.get("/api/health")).json()
-    assert health == {"version": drillion.__version__, "tasks": 1}
+    assert health == {
+        "version": drillion.__version__,
+        "tasks": 1,
+        "python": sandbox.grading_python(),
+    }
 
 
 async def _note(api, _path):
