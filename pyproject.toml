@@ -4,7 +4,7 @@ version = "0.7.0"
 description = "Python practice drills that come back before you forget them. Graded by pytest, runs on your machine."
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 # the same eight words the repo's GitHub topics use; keep the two lists identical
 keywords = [
     "education",
@@ -24,7 +24,6 @@ classifiers = [
     "Framework :: FastAPI",
     "Intended Audience :: Education",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Topic :: Education :: Computer Aided Instruction (CAI)",
 ]

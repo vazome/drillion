@@ -10,7 +10,7 @@ uv run ruff check .                          # lint — CI fails if this fails
 uv run drillion selfcheck                    # solve every task with its reference; must say 201/201
 ```
 
-Requirements: Python 3.13 and [uv](https://docs.astral.sh/uv/). The frontend (React + Vite, in
+Requirements: Python 3.14 and [uv](https://docs.astral.sh/uv/). The frontend (React + Vite, in
 `web/`) builds itself the first time `uv run drillion` runs; without `pnpm` on `PATH` the JSON
 API still serves and only `/` 404s. To work on the frontend itself:
 

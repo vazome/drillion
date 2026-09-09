@@ -24,7 +24,7 @@ FENCE = re.compile(r"^```.*?^```", re.DOTALL | re.MULTILINE)
 SLUG = re.compile(r"^(\d{3})_[a-z0-9_]+$")
 # (key, scan, tasks) — rebinding a global is atomic, so a race just re-scans. The empty
 # scan is never served: no real key equals None, so the first call always rebuilds.
-_cache: "tuple[object, Scan, dict[str, TaskMeta]]" = (None, [], {})
+_cache: tuple[object, Scan, dict[str, TaskMeta]] = (None, [], {})
 
 
 class _Built(TypedDict):

@@ -131,8 +131,8 @@ Run `uv run drillion doctor` — it reports every rule the folder breaks, not ju
   `## Hints`.
 
 `uv run drillion selfcheck` splices `_reference` into every file and runs the tests; it must be
-green before a task is trusted. But it only counts tasks the catalogue already accepted, so if it
-still says `201/201` after you added one, `doctor` is where to look.
+green on Python 3.14 before a task is trusted. But it only counts tasks the catalogue already
+accepted, so if it still says `201/201` after you added one, `doctor` is where to look.
 
 ## Retired tags
 

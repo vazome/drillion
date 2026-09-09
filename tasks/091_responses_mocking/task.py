@@ -8,7 +8,7 @@ def solve(rsps: responses.RequestsMock, spec: dict[str, dict[str, int] | list[st
 # ══ machinery — everything below is the grader's, not yours ══
 
 import requests
-import responses
+import responses  # noqa: F811 — machinery cannot depend on the learner's import style
 from _lib import rng
 
 

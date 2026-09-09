@@ -54,7 +54,7 @@ def _outside(path):
         return real != os.path.realpath(os.devnull) and (
             os.path.commonpath([real, SCRATCH]) != SCRATCH
         )
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return False
 
 

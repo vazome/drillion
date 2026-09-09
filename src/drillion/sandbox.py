@@ -141,7 +141,7 @@ def _process_cap():
     try:
         with open("/proc/loadavg") as handle:
             return int(handle.read().split()[3].partition("/")[2]) + PROCESS_HEADROOM
-    except (OSError, ValueError, IndexError):
+    except OSError, ValueError, IndexError:
         return None
 
 
@@ -206,7 +206,7 @@ def abi():
         version = _libc().syscall(
             ctypes.c_long(_SYS_CREATE), None, ctypes.c_size_t(0), ctypes.c_uint32(1)
         )
-    except (OSError, AttributeError, ValueError):
+    except OSError, AttributeError, ValueError:
         return 0
     return max(version, 0)
 
@@ -540,7 +540,7 @@ def preexec(scratch, targets, cpu):
         for what, soft_hard in limits:
             try:
                 resource.setrlimit(what, soft_hard)
-            except (OSError, ValueError):
+            except OSError, ValueError:
                 # Darwin refuses a finite RLIMIT_AS. One limit the kernel will not take is
                 # a weaker floor, not a reason to refuse to grade at all
                 pass

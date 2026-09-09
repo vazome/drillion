@@ -61,7 +61,7 @@ jobs:
             echo "documentation only: skipping the matrix, the client and the image" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-  # the README sells uvx / uv tool install / pip on "Python 3.13 or newer", so Windows and
+  # the README sells uvx / uv tool install / pip on "Python 3.14 or newer", so Windows and
   # macOS are advertised platforms: settings._data_home() picks where progress.json lives
   # from sys.platform, and only its Linux branch had ever been executed
   check:
@@ -73,17 +73,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # three OS on the pinned interpreter plus one cell on the next series; a full 3x2
-        # buys little, because uv.lock carries no python_full_version markers and so
-        # resolves the same packages on both
+        # all advertised operating systems on the one Python version drillion supports
         include:
           - os: ubuntu-latest
-            python: "3.13"
+            python: "3.14"
           - os: windows-latest
-            python: "3.13"
+            python: "3.14"
           - os: macos-latest
-            python: "3.13"
-          - os: ubuntu-latest
             python: "3.14"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

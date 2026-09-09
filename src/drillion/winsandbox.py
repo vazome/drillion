@@ -372,6 +372,6 @@ def works():
     with tempfile.TemporaryDirectory() as scratch:
         try:
             done = run([sys.executable, "-c", _READ_BACK], scratch, timeout=60)
-        except (OSError, subprocess.SubprocessError):
+        except OSError, subprocess.SubprocessError:
             return False
     return done.stdout.strip().endswith(LOW_INTEGRITY)

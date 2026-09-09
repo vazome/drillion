@@ -117,7 +117,7 @@ installs one:
 
 ```bash
 uv tool install drillion    # uv tool upgrade drillion to update
-pip install drillion        # the same, if you already have Python 3.13+ and no uv
+pip install drillion        # the same, if you already have Python 3.14+ and no uv
 ```
 
 ### Docker
