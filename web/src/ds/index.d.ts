@@ -102,6 +102,19 @@ export interface ToggleProps {
 }
 export declare function Toggle(props: ToggleProps): El;
 
+/** Modal panel over the current screen: a native <dialog>, so Escape, the focus trap and
+ *  the blurred backdrop are the platform's. `open` drives it; `onClose` is called for the
+ *  close button, the Escape key and a click on the backdrop alike. */
+export interface DialogProps {
+  open?: boolean;
+  onClose?: () => void;
+  /** heading text, and the accessible name of the dialog */
+  label?: string;
+  children?: React.ReactNode;
+  style?: Style;
+}
+export declare function Dialog(props: DialogProps): El;
+
 /** Dense list table: 40px rows, hairline separators, sortable header, tabular-nums. */
 export interface TableColumn {
   key: string;

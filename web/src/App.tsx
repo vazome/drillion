@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Toggle } from "./ds/index.js";
+import { Dialog, Toggle } from "./ds/index.js";
 import { api, type Health } from "./api";
 import { Catalogue } from "./Catalogue";
 import { Task } from "./Task";
@@ -53,8 +53,15 @@ function useTheme(): [boolean, (v: boolean) => void] {
   return [dark, (v) => { applyTheme(v); setDark(v); }];
 }
 
-function Header({ route, dark, setDark, total, version, python }: {
-  route: string; dark: boolean; setDark: (v: boolean) => void; total: number; version: string; python: string;
+/** `#/settings` stays a link anyone can keep, though Settings is no longer a screen of its
+ *  own: it opens the dialog, over the catalogue, since a link arrives with no screen to be
+ *  over. The header opens the same dialog without touching the route at all, which is what
+ *  keeps the task you had open underneath it. */
+const SETTINGS = "#/settings";
+
+function Header({ route, dark, setDark, total, version, python, onSettings }: {
+  route: string; dark: boolean; setDark: (v: boolean) => void; total: number; version: string;
+  python: string; onSettings: () => void;
 }) {
   const link = (href: string, text: string) => (
     <a href={href} style={{ fontSize: 14, fontWeight: route === href.slice(1) ? 600 : 400, color: route === href.slice(1) ? "var(--text)" : "var(--text-muted)" }}>{text}</a>
@@ -74,7 +81,11 @@ function Header({ route, dark, setDark, total, version, python }: {
       <div style={{ flex: 1 }} />
       {link("#/", "Catalogue")}
       {link("#/progress", "Progress")}
-      {link("#/settings", "Settings")}
+      {/* a dialog, not a route: a preference is wanted while looking at the code it changes,
+        * and coming back from a screen of its own is a second navigation */}
+      <button type="button" onClick={onSettings} style={{ font: "inherit", fontSize: 14, color: "var(--text-muted)", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+        Settings
+      </button>
       <Toggle checked={dark} onChange={setDark} label={dark ? "Dark" : "Light"} />
     </header>
   );
@@ -84,7 +95,19 @@ export function App() {
   const route = useHash();
   const [dark, setDark] = useTheme();
   const [head, setHead] = useState({ total: 0, version: "", python: "" });
+  const [settings, setSettings] = useState(location.hash === SETTINGS);
   useSlashToSearch();
+  // any navigation closes it, and the link opens it: a modal that outlives the screen it
+  // was opened over is a door with no way out of it
+  useEffect(() => {
+    const on = () => setSettings(location.hash === SETTINGS);
+    addEventListener("hashchange", on);
+    return () => removeEventListener("hashchange", on);
+  }, []);
+  const closeSettings = () => {
+    setSettings(false);
+    if (location.hash === SETTINGS) location.replace("#/");  // the deep link, spent
+  };
   useEffect(() => {
     api<Health>("/health")
       .then((h) => setHead({ total: h.tasks, version: h.version, python: h.python }))
@@ -97,13 +120,15 @@ export function App() {
   const slug = tail ? decodeURIComponent(deps ? tail.slice(0, -"/deps".length) : tail) : null;
   return (
     <>
-      <Header route={route} dark={dark} setDark={setDark} {...head} />
+      <Header route={route} dark={dark} setDark={setDark} {...head} onSettings={() => setSettings(true)} />
       <main style={{ padding: "24px" }}>
         {slug ? (deps ? <Deps key={slug} slug={slug} /> : <Task key={slug} slug={slug} dark={dark} />)
           : route === "/progress" ? <Progress />
-          : route === "/settings" ? <Settings />
           : <Catalogue />}
       </main>
+      <Dialog open={settings} onClose={closeSettings} label="Settings">
+        <Settings />
+      </Dialog>
     </>
   );
 }

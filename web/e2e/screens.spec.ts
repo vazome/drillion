@@ -61,7 +61,8 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await expect(page.getByText("How well you know them", { exact: true })).toBeVisible();
   await shot(page, "5-progress");
 
-  // Settings: the data locations and both halves of the backup workflow.
+  // Settings: a dialog over whatever is on screen, reached here by the link that still
+  // deep-links to it. The data locations and both halves of the backup workflow.
   await page.goto("/#/settings");
   await expect(page.getByText("Download a backup", { exact: true })).toBeVisible();
   await expect(page.getByText(scratchRoot, { exact: true })).toBeVisible();
@@ -99,7 +100,8 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   // Vim mode last: it is a browser preference, so switching it on would follow the page
   // into every shot above. Turned back off before the run ends.
   await page.goto("/#/settings");
-  await page.getByRole("switch").filter({ hasText: "Regular keys" }).click();
+  await page.getByLabel("Key binding").selectOption("vim");
+  await page.keyboard.press("Escape");
   await page.goto(`/#/task/${GATED}`);
   const modeLine = page.locator(".monaco-editor").locator("..").locator("..").getByText("--", { exact: false });
   await expect(page.getByText("NORMAL", { exact: false }).first()).toBeVisible();
@@ -112,7 +114,8 @@ test("captures the screens a reviewer needs", async ({ page }) => {
   await expect(modeLine.first()).toBeVisible();
 
   await page.goto("/#/settings");
-  await page.getByRole("switch").filter({ hasText: "Vim keys" }).click();
+  await page.getByLabel("Key binding").selectOption("regular");
+  await page.keyboard.press("Escape");
 });
 
 test("the run cannot have touched the repository's own state", async ({ request }) => {

@@ -2,6 +2,7 @@ export { Button } from "./Button.jsx";
 export { Card } from "./Card.jsx";
 export { Collapsible } from "./Collapsible.jsx";
 export { ConflictBanner } from "./ConflictBanner.jsx";
+export { Dialog } from "./Dialog.jsx";
 export { EmptyState } from "./EmptyState.jsx";
 export { Input } from "./Input.jsx";
 export { Kbd } from "./Kbd.jsx";
