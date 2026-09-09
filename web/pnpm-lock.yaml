@@ -49,6 +49,9 @@ importers:
       '@codingame/monaco-vscode-standalone-languages':
         specifier: 36.2.5
         version: 36.2.5
+      monaco-emacs:
+        specifier: ^0.3.0
+        version: 0.3.0(@codingame/monaco-vscode-editor-api@36.2.2)
       monaco-languageclient:
         specifier: 11.0.0-next.1
         version: 11.0.0-next.1
@@ -829,6 +832,12 @@ packages:
     resolution: {integrity: sha512-WkUDrojuJs0xkgGf2udWxa3yGBRxPtxUkB79i6aCZLRgc7PM8fZe9TosfPDcvEpQZbuFASnHYmRLBLUbmLOIIA==}
     engines: {node: '>= 12.0.0'}
 
+  lodash.kebabcase@4.1.1:
+    resolution: {integrity: sha512-N8XRTIMMqqDgSy4VLKPnJ/+hpGZN+PHQiJnSenYqPaVV/NCqEogTnAdZLQiGKhxX+JCs8waWq2t1XHWKOmlY8g==}
+
+  lodash.throttle@4.1.1:
+    resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
+
   longest-streak@3.1.0:
     resolution: {integrity: sha512-9Ri+o0JYgehTaVBBDoMqIl8GXtbWg711O3srftcHhZ0dqnETqLaoIK0x17fUw9rFSlK/0NlsKe0Ahhyl5pXE2g==}
 
@@ -972,6 +981,11 @@ packages:
   minimatch@10.2.6:
     resolution: {integrity: sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A==}
     engines: {node: 18 || 20 || >=22}
+
+  monaco-emacs@0.3.0:
+    resolution: {integrity: sha512-T7uyCIqpLBmU2dO9pzQ3KTUt2RNOFtqLVQZA0lF8oJ2nphnomSNl29WpkTCJKJVFMmGKauPVB9fknEMFibEwCA==}
+    peerDependencies:
+      monaco-editor: '>=0.31'
 
   monaco-languageclient@11.0.0-next.1:
     resolution: {integrity: sha512-NDMzffwPxjibGdl1laZ6jDD1X4lsXJSzZPg8vNBEZJgE/QWVr4TqfFyBALVyHlZ8kGxzqEJAk9hIQUHAP3yATQ==}
@@ -1766,6 +1780,10 @@ snapshots:
       lightningcss-win32-arm64-msvc: 1.33.0
       lightningcss-win32-x64-msvc: 1.33.0
 
+  lodash.kebabcase@4.1.1: {}
+
+  lodash.throttle@4.1.1: {}
+
   longest-streak@3.1.0: {}
 
   markdown-table@3.0.4: {}
@@ -2119,6 +2137,12 @@ snapshots:
   minimatch@10.2.6:
     dependencies:
       brace-expansion: 5.0.9
+
+  monaco-emacs@0.3.0(@codingame/monaco-vscode-editor-api@36.2.2):
+    dependencies:
+      lodash.kebabcase: 4.1.1
+      lodash.throttle: 4.1.1
+      monaco-editor: '@codingame/monaco-vscode-editor-api@36.2.2'
 
   monaco-languageclient@11.0.0-next.1:
     dependencies:

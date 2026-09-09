@@ -10,7 +10,7 @@ const KEY = "drillion-prefs";
 const OLD = "drillion-editor-mode"; // the Vim switch these grew out of
 
 export type Prefs = {
-  keys: "regular" | "vim";
+  keys: "regular" | "vim" | "emacs";
   font: "shipped" | "system";
   fontSize: number;
   ligatures: boolean;

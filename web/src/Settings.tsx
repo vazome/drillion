@@ -133,9 +133,9 @@ function EditorSettings() {
         <Toggle checked={prefs.ligatures} label={prefs.ligatures ? "On" : "Off"}
           onChange={(on) => setPrefs({ ligatures: on })} />
       </Row>
-      <Row label="Key binding" hint="Ctrl+Enter runs and Ctrl+Shift+Enter submits either way.">
+      <Row label="Key binding" hint="Ctrl+Enter runs and Ctrl+Shift+Enter submits whichever you pick, and C-g always gets you out of a half-typed Emacs chord.">
         <Select value={prefs.keys} ariaLabel="Key binding" style={{ minWidth: 140 }}
-          options={[{ value: "regular", label: "Standard" }, { value: "vim", label: "Vim" }]}
+          options={[{ value: "regular", label: "Standard" }, { value: "vim", label: "Vim" }, { value: "emacs", label: "Emacs" }]}
           onChange={(v) => setPrefs({ keys: v as typeof prefs.keys })} />
       </Row>
       <Row label="Tab size">

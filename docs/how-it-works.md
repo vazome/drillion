@@ -104,7 +104,7 @@ issue that says "make it 20" needs it.
 
 Settings is a dialog over whatever you are looking at, so changing something does not cost
 you the task you had open. **The editor card** holds the font, its size, ligatures, the key
-binding, tab size, word wrap and relative line numbers, plus whether the practice timer is on
+binding — standard, Vim or Emacs — tab size, word wrap and relative line numbers, plus whether the practice timer is on
 screen — hiding it changes nothing about the time, which is still counted and still decides
 the grade. Those are preferences of the browser, not of your practice, so they are not in a
 backup.
