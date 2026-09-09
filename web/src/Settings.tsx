@@ -243,6 +243,7 @@ export function Settings() {
         </p>
         <input
           ref={picker} type="file" accept=".zip,application/zip" disabled={busy}
+          aria-label="Choose a backup file to restore"
           onChange={(e) => choose(e.target.files?.[0] ?? null)}
           style={{ fontSize: 14, color: "var(--text-muted)" }}
         />

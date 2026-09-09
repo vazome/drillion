@@ -18,7 +18,9 @@ export function Stats({ boxes, ladder, due, seen, total, practised, outOf, progr
 }) {
   const known = tally(boxes, ladder);
   return (
-    <Card padding="12px 18px" style={{ display: "flex", alignItems: "stretch", gap: 22 }}>
+    // wraps rather than pushing the page sideways: at 200% zoom the strip is wider than
+    // the window, and a horizontal scrollbar under every screen is the wrong answer
+    <Card padding="12px 18px" style={{ display: "flex", alignItems: "stretch", flexWrap: "wrap", gap: "10px 22px" }}>
       {practised === undefined ? null : <><Cell label="days practised"
         value={<>{practised} <span style={{ fontSize: 14, color: "var(--text-faint)" }}>of {outOf}</span></>} /><Rule /></>}
       <div><div style={{ ...NUM, color: "var(--accent)" }}>{due}</div><div style={LABEL}>due today</div></div>

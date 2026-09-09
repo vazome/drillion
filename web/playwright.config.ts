@@ -22,12 +22,18 @@ export default defineConfig({
   timeout: 60_000,
   reporter: [["list"]],
   use: {
-    ...devices["Desktop Chrome"],
     baseURL: `http://127.0.0.1:${port}`,
     trace: "retain-on-failure",
     // fixed, so a screenshot changes when the UI changes and not when the runner does
     viewport: { width: 1440, height: 900 },
   },
+  // Chromium runs everything; the other two engines run the keyboard and audit pass only.
+  // Screenshots stay on one engine, or every capture churns three ways for one UI change.
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "firefox", use: { ...devices["Desktop Firefox"] }, testMatch: /a11y\.spec\.ts/ },
+    { name: "webkit", use: { ...devices["Desktop Safari"] }, testMatch: /a11y\.spec\.ts/ },
+  ],
   webServer: {
     // built here, not in a fixture: the root must exist before the server reads it, and
     // this runs once where a fixture re-runs on every restarted worker
