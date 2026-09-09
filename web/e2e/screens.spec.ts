@@ -117,6 +117,7 @@ test("captures the screens a reviewer needs", async ({ page, request }) => {
   // Vim mode last: it is a browser preference, so switching it on would follow the page
   // into every shot above. Turned back off before the run ends.
   await page.goto("/#/settings");
+  await page.getByRole("tab", { name: "Editor" }).click();
   await page.getByRole("radio", { name: "Vim" }).click();
   await page.keyboard.press("Escape");
   await page.goto(`/#/task/${GATED}`);
