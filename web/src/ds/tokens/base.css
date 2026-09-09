@@ -29,10 +29,36 @@ code,pre{font-family:var(--font-mono)}
    1.4.1 forbids. Only in prose: a link that is its own row or button reads as one already. */
 .spec a{text-decoration:underline}
 
+/* A dialog lays its header and body out as a column, but only while it is open: the browser
+   hides a closed one with display:none, and setting display inline would override that and
+   leave the panel on the page.
+
+   It pops in and drops back out. display and overlay have to be in the transition as
+   discrete properties, or the closing half is skipped and the panel vanishes; the opening
+   half comes from @starting-style. Both halves collapse under prefers-reduced-motion with
+   the rest of the system. */
+dialog{
+  flex-direction:column;opacity:0;transform:scale(.96);
+  transition:opacity var(--dur-fast) var(--ease-in),transform var(--dur-fast) var(--ease-in),
+    overlay var(--dur-fast) allow-discrete,display var(--dur-fast) allow-discrete;
+}
+dialog[open]{
+  display:flex;opacity:1;transform:scale(1);
+  transition:opacity var(--dur-base) var(--ease-out),transform var(--dur-base) var(--ease-step),
+    overlay var(--dur-base) allow-discrete,display var(--dur-base) allow-discrete;
+}
+@starting-style{dialog[open]{opacity:0;transform:scale(.96)}}
+
 /* The modal backdrop. Blurred rather than merely dimmed, so a dialog reads as being in
    front of the page instead of on it; the dim alone keeps it legible where the browser has
    no backdrop-filter. */
-dialog::backdrop{background:rgb(0 0 0 / .38);backdrop-filter:blur(3px)}
+dialog::backdrop{
+  background:rgb(0 0 0 / .38);backdrop-filter:blur(3px);opacity:0;
+  transition:opacity var(--dur-fast) var(--ease-in),
+    overlay var(--dur-fast) allow-discrete,display var(--dur-fast) allow-discrete;
+}
+dialog[open]::backdrop{opacity:1;transition-duration:var(--dur-base);transition-timing-function:var(--ease-out)}
+@starting-style{dialog[open]::backdrop{opacity:0}}
 
 /* One three-position choice, shaped like a single control rather than a dropdown. Native
    radios keep arrow-key movement and form semantics; the spans are only their visible faces. */

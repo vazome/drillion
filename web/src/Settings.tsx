@@ -139,7 +139,7 @@ function EditorSettings() {
   const prefs = usePrefs();
   const untouched = JSON.stringify(prefs) === JSON.stringify(DEFAULTS);
   return (
-    <Card label="Editor">
+    <>
       <Row label="Font">
         <Select value={prefs.font} ariaLabel="Editor font" style={{ minWidth: 190 }}
           options={FONTS.map((f) => ({ value: f.value, label: f.label }))}
@@ -149,38 +149,35 @@ function EditorSettings() {
         <Select value={String(prefs.fontSize)} options={SIZES} ariaLabel="Editor font size"
           onChange={(v) => setPrefs({ fontSize: Number(v) })} style={{ minWidth: 90 }} />
       </Row>
-      <Row label="Font ligatures" hint="Draws ==, != and -> as one glyph.">
+      <Row label="Font ligatures" hint="== and -> as one glyph.">
         <Toggle checked={prefs.ligatures} label={prefs.ligatures ? "On" : "Off"}
           onChange={(on) => setPrefs({ ligatures: on })} />
       </Row>
-      <Row label="Key binding" hint="Ctrl+Enter runs and Ctrl+Shift+Enter submits whichever you pick, and C-g always gets you out of a half-typed Emacs chord.">
+      <Row label="Key binding" hint="Ctrl+Enter runs, Ctrl+Shift+Enter submits.">
         <KeyBinding value={prefs.keys} onChange={(keys) => setPrefs({ keys })} />
       </Row>
       <Row label="Tab size">
         <Select value={String(prefs.tabSize)} options={TABS} ariaLabel="Tab size"
           onChange={(v) => setPrefs({ tabSize: Number(v) })} style={{ minWidth: 90 }} />
       </Row>
-      <Row label="Word wrap" hint="Off puts long lines behind a horizontal scrollbar.">
+      <Row label="Word wrap" hint="Off scrolls long lines sideways.">
         <Toggle checked={prefs.wordWrap} label={prefs.wordWrap ? "On" : "Off"}
           onChange={(on) => setPrefs({ wordWrap: on })} />
       </Row>
-      <Row label="Relative line numbers" hint="Counts from the cursor, the way Vim motions do.">
+      <Row label="Relative line numbers" hint="Counts from the cursor.">
         <Toggle checked={prefs.relativeLines} label={prefs.relativeLines ? "On" : "Off"}
           onChange={(on) => setPrefs({ relativeLines: on })} />
       </Row>
-      <Row label="Practice timer" hint="Hiding it changes nothing about the time: it is still counted, and it still grades.">
+      <Row label="Practice timer" hint="Time is counted either way.">
         <Toggle checked={prefs.showTimer} label={prefs.showTimer ? "Shown" : "Hidden"}
           onChange={(on) => setPrefs({ showTimer: on })} />
       </Row>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginTop: 6 }}>
-        {untouched ? null : (
-          <Button variant="quiet" onClick={() => setPrefs(DEFAULTS)}>Put these back to their defaults</Button>
-        )}
-        <span style={{ fontSize: 13, color: "var(--text-faint)" }}>
-          These live in this browser, so they are not part of a backup.
-        </span>
-      </div>
-    </Card>
+      {untouched ? null : (
+        <div style={{ marginTop: 6 }}>
+          <Button variant="quiet" onClick={() => setPrefs(DEFAULTS)}>Restore defaults</Button>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -227,9 +224,12 @@ export function Settings() {
   };
 
   return (
-    <div style={{ display: "grid", gap: 18 }}>
-      <div role="tablist" aria-label="Settings categories"
-        style={{ display: "flex", gap: 4, borderBottom: "1px solid var(--border)" }}>
+    // A rail down the left, the chosen section beside it. The negative margin lets the rail
+    // reach the dialog's own edges rather than sitting inside its padding.
+    <div style={{ display: "flex", alignItems: "stretch", margin: -20 }}>
+      <div role="tablist" aria-label="Settings categories" aria-orientation="vertical"
+        style={{ display: "flex", flexDirection: "column", gap: 2, flex: "none", width: 168,
+          padding: 12, borderRight: "1px solid var(--border)", background: "var(--surface-2)" }}>
         {sections.map((name, index) => {
           const selected = section === name;
           const label = name[0].toUpperCase() + name.slice(1);
@@ -239,8 +239,8 @@ export function Settings() {
               onClick={() => setSection(name)}
               onKeyDown={(event) => {
                 let next = index;
-                if (event.key === "ArrowRight") next = (index + 1) % sections.length;
-                else if (event.key === "ArrowLeft") next = (index - 1 + sections.length) % sections.length;
+                if (event.key === "ArrowDown") next = (index + 1) % sections.length;
+                else if (event.key === "ArrowUp") next = (index - 1 + sections.length) % sections.length;
                 else if (event.key === "Home") next = 0;
                 else if (event.key === "End") next = sections.length - 1;
                 else return;
@@ -249,20 +249,26 @@ export function Settings() {
                 setSection(target);
                 document.getElementById(`settings-${target}-tab`)?.focus();
               }}
-              style={{ padding: "8px 14px", marginBottom: -1, border: "none", borderBottom: selected ? "2px solid var(--accent)" : "2px solid transparent", background: "transparent", color: selected ? "var(--text)" : "var(--text-muted)", font: "inherit", fontSize: 14, fontWeight: selected ? 600 : 400, cursor: "pointer" }}>
+              style={{ padding: "8px 12px", textAlign: "left", border: "none", borderRadius: "var(--radius-sm)", background: selected ? "var(--accent-tint)" : "transparent", color: selected ? "var(--accent)" : "var(--text-muted)", font: "inherit", fontSize: 14, fontWeight: selected ? 600 : 400, cursor: "pointer" }}>
               {label}
             </button>
           );
         })}
       </div>
 
+      {/* The Editor panel stays in flow whichever section is showing, so it is what gives the
+          dialog its height; Data is laid over it and scrolls. That keeps the window the same
+          size on both sections without anyone having to pick a pixel height for it. */}
+      <div style={{ position: "relative", flex: 1, minWidth: 0, padding: 20 }}>
       <div id="settings-editor" role="tabpanel" aria-labelledby="settings-editor-tab"
-        hidden={section !== "editor"}>
+        inert={section !== "editor"} style={{ visibility: section === "editor" ? "visible" : "hidden" }}>
         <EditorSettings />
       </div>
 
       <div id="settings-data" role="tabpanel" aria-labelledby="settings-data-tab"
-        hidden={section !== "data"} style={{ display: section === "data" ? "grid" : "none", gap: 18 }}>
+        inert={section !== "data"}
+        style={{ position: "absolute", inset: 20, overflow: "auto", display: "grid", gap: 18,
+          visibility: section === "data" ? "visible" : "hidden" }}>
           {error && !paths ? <EmptyState message={`Could not load settings: ${error}`} /> : (
             <Card label="Your data">
               <p style={{ margin: "0 0 8px", fontSize: 14, color: "var(--text-muted)" }}>
@@ -332,6 +338,7 @@ export function Settings() {
           </Card>
 
         <DangerZone />
+      </div>
       </div>
     </div>
   );

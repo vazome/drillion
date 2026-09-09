@@ -79,7 +79,7 @@ test("captures the screens a reviewer needs", async ({ page, request }) => {
   await expect(editorTab).toHaveAttribute("aria-selected", "true");
   await shot(page, "5b-settings-editor");
   await editorTab.focus();
-  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowDown");   // the sections are a rail down the left
   await expect(page.getByRole("tab", { name: "Data" })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByText("Download a backup", { exact: true })).toBeVisible();
   await expect(page.getByText(scratchRoot, { exact: true })).toBeVisible();

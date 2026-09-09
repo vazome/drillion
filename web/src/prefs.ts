@@ -11,7 +11,7 @@ const OLD = "drillion-editor-mode"; // the Vim switch these grew out of
 
 export type Prefs = {
   keys: "regular" | "vim" | "emacs";
-  font: "shipped" | "system";
+  font: "shipped" | "jetbrains" | "fira" | "cascadia" | "source" | "plex" | "inconsolata" | "system";
   fontSize: number;
   ligatures: boolean;
   tabSize: number;
@@ -33,10 +33,17 @@ export const DEFAULTS: Prefs = {
   showTimer: true,
 };
 
-/** Only what a self-hosted install already has on disk: the face drillion ships, and
- *  whatever the machine calls monospace. Nothing is fetched from anyone. */
+/** Only what a self-hosted install already has on disk: the faces drillion ships, and
+ *  whatever the machine calls monospace. Nothing is fetched from anyone. The first three
+ *  after the default carry programming ligatures, which the ligature setting turns on. */
 export const FONTS: { value: Prefs["font"]; label: string; stack: string }[] = [
   { value: "shipped", label: "Spline Sans Mono", stack: '"Spline Sans Mono", ui-monospace, monospace' },
+  { value: "jetbrains", label: "JetBrains Mono", stack: '"JetBrains Mono", ui-monospace, monospace' },
+  { value: "fira", label: "Fira Code", stack: '"Fira Code", ui-monospace, monospace' },
+  { value: "cascadia", label: "Cascadia Code", stack: '"Cascadia Code", ui-monospace, monospace' },
+  { value: "source", label: "Source Code Pro", stack: '"Source Code Pro", ui-monospace, monospace' },
+  { value: "plex", label: "IBM Plex Mono", stack: '"IBM Plex Mono", ui-monospace, monospace' },
+  { value: "inconsolata", label: "Inconsolata", stack: '"Inconsolata", ui-monospace, monospace' },
   { value: "system", label: "System monospace", stack: "ui-monospace, Consolas, Menlo, monospace" },
 ];
 
