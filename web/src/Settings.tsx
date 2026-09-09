@@ -188,8 +188,9 @@ export function Settings() {
 
       <Card label="Restore">
         <p style={{ margin: "0 0 12px", fontSize: 14, color: "var(--text-muted)" }}>
-          Restoring replaces your current progress and the code saved in every task. What it
-          replaces is written to a backup of its own first, so you can undo it.
+          Restoring replaces your current progress and the code saved in every task. It
+          happens completely or not at all, and what it replaces is written to a backup of
+          its own first, so you can undo it.
         </p>
         <input
           ref={picker} type="file" accept=".zip,application/zip" disabled={busy}
@@ -219,7 +220,6 @@ export function Settings() {
         {done ? (
           <div style={{ marginTop: 14, display: "grid", gap: 8 }}>
             <div style={{ fontSize: 14 }}>Restored {counts(done.brings)}.</div>
-            {done.failed.length ? <NoticeBanner message={`The code could not be written back for: ${done.failed.join(", ")}`} /> : null}
             <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
               What you had before is at <code>{done.kept}</code>.
             </div>

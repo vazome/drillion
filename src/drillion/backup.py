@@ -20,13 +20,16 @@ FORMAT = 1
 # sentence rather than "yes": the point is that it cannot be reached by muscle memory.
 PHRASE = "erase progress"
 MANIFEST = "manifest.json"
+KEPT_RESTORE = "backup-before-restore.zip"
 PROGRESS = "progress.json"
 REGIONS = "regions/"
 log = logging.getLogger(__name__)
 
 
 class Rejected(Exception):
-    """The bundle is not one we can restore; live data was not touched."""
+    """A restore that did not happen. Live data is as it was, unless the message says
+    otherwise: a rollback that could not put a file back is the one case that leaves a
+    mixture, and it names the files and the backup that undoes them."""
 
 
 def bundle():
@@ -107,35 +110,82 @@ def inspect(data):
     }
 
 
+def _planned(saved, known):
+    """Every saved region checked against the file it would land in, before one is written.
+
+    Returns `[(path, new_src, current_src)]`, holding the text each file had so a failed
+    pass can be put back. A region that will not splice into this version's machinery stops
+    the whole restore: a history restored against half the code it was written for is worse
+    than a restore the learner can retry."""
+    plan, refused = [], []
+    for slug, body in sorted(saved.items()):
+        if slug not in known:
+            continue
+        path = known[slug]["path"]
+        try:
+            src = path.read_text(encoding="utf-8")
+            plan.append((path, region.validate(body, src), src))
+        except (OSError, region.Invalid) as exc:
+            refused.append(f"{slug} ({exc})")
+    if refused:
+        raise Rejected(
+            "Nothing was restored. The saved code for "
+            + ", ".join(refused)
+            + " does not fit this version of drillion."
+        )
+    return plan
+
+
+def _apply(plan):
+    """Write every planned region, or put back the ones already written.
+
+    `write_region` replaces a file atomically, so a failure lands between files rather than
+    inside one, and the file before it can be written back the same way. A rollback that
+    itself fails is the one case where the learner is left with a mixture, and it says so."""
+    done = []
+    for path, new_src, current in plan:
+        try:
+            region.write_region(path, new_src)
+        except OSError as exc:
+            stuck = []
+            for undo_path, original in reversed(done):
+                try:
+                    region.write_region(undo_path, original)
+                except OSError:
+                    log.exception("could not put %s back", undo_path)
+                    stuck.append(undo_path.parent.name)
+            if stuck:
+                raise Rejected(
+                    f"Could not write {path.parent.name} ({exc}), and could not put "
+                    f"{', '.join(stuck)} back. Restore "
+                    f"{settings.root / KEPT_RESTORE} to get back to where you were."
+                ) from exc
+            raise Rejected(
+                f"Nothing was restored: could not write {path.parent.name} ({exc})."
+            ) from exc
+        done.append((path, current))
+
+
 def restore(data):
     """Replace progress and saved code from a bundle, or change nothing at all.
 
-    Progress and every task file move inside one transaction, so a failure part-way
-    leaves the previous state in place. What the restore is about to overwrite is written
-    to a bundle of its own first, since the only safe undo is another backup. A task the
-    bundle knows and this version does not is reported rather than dropped in silence."""
+    Every region is validated against the file it lands in before any of them is written,
+    and the writes are undone if one of them fails, so the progress in the transaction and
+    the code on disk always describe the same restore. What the restore is about to
+    overwrite is written to a bundle of its own first, since the only safe undo is another
+    backup. A task the bundle knows and this version does not is reported rather than
+    dropped in silence."""
     _, progress, saved = _open(data)
     known = tasks()
-    keep = settings.root / "backup-before-restore.zip"
+    plan = _planned(saved, known)
+    keep = settings.root / KEPT_RESTORE
     keep.write_bytes(bundle())
     log.info("wrote %s before restoring", keep)
-    written, failed = 0, []
     with state.frozen(progress):
-        for slug, body in saved.items():
-            if slug not in known:
-                continue
-            path = known[slug]["path"]
-            try:
-                src = path.read_text(encoding="utf-8")
-                region.write_region(path, region.validate(body, src))
-                written += 1
-            except (OSError, region.Invalid) as exc:
-                log.warning("Could not restore the code for %s: %s", slug, exc)
-                failed.append(slug)
+        _apply(plan)  # raises, so the transaction rolls the progress back
     return {
-        "brings": _counts(progress) | {"tasks": written},
+        "brings": _counts(progress) | {"tasks": len(plan)},
         "unknown": sorted(set(saved) - set(known)),
-        "failed": failed,
         "kept": str(keep),
     }
 

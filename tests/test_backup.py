@@ -15,6 +15,7 @@ from drillion.api import app
 from drillion.settings import settings
 
 SLUG = "009_fstrings"
+OTHER = "008_slicing"
 SOURCE = settings.tasks_dir
 
 
@@ -62,7 +63,7 @@ def test_a_bundle_round_trips_progress_and_saved_code(root):
 
     summary = backup.restore(data)
     assert summary["brings"]["tasks"] == 1
-    assert summary["unknown"] == [] and summary["failed"] == []
+    assert summary["unknown"] == []
     assert state.load()["notes"][SLUG] == "my note"
     assert state.load()["cards"][SLUG]["box"] == 3
     assert _body(SLUG) == mine.strip("\n")
@@ -89,6 +90,75 @@ def test_a_task_this_version_does_not_ship_is_reported_not_dropped(root):
         new.writestr(f"{backup.REGIONS}999_retired.py", "def solve():\n    return 1\n")
     assert backup.inspect(buf.getvalue())["unknown"] == ["999_retired"]
     assert backup.restore(buf.getvalue())["unknown"] == ["999_retired"]
+
+
+@pytest.fixture
+def two_roots(monkeypatch):
+    """Two tasks, so a restore has somewhere to fail part-way through."""
+    tmp = _root(extra=(OTHER,))
+    monkeypatch.setattr(settings, "root", tmp)
+    yield tmp
+    shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_a_region_that_will_not_splice_stops_the_whole_restore(two_roots):
+    with state.writing() as st:
+        st["notes"][SLUG] = "in the bundle"
+    _write(SLUG, "def solve(rows):\n    return 'bundled'\n")
+    data = backup.bundle()
+
+    with state.writing() as st:
+        st["notes"][SLUG] = "on disk now"
+    _write(SLUG, "def solve(rows):\n    return 'on disk now'\n")
+    before = (_body(SLUG), _body(OTHER))
+
+    # one region in the bundle no longer fits the machinery it has to land in
+    buf = io.BytesIO()
+    with zipfile.ZipFile(io.BytesIO(data)) as old, zipfile.ZipFile(buf, "w") as new:
+        for item in old.infolist():
+            body = old.read(item.filename)
+            if item.filename == f"{backup.REGIONS}{OTHER}.py":
+                body = b"def solve(xs: return 1\n"
+            new.writestr(item, body)
+
+    with pytest.raises(backup.Rejected, match=OTHER):
+        backup.restore(buf.getvalue())
+    assert (_body(SLUG), _body(OTHER)) == before
+    assert state.load()["notes"][SLUG] == "on disk now"
+
+
+def test_a_write_that_fails_part_way_puts_the_earlier_files_back(
+    two_roots, monkeypatch
+):
+    with state.writing() as st:
+        st["notes"][SLUG] = "in the bundle"
+    _write(SLUG, "def solve(rows):\n    return 'bundled'\n")
+    _write(OTHER, _body(OTHER).replace("raise NotImplementedError", "return 'bundled'"))
+    data = backup.bundle()
+
+    with state.writing() as st:
+        st["notes"][SLUG] = "on disk now"
+    _write(SLUG, "def solve(rows):\n    return 'on disk now'\n")
+    _write(
+        OTHER, _body(OTHER).replace("raise NotImplementedError", "return 'on disk now'")
+    )
+    before = (_body(SLUG), _body(OTHER))
+
+    real, calls = region.write_region, []
+
+    def fail_on_the_second(path, new_src):
+        calls.append(path)
+        if len(calls) == 2:
+            raise OSError("disk full")
+        real(path, new_src)
+
+    monkeypatch.setattr(backup.region, "write_region", fail_on_the_second)
+    with pytest.raises(backup.Rejected):
+        backup.restore(data)
+
+    monkeypatch.setattr(backup.region, "write_region", real)
+    assert (_body(SLUG), _body(OTHER)) == before
+    assert state.load()["notes"][SLUG] == "on disk now"
 
 
 @pytest.mark.parametrize(
