@@ -113,6 +113,26 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
 const SIZES = ["12", "13", "14", "16", "18"];
 const TABS = ["2", "4", "8"];
 
+function KeyBinding({ value, onChange }: {
+  value: "regular" | "vim" | "emacs";
+  onChange: (value: "regular" | "vim" | "emacs") => void;
+}) {
+  const choices = [
+    ["regular", "Standard"], ["vim", "Vim"], ["emacs", "Emacs"],
+  ] as const;
+  return (
+    <div className="key-binding-segmented" role="radiogroup" aria-label="Key binding">
+      {choices.map(([key, label]) => (
+        <label key={key}>
+          <input type="radio" name="key-binding" value={key} checked={value === key}
+            onChange={() => onChange(key)} />
+          <span>{label}</span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
 /** How the editor is set, and whether the clock is on screen. Every row is a preference of
  *  this browser: none of it is in your progress, and none of it travels in a backup. */
 function EditorSettings() {
@@ -134,9 +154,7 @@ function EditorSettings() {
           onChange={(on) => setPrefs({ ligatures: on })} />
       </Row>
       <Row label="Key binding" hint="Ctrl+Enter runs and Ctrl+Shift+Enter submits whichever you pick, and C-g always gets you out of a half-typed Emacs chord.">
-        <Select value={prefs.keys} ariaLabel="Key binding" style={{ minWidth: 140 }}
-          options={[{ value: "regular", label: "Standard" }, { value: "vim", label: "Vim" }, { value: "emacs", label: "Emacs" }]}
-          onChange={(v) => setPrefs({ keys: v as typeof prefs.keys })} />
+        <KeyBinding value={prefs.keys} onChange={(keys) => setPrefs({ keys })} />
       </Row>
       <Row label="Tab size">
         <Select value={String(prefs.tabSize)} options={TABS} ariaLabel="Tab size"
@@ -170,6 +188,7 @@ const counts = (b: Bundle["brings"]) =>
   `${b.cards} cards, ${b.archive} solved tasks, ${b.notes} notes, ${b.tasks} saved task files`;
 
 export function Settings() {
+  const [section, setSection] = useState<"editor" | "data">("editor");
   const [paths, setPaths] = useState<Paths | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -177,6 +196,7 @@ export function Settings() {
   const [done, setDone] = useState<Restored | null>(null);
   const [busy, setBusy] = useState(false);
   const picker = useRef<HTMLInputElement>(null);
+  const sections = ["editor", "data"] as const;
 
   useEffect(() => { api<Paths>("/settings").then(setPaths).catch((e) => setError(e.message)); }, []);
 
@@ -206,79 +226,113 @@ export function Settings() {
     setBusy(false);
   };
 
-  if (error && !paths) return <EmptyState message={`Could not load settings: ${error}`} />;
-
   return (
     <div style={{ display: "grid", gap: 18 }}>
-      <Card label="Your data">
-        <p style={{ margin: "0 0 8px", fontSize: 14, color: "var(--text-muted)" }}>
-          Everything drillion knows about your practice lives on this machine, in these places.
-        </p>
-        {paths ? (
-          <>
-            <Location label="Data folder" path={paths.root} />
-            <Location label="Progress" path={paths.progress} />
-            <Location label="Tasks" path={paths.tasks} />
-          </>
-        ) : <EmptyState message="Loading…" align="left" />}
-      </Card>
+      <div role="tablist" aria-label="Settings categories"
+        style={{ display: "flex", gap: 4, borderBottom: "1px solid var(--border)" }}>
+        {sections.map((name, index) => {
+          const selected = section === name;
+          const label = name[0].toUpperCase() + name.slice(1);
+          return (
+            <button key={name} id={`settings-${name}-tab`} type="button" role="tab"
+              aria-selected={selected} aria-controls={`settings-${name}`} tabIndex={selected ? 0 : -1}
+              onClick={() => setSection(name)}
+              onKeyDown={(event) => {
+                let next = index;
+                if (event.key === "ArrowRight") next = (index + 1) % sections.length;
+                else if (event.key === "ArrowLeft") next = (index - 1 + sections.length) % sections.length;
+                else if (event.key === "Home") next = 0;
+                else if (event.key === "End") next = sections.length - 1;
+                else return;
+                event.preventDefault();
+                const target = sections[next];
+                setSection(target);
+                document.getElementById(`settings-${target}-tab`)?.focus();
+              }}
+              style={{ padding: "8px 14px", marginBottom: -1, border: "none", borderBottom: selected ? "2px solid var(--accent)" : "2px solid transparent", background: "transparent", color: selected ? "var(--text)" : "var(--text-muted)", font: "inherit", fontSize: 14, fontWeight: selected ? 600 : 400, cursor: "pointer" }}>
+              {label}
+            </button>
+          );
+        })}
+      </div>
 
-      <EditorSettings />
+      <div id="settings-editor" role="tabpanel" aria-labelledby="settings-editor-tab"
+        hidden={section !== "editor"}>
+        <EditorSettings />
+      </div>
 
-      <Card label="Back up">
-        <p style={{ margin: "0 0 12px", fontSize: 14, color: "var(--text-muted)" }}>
-          One file holding your schedule, your history and the code you have written. Keep it
-          anywhere. Restoring it on another machine, or after a reinstall, picks up where you left off.
-        </p>
-        <a href="/api/backup" download style={{ textDecoration: "none" }}>
-          <Button variant="primary">Download a backup</Button>
-        </a>
-      </Card>
+      <div id="settings-data" role="tabpanel" aria-labelledby="settings-data-tab"
+        hidden={section !== "data"} style={{ display: section === "data" ? "grid" : "none", gap: 18 }}>
+          {error && !paths ? <EmptyState message={`Could not load settings: ${error}`} /> : (
+            <Card label="Your data">
+              <p style={{ margin: "0 0 8px", fontSize: 14, color: "var(--text-muted)" }}>
+                Everything drillion knows about your practice lives on this machine, in these places.
+              </p>
+              {paths ? (
+                <>
+                  <Location label="Data folder" path={paths.root} />
+                  <Location label="Progress" path={paths.progress} />
+                  <Location label="Tasks" path={paths.tasks} />
+                </>
+              ) : <EmptyState message="Loading…" align="left" />}
+            </Card>
+          )}
 
-      <Card label="Restore">
-        <p style={{ margin: "0 0 12px", fontSize: 14, color: "var(--text-muted)" }}>
-          Restoring replaces your current progress and the code saved in every task. It
-          happens completely or not at all, and what it replaces is written to a backup of
-          its own first, so you can undo it.
-        </p>
-        <input
-          ref={picker} type="file" accept=".zip,application/zip" disabled={busy}
-          aria-label="Choose a backup file to restore"
-          onChange={(e) => choose(e.target.files?.[0] ?? null)}
-          style={{ fontSize: 14, color: "var(--text-muted)" }}
-        />
-        {error && paths ? <NoticeBanner message={error} style={{ marginTop: 12 }} /> : null}
-        {preview ? (
-          <div style={{ marginTop: 14, display: "grid", gap: 8 }}>
-            <div style={{ fontSize: 14 }}>
-              Taken {preview.created?.replace("T", " at ") ?? "at an unknown time"} on drillion v{preview.drillion}.
-            </div>
-            <div style={{ fontSize: 14 }}>Brings back {counts(preview.brings)}.</div>
-            <div style={{ fontSize: 14, color: "var(--text-muted)" }}>
-              Replaces {preview.replaces.cards} cards, {preview.replaces.archive} solved tasks
-              and {preview.replaces.notes} notes you have now.
-            </div>
-            {preview.unknown.length ? (
-              <NoticeBanner message={`${preview.unknown.length} task${preview.unknown.length > 1 ? "s" : ""} in this backup are not in this version of drillion, so their saved code stays in the file: ${preview.unknown.join(", ")}`} />
+          <Card label="Back up">
+            <p style={{ margin: "0 0 12px", fontSize: 14, color: "var(--text-muted)" }}>
+              One file holding your schedule, your history and the code you have written. Keep it
+              anywhere. Restoring it on another machine, or after a reinstall, picks up where you left off.
+            </p>
+            <a href="/api/backup" download style={{ textDecoration: "none" }}>
+              <Button variant="primary">Download a backup</Button>
+            </a>
+          </Card>
+
+          <Card label="Restore">
+            <p style={{ margin: "0 0 12px", fontSize: 14, color: "var(--text-muted)" }}>
+              Restoring replaces your current progress and the code saved in every task. It
+              happens completely or not at all, and what it replaces is written to a backup of
+              its own first, so you can undo it.
+            </p>
+            <input
+              ref={picker} type="file" accept=".zip,application/zip" disabled={busy}
+              aria-label="Choose a backup file to restore"
+              onChange={(e) => choose(e.target.files?.[0] ?? null)}
+              style={{ fontSize: 14, color: "var(--text-muted)" }}
+            />
+            {error && paths ? <NoticeBanner message={error} style={{ marginTop: 12 }} /> : null}
+            {preview ? (
+              <div style={{ marginTop: 14, display: "grid", gap: 8 }}>
+                <div style={{ fontSize: 14 }}>
+                  Taken {preview.created?.replace("T", " at ") ?? "at an unknown time"} on drillion v{preview.drillion}.
+                </div>
+                <div style={{ fontSize: 14 }}>Brings back {counts(preview.brings)}.</div>
+                <div style={{ fontSize: 14, color: "var(--text-muted)" }}>
+                  Replaces {preview.replaces.cards} cards, {preview.replaces.archive} solved tasks
+                  and {preview.replaces.notes} notes you have now.
+                </div>
+                {preview.unknown.length ? (
+                  <NoticeBanner message={`${preview.unknown.length} task${preview.unknown.length > 1 ? "s" : ""} in this backup are not in this version of drillion, so their saved code stays in the file: ${preview.unknown.join(", ")}`} />
+                ) : null}
+                <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                  <Button variant="primary" disabled={busy} onClick={apply}>Replace my data</Button>
+                  <Button variant="quiet" disabled={busy} onClick={() => choose(null)}>Cancel</Button>
+                </div>
+              </div>
             ) : null}
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <Button variant="primary" disabled={busy} onClick={apply}>Replace my data</Button>
-              <Button variant="quiet" disabled={busy} onClick={() => choose(null)}>Cancel</Button>
-            </div>
-          </div>
-        ) : null}
-        {done ? (
-          <div style={{ marginTop: 14, display: "grid", gap: 8 }}>
-            <div style={{ fontSize: 14 }}>Restored {counts(done.brings)}.</div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
-              What you had before is at <code>{done.kept}</code>.
-            </div>
-            <div><Button onClick={() => { location.hash = "#/"; location.reload(); }}>Back to the catalogue</Button></div>
-          </div>
-        ) : null}
-      </Card>
+            {done ? (
+              <div style={{ marginTop: 14, display: "grid", gap: 8 }}>
+                <div style={{ fontSize: 14 }}>Restored {counts(done.brings)}.</div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                  What you had before is at <code>{done.kept}</code>.
+                </div>
+                <div><Button onClick={() => { location.hash = "#/"; location.reload(); }}>Back to the catalogue</Button></div>
+              </div>
+            ) : null}
+          </Card>
 
-      <DangerZone />
+        <DangerZone />
+      </div>
     </div>
   );
 }
