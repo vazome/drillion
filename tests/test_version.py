@@ -8,6 +8,7 @@ from pathlib import Path
 
 import httpx
 import pytest
+import yaml
 
 import drillion
 from drillion.api import app
@@ -43,3 +44,24 @@ def test_pyproject_is_the_only_declaration():
         "version"
     ]
     assert declared == version("drillion")
+
+
+def test_python_314_is_the_supported_version():
+    root = Path(__file__).resolve().parent.parent
+    project = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))[
+        "project"
+    ]
+    classifiers = [
+        value
+        for value in project["classifiers"]
+        if value.startswith("Programming Language :: Python :: 3.")
+    ]
+    workflow = yaml.safe_load(
+        (root / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+    )
+    matrix = workflow["jobs"]["check"]["strategy"]["matrix"]["include"]
+
+    assert project["requires-python"] == ">=3.14"
+    assert classifiers == ["Programming Language :: Python :: 3.14"]
+    assert (root / ".python-version").read_text().strip() == "3.14"
+    assert {cell["python"] for cell in matrix} == {"3.14"}
