@@ -7,7 +7,7 @@ uv sync                                      # dependencies (runtime + dev)
 uv run drillion                              # serve on http://127.0.0.1:8765, opens the browser
 uv run pytest tests -q                       # the app's own tests
 uv run ruff check .                          # lint — CI fails if this fails
-uv run drillion selfcheck                    # solve every task with its reference; must say 189/189
+uv run drillion selfcheck                    # solve every task with its reference; must say 201/201
 ```
 
 Requirements: Python 3.13 and [uv](https://docs.astral.sh/uv/). The frontend (React + Vite, in
@@ -18,7 +18,7 @@ API still serves and only `/` 404s. To work on the frontend itself:
 pnpm --dir web install                       # once
 pnpm --dir web dev                           # Vite on 5173, proxying /api to the server on 8765
 pnpm --dir web lint                          # lint — CI fails if this fails, same as ruff
-pnpm --dir web screens                       # Playwright: renders all 171 task pages, photographs the rest
+pnpm --dir web screens                       # Playwright: renders all 201 task pages, photographs the rest
 ```
 
 ## Seeing the client without running it

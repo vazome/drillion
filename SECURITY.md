@@ -4,7 +4,7 @@
 
 drillion runs arbitrary Python on your machine, by design, and only on your machine. The
 sharpest exposure is not a learner attacking themselves: `task.py` executes on import, and
-189 of them ship inside the wheel, so a contributed task is code execution on every user's
+201 of them ship inside the wheel, so a contributed task is code execution on every user's
 machine. That is what the sandbox is for.
 
 - **Graded code runs in a sandboxed pytest subprocess** (`src/drillion/sandbox.py`). What it
