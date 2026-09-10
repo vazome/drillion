@@ -1,2 +1,2 @@
-.root{background:var(--surface);box-shadow:var(--shadow-card);border-radius:var(--radius)}
+.root{background:var(--surface);box-shadow:var(--shadow-card);border-radius:var(--radius);min-width:0}
 .label{font-size:var(--fs-label);font-weight:600;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--text-muted);margin-bottom:12px}

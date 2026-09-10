@@ -4,6 +4,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 
+// Colour is measured here, and the entry animations fade elements in from transparent: an
+// audit that samples one mid-fade reads a blend nobody is ever asked to read. The app already
+// collapses every one of them under this setting, so the page under audit is the settled one.
+test.use({ reducedMotion: "reduce" });
+
 const SLUG = "009_fstrings";
 const SCREENS = ["/#/", `/#/task/${SLUG}`, "/#/progress"];
 
@@ -22,11 +27,6 @@ const audit = (page: Page) =>
   new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .exclude(".monaco-editor")
-    // the one accepted exception, and it is one decision rather than hundreds of defects:
-    // `--text-faint` is 2.8:1 against the desk and 3.05:1 against a card, which fails AA
-    // wherever it is used. Repainting a token is the design system's call, tracked on its
-    // own; every other rule is a gate here and now.
-    .disableRules(["color-contrast"])
     .analyze();
 
 const listed = (violations: { id: string; nodes: { html: string }[] }[]) =>
@@ -52,10 +52,19 @@ async function tabTo(page: Page, want: string, max = 60) {
 }
 
 test("every screen passes an axe audit", async ({ page }) => {
-  for (const route of SCREENS) {
-    await page.goto(route);
-    await settled(page, route);
-    expect(listed((await audit(page)).violations), route).toBe("");
+  // Both themes: the palettes are separate sets of values, so passing in one proves nothing
+  // about the other. The theme is read out of storage when the app boots, so it is set there
+  // and the page reloaded; the class assertion keeps the dark pass from going quietly vacuous.
+  for (const scheme of ["light", "dark"] as const) {
+    await page.goto(SCREENS[0]);
+    await page.evaluate((s) => localStorage.setItem("drillion-theme", s), scheme);
+    await page.reload();
+    await expect(page.locator("html")).toHaveClass(scheme === "dark" ? /dark/ : /^(?!.*dark).*$/);
+    for (const route of SCREENS) {
+      await page.goto(route);
+      await settled(page, route);
+      expect(listed((await audit(page)).violations), `${route} (${scheme})`).toBe("");
+    }
   }
 });
 

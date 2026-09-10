@@ -1,11 +1,11 @@
-.sheet { display: grid; gap: 32px; max-width: 620px; font-size: 14px; }
+.sheet { display: grid; gap: 32px; font-size: 14px; }
 .sectionTitle { margin: 0 0 2px; font-size: 14px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
 .sectionNote { margin: 0 0 6px; font-size: 14px; color: var(--text-muted); max-width: 560px; text-wrap: pretty; }
 .sectionBody { margin-top: 6px; }
 .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 24px; min-height: 52px; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .row:last-child { border-bottom: none; }
 .rowLabel { min-width: 0; }
-.hint { font-size: 13px; color: var(--text-faint); margin-top: 2px; text-wrap: pretty; }
+.hint { font-size: 13px; color: var(--text-muted); margin-top: 2px; text-wrap: pretty; }
 .control { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-width: 0; }
 .path { font-size: 13px; color: var(--text-muted); overflow-wrap: anywhere; text-align: right; min-width: 0; }
 .row:has(.path) { grid-template-columns: minmax(90px, 1fr) minmax(0, 2fr); }

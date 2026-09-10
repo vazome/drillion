@@ -64,7 +64,7 @@ def test_the_output_panel_never_shows_terminal_escapes(tmp_path, monkeypatch):
     monkeypatch.setenv("FORCE_COLOR", "1")
     task = tmp_path / "task.py"
     task.write_text("def test_solve():\n    assert 1 == 2\n", encoding="utf-8")
-    passed, out = runner.run_tests(task, seed=1)
+    passed, out, _ = runner.run_tests(task, seed=1)
     assert passed is False
     assert "\x1b[" not in out, "terminal escapes reached the output panel"
 
@@ -80,7 +80,7 @@ def test_the_learners_code_cannot_litter_the_data_root(tmp_path, monkeypatch):
         "    (Path.cwd() / 'litter.txt').write_text('x')\n",
         encoding="utf-8",
     )
-    passed, out = runner.run_tests(task, seed=1)
+    passed, out, _ = runner.run_tests(task, seed=1)
     assert passed, out  # the write itself succeeded
     assert not list(tmp_path.rglob("litter.txt"))
 
@@ -101,7 +101,7 @@ def test_a_warning_in_the_learners_code_is_not_a_failure(tmp_path, monkeypatch):
         "    warnings.warn('old api', DeprecationWarning)\n"
         "    assert True\n"
     )
-    passed, out = runner.run_tests(task, seed=1)
+    passed, out, _ = runner.run_tests(task, seed=1)
     assert passed, out
 
 
@@ -115,7 +115,7 @@ def test_what_the_learner_printed_comes_back_either_way(tmp_path, monkeypatch, v
     task.write_text(
         f"def test_solve():\n    print('rows =', 3)\n    {verdict}\n", encoding="utf-8"
     )
-    _, out = runner.run_tests(task, seed=1)
+    _, out, _ = runner.run_tests(task, seed=1)
     assert runner.summarise(out, marker_line=1)["printed"] == "rows = 3"
 
 
@@ -125,7 +125,7 @@ def test_a_silent_run_has_nothing_to_show_and_says_so_with_nothing(
     monkeypatch.setattr(settings, "root", tmp_path)
     task = tmp_path / "task.py"
     task.write_text("def test_solve():\n    assert True\n", encoding="utf-8")
-    _, out = runner.run_tests(task, seed=1)
+    _, out, _ = runner.run_tests(task, seed=1)
     assert runner.summarise(out, marker_line=1)["printed"] == ""
 
 
@@ -144,7 +144,7 @@ def test_a_failure_names_the_task_the_short_way(tmp_path, monkeypatch):
     task = tmp_path / "tasks" / "009_fstrings" / "task.py"
     task.parent.mkdir(parents=True)
     task.write_text("def test_solve():\n    assert 1 == 2\n", encoding="utf-8")
-    _, out = runner.run_tests(task, seed=1)
+    _, out, _ = runner.run_tests(task, seed=1)
     text = runner.summarise(out, marker_line=1)["output"]
     assert "../tasks/009_fstrings/task.py" in text
     assert "task.py" not in text.replace("../tasks/009_fstrings/task.py", ""), text
@@ -205,3 +205,96 @@ def test_a_failed_line_names_the_task_folder_and_nothing_else(sep):
         "008_slicing",
         "009_fstrings",
     ]
+
+
+def test_the_failing_case_is_named_not_just_the_assertion(tmp_path, monkeypatch):
+    """A fresh seed builds a different case every sitting, so "wrong answer" is only half a
+    report: the panel has to say which input produced it."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    task = tmp_path / "task.py"
+    task.write_text(
+        "def test_solve():\n"
+        "    for n in (1, 2, 3):\n"
+        "        rows = [n, n + 1]\n"
+        "        assert sum(rows) == 99\n",
+        encoding="utf-8",
+    )
+    passed, out, _ = runner.run_tests(task, seed=1)
+    assert passed is False
+    assert "rows       = [1, 2]" in out, out
+
+
+def test_the_headline_names_the_difference_and_asks_for_no_flags(tmp_path, monkeypatch):
+    """At its default pytest elides the values it compared and tells the reader to pass `-vv`,
+    which is a flag the learner has no way to pass. Verbosity 2 spells the values out, and the
+    headline keeps the assertion plus the keys that differ, without the half that is right."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    task = tmp_path / "task.py"
+    # nine elements, because `Differing items:` puts its values through `reprlib` and cuts
+    # them at six however loud the run is. The `assert` line is what carries them whole.
+    task.write_text(
+        "def test_solve():\n"
+        "    assert {'a': [0], 'rev': list(range(9))} == {'a': [0], 'rev': list(reversed(range(9)))}\n",
+        encoding="utf-8",
+    )
+    _, out, _ = runner.run_tests(task, seed=1)
+    headline = "\n".join(runner.summarise(out, marker_line=99)["headline"])
+    assert "use -vv" not in headline and "use -v " not in headline
+    assert "Common items:" not in headline, "the half that is right is not the report"
+    assert "Differing items:" in headline, "say which key is wrong"
+    assert "[0, 1, 2, 3, 4, 5, 6, 7, 8]" in headline, "and carry that key's value whole"
+
+
+def test_the_headline_survives_a_comparison_pytest_cannot_itemise():
+    """Only dicts get `Differing items:`. A list, a string, a bare value or a raise has to
+    keep reporting the assertion itself."""
+    for canned, want in (
+        (
+            "E       assert [10, 20] == [10, 25]\nE         At index 1 diff: 20 != 25\n",
+            "At index 1",
+        ),
+        ("E       IndexError: list index out of range\n", "IndexError"),
+    ):
+        assert want in "\n".join(runner._headline(canned.split("\n")))
+
+
+def test_the_failing_case_comes_back_as_data(tmp_path, monkeypatch):
+    """Input, expected and actual are all on the frame pytest is already holding. The panel
+    should not have to parse them back out of its prose."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    task = tmp_path / "task.py"
+    task.write_text(
+        "def test_solve():\n"
+        "    for n in (3, 4):\n"
+        "        rows = [n, n + 1]\n"
+        "        assert sum(rows) == 99\n",
+        encoding="utf-8",
+    )
+    passed, _, case = runner.run_tests(task, seed=1)
+    assert passed is False
+    assert case["args"] == {"n": "3", "rows": "[3, 4]"}, case
+    assert (case["actual"], case["expected"]) == ("7", "99")
+    assert case["source"] == "assert sum(rows) == 99"
+    assert case["error"].startswith("AssertionError")
+
+
+def test_a_case_survives_a_failure_that_is_not_a_comparison(tmp_path, monkeypatch):
+    """A raise has no two sides. The input and the line still say more than the traceback."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    task = tmp_path / "task.py"
+    task.write_text(
+        "def test_solve():\n    rows = [1, 2]\n    assert rows[9] == 1\n",
+        encoding="utf-8",
+    )
+    _, _, case = runner.run_tests(task, seed=1)
+    assert case["expected"] is None and case["actual"] is None
+    assert case["args"] == {"rows": "[1, 2]"}
+    assert "IndexError" in case["error"]
+
+
+def test_a_passing_run_has_no_case(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "root", tmp_path)
+    task = tmp_path / "task.py"
+    task.write_text("def test_solve():\n    assert 1 + 1 == 2\n", encoding="utf-8")
+    passed, _, case = runner.run_tests(task, seed=1)
+    assert passed and case is None

@@ -44,6 +44,42 @@ It does not replace the per-file `source:` field and attribution footer on
 each of the 89 tasks — those stay as the finer-grained record of exactly what
 came from where.
 
+Three tasks under `tasks/` adapt reference implementations from the example
+code for *Fluent Python, 2nd ed.*: `202_descriptor`, `203_abstractbase` and
+`204_classiterator`. Those sources carry no problem statements, so the code is
+theirs and every word of the task is drillion's, the opposite way round from
+the Exercism tasks above. Each names its origin in `source:` and closes with an
+"Adapted from fluentpython/example-code-2e — MIT" line; run
+`grep -rl '^source: fluentpython' tasks/*/README.md` to list them.
+
+That content is drawn from:
+
+- https://github.com/fluentpython/example-code-2e
+
+which is MIT licensed:
+
+    The MIT License (MIT)
+
+    Copyright (c) 2020 Luciano Ramalho
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
 One further task, `187_job_spacing`, restates a problem from MBPP (Mostly
 Basic Python Problems), published by Google Research at
 https://github.com/google-research/google-research/tree/master/mbpp under

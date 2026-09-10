@@ -449,7 +449,7 @@ def run_task(slug: str, edit: Edit):
         _check_etag(src, edit.etag)
         new_src = validate(edit.code, src)
         write_region(meta["path"], new_src)
-        passed, out = run_tests(meta["path"], o["seed"])
+        passed, out, found = run_tests(meta["path"], o["seed"])
         if edit.submit:
             o["attempts"] += 1
         else:
@@ -460,6 +460,7 @@ def run_task(slug: str, edit: Edit):
             "graded": edit.submit,
             "attempts": o["attempts"],
             **summarise(out, bounds(new_src)),
+            "case": found,
         }
         log.info(
             "%s passed=%s graded=%s attempts=%s",

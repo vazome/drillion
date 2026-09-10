@@ -92,10 +92,21 @@ export interface Task {
   /** The learner's one note on the task, `""` when there is none — `PUT /api/task/{slug}/note`. */
   note: string;
 }
+/** The case that failed, as the grader saw it. `null` on a green run, and on a red one
+ *  whose failure the grader could not read a frame out of. `expected` and `actual` are both
+ *  null when the code raised rather than compared: there were no two sides. */
+export interface Case {
+  args: Record<string, string>;
+  expected: string | null;
+  actual: string | null;
+  source: string;
+  error: string;
+}
 interface RunBase {
   attempts: number; headline: string[]; output: string; etag: string;
   /** what the learner's own code printed, lifted out of pytest's report; "" when silent */
   printed: string;
+  case: Case | null;
 }
 /** The grade and everything it decided exist iff `passed && graded`. A plain Run is
  *  `graded: false`: it costs no attempt and moves no card, however green it came back.

@@ -11,6 +11,12 @@ import { initVimMode } from "monaco-vim";
 import { EmacsExtension } from "monaco-emacs";
 import { DEFAULTS, fontStack, type Prefs } from "./prefs";
 
+// Every mono face is `font-display: swap`, and Monaco measures the character advance once
+// at construction: an editor built before the woff2 lands keeps drawing the caret and the
+// selection on the fallback's grid, drifting further off the longer the line. This is also
+// what a font picked in Settings needs, since that face loads the moment it is chosen.
+document.fonts.addEventListener("loadingdone", () => monaco.editor.remeasureFonts());
+
 const token = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const bare = (name: string) => token(name).replace("#", "");
 

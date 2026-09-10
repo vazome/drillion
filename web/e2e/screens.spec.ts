@@ -46,6 +46,9 @@ test("captures the screens a reviewer needs", async ({ page, request }) => {
 
   // The reading grace. Dismissed straight after, or it sits in the corner of the next two shots.
   const grace = page.getByText(/The clock starts in \d+ seconds/);
+  // the reopened attempt starts on the same timer the poll above waits for, and the notice
+  // cannot be on screen before the server says the reading minute is running
+  await expect.poll(async () => (await meta()).attempt?.grace ?? 0, { timeout: 15_000 }).toBeGreaterThan(0);
   await expect(grace).toBeVisible();
   await shot(page, "2b-task-reading-time");
   await page.getByRole("button", { name: "Dismiss" }).click();
