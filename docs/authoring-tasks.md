@@ -11,7 +11,7 @@ a difficulty, a track or a tag, and what the folder has to contain.
 | tier | what belongs in it | today |
 |---|---|---|
 | `core` | the language and its standard library, and every coder needs it: syntax, data structures, files and text, errors, `itertools`, `pathlib` | 163 |
-| `advanced` | still the standard library, but you can work a long while without it: `asyncio`, concurrency, generators, decorators, closures, `functools` | 22 |
+| `advanced` | still the standard library, but you can work a long while without it: `asyncio`, concurrency, generators, decorators, closures, `functools`, the object model past `@property` | 25 |
 | `packages` | solving it needs something `pip` installs: `requests`, `responses`, `boto3`, `moto`, `pytest`, `fastapi`, `langchain` | 16 |
 
 Tier answers "can I run this with stock Python?", so `packages` wins whenever a task is both —
@@ -26,7 +26,7 @@ not count — 14 tasks `import pytest` down there for `pytest.approx` alone and 
 lines you can only write once you have seen the trick is `hard`. Anchor the call on the task's
 `## Rules` — rules are where the traps live — and grade a new task against the rubric all 201
 were graded against: [difficulty-rubric.md](difficulty-rubric.md).
-Today: 36 easy · 136 medium · 29 hard.
+Today: 36 easy · 138 medium · 30 hard.
 
 **track** — optional, at most one per task: a themed run through the catalogue that cuts across
 tiers, for a sequence meant to be practised in order. No track is defined today. Leave the key
@@ -93,6 +93,17 @@ before it. Headings, lists, tables, fenced code, GitHub alerts (`> [!NOTE]`), Me
 images and muted looping clips from `assets/` all render. For a task adapted from Exercism the
 README carries **Exercism's Markdown verbatim** — never trimmed to make room for ours — plus
 frontmatter `source:` and a closing attribution line.
+
+`source:` is provenance, and it does not care which half was borrowed. Some sources have no
+problem statement at all, only reference implementations: there drillion takes the code and
+writes the words, the opposite way round from Exercism. One test covers both directions
+([ADR 0009](adr/0009-borrowed-code-is-a-source-like-borrowed-words.md)): if what you borrowed is
+a **substantial portion** of what you shipped — their prose as the spec, or their implementation
+as `_reference()` — the task carries `source:`, the closing attribution line and a `NOTICE`
+entry. If it is not, it carries none of them. Reaching for `graphlib.TopologicalSorter` after
+reading someone's topological sort is not an adaptation of it. Code in the CPython documentation
+is Zero-Clause BSD and needs no attribution either way; the prose around it is not, so adapt the
+example and write the words fresh.
 
 **`task.py`** — code only, no docstring spec, no META, no HINTS:
 
