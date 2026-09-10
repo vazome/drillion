@@ -5,7 +5,7 @@
 .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 24px; min-height: 52px; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .row:last-child { border-bottom: none; }
 .rowLabel { min-width: 0; }
-.hint { font-size: 13px; color: var(--text-faint); margin-top: 2px; text-wrap: pretty; }
+.hint { font-size: 13px; color: var(--text-muted); margin-top: 2px; text-wrap: pretty; }
 .control { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-width: 0; }
 .path { font-size: 13px; color: var(--text-muted); overflow-wrap: anywhere; text-align: right; min-width: 0; }
 .row:has(.path) { grid-template-columns: minmax(90px, 1fr) minmax(0, 2fr); }
