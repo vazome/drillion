@@ -4,6 +4,14 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.7.5 — 2026-09-10
+
+- The web design system now uses CSS Modules, keeping component styles local while preserving the
+  existing pixels and behavior.
+- Settings has a single-column layout with editor preferences, data backup and restore, and the
+  danger zone; preferences and recovery APIs remain unchanged.
+- Added editor font choices and coverage for the Settings and CSS Modules contracts.
+
 ## 0.7.0 — 2026-09-08
 
 - Seven new tasks bring the catalogue to 189 and close the last of the single-exposure
