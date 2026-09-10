@@ -4,6 +4,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 
+// Colour is measured here, and the entry animations fade elements in from transparent: an
+// audit that samples one mid-fade reads a blend nobody is ever asked to read. The app already
+// collapses every one of them under this setting, so the page under audit is the settled one.
+test.use({ reducedMotion: "reduce" });
+
 const SLUG = "009_fstrings";
 const SCREENS = ["/#/", `/#/task/${SLUG}`, "/#/progress"];
 
