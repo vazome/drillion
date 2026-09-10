@@ -205,3 +205,54 @@ def test_a_failed_line_names_the_task_folder_and_nothing_else(sep):
         "008_slicing",
         "009_fstrings",
     ]
+
+
+def test_the_failing_case_is_named_not_just_the_assertion(tmp_path, monkeypatch):
+    """A fresh seed builds a different case every sitting, so "wrong answer" is only half a
+    report: the panel has to say which input produced it."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    task = tmp_path / "task.py"
+    task.write_text(
+        "def test_solve():\n"
+        "    for n in (1, 2, 3):\n"
+        "        rows = [n, n + 1]\n"
+        "        assert sum(rows) == 99\n",
+        encoding="utf-8",
+    )
+    passed, out = runner.run_tests(task, seed=1)
+    assert passed is False
+    assert "rows       = [1, 2]" in out, out
+
+
+def test_the_headline_names_the_difference_and_asks_for_no_flags(tmp_path, monkeypatch):
+    """At its default pytest elides the values it compared and tells the reader to pass `-vv`,
+    which is a flag the learner has no way to pass. Verbosity 2 spells the values out, and the
+    headline keeps the assertion plus the keys that differ, without the half that is right."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    task = tmp_path / "task.py"
+    # nine elements, because `Differing items:` puts its values through `reprlib` and cuts
+    # them at six however loud the run is. The `assert` line is what carries them whole.
+    task.write_text(
+        "def test_solve():\n"
+        "    assert {'a': [0], 'rev': list(range(9))} == {'a': [0], 'rev': list(reversed(range(9)))}\n",
+        encoding="utf-8",
+    )
+    _, out = runner.run_tests(task, seed=1)
+    headline = "\n".join(runner.summarise(out, marker_line=99)["headline"])
+    assert "use -vv" not in headline and "use -v " not in headline
+    assert "Common items:" not in headline, "the half that is right is not the report"
+    assert "Differing items:" in headline, "say which key is wrong"
+    assert "[0, 1, 2, 3, 4, 5, 6, 7, 8]" in headline, "and carry that key's value whole"
+
+
+def test_the_headline_survives_a_comparison_pytest_cannot_itemise():
+    """Only dicts get `Differing items:`. A list, a string, a bare value or a raise has to
+    keep reporting the assertion itself."""
+    for canned, want in (
+        (
+            "E       assert [10, 20] == [10, 25]\nE         At index 1 diff: 20 != 25\n",
+            "At index 1",
+        ),
+        ("E       IndexError: list index out of range\n", "IndexError"),
+    ):
+        assert want in "\n".join(runner._headline(canned.split("\n")))

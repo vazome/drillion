@@ -49,7 +49,9 @@ def _run_pytest(args, timeout=None, **env):
         ini = Path(scratch, "pytest.ini")
         ini.write_text("[pytest]\n", encoding="utf-8")
         return sandbox.run(
-            ["-c", str(ini), f"--rootdir={settings.root}", *args, *_PYTEST],
+            # the caller's flags go last so they win: `-q` in the defaults is a counter, and
+            # it walks back a verbosity set before it
+            ["-c", str(ini), f"--rootdir={settings.root}", *_PYTEST, *args],
             scratch,
             timeout,
             PYTHONPATH=str(settings.tasks_dir),
@@ -58,10 +60,22 @@ def _run_pytest(args, timeout=None, **env):
 
 
 def run_tests(path, seed):
-    """Task code only ever runs here, in its own process."""
+    """Task code only ever runs here, in its own process.
+
+    `-l` because the seed makes a different case every sitting: without the failing frame's
+    locals the learner can read that `solve` answered wrong and still not know what it was
+    asked. No `-x` — a task is one test function, so it never stopped anything a failing
+    `assert` inside the loop had not already stopped, and it hid the second test where
+    there is one.
+
+    `--verbosity=2` rather than `-vv`, which would only cancel out the `-q` above: at the
+    default pytest elides the values it is comparing and tells the learner to pass flags
+    they have no way to pass."""
     try:
         r = _run_pytest(
-            [str(path), "-x", "--timeout=10"], timeout=60, DRILLION_SEED=str(seed)
+            [str(path), "-l", "--verbosity=2", "--timeout=10"],
+            timeout=60,
+            DRILLION_SEED=str(seed),
         )
     except subprocess.TimeoutExpired:
         return False, "timed out after 60s — an endless loop, most likely"
@@ -102,6 +116,27 @@ def printed(out):
     return "\n".join(kept)
 
 
+def _headline(lines):
+    """The assertion itself, without pytest's blank rules or its full-diff appendix.
+
+    Verbosity 2 is what stops the values being elided, and it pays for that with a
+    `Full diff:` block longer than the panel the headline goes in. The diff is still in the
+    output below, where there is room for it."""
+    head = []
+    for line in lines:
+        if not line.startswith("E   ") or line.strip() == "E":
+            continue
+        if "Full diff:" in line:
+            break
+        head.append(line)
+    # `Differing items:` names the key that is wrong, but its values go through `reprlib`
+    # and are cut at six elements whatever the verbosity, so the `assert` line above it is
+    # the only one carrying both values whole. Keep that pair and drop `Common items:`,
+    # which is however many lines of the half that is right.
+    named = next((i for i, ln in enumerate(head) if "Differing items:" in ln), 0)
+    return (head[:1] + head[named:] if named else head)[:6]
+
+
 def summarise(out, marker_line):
     """pytest output for the browser: the assertion lines, in editor coordinates."""
     out = _posix(out)
@@ -112,9 +147,8 @@ def summarise(out, marker_line):
 
     text = _TASK_LINE.sub(editor_line, out)
     lines = text.split("\n")
-    head = [ln for ln in lines if ln.startswith("E   ")][:6]
     return {
-        "headline": head
+        "headline": _headline(lines)
         or [ln for ln in lines if ln.startswith(("FAILED", "ERROR"))][:6],
         "output": text[-8192:],
         "printed": printed(text),
