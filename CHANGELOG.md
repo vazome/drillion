@@ -4,6 +4,11 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.7.6 — 2026-09-10
+
+- Release metadata now uses the public `release: <version>` label consistently across deployment
+  history.
+
 ## 0.7.5 — 2026-09-10
 
 - The web design system now uses CSS Modules, keeping component styles local while preserving the
