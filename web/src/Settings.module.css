@@ -1,4 +1,4 @@
-.sheet { display: grid; gap: 32px; max-width: 620px; font-size: 14px; }
+.sheet { display: grid; gap: 32px; font-size: 14px; }
 .sectionTitle { margin: 0 0 2px; font-size: 14px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
 .sectionNote { margin: 0 0 6px; font-size: 14px; color: var(--text-muted); max-width: 560px; text-wrap: pretty; }
 .sectionBody { margin-top: 6px; }

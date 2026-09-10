@@ -87,7 +87,9 @@ def grade(tmp_path, monkeypatch, *body):
     task = tmp_path / "root" / "tasks" / "999_probe" / "task.py"
     task.parent.mkdir(parents=True, exist_ok=True)
     task.write_text(PROBE.format(canary=str(canary), body="".join(body)))
-    return runner.run_tests(task, seed=1)
+    return runner.run_tests(task, seed=1)[
+        :2
+    ]  # these tests grade the sandbox, not the case
 
 
 def unconfined(args, scratch, cpu, **env):
@@ -167,7 +169,7 @@ def test_grading_survives_a_machine_with_no_kernel_tier(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "root", tmp_path)
     task = tmp_path / "task.py"
     task.write_text("def test_solve():\n    assert 1 + 1 == 2\n")
-    passed, out = runner.run_tests(task, seed=1)
+    passed, out, _ = runner.run_tests(task, seed=1)
     assert passed, out
 
 

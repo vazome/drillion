@@ -837,7 +837,7 @@ def test_deps_on_the_task_payload():
 def test_failed_progress_commit_never_resets_unarchived_code(action, monkeypatch):
     from drillion import api as routes
 
-    monkeypatch.setattr(routes, "run_tests", lambda *args: (True, "1 passed"))
+    monkeypatch.setattr(routes, "run_tests", lambda *args: (True, "1 passed", None))
 
     async def flow(api, path):
         task = (await api.post(f"/api/task/{SLUG}/open")).json()

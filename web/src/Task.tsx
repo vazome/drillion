@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Button, Card, Collapsible, ConflictBanner, DepLineage, EmptyState, NoteField, GraceNotice, NoticeBanner, RequiresTag, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
-import { ApiError, api, post, type Task as TaskData, type RunResult } from "./api";
+import { Button, Card, Collapsible, ConflictBanner, DepLineage, EmptyState, FailedCase, NoteField, GraceNotice, NoticeBanner, RequiresTag, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
+import { ApiError, api, post, type Task as TaskData, type RunResult, type Case } from "./api";
 import { depsHref, prefetch } from "./Deps";
 import { inDays, strength } from "./strength";
 import { DiffView, Editor } from "./Editor";
@@ -35,7 +35,7 @@ type Gate = { at: "hints" | "solution" | "editor" | "note"; message: string } | 
 type Result =
   | { state: "idle" | "running" }
   | { state: "ran"; output: string; printed: string }
-  | { state: "failed"; graded: boolean; attempts: number; headline: string; output: string; printed: string }
+  | { state: "failed"; graded: boolean; attempts: number; headline: string; output: string; printed: string; case: Case | null }
   | { state: "passed"; grade: string; box: number; stepped: boolean; fromBox: number; reason: string; dueIn: number; attempts: number; code: string };
 
 /** The pass banner's one line about where the task now sits: `stepped` is the server's answer
@@ -174,13 +174,13 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       } else if (r.passed) {
         setResult({ state: "ran", output: r.output, printed: r.printed });
       } else {
-        setResult({ state: "failed", graded: r.graded, attempts: r.attempts, headline: r.headline.join("\n") || "The tests did not pass.", output: r.output, printed: r.printed });
+        setResult({ state: "failed", graded: r.graded, attempts: r.attempts, headline: r.headline.join("\n") || "The tests did not pass.", output: r.output, printed: r.printed, case: r.case });
         setTask((p) => p && p.attempt ? { ...p, attempt: { ...p.attempt, attempts: r.attempts } } : p);
       }
     } catch (e) {
       const err = e as ApiError, bad = err.status === 400;
       if (absorb(err) && !bad) setResult({ state: "idle" });      // the conflict banner has it now
-      else setResult({ state: "failed", graded: submit, attempts: 0, output: "", printed: "",
+      else setResult({ state: "failed", graded: submit, attempts: 0, output: "", printed: "", case: null,
         headline: bad ? `${err.detail?.error}${err.detail?.line != null ? ` (line ${err.detail.line})` : ""}` : err.message });
     } finally { setInflight(null); }
   };
@@ -477,6 +477,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                 )}
               </div>
             </div>
+
+            {result.state === "failed" && result.case ? <FailedCase case={result.case} /> : null}
 
             {/* the learner's own print() first, open: it is the one line of the report they wrote */}
             {(result.state === "failed" || result.state === "ran") && result.printed ? (

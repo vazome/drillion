@@ -1,11 +1,14 @@
 """Running the tests: task code only ever executes in a pytest subprocess."""
 
 import ast
+import json
+import os
 import re
 import subprocess
 import tempfile
 from pathlib import Path
 
+from . import case as case_capture
 from . import sandbox
 from .catalogue import tasks
 from .region import _solve, cut, splice, stub
@@ -35,7 +38,7 @@ _PYTEST = [
 ]
 
 
-def _run_pytest(args, timeout=None, **env):
+def _run_pytest(args, timeout=None, capture_case=None, **env):
     """pytest in a subprocess, sandboxed: cwd a scratch dir that is also the child's `HOME`
     and the only place it may write, and `tasks/` on PYTHONPATH so `from _lib import rng`
     works from any root. `sandbox.run` decides everything else about the child."""
@@ -48,15 +51,27 @@ def _run_pytest(args, timeout=None, **env):
         # `root` or pytest reports failures with no filename in them.
         ini = Path(scratch, "pytest.ini")
         ini.write_text("[pytest]\n", encoding="utf-8")
-        return sandbox.run(
+        if capture_case is not None:
+            Path(scratch, f"{case_capture.NAME}.py").write_text(
+                case_capture.PLUGIN, encoding="utf-8"
+            )
+            args = ["-p", case_capture.NAME, *args]
+            # into the scratch dir, which is the only place the child may write; the parent
+            # is not confined and lifts it out below, before the directory goes away
+            written = Path(scratch, "case.json")
+            env["DRILLION_CASE"] = str(written)
+            env["PYTHONPATH"] = f"{settings.tasks_dir}{os.pathsep}{scratch}"
+        result = sandbox.run(
             # the caller's flags go last so they win: `-q` in the defaults is a counter, and
             # it walks back a verbosity set before it
             ["-c", str(ini), f"--rootdir={settings.root}", *_PYTEST, *args],
             scratch,
             timeout,
-            PYTHONPATH=str(settings.tasks_dir),
-            **env,
+            **{"PYTHONPATH": str(settings.tasks_dir), **env},
         )
+        if capture_case is not None and written.exists():
+            capture_case.write_bytes(written.read_bytes())
+        return result
 
 
 def run_tests(path, seed):
@@ -71,15 +86,24 @@ def run_tests(path, seed):
     `--verbosity=2` rather than `-vv`, which would only cancel out the `-q` above: at the
     default pytest elides the values it is comparing and tells the learner to pass flags
     they have no way to pass."""
-    try:
-        r = _run_pytest(
-            [str(path), "-l", "--verbosity=2", "--timeout=10"],
-            timeout=60,
-            DRILLION_SEED=str(seed),
-        )
-    except subprocess.TimeoutExpired:
-        return False, "timed out after 60s — an endless loop, most likely"
-    return r.returncode == 0, r.stdout
+    with tempfile.TemporaryDirectory(dir=settings.root) as box:
+        found = Path(box, "case.json")
+        try:
+            r = _run_pytest(
+                [str(path), "-l", "--verbosity=2", "--timeout=10"],
+                timeout=60,
+                capture_case=found,
+                DRILLION_SEED=str(seed),
+            )
+        except subprocess.TimeoutExpired:
+            return False, "timed out after 60s — an endless loop, most likely", None
+        case = None
+        if found.exists():
+            try:
+                case = case_capture.trim(json.loads(found.read_text(encoding="utf-8")))
+            except ValueError, OSError:  # a killed child can leave half a file
+                case = None
+    return r.returncode == 0, r.stdout, case
 
 
 def _posix(out):

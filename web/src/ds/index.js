@@ -8,6 +8,7 @@ export { Input } from "./Input.jsx";
 export { Kbd } from "./Kbd.jsx";
 export { GraceNotice } from "./GraceNotice.jsx";
 export { NoticeBanner } from "./NoticeBanner.jsx";
+export { FailedCase } from "./FailedCase.jsx";
 export { ResultBanner } from "./ResultBanner.jsx";
 export { Select } from "./Select.jsx";
 export { SpecText } from "./SpecText.jsx";
