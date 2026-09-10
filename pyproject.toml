@@ -1,6 +1,6 @@
 [project]
 name = "drillion"
-version = "0.7.6"
+version = "0.7.7"
 description = "Python practice drills that come back before you forget them. Graded by pytest, runs on your machine."
 readme = "README.md"
 license = "MIT"

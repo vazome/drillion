@@ -1,6 +1,6 @@
 name: release
 
-run-name: release: ${{ github.ref_name }}
+run-name: "release: ${{ github.ref_name }}"
 
 on:
   push:
