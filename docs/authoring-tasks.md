@@ -11,7 +11,7 @@ a difficulty, a track or a tag, and what the folder has to contain.
 | tier | what belongs in it | today |
 |---|---|---|
 | `core` | the language and its standard library, and every coder needs it: syntax, data structures, files and text, errors, `itertools`, `pathlib` | 163 |
-| `advanced` | still the standard library, but you can work a long while without it: `asyncio`, concurrency, generators, decorators, closures, `functools`, the object model past `@property` | 25 |
+| `advanced` | still the standard library, but you can work a long while without it: `asyncio`, concurrency, generators, decorators, closures, `functools`, the object model past `@property` | 39 |
 | `packages` | solving it needs something `pip` installs: `requests`, `responses`, `boto3`, `moto`, `pytest`, `fastapi`, `langchain` | 16 |
 
 Tier answers "can I run this with stock Python?", so `packages` wins whenever a task is both —
@@ -24,9 +24,9 @@ not count — 14 tasks `import pytest` down there for `pytest.approx` alone and 
 **difficulty** — how hard the task is to get **right the first time**: `easy`, `medium` or
 `hard`. It is not how long the task takes. Thirty minutes of unsurprising typing is `easy`; six
 lines you can only write once you have seen the trick is `hard`. Anchor the call on the task's
-`## Rules` — rules are where the traps live — and grade a new task against the rubric all 201
+`## Rules` — rules are where the traps live — and grade a new task against the rubric all 218
 were graded against: [difficulty-rubric.md](difficulty-rubric.md).
-Today: 36 easy · 138 medium · 30 hard.
+Today: 36 easy · 148 medium · 34 hard.
 
 **track** — optional, at most one per task: a themed run through the catalogue that cuts across
 tiers, for a sequence meant to be practised in order. No track is defined today. Leave the key
@@ -58,8 +58,8 @@ it — and `POST /api/focus` sets it.
 
 One folder per task, `tasks/<NNN>_<name>/`; copy the shape of an existing one.
 
-`<NNN>` is the task's place in the curriculum, `001`–`201` with no gaps, so the next task you add is
-`202`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
+`<NNN>` is the task's place in the curriculum, `001`–`218` with no gaps, so the next task you add is
+`219`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
 always numbers below its own, and `doctor` will not let that stop being true. Append, never insert —
 inserting means rewriting every number after it, and [ADR-0006](adr/0006-the-fundamentals-come-first.md)
 says the two renumberings drillion has had are the last two.
@@ -131,7 +131,7 @@ defines `_reference`/`_gen`/`test_*` or names `_reference` is refused.
 ## When a new task does not show up
 
 A folder the catalogue cannot read is **skipped**, not reported: a half-written task must never
-break the menu for the other 200. That makes a mistake look like a task that simply is not there.
+break the menu for the other 217. That makes a mistake look like a task that simply is not there.
 Run `uv run drillion doctor` — it reports every rule the folder breaks, not just the first:
 
 - a required key missing, empty, or misspelt (`tags: []` counts as missing);
@@ -143,7 +143,7 @@ Run `uv run drillion doctor` — it reports every rule the folder breaks, not ju
 
 `uv run drillion selfcheck` splices `_reference` into every file and runs the tests; it must be
 green on Python 3.14 before a task is trusted. But it only counts tasks the catalogue already
-accepted, so if it still says `201/201` after you added one, `doctor` is where to look.
+accepted, so if it still says `218/218` after you added one, `doctor` is where to look.
 
 ## Retired tags
 

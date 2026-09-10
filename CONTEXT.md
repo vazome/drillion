@@ -14,7 +14,7 @@ words mean.
 
 **Task**:
 The unit of practice: one folder under `tasks/`, holding one spec, one stub to fill in, and one
-test that grades it. There are 201.
+test that grades it. There are 218.
 _Avoid_: exercise, drill, problem, kata, question
 
 **Slug**:

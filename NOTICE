@@ -44,12 +44,12 @@ It does not replace the per-file `source:` field and attribution footer on
 each of the 89 tasks — those stay as the finer-grained record of exactly what
 came from where.
 
-Three tasks under `tasks/` adapt reference implementations from the example
-code for *Fluent Python, 2nd ed.*: `202_descriptor`, `203_abstractbase` and
-`204_classiterator`. Those sources carry no problem statements, so the code is
-theirs and every word of the task is drillion's, the opposite way round from
-the Exercism tasks above. Each names its origin in `source:` and closes with an
-"Adapted from fluentpython/example-code-2e — MIT" line; run
+Several tasks under `tasks/` adapt reference implementations from the example
+code for *Fluent Python, 2nd ed.*, all of them about the object model. Those
+sources carry no problem statements, so the code is theirs and every word of
+the task is drillion's, the opposite way round from the Exercism tasks above.
+Each names its origin in `source:` and closes with an "Adapted from
+fluentpython/example-code-2e — MIT" line; run
 `grep -rl '^source: fluentpython' tasks/*/README.md` to list them.
 
 That content is drawn from:
