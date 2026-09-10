@@ -1,0 +1,19 @@
+.root{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:var(--radius-sm);white-space:nowrap;color:var(--text-muted);background:var(--surface-2)}
+/* statuses — where the task sits in your workflow; api.py _status() emits these four */
+.root[data-status="new"]{color:var(--text-muted);background:var(--surface-2)}
+.root[data-status="due"]{color:var(--accent);background:var(--accent-tint)}
+.root[data-status="open"]{color:var(--warn);background:var(--warn-bg)}
+.root[data-status="done"]{color:var(--pass);background:var(--pass-bg)}
+/* difficulty — the task's own rating, independent of how you did on it */
+.root[data-status="easy"]{color:var(--pass);background:var(--pass-bg)}
+.root[data-status="medium"]{color:var(--warn);background:var(--warn-bg)}
+.root[data-status="hard"]{color:var(--fail);background:var(--fail-bg)}
+/* strength — how well you know the task, read off its return interval by src/strength.ts */
+.root[data-status="learning"]{color:var(--warn);background:var(--warn-bg)}
+.root[data-status="familiar"]{color:var(--accent);background:var(--accent-tint)}
+.root[data-status="solid"]{color:var(--pass);background:var(--pass-bg)}
+/* grades — how the attempt went; scheduler.grade_of() plus the abandoned case */
+.root[data-status="quick"]{color:var(--pass);background:var(--pass-bg)}
+.root[data-status="pass"]{color:var(--pass);background:var(--pass-bg)}
+.root[data-status="struggled"]{color:var(--warn);background:var(--warn-bg)}
+.root[data-status="abandoned"]{color:var(--text-muted);background:var(--surface-2)}

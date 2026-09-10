@@ -1,0 +1,19 @@
+/* The strip wraps rather than pushing the page sideways: at 200% zoom it is wider than the
+   window, and a horizontal scrollbar under every screen is the wrong answer. */
+.strip { display: flex; align-items: stretch; flex-wrap: wrap; gap: 10px 22px; }
+
+.label {
+  font-size: var(--fs-label); font-weight: 600; letter-spacing: var(--ls-label);
+  text-transform: uppercase; color: var(--text-muted); white-space: nowrap;
+}
+.num { font-family: var(--font-mono); font-size: 20px; font-variant-numeric: tabular-nums; }
+.num[data-accent] { color: var(--accent); }
+.of { font-size: 14px; color: var(--text-faint); }
+.rule { width: 1px; background: var(--border); }
+
+/* The three strength counts sit together and push the progress link to the far end. */
+.known { display: flex; align-items: center; gap: 18px; flex: 1; }
+.known .num { font-size: 15px; }
+.known .label { font-size: 11px; }
+.spacer { flex: 1; }
+.more { font-size: 13px; align-self: flex-end; white-space: nowrap; }

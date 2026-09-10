@@ -1,0 +1,6 @@
+.root{display:grid;gap:10px;justify-items:center;text-align:center;padding:var(--space-6) var(--space-4)}
+.root[data-align="left"]{justify-items:start;text-align:left}
+.message{font-family:var(--font-sans);font-size:14px;line-height:var(--lh-body);color:var(--text-muted);max-width:52ch;text-wrap:pretty}
+.action{background:transparent;border:none;border-radius:var(--radius-sm);padding:4px 6px;font-family:var(--font-sans);font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;cursor:pointer}
+@media (hover:hover){.action:hover:not(:disabled){text-decoration:underline}}
+.action:disabled{color:var(--text-faint);cursor:default}

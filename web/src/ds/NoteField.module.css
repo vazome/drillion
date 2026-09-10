@@ -1,0 +1,5 @@
+.root{display:grid;gap:10px}
+.label{font-size:var(--fs-label);font-weight:600;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--text-muted)}
+.hint{font-weight:400;text-transform:none;letter-spacing:0;font-size:12.5px;color:var(--text-faint)}
+.root[data-dirty] .hint{color:var(--text-muted)}
+.field{width:100%;box-sizing:border-box;display:block;resize:vertical;font-family:var(--font-sans);font-size:14px;line-height:1.55;padding:8px 12px;border-radius:var(--radius);border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text);outline:none;transition:border-color var(--dur-press) var(--ease-out)}

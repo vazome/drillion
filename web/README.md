@@ -11,6 +11,7 @@ uv run drillion                 # API on 8765 (and it builds web/dist if stale)
 pnpm --dir web dev              # Vite on 5173, proxying /api to 8765
 pnpm --dir web lint             # runs in CI
 pnpm --dir web build            # emits web/dist, which the server serves at /
+node --test web/tests/css-modules.test.mjs # module exports and rendered component contracts
 pnpm --dir web screens          # Playwright: renders all 201 task pages, photographs the rest,
                                 # and runs the keyboard/axe pass on Chromium, Firefox and WebKit
 ```
@@ -21,8 +22,9 @@ pnpm --dir web screens          # Playwright: renders all 201 task pages, photog
 Notes:
 
 - `src/ds/` is the drillion design system ("Mineral Blue"), authored in Claude Design and
-  vendored here. Treat it as vendored — changes belong upstream. The one exception is
-  `SpecText.jsx`, whose regex Markdown parser was replaced with `react-markdown` + `remark-gfm`.
+  vendored here, with sibling CSS Modules. Treat it as vendored — changes belong upstream;
+  `.design-sync/NOTES.md` records the import adaptation and local differences.
+  `SpecText.jsx` replaces the upstream regex Markdown parser with `react-markdown` + `remark-gfm`.
   Run `pnpm screens` after touching it — `e2e/render.spec.ts` renders every task spec.
   `Dialog.jsx` (the Settings modal) and the table roles inside `TopicStrips.jsx` were written
   here and belong upstream too.

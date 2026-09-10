@@ -13,6 +13,7 @@ export interface ButtonProps {
   kbdHint?: string;
   onClick?: () => void;
   children?: React.ReactNode;
+  className?: string;
   style?: Style;
 }
 export declare function Button(props: ButtonProps): El;
@@ -23,6 +24,7 @@ export interface CardProps {
   label?: React.ReactNode;
   padding?: number | string;
   children?: React.ReactNode;
+  className?: string;
   style?: Style;
 }
 export declare function Card(props: CardProps): El;
@@ -36,12 +38,13 @@ export interface InputProps {
   mono?: boolean;
   /** label when no visible <label> names the field */
   ariaLabel?: string;
+  className?: string;
   style?: Style;
 }
 export declare function Input(props: InputProps): El;
 
 /** Keyboard shortcut hint. Styling comes from the global kbd rule. */
-export interface KbdProps { children?: React.ReactNode }
+export interface KbdProps { children?: React.ReactNode; className?: string; style?: Style }
 export declare function Kbd(props: KbdProps): El;
 
 /** ▸ disclosure row that opens to monospace output. First use: the full pytest output. */
@@ -57,6 +60,7 @@ export interface CollapsibleProps {
   /** monospace, never-wrapped body (default); false for prose */
   mono?: boolean;
   children?: React.ReactNode;
+  className?: string;
   style?: Style;
 }
 export declare function Collapsible(props: CollapsibleProps): El;
@@ -70,6 +74,7 @@ export interface EmptyStateProps {
   actionDisabled?: boolean;
   /** "center" inside a panel (default), "left" inside a column of rows */
   align?: "center" | "left";
+  className?: string;
   style?: Style;
 }
 export declare function EmptyState(props: EmptyStateProps): El;
@@ -86,6 +91,7 @@ export interface SelectProps {
   mono?: boolean;
   /** label when no visible <label> wraps it */
   ariaLabel?: string;
+  className?: string;
   style?: Style;
 }
 export declare function Select(props: SelectProps): El;
@@ -98,6 +104,7 @@ export interface ToggleProps {
   label?: string;
   disabled?: boolean;
   ariaLabel?: string;
+  className?: string;
   style?: Style;
 }
 export declare function Toggle(props: ToggleProps): El;
@@ -111,6 +118,7 @@ export interface DialogProps {
   /** heading text, and the accessible name of the dialog */
   label?: string;
   children?: React.ReactNode;
+  className?: string;
   style?: Style;
 }
 export declare function Dialog(props: DialogProps): El;
@@ -137,6 +145,7 @@ export interface TableProps {
   onSort?: (key: string, dir: "asc" | "desc") => void;
   onRowClick?: (row: any) => void;
   emptyMessage?: React.ReactNode;
+  className?: string;
   style?: Style;
 }
 export declare function Table(props: TableProps): El;
@@ -146,6 +155,7 @@ export interface StatusBadgeProps {
   status?: "new" | "due" | "open" | "done" | "easy" | "medium" | "hard" | "quick" | "pass" | "struggled" | "abandoned" | "learning" | "familiar" | "solid";
   /** override label (e.g. "done 6 d") */
   children?: React.ReactNode;
+  className?: string;
   style?: Style;
 }
 export declare function StatusBadge(props: StatusBadgeProps): El;
@@ -156,6 +166,7 @@ export interface GraceNoticeProps {
   /** seconds of grace left, straight from the payload */
   seconds?: number;
   onDismiss?: () => void;
+  className?: string;
   style?: Style;
 }
 export declare function GraceNotice(props: GraceNoticeProps): El;
@@ -167,6 +178,7 @@ export interface TagChipProps {
   onClick?: () => void;
   /** 12px static row variant */
   small?: boolean;
+  className?: string;
   style?: Style;
 }
 export declare function TagChip(props: TagChipProps): El;
@@ -176,6 +188,7 @@ export interface TimerProps {
   seconds?: number;
   parMinutes?: number;
   paused?: boolean;
+  className?: string;
   style?: Style;
 }
 export declare function Timer(props: TimerProps): El;
@@ -191,6 +204,7 @@ export interface ResultBannerProps {
   gradeLine?: string;
   /** passed: "8 days" */
   backIn?: string;
+  className?: string;
   style?: Style;
 }
 export declare function ResultBanner(props: ResultBannerProps): El;
@@ -199,6 +213,7 @@ export declare function ResultBanner(props: ResultBannerProps): El;
 export interface NoticeBannerProps {
   message: React.ReactNode;
   actions?: { label: string; onClick?: () => void }[];
+  className?: string;
   style?: Style;
 }
 export declare function NoticeBanner(props: NoticeBannerProps): El;
@@ -216,6 +231,7 @@ export interface ConflictBannerProps {
   onKeep?: () => void;
   /** both actions disabled while the reload is in flight */
   disabled?: boolean;
+  className?: string;
   style?: Style;
 }
 export declare function ConflictBanner(props: ConflictBannerProps): El;
@@ -229,6 +245,7 @@ export interface SpecTextProps {
   hideTitle?: boolean;
   /** resolves relative assets/ links against /api/task/{slug}/assets/ */
   slug?: string;
+  className?: string;
   style?: Style;
 }
 export declare function SpecText(props: SpecTextProps): El;
@@ -244,6 +261,7 @@ export interface DueForecastProps {
   cap?: number;
   /** "YYYY-MM-DD" for bar [0], so weekday letters land right in any timezone */
   today?: string;
+  className?: string;
   style?: Style;
 }
 export declare function DueForecast(props: DueForecastProps): El;
@@ -260,6 +278,7 @@ export interface PracticeHeatmapProps {
   cell?: number;
   /** gap between squares, px */
   gap?: number;
+  className?: string;
   style?: Style;
 }
 export declare function PracticeHeatmap(props: PracticeHeatmapProps): El;
@@ -287,6 +306,7 @@ export interface TopicStripsProps {
   defaultSort?: "stuck first" | "neglected first" | "most lapses" | "a–z";
   /** scroll height of the row list, px */
   maxHeight?: number;
+  className?: string;
   style?: Style;
 }
 export declare function TopicStrips(props: TopicStripsProps): El;
@@ -307,6 +327,7 @@ export interface StuckNudgeProps {
   onDismiss?: () => void;
   /** "corner" — 360px and elevated, for a fixed bottom-right wrapper; "inline" — full width above the task */
   placement?: "corner" | "inline";
+  className?: string;
   style?: Style;
 }
 export declare function StuckNudge(props: StuckNudgeProps): El;
@@ -320,6 +341,7 @@ export interface BandProps {
   aside?: React.ReactNode;
   /** first band in the panel: no top border, more headroom */
   first?: boolean;
+  className?: string;
   style?: Style;
 }
 export declare function Band(props: BandProps): El;
@@ -341,6 +363,7 @@ export interface NoteFieldProps {
   rows?: number;
   /** accessible name, when the visible label is not enough ("Your note on Counter — top N") */
   ariaLabel?: string;
+  className?: string;
   style?: Style;
 }
 export declare function NoteField(props: NoteFieldProps): El;
@@ -354,6 +377,7 @@ export interface SortResetProps {
   onClick?: () => void;
   title?: string;
   ariaLabel?: string;
+  className?: string;
   style?: Style;
 }
 export declare function SortReset(props: SortResetProps): El;
@@ -367,6 +391,7 @@ export interface TaskPathProps {
   tags?: string[];
   /** between tags; " · " by default */
   separator?: string;
+  className?: string;
   style?: Style;
 }
 export declare function TaskPath(props: TaskPathProps): El;
@@ -384,6 +409,7 @@ export interface RowFlagsProps {
   lapses?: number;
   /** `stats.lapse_limit` — the flag appears at or above it; 0 turns the flag off */
   lapseLimit?: number;
+  className?: string;
   style?: Style;
 }
 export declare function RowFlags(props: RowFlagsProps): El | null;
@@ -404,6 +430,7 @@ export interface RequiresTagProps {
   onClick?: (e: React.MouseEvent) => void;
   /** also wired to focus: somewhere to fetch what the tag points at before it is clicked */
   onPointerEnter?: () => void;
+  className?: string;
   style?: Style;
 }
 export declare function RequiresTag(props: RequiresTagProps): El;
@@ -440,6 +467,7 @@ export interface DepLineageProps {
   graphHref?: string;
   /** shown as `Close` — pass it in the panel case, leave it out on a screen */
   onClose?: () => void;
+  className?: string;
   style?: Style;
 }
 export declare function DepLineage(props: DepLineageProps): El;

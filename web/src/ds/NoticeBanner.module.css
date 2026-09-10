@@ -1,0 +1,3 @@
+.root{background:var(--warn-bg);border-radius:var(--radius);padding:10px 14px;display:flex;align-items:center;gap:16px;font-size:14px;color:var(--text)}
+.message{flex:1}
+.action{background:transparent;border:none;padding:4px;font-family:var(--font-sans);font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;white-space:nowrap}
