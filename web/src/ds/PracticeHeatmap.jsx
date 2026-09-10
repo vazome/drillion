@@ -1,10 +1,11 @@
 import React from "react";
+import s from "./PracticeHeatmap.module.css";
 import { Tip } from "./Tip.jsx";
-/* Practice heatmap — 53 weeks × 7 days, four intensity steps off the accent. */
-const HEAT = ["var(--surface-2)", "var(--accent-tint)", "color-mix(in srgb, var(--accent) 45%, var(--surface))", "var(--accent)"];
+/* Practice heatmap — 53 weeks × 7 days, four intensity steps off the accent (the steps
+   themselves live in the module, as [data-heat] on a square). */
 const heatLevel = (n) => (!n ? 0 : n <= 3 ? 1 : n <= 8 ? 2 : 3);
 
-export function PracticeHeatmap({ days = {}, today, style, cell, gap = 4 }) {
+export function PracticeHeatmap({ days = {}, today, className, style, cell, gap = 4 }) {
   /* No `cell` given: measure the card and size the squares to fill its width. */
   const box = React.useRef(null);
   const [auto, setAuto] = React.useState(cell || 11);
@@ -17,7 +18,7 @@ export function PracticeHeatmap({ days = {}, today, style, cell, gap = 4 }) {
     ro.observe(box.current);
     return () => ro.disconnect();
   }, [cell, gap]);
-  const size = cell || auto;
+  const cellSize = cell || auto;
   const iso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   const end = new Date((today || new Date().toISOString().slice(0, 10)) + "T00:00:00");
   const last = new Date(end); last.setDate(last.getDate() + (6 - end.getDay()));   // fill to the end of this week
@@ -34,47 +35,47 @@ export function PracticeHeatmap({ days = {}, today, style, cell, gap = 4 }) {
   cols.forEach((week, c) => { const m = week[0].getMonth(); if (m !== prev && c < 51) { months.push({ c, m }); prev = m; } });
   const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-  const counts = Object.entries(days).filter(([d]) => d >= iso(first) && d <= iso(end)).map(([, n]) => n);
+  const counts = Object.values(days);
   const practised = counts.filter((n) => n > 0).length;
   const passes = counts.reduce((a, b) => a + b, 0);
   const fmt = (d) => d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
   const aria = "Practice over the last year: " + passes + " passes across " + practised + " days.";
-  const track = { display: "grid", gridTemplateColumns: "repeat(53, minmax(0, 1fr))", gap: gap + "px" };
   const [tip, setTip] = React.useState(null);
   const show = (e, text) => setTip({ text, x: e.currentTarget.offsetLeft + e.currentTarget.offsetWidth / 2, y: e.currentTarget.offsetTop });
 
   return (
-    <div style={style} ref={box}>
-      <div role="img" aria-label={aria} style={{ display: "flex", gap: 8, position: "relative" }} onMouseLeave={() => setTip(null)}>
+    <div className={className} style={style} ref={box}>
+      <div role="img" aria-label={aria} className={s.plot} onMouseLeave={() => setTip(null)}>
         {tip ? <Tip text={tip.text} x={tip.x} y={tip.y} /> : null}
-        <div style={{ display: "grid", gridTemplateRows: "14px repeat(7, " + size + "px)", gap: gap + "px", fontSize: 10, color: "var(--text-faint)", width: 20, justifyItems: "end", alignItems: "center" }}>
+        <div className={s.weekdays} style={{ gridTemplateRows: "14px repeat(7, " + cellSize + "px)", gap: gap + "px" }}>
           <div /><div /><div>M</div><div /><div>W</div><div /><div>F</div><div />
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ ...track, height: 14, fontSize: 10, color: "var(--text-faint)", overflow: "hidden" }}>
+        <div className={s.grid}>
+          <div className={s.months} style={{ gap: gap + "px" }}>
             {months.map(({ c, m }) => <div key={c} style={{ gridRow: 1, gridColumn: c + 1 + " / span 4" }}>{MON[m]}</div>)}
           </div>
-          <div style={{ ...track, gridTemplateRows: "repeat(7, " + size + "px)", gridAutoFlow: "column", marginTop: gap }}>
+          <div className={s.cells} style={{ gap: gap + "px", gridTemplateRows: "repeat(7, " + cellSize + "px)", marginTop: gap }}>
             {cols.flatMap((week) => week.map((d) => {
               const future = d > end;
               const n = days[iso(d)] || 0;
               const text = n === 0 ? "No practice on " + fmt(d) : n + (n === 1 ? " pass" : " passes") + " on " + fmt(d);
               return <div key={iso(d)} title={future ? undefined : text} onMouseEnter={future ? undefined : (e) => show(e, text)}
-                style={{ height: size, borderRadius: size > 14 ? 3 : 2, visibility: future ? "hidden" : "visible", background: HEAT[heatLevel(n)], boxShadow: n === 0 ? "none" : "inset 0 0 0 1px var(--accent-line)" }} />;
+                className={s.cell} data-heat={heatLevel(n)} data-future={future ? "" : undefined} data-round={cellSize > 14 ? "lg" : undefined}
+                style={{ height: cellSize }} />;
             }))}
           </div>
         </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
-        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-          {passes === 0 ? "No passes yet. Every square fills in as you practise." : practised + (practised === 1 ? " day" : " days") + " with a pass in the last year"}
+      <div className={s.foot}>
+        <span className={s.note}>
+          {passes === 0 ? "No passes yet. Every square fills in as you practise." : practised + " days practised in the last year"}
         </span>
-        <div style={{ flex: 1 }} />
-        <span style={{ fontSize: 11, color: "var(--text-faint)" }}>less</span>
-        <div style={{ display: "flex", gap: 3 }}>
-          {HEAT.map((c, i) => <div key={i} style={{ width: 12, height: 12, borderRadius: 2, background: c, boxShadow: i === 0 ? "none" : "inset 0 0 0 1px var(--accent-line)" }} />)}
+        <div className={s.spacer} />
+        <span className={s.scaleLabel}>less</span>
+        <div className={s.scale}>
+          {[0, 1, 2, 3].map((i) => <div key={i} className={s.swatch} data-heat={i} />)}
         </div>
-        <span style={{ fontSize: 11, color: "var(--text-faint)" }}>more</span>
+        <span className={s.scaleLabel}>more</span>
       </div>
     </div>
   );

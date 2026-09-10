@@ -1,0 +1,35 @@
+.head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.lede{font-size:13px;color:var(--text-muted)}
+.spacer{flex:1}
+.sorts{display:flex;gap:6px}
+.sortBtn{font:inherit;font-size:12px;padding:3px 9px;cursor:pointer;white-space:nowrap;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text-muted)}
+.sortBtn[data-active]{border-color:var(--accent-line);background:var(--accent-tint);color:var(--accent)}
+.row{display:grid;grid-template-columns:156px minmax(0,1fr) 52px 44px 66px;gap:12px;align-items:center}
+.headRow{padding-bottom:6px;padding-right:10px;border-bottom:1px solid var(--border)}
+.colLabel{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted)}
+.colLabel[data-align="right"]{text-align:right}
+.body{overflow:auto;margin-top:4px;padding-right:10px}
+.bodyRow{height:26px}
+.tagCell{overflow:hidden}
+.tagLink{font-size:13px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.strip{display:flex;gap:1px;min-width:8px}
+.seg{height:10px;border-radius:1px}
+.seg[data-ramp="0"]{background:color-mix(in srgb,var(--accent) 16%,var(--surface-2))}
+.seg[data-ramp="1"]{background:color-mix(in srgb,var(--accent) 30%,var(--surface-2))}
+.seg[data-ramp="2"]{background:color-mix(in srgb,var(--accent) 44%,var(--surface-2))}
+.seg[data-ramp="3"]{background:color-mix(in srgb,var(--accent) 58%,var(--surface-2))}
+.seg[data-ramp="4"]{background:color-mix(in srgb,var(--accent) 72%,var(--surface-2))}
+.seg[data-ramp="5"]{background:color-mix(in srgb,var(--accent) 86%,var(--surface-2))}
+.seg[data-ramp="6"]{background:color-mix(in srgb,var(--accent) 100%,var(--surface-2))}
+.seg[data-rest]{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--border)}
+.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:12px;text-align:right;color:var(--text-muted)}
+.num[data-tone="lapses"]{color:var(--text-faint)}
+.num[data-tone="lapses"][data-some]{color:var(--warn)}
+.num[data-tone="seen"]{color:inherit}
+.of{color:var(--text-faint)}
+.foot{display:flex;align-items:center;gap:10px;margin-top:12px}
+.footNote{font-size:12.5px;color:var(--text-faint)}
+.legend{display:flex;gap:2px;align-items:center}
+.chip{width:12px;height:10px;border-radius:1px}
+.chip[data-rest]{margin-left:3px}
+.footLabel{font-size:11px;color:var(--text-faint)}

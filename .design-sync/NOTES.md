@@ -1,5 +1,43 @@
 # design-sync notes
 
+## CSS Modules sync — 2026-09-10
+
+Source: the supplied `drillion design system.zip` export. Components remain vendored.
+The export uses prefixed global selectors and a `const s` class-name map because its
+preview does not load modules. In Vite, replace that map with a default import from the
+sibling `.module.css`, remove the component prefix from its selectors, and flatten sibling
+component imports into `web/src/ds/`. Do not import the export's aggregate component CSS
+from `styles.css`: Vite includes each module through its component. Keep `className` and
+`style` in `index.d.ts` aligned with the runtime props.
+
+The conversion carries these local adaptations forward:
+
+- `SpecText` keeps `react-markdown`, GFM, alert classes, and task asset URLs. Its module now
+  owns prose, tables, syntax colours and scoped plugin callouts; none belong in `tokens/base.css`.
+- `Dialog` closes the native element on both Close and backdrop clicks; its close event
+  reports the result. Its module keeps the fixed header, scrolling body, blur and open/close
+  transitions. These differ from the export's sticky header and callback-only close buttons.
+- `StuckNudge` retains the hint/read-material copy and no bury action. `ResultBanner` keeps
+  entrance animation in its app wrapper. `DepLineage` retains `hrefOf`-controlled links.
+- `PracticeHeatmap` derives a separate cell size instead of reassigning an effect dependency.
+  Table headers retain sans-serif labels even for monospace data columns.
+- Settings uses the export's single-column sections, aligned rows and key-binding dropdown,
+  with styles in `Settings.module.css`. It retains the app's full font list, ligatures, tab
+  size, relative line numbers and Restore workflow, which the mock omits. Paths and actions
+  use the real API; preferences still use the shared browser store. Rows stack on narrow
+  screens, and the dialog body is the only scroll area.
+- `tokens/motion.css` and all other token values stay local and unchanged. `Kbd` still uses
+  the native-element rule in `base.css`, matching the export.
+
+Check with `pnpm --dir web build`, `pnpm --dir web lint`, and
+`node --test web/tests/css-modules.test.mjs`. With browser verification approved, also run
+`pnpm --dir web screens` for keyboard, accessibility and task rendering coverage.
+
+## Earlier sync notes
+
+Some differences below have since landed upstream. The snapshot notes above take precedence
+for component styling and the current local adaptations.
+
 The vendored design system in `web/src/ds/` diverges from the Claude Design project by:
 
 - the DIFFICULTY-AND-MOTION patch — `StatusBadge` gains the `easy` / `medium` / `hard`

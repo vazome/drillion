@@ -1,0 +1,11 @@
+.root{border-radius:var(--radius);padding:12px 16px;font-size:14px}
+.root[data-state="idle"]{background:var(--surface-2);color:var(--text-faint)}
+.root[data-state="running"]{background:var(--surface-2);color:var(--text-muted)}
+.root[data-state="failed"]{background:var(--fail-bg);border-left:3px solid var(--fail);color:var(--text)}
+.root[data-state="passed"]{background:var(--pass-bg);border-left:3px solid var(--pass);color:var(--text)}
+.headline{font-family:var(--font-mono);font-size:13.5px;white-space:pre-wrap;color:var(--fail);font-weight:600}
+.details{margin-top:8px}
+.summary{cursor:pointer;font-size:13px;color:var(--text-muted)}
+.output{margin:8px 0 0;font-family:var(--font-mono);font-size:12.5px;line-height:1.55;white-space:pre-wrap;color:var(--text-muted)}
+.grade{font-weight:600;color:var(--pass);letter-spacing:.04em}
+.backIn{margin-left:10px;font-size:13px;color:var(--text-muted)}

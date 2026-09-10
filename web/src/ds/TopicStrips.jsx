@@ -1,11 +1,9 @@
 import React from "react";
+import s from "./TopicStrips.module.css";
 /* Topic depth — one strip per tag: how well its tasks are known, as a stacked bar, plus
    lapses, due7, seen/total. Segments run shakiest to most solid; the scheduler's boxes stay
-   behind the API, see src/strength.ts. */
-const STRIP_MONO = { fontFamily: "var(--font-mono)", fontVariantNumeric: "tabular-nums" };
-const STRIP_LABEL = { fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--text-muted)" };
-const STRIP_GRID = { display: "grid", gridTemplateColumns: "156px minmax(0, 1fr) 52px 44px 66px", gap: 12, alignItems: "center" };
-const STRIP_RAMP = [16, 30, 44, 58, 72, 86, 100].map((p) => "color-mix(in srgb, var(--accent) " + p + "%, var(--surface-2))");
+   behind the API, see src/strength.ts. The seven-step ramp off the accent lives in the
+   module, as [data-ramp] on a segment. */
 const STRIP_SORTS = {
   "stuck first": (a, b) => (b.boxes[0] + b.boxes[1]) / Math.max(1, b.seen) - (a.boxes[0] + a.boxes[1]) / Math.max(1, a.seen) || b.seen - a.seen,
   "neglected first": (a, b) => (b.total - b.seen) - (a.total - a.seen),
@@ -15,61 +13,61 @@ const STRIP_SORTS = {
 
 function TopicStripsSort({ value, onChange }) {
   return (
-    <div style={{ display: "flex", gap: 6 }}>
+    <div className={s.sorts}>
       {Object.keys(STRIP_SORTS).map((k) => (
-        <button key={k} onClick={() => onChange(k)} style={{ font: "inherit", fontSize: 12, padding: "3px 9px", cursor: "pointer", whiteSpace: "nowrap", borderRadius: "var(--radius-sm)", border: "1px solid " + (k === value ? "var(--accent-line)" : "var(--border)"), background: k === value ? "var(--accent-tint)" : "var(--surface)", color: k === value ? "var(--accent)" : "var(--text-muted)" }}>{k}</button>
+        <button key={k} onClick={() => onChange(k)} className={s.sortBtn} data-active={k === value ? "" : undefined}>{k}</button>
       ))}
     </div>
   );
 }
 
-export function TopicStrips({ tags = [], defaultSort = "stuck first", maxHeight = 520, style }) {
+export function TopicStrips({ tags = [], defaultSort = "stuck first", maxHeight = 520, className, style }) {
   const [sort, setSort] = React.useState(defaultSort);
   const rows = [...tags].sort(STRIP_SORTS[sort]);
   const widest = Math.max(1, ...tags.map((t) => t.total));
   return (
-    <div style={style}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>One strip per topic: how well you know its tasks, shakiest on the left, most solid on the right.</span>
-        <div style={{ flex: 1 }} /><TopicStripsSort value={sort} onChange={setSort} />
+    <div className={className} style={style}>
+      <div className={s.head}>
+        <span className={s.lede}>One strip per topic: how well you know its tasks, shakiest on the left, most solid on the right.</span>
+        <div className={s.spacer} /><TopicStripsSort value={sort} onChange={setSort} />
       </div>
       {/* one table, header row included: a role="table" whose columns are a sibling div is a
           table to nobody, and its rows need the rowgroup a scrolling box would otherwise break */}
       <div role="table" aria-label="Practice spread per topic">
       <div role="rowgroup">
-      <div role="row" style={{ ...STRIP_GRID, paddingBottom: 6, paddingRight: 10, borderBottom: "1px solid var(--border)" }}>
-        <div role="columnheader" style={STRIP_LABEL}>Tag</div><div role="columnheader" style={STRIP_LABEL}>Spread</div>
-        <div role="columnheader" style={{ ...STRIP_LABEL, textAlign: "right" }}>Lapses</div>
-        <div role="columnheader" style={{ ...STRIP_LABEL, textAlign: "right" }}>Due 7</div>
-        <div role="columnheader" style={{ ...STRIP_LABEL, textAlign: "right" }}>Seen</div>
+      <div role="row" className={s.row + " " + s.headRow}>
+        <div role="columnheader" className={s.colLabel}>Tag</div><div role="columnheader" className={s.colLabel}>Spread</div>
+        <div role="columnheader" className={s.colLabel} data-align="right">Lapses</div>
+        <div role="columnheader" className={s.colLabel} data-align="right">Due 7</div>
+        <div role="columnheader" className={s.colLabel} data-align="right">Seen</div>
       </div>
       </div>
-      <div role="rowgroup" style={{ maxHeight, overflow: "auto", marginTop: 4, paddingRight: 10 }}>
+      <div role="rowgroup" className={s.body} style={{ maxHeight }}>
         {rows.map((t) => (
-          <div key={t.tag} role="row" style={{ ...STRIP_GRID, height: 26 }}>
-            <div role="cell" style={{ overflow: "hidden" }}>
-              <a href={"#/?tag=" + encodeURIComponent(t.tag)} title={t.tag} style={{ fontSize: 13, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.tag}</a>
+          <div key={t.tag} role="row" className={s.row + " " + s.bodyRow}>
+            <div role="cell" className={s.tagCell}>
+              <a href={"#/?tag=" + t.tag} title={t.tag} className={s.tagLink}>{t.tag}</a>
             </div>
-            <div role="cell" style={{ display: "flex", gap: 1, width: (t.total / widest) * 100 + "%", minWidth: 8 }}
+            <div role="cell" className={s.strip} style={{ width: (t.total / widest) * 100 + "%" }}
               title={t.tag + " — " + t.seen + " of " + t.total + " practised, " + (t.total - t.seen) + " not started"}>
-              {t.boxes.map((n, i) => (n ? <div key={i} style={{ flex: n, height: 10, borderRadius: 1, background: STRIP_RAMP[i] }} /> : null))}
-              {t.total - t.seen > 0 ? <div style={{ flex: t.total - t.seen, height: 10, borderRadius: 1, background: "var(--surface-2)", boxShadow: "inset 0 0 0 1px var(--border)" }} /> : null}
+              {t.boxes.map((n, i) => (n ? <div key={i} className={s.seg} data-ramp={i} style={{ flex: n }} /> : null))}
+              {t.total - t.seen > 0 ? <div className={s.seg} data-rest="" style={{ flex: t.total - t.seen }} /> : null}
             </div>
-            <div role="cell" style={{ ...STRIP_MONO, fontSize: 12, textAlign: "right", color: t.lapses ? "var(--warn)" : "var(--text-faint)" }}>{t.lapses || "—"}</div>
-            <div role="cell" style={{ ...STRIP_MONO, fontSize: 12, textAlign: "right", color: "var(--text-muted)" }}>{t.due7}</div>
-            <div role="cell" style={{ ...STRIP_MONO, fontSize: 12, textAlign: "right" }}>{t.seen}<span style={{ color: "var(--text-faint)" }}>/{t.total}</span></div>
+            <div role="cell" className={s.num} data-tone="lapses" data-some={t.lapses ? "" : undefined}>{t.lapses || "—"}</div>
+            <div role="cell" className={s.num}>{t.due7}</div>
+            <div role="cell" className={s.num} data-tone="seen">{t.seen}<span className={s.of}>/{t.total}</span></div>
           </div>
         ))}
       </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
-        <span style={{ fontSize: 12.5, color: "var(--text-faint)" }}>{tags.length} tags · strip width is the topic's size, segments run shakiest to most solid, then not started</span>
-        <div style={{ flex: 1 }} />
-        <div style={{ display: "flex", gap: 2, alignItems: "center" }}>
-          {STRIP_RAMP.map((c, i) => <div key={i} style={{ width: 12, height: 10, borderRadius: 1, background: c }} />)}
-          <div style={{ width: 12, height: 10, borderRadius: 1, background: "var(--surface-2)", boxShadow: "inset 0 0 0 1px var(--border)", marginLeft: 3 }} title="not started" />
+      <div className={s.foot}>
+        <span className={s.footNote}>{tags.length} tags · strip width is the topic's size, segments run shakiest to most solid, then not started</span>
+        <div className={s.spacer} />
+        <div className={s.legend}>
+          {[0, 1, 2, 3, 4, 5, 6].map((i) => <div key={i} className={s.chip + " " + s.seg} data-ramp={i} />)}
+          <div className={s.chip + " " + s.seg} data-rest="" title="not started" />
         </div>
-        <span style={{ fontSize: 11, color: "var(--text-faint)" }}>shaky → solid → not started</span>
+        <span className={s.footLabel}>shaky → solid → not started</span>
       </div>
     </div>
   );

@@ -1,0 +1,4 @@
+.root{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:15px;color:var(--text-muted)}
+.root[data-over="par"]{color:var(--warn)}
+.root[data-over="double"]{color:var(--fail)}
+.par{opacity:.65}

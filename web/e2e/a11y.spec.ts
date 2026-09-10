@@ -67,7 +67,9 @@ test("Settings opens from the keyboard, keeps focus, and Escape gives it back", 
 
   const dialog = page.getByRole("dialog", { name: "Settings" });
   await expect(dialog).toBeVisible();
-  await dialog.getByRole("tab", { name: "Data" }).click();
+  await expect(dialog.getByRole("tablist")).toHaveCount(0);
+  await expect(dialog.getByRole("heading", { name: "Editor", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "Your data", exact: true })).toBeVisible();
   await expect(dialog.getByText("Data folder")).toBeVisible();   // its paths have arrived
   expect(listed((await audit(page)).violations), "settings").toBe("");
   // the modal owns the focus: tabbing cycles inside it and never reaches the screen behind
@@ -108,9 +110,15 @@ test("a task can be opened, run and read without a pointer", async ({ page }) =>
 test("the page reflows at 200% zoom", async ({ page }) => {
   // 200% of the 1440x900 the rest of the suite uses: the same page in half the CSS pixels
   await page.setViewportSize({ width: 720, height: 450 });
-  for (const route of SCREENS) {
+  for (const route of [...SCREENS, "/#/settings"]) {
     await page.goto(route);
-    await settled(page, route);
+    if (route.endsWith("/settings")) {
+      await expect(page.getByRole("dialog", { name: "Settings" })).toBeVisible();
+      const spill = await page.getByRole("dialog", { name: "Settings" }).evaluate((el) => el.scrollWidth - el.clientWidth);
+      expect(spill, "Settings scrolls sideways at 200%").toBeLessThanOrEqual(1);
+    } else {
+      await settled(page, route);
+    }
     const spill = await page.evaluate(() =>
       document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(spill, `${route} scrolls sideways at 200%`).toBeLessThanOrEqual(1);

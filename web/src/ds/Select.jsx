@@ -1,17 +1,16 @@
 import React from "react";
-export function Select({ value, onChange, options = [], placeholder, disabled = false, mono = false, ariaLabel, style }) {
-  const [hover, setHover] = React.useState(false);
+import s from "./Select.module.css";
+export function Select({ value, onChange, options = [], placeholder, disabled = false, mono = false, ariaLabel, className, style }) {
   const opts = options.map((o) => (typeof o === "string" ? { value: o, label: o } : o));
   return (
-    <span style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
-      <select value={value} disabled={disabled} aria-label={ariaLabel}
+    <span className={s.wrap}>
+      <select value={value} disabled={disabled} aria-label={ariaLabel} data-mono={mono ? "" : undefined}
         onChange={onChange ? (e) => onChange(e.target.value) : undefined}
-        onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-        style={{ appearance: "none", WebkitAppearance: "none", fontFamily: mono ? "var(--font-mono)" : "var(--font-sans)", fontSize: "14px", height: "var(--control-h)", padding: "0 30px 0 12px", borderRadius: "var(--radius)", border: "1px solid var(--border-strong)", background: (hover && !disabled) ? "var(--surface-2)" : (disabled ? "var(--surface-2)" : "var(--surface)"), color: disabled ? "var(--text-faint)" : "var(--text)", outline: "none", cursor: disabled ? "default" : "pointer", boxSizing: "border-box", transition: "background var(--dur-press) var(--ease-out), border-color var(--dur-press) var(--ease-out)", ...style }}>
+        className={[s.root, className].filter(Boolean).join(" ")} style={style}>
         {placeholder ? <option value="">{placeholder}</option> : null}
         {opts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
-      <span aria-hidden="true" style={{ position: "absolute", right: "11px", fontSize: "10px", lineHeight: 1, color: disabled ? "var(--text-faint)" : "var(--text-muted)", pointerEvents: "none" }}>▾</span>
+      <span aria-hidden="true" className={s.caret}>▾</span>
     </span>
   );
 }

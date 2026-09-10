@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Button, Card, EmptyState, Input, NoticeBanner, Select, Toggle } from "./ds/index.js";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { Button, EmptyState, Input, NoticeBanner, Select, Toggle } from "./ds/index.js";
 import { api, type Paths, type Bundle, type Erased, type Restored } from "./api";
 import { DEFAULTS, FONTS, setPrefs, usePrefs } from "./prefs";
+import s from "./Settings.module.css";
 
 /** A path plus the one thing anyone wants to do with it. */
 function Location({ label, path }: { label: string; path: string }) {
@@ -13,11 +14,10 @@ function Location({ label, path }: { label: string; path: string }) {
     }, () => {});
   };
   return (
-    <div style={{ display: "flex", alignItems: "baseline", gap: 12, padding: "6px 0" }}>
-      <span style={{ fontSize: 13, color: "var(--text-muted)", minWidth: 110 }}>{label}</span>
-      <code style={{ flex: 1, fontSize: 13, overflowWrap: "anywhere" }}>{path}</code>
+    <Row label={label}>
+      <code className={s.path}>{path}</code>
       <Button variant="quiet" onClick={copy}>{copied ? "Copied" : "Copy"}</Button>
-    </div>
+    </Row>
   );
 }
 
@@ -46,11 +46,11 @@ function DangerZone() {
   };
 
   return (
-    <Card label="Danger zone" style={{ border: "1px solid var(--fail)", boxShadow: "none" }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ flex: 1, minWidth: 280 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fail)" }}>Erase all progress</div>
-          <p style={{ margin: "4px 0 0", fontSize: 14, color: "var(--text-muted)" }}>
+    <div className={s.dangerZone}>
+      <div className={s.dangerHead}>
+        <div className={s.dangerText}>
+          <div className={s.dangerTitle}>Erase all progress</div>
+          <p className={s.dangerDescription}>
             Deletes the progress database itself, so your schedule, your history and your
             notes are gone rather than emptied, and puts every task back to a{" "}
             <code>solve()</code> that raises, the way Abandon does for one. A backup of
@@ -58,26 +58,26 @@ function DangerZone() {
           </p>
         </div>
         {open ? null : (
-          <Button variant="secondary" style={{ color: "var(--fail)", borderColor: "var(--fail)" }} onClick={() => setOpen(true)}>
+          <Button variant="secondary" className={s.dangerButton} onClick={() => setOpen(true)}>
             Erase all progress
           </Button>
         )}
       </div>
 
       {open ? (
-        <div style={{ marginTop: 14, padding: 14, borderRadius: "var(--radius)", background: "var(--fail-bg)", display: "grid", gap: 10 }}>
-          <div style={{ fontSize: 14 }}>
-            To confirm, type <code style={{ fontWeight: 600 }}>{PHRASE}</code> below.
+        <div className={s.confirmation}>
+          <div>
+            To confirm, type <code className={s.phrase}>{PHRASE}</code> below.
           </div>
           <Input
             value={typed} onChange={setTyped} mono placeholder={PHRASE}
-            ariaLabel={`Type ${PHRASE} to confirm`} style={{ maxWidth: 280 }}
+            ariaLabel={`Type ${PHRASE} to confirm`} className={s.confirmInput}
           />
           {error ? <NoticeBanner message={error} /> : null}
-          <div style={{ display: "flex", gap: 10 }}>
+          <div className={s.actions}>
             <Button
               variant="secondary" disabled={busy || typed.trim() !== PHRASE} onClick={erase}
-              style={typed.trim() === PHRASE && !busy ? { background: "var(--fail)", borderColor: "var(--fail)", color: "#FFFFFF" } : undefined}>
+              className={s.confirmButton}>
               {busy ? "Erasing…" : "I understand, erase everything"}
             </Button>
             <Button variant="quiet" disabled={busy} onClick={close}>Cancel</Button>
@@ -86,52 +86,49 @@ function DangerZone() {
       ) : null}
 
       {done ? (
-        <div style={{ marginTop: 14, display: "grid", gap: 8 }}>
-          <div style={{ fontSize: 14 }}>Erased. {done.cleared} task files went back to their stub.</div>
+        <div className={s.result}>
+          <div>Erased. {done.cleared} task files went back to their stub.</div>
           {done.failed.length ? <NoticeBanner message={`The code could not be cleared for: ${done.failed.join(", ")}`} /> : null}
-          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          <div className={s.kept}>
             What you had is at <code>{done.kept}</code>.
           </div>
           <div><Button onClick={() => { location.hash = "#/"; location.reload(); }}>Back to the catalogue</Button></div>
         </div>
       ) : null}
-    </Card>
+    </div>
   );
 }
 
 /** One preference: what it is called, the control, and a line saying what it buys you. */
-function Row({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+function Row({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
+  const id = useId();
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "7px 0", flexWrap: "wrap" }}>
-      <span style={{ fontSize: 14, minWidth: 150 }}>{label}</span>
-      {children}
-      {hint ? <span style={{ fontSize: 13, color: "var(--text-faint)", flex: 1, minWidth: 180 }}>{hint}</span> : null}
+    <div className={s.row} role="group" aria-labelledby={id}>
+      <div className={s.rowLabel}>
+        <div id={id}>{label}</div>
+        {hint ? <div className={s.hint}>{hint}</div> : null}
+      </div>
+      <div className={s.control}>{children}</div>
     </div>
+  );
+}
+
+/** Headings share the sheet's one scroll area; sections do not add another card or scroller. */
+function Section({ title, note, children }: {
+  title: string; note?: string; children: ReactNode;
+}) {
+  const id = useId();
+  return (
+    <section aria-labelledby={id}>
+      <h3 id={id} className={s.sectionTitle}>{title}</h3>
+      {note ? <p className={s.sectionNote}>{note}</p> : null}
+      <div className={s.sectionBody}>{children}</div>
+    </section>
   );
 }
 
 const SIZES = ["12", "13", "14", "16", "18"];
 const TABS = ["2", "4", "8"];
-
-function KeyBinding({ value, onChange }: {
-  value: "regular" | "vim" | "emacs";
-  onChange: (value: "regular" | "vim" | "emacs") => void;
-}) {
-  const choices = [
-    ["regular", "Standard"], ["vim", "Vim"], ["emacs", "Emacs"],
-  ] as const;
-  return (
-    <div className="key-binding-segmented" role="radiogroup" aria-label="Key binding">
-      {choices.map(([key, label]) => (
-        <label key={key}>
-          <input type="radio" name="key-binding" value={key} checked={value === key}
-            onChange={() => onChange(key)} />
-          <span>{label}</span>
-        </label>
-      ))}
-    </div>
-  );
-}
 
 /** How the editor is set, and whether the clock is on screen. Every row is a preference of
  *  this browser: none of it is in your progress, and none of it travels in a backup. */
@@ -139,32 +136,35 @@ function EditorSettings() {
   const prefs = usePrefs();
   const untouched = JSON.stringify(prefs) === JSON.stringify(DEFAULTS);
   return (
-    <Card label="Editor">
+    <Section title="Editor" note="These live in this browser, so they are not part of a backup.">
+      <div>
       <Row label="Font">
-        <Select value={prefs.font} ariaLabel="Editor font" style={{ minWidth: 190 }}
+        <Select value={prefs.font} ariaLabel="Editor font" className={s.fontSelect}
           options={FONTS.map((f) => ({ value: f.value, label: f.label }))}
           onChange={(v) => setPrefs({ font: v as typeof prefs.font })} />
       </Row>
       <Row label="Font size">
         <Select value={String(prefs.fontSize)} options={SIZES} ariaLabel="Editor font size"
-          onChange={(v) => setPrefs({ fontSize: Number(v) })} style={{ minWidth: 90 }} />
+          onChange={(v) => setPrefs({ fontSize: Number(v) })} className={s.numberSelect} />
       </Row>
-      <Row label="Font ligatures" hint="Draws ==, != and -> as one glyph.">
+      <Row label="Font ligatures" hint="== and -> as one glyph.">
         <Toggle checked={prefs.ligatures} label={prefs.ligatures ? "On" : "Off"}
           onChange={(on) => setPrefs({ ligatures: on })} />
       </Row>
-      <Row label="Key binding" hint="Ctrl+Enter runs and Ctrl+Shift+Enter submits whichever you pick, and C-g always gets you out of a half-typed Emacs chord.">
-        <KeyBinding value={prefs.keys} onChange={(keys) => setPrefs({ keys })} />
+      <Row label="Key binding" hint={<span>Ctrl+Enter runs and Ctrl+Shift+Enter submits whichever you pick, and <code>C-g</code> always gets you out of a half-typed Emacs chord.</span>}>
+        <Select value={prefs.keys} ariaLabel="Key binding" className={s.keySelect}
+          options={[{ value: "regular", label: "Standard" }, { value: "vim", label: "Vim" }, { value: "emacs", label: "Emacs" }]}
+          onChange={(keys) => setPrefs({ keys: keys as typeof prefs.keys })} />
       </Row>
       <Row label="Tab size">
         <Select value={String(prefs.tabSize)} options={TABS} ariaLabel="Tab size"
-          onChange={(v) => setPrefs({ tabSize: Number(v) })} style={{ minWidth: 90 }} />
+          onChange={(v) => setPrefs({ tabSize: Number(v) })} className={s.numberSelect} />
       </Row>
       <Row label="Word wrap" hint="Off puts long lines behind a horizontal scrollbar.">
         <Toggle checked={prefs.wordWrap} label={prefs.wordWrap ? "On" : "Off"}
           onChange={(on) => setPrefs({ wordWrap: on })} />
       </Row>
-      <Row label="Relative line numbers" hint="Counts from the cursor, the way Vim motions do.">
+      <Row label="Relative line numbers" hint="Counts from the cursor.">
         <Toggle checked={prefs.relativeLines} label={prefs.relativeLines ? "On" : "Off"}
           onChange={(on) => setPrefs({ relativeLines: on })} />
       </Row>
@@ -172,15 +172,13 @@ function EditorSettings() {
         <Toggle checked={prefs.showTimer} label={prefs.showTimer ? "Shown" : "Hidden"}
           onChange={(on) => setPrefs({ showTimer: on })} />
       </Row>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginTop: 6 }}>
-        {untouched ? null : (
-          <Button variant="quiet" onClick={() => setPrefs(DEFAULTS)}>Put these back to their defaults</Button>
-        )}
-        <span style={{ fontSize: 13, color: "var(--text-faint)" }}>
-          These live in this browser, so they are not part of a backup.
-        </span>
       </div>
-    </Card>
+      {untouched ? null : (
+        <div className={s.defaults}>
+          <Button variant="quiet" onClick={() => setPrefs(DEFAULTS)}>Put these back to their defaults</Button>
+        </div>
+      )}
+    </Section>
   );
 }
 
@@ -188,22 +186,24 @@ const counts = (b: Bundle["brings"]) =>
   `${b.cards} cards, ${b.archive} solved tasks, ${b.notes} notes, ${b.tasks} saved task files`;
 
 export function Settings() {
-  const [section, setSection] = useState<"editor" | "data">("editor");
   const [paths, setPaths] = useState<Paths | null>(null);
+  const [pathError, setPathError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<Bundle | null>(null);
   const [done, setDone] = useState<Restored | null>(null);
   const [busy, setBusy] = useState(false);
   const picker = useRef<HTMLInputElement>(null);
-  const sections = ["editor", "data"] as const;
 
-  useEffect(() => { api<Paths>("/settings").then(setPaths).catch((e) => setError(e.message)); }, []);
+  useEffect(() => { api<Paths>("/settings").then(setPaths).catch((e) => setPathError(e.message)); }, []);
 
   /** Reading the bundle is its own step: nothing is replaced until the summary is accepted. */
   const choose = async (chosen: File | null) => {
     setFile(chosen); setPreview(null); setDone(null); setError(null);
-    if (!chosen) return;
+    if (!chosen) {
+      if (picker.current) picker.current.value = "";
+      return;
+    }
     setBusy(true);
     try {
       setPreview(await api<Bundle>("/restore/preview", {
@@ -227,112 +227,62 @@ export function Settings() {
   };
 
   return (
-    <div style={{ display: "grid", gap: 18 }}>
-      <div role="tablist" aria-label="Settings categories"
-        style={{ display: "flex", gap: 4, borderBottom: "1px solid var(--border)" }}>
-        {sections.map((name, index) => {
-          const selected = section === name;
-          const label = name[0].toUpperCase() + name.slice(1);
-          return (
-            <button key={name} id={`settings-${name}-tab`} type="button" role="tab"
-              aria-selected={selected} aria-controls={`settings-${name}`} tabIndex={selected ? 0 : -1}
-              onClick={() => setSection(name)}
-              onKeyDown={(event) => {
-                let next = index;
-                if (event.key === "ArrowRight") next = (index + 1) % sections.length;
-                else if (event.key === "ArrowLeft") next = (index - 1 + sections.length) % sections.length;
-                else if (event.key === "Home") next = 0;
-                else if (event.key === "End") next = sections.length - 1;
-                else return;
-                event.preventDefault();
-                const target = sections[next];
-                setSection(target);
-                document.getElementById(`settings-${target}-tab`)?.focus();
-              }}
-              style={{ padding: "8px 14px", marginBottom: -1, border: "none", borderBottom: selected ? "2px solid var(--accent)" : "2px solid transparent", background: "transparent", color: selected ? "var(--text)" : "var(--text-muted)", font: "inherit", fontSize: 14, fontWeight: selected ? 600 : 400, cursor: "pointer" }}>
-              {label}
-            </button>
-          );
-        })}
-      </div>
+    <div className={s.sheet}>
+      <EditorSettings />
 
-      <div id="settings-editor" role="tabpanel" aria-labelledby="settings-editor-tab"
-        hidden={section !== "editor"}>
-        <EditorSettings />
-      </div>
+      <Section title="Your data" note="Everything drillion knows about your practice lives on this machine, in these places.">
+        {pathError ? <EmptyState message={`Could not load settings: ${pathError}`} /> : paths ? (
+          <>
+            <Location label="Data folder" path={paths.root} />
+            <Location label="Progress" path={paths.progress} />
+            <Location label="Tasks" path={paths.tasks} />
+          </>
+        ) : <EmptyState message="Loading…" align="left" />}
+      </Section>
 
-      <div id="settings-data" role="tabpanel" aria-labelledby="settings-data-tab"
-        hidden={section !== "data"} style={{ display: section === "data" ? "grid" : "none", gap: 18 }}>
-          {error && !paths ? <EmptyState message={`Could not load settings: ${error}`} /> : (
-            <Card label="Your data">
-              <p style={{ margin: "0 0 8px", fontSize: 14, color: "var(--text-muted)" }}>
-                Everything drillion knows about your practice lives on this machine, in these places.
-              </p>
-              {paths ? (
-                <>
-                  <Location label="Data folder" path={paths.root} />
-                  <Location label="Progress" path={paths.progress} />
-                  <Location label="Tasks" path={paths.tasks} />
-                </>
-              ) : <EmptyState message="Loading…" align="left" />}
-            </Card>
-          )}
+      <Section title="Back up" note="One file holding your schedule, your history and the code you have written. Keep it anywhere. Restoring it on another machine, or after a reinstall, picks up where you left off.">
+        <a href="/api/backup" download data-variant="primary" className={s.download}>Download a backup</a>
+      </Section>
 
-          <Card label="Back up">
-            <p style={{ margin: "0 0 12px", fontSize: 14, color: "var(--text-muted)" }}>
-              One file holding your schedule, your history and the code you have written. Keep it
-              anywhere. Restoring it on another machine, or after a reinstall, picks up where you left off.
-            </p>
-            <a href="/api/backup" download style={{ textDecoration: "none" }}>
-              <Button variant="primary">Download a backup</Button>
-            </a>
-          </Card>
-
-          <Card label="Restore">
-            <p style={{ margin: "0 0 12px", fontSize: 14, color: "var(--text-muted)" }}>
-              Restoring replaces your current progress and the code saved in every task. It
-              happens completely or not at all, and what it replaces is written to a backup of
-              its own first, so you can undo it.
-            </p>
-            <input
-              ref={picker} type="file" accept=".zip,application/zip" disabled={busy}
-              aria-label="Choose a backup file to restore"
-              onChange={(e) => choose(e.target.files?.[0] ?? null)}
-              style={{ fontSize: 14, color: "var(--text-muted)" }}
-            />
-            {error && paths ? <NoticeBanner message={error} style={{ marginTop: 12 }} /> : null}
-            {preview ? (
-              <div style={{ marginTop: 14, display: "grid", gap: 8 }}>
-                <div style={{ fontSize: 14 }}>
-                  Taken {preview.created?.replace("T", " at ") ?? "at an unknown time"} on drillion v{preview.drillion}.
-                </div>
-                <div style={{ fontSize: 14 }}>Brings back {counts(preview.brings)}.</div>
-                <div style={{ fontSize: 14, color: "var(--text-muted)" }}>
-                  Replaces {preview.replaces.cards} cards, {preview.replaces.archive} solved tasks
-                  and {preview.replaces.notes} notes you have now.
-                </div>
-                {preview.unknown.length ? (
-                  <NoticeBanner message={`${preview.unknown.length} task${preview.unknown.length > 1 ? "s" : ""} in this backup are not in this version of drillion, so their saved code stays in the file: ${preview.unknown.join(", ")}`} />
-                ) : null}
-                <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-                  <Button variant="primary" disabled={busy} onClick={apply}>Replace my data</Button>
-                  <Button variant="quiet" disabled={busy} onClick={() => choose(null)}>Cancel</Button>
-                </div>
-              </div>
+      <Section title="Restore" note="Restoring replaces your current progress and the code saved in every task. It happens completely or not at all, and what it replaces is written to a backup of its own first, so you can undo it.">
+        <input
+          ref={picker} type="file" accept=".zip,application/zip" disabled={busy}
+          aria-label="Choose a backup file to restore"
+          onChange={(e) => choose(e.target.files?.[0] ?? null)}
+          className={s.picker}
+        />
+        {error ? <NoticeBanner message={error} className={s.error} /> : null}
+        {preview ? (
+          <div className={s.result}>
+            <div>
+              Taken {preview.created?.replace("T", " at ") ?? "at an unknown time"} on drillion v{preview.drillion}.
+            </div>
+            <div>Brings back {counts(preview.brings)}.</div>
+            <div className={s.muted}>
+              Replaces {preview.replaces.cards} cards, {preview.replaces.archive} solved tasks
+              and {preview.replaces.notes} notes you have now.
+            </div>
+            {preview.unknown.length ? (
+              <NoticeBanner message={`${preview.unknown.length} task${preview.unknown.length > 1 ? "s" : ""} in this backup are not in this version of drillion, so their saved code stays in the file: ${preview.unknown.join(", ")}`} />
             ) : null}
-            {done ? (
-              <div style={{ marginTop: 14, display: "grid", gap: 8 }}>
-                <div style={{ fontSize: 14 }}>Restored {counts(done.brings)}.</div>
-                <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                  What you had before is at <code>{done.kept}</code>.
-                </div>
-                <div><Button onClick={() => { location.hash = "#/"; location.reload(); }}>Back to the catalogue</Button></div>
-              </div>
-            ) : null}
-          </Card>
+            <div className={s.restoreActions}>
+              <Button variant="primary" disabled={busy} onClick={apply}>Replace my data</Button>
+              <Button variant="quiet" disabled={busy} onClick={() => choose(null)}>Cancel</Button>
+            </div>
+          </div>
+        ) : null}
+        {done ? (
+          <div className={s.result}>
+            <div>Restored {counts(done.brings)}.</div>
+            <div className={s.kept}>
+              What you had before is at <code>{done.kept}</code>.
+            </div>
+            <div><Button onClick={() => { location.hash = "#/"; location.reload(); }}>Back to the catalogue</Button></div>
+          </div>
+        ) : null}
+      </Section>
 
-        <DangerZone />
-      </div>
+      <Section title="Danger zone"><DangerZone /></Section>
     </div>
   );
 }

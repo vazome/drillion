@@ -1,25 +1,22 @@
 import React from "react";
-export function Table({ columns = [], rows = [], sortKey, sortDir = "asc", onSort, onRowClick, emptyMessage, style }) {
-  const [hoverRow, setHoverRow] = React.useState(null);
-  const [hoverCol, setHoverCol] = React.useState(null);
-  const cell = (col) => ({ padding: "0 12px", textAlign: col.align || "left", width: col.width, whiteSpace: "nowrap", fontFamily: col.mono ? "var(--font-mono)" : "var(--font-sans)", fontVariantNumeric: (col.mono || col.numeric) ? "tabular-nums" : "normal" });
+import s from "./Table.module.css";
+export function Table({ columns = [], rows = [], sortKey, sortDir = "asc", onSort, onRowClick, emptyMessage, className, style }) {
+  const cellAttrs = (col) => ({ "data-align": col.align || undefined, "data-mono": col.mono ? "" : undefined, "data-numeric": col.numeric ? "" : undefined });
   return (
-    <table style={{ width: "100%", borderCollapse: "collapse", background: "var(--surface)", fontSize: "14px", color: "var(--text)", ...style }}>
+    <table className={[s.root, className].filter(Boolean).join(" ")} style={style}>
       <thead>
         <tr>
           {columns.map((col) => {
             const active = sortKey === col.key;
             const sortable = col.sortable && !!onSort;
-            const arrow = active ? (sortDir === "asc" ? "▲" : "▼") : (hoverCol === col.key ? "▲" : "");
             const nextDir = active && sortDir === "asc" ? "desc" : "asc";
             return (
-              <th key={col.key} scope="col" aria-sort={sortable ? (active ? (sortDir === "asc" ? "ascending" : "descending") : "none") : undefined} style={{ ...cell(col), padding: sortable ? 0 : "0 12px", height: "32px", borderBottom: "1px solid var(--border)", fontFamily: "var(--font-sans)", fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase", color: active ? "var(--text)" : "var(--text-muted)" }}>
+              <th key={col.key} scope="col" className={s.th} {...cellAttrs(col)} data-sortable={sortable ? "" : undefined} data-active={active ? "" : undefined} style={{ width: col.width }}
+                aria-sort={sortable ? (active ? (sortDir === "asc" ? "ascending" : "descending") : "none") : undefined}>
                 {sortable ? (
-                  <button type="button" onClick={() => onSort(col.key, nextDir)} aria-label={"Sort by " + col.label + " " + (nextDir === "asc" ? "ascending" : "descending")}
-                    onMouseEnter={() => setHoverCol(col.key)} onMouseLeave={() => setHoverCol(null)}
-                    style={{ width: "100%", height: "32px", display: "inline-flex", alignItems: "center", gap: "5px", justifyContent: col.align === "right" ? "flex-end" : "flex-start", padding: "0 12px", background: "transparent", border: "none", borderRadius: "var(--radius-sm)", font: "inherit", letterSpacing: "inherit", textTransform: "inherit", color: (active || hoverCol === col.key) ? "var(--text)" : "var(--text-muted)", cursor: "pointer" }}>
+                  <button type="button" className={s.sortBtn} onClick={() => onSort(col.key, nextDir)} aria-label={"Sort by " + col.label + " " + (nextDir === "asc" ? "ascending" : "descending")}>
                     <span>{col.label}</span>
-                    <span aria-hidden="true" style={{ fontSize: "8px", lineHeight: 1, color: active ? "var(--accent)" : "var(--text-faint)", width: "7px" }}>{arrow}</span>
+                    <span aria-hidden="true" className={s.arrow} data-active={active ? "" : undefined}>{active ? (sortDir === "asc" ? "▲" : "▼") : ""}</span>
                   </button>
                 ) : col.label}
               </th>
@@ -29,18 +26,17 @@ export function Table({ columns = [], rows = [], sortKey, sortDir = "asc", onSor
       </thead>
       <tbody>
         {rows.length === 0 ? (
-          <tr><td colSpan={columns.length} style={{ height: "76px", textAlign: "center", color: "var(--text-muted)", borderTop: "1px solid var(--border)" }}>{emptyMessage || "Nothing here."}</td></tr>
+          <tr><td colSpan={columns.length} className={s.empty}>{emptyMessage || "Nothing here."}</td></tr>
         ) : rows.map((row, i) => {
           const dim = !!row.disabled;
           const clickable = !!onRowClick && !dim;
           return (
-            <tr key={row.id != null ? row.id : i} tabIndex={clickable ? 0 : undefined}
+            <tr key={row.id != null ? row.id : i} tabIndex={clickable ? 0 : undefined} className={s.row}
+              data-dim={dim ? "" : undefined} data-clickable={clickable ? "" : undefined}
               onClick={clickable ? () => onRowClick(row) : undefined}
-              onKeyDown={clickable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onRowClick(row); } } : undefined}
-              onMouseEnter={() => setHoverRow(i)} onMouseLeave={() => setHoverRow(null)}
-              style={{ height: "40px", background: (hoverRow === i && clickable) ? "var(--surface-2)" : "transparent", color: dim ? "var(--text-faint)" : "var(--text)", cursor: clickable ? "pointer" : "default", outline: "none" }}>
+              onKeyDown={clickable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onRowClick(row); } } : undefined}>
               {columns.map((col) => (
-                <td key={col.key} style={{ ...cell(col), borderTop: "1px solid var(--border)", color: col.muted ? "var(--text-muted)" : "inherit", fontSize: col.small ? "12.5px" : "inherit", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <td key={col.key} className={s.td} {...cellAttrs(col)} data-muted={col.muted ? "" : undefined} data-small={col.small ? "" : undefined} style={{ width: col.width }}>
                   {col.render ? col.render(row) : row[col.key]}
                 </td>
               ))}

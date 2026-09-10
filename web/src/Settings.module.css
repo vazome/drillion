@@ -1,0 +1,42 @@
+.sheet { display: grid; gap: 32px; max-width: 620px; font-size: 14px; }
+.sectionTitle { margin: 0 0 2px; font-size: 14px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.sectionNote { margin: 0 0 6px; font-size: 14px; color: var(--text-muted); max-width: 560px; text-wrap: pretty; }
+.sectionBody { margin-top: 6px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 24px; min-height: 52px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.row:last-child { border-bottom: none; }
+.rowLabel { min-width: 0; }
+.hint { font-size: 13px; color: var(--text-faint); margin-top: 2px; text-wrap: pretty; }
+.control { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-width: 0; }
+.path { font-size: 13px; color: var(--text-muted); overflow-wrap: anywhere; text-align: right; min-width: 0; }
+.row:has(.path) { grid-template-columns: minmax(90px, 1fr) minmax(0, 2fr); }
+.fontSelect { min-width: 200px; }
+.numberSelect { min-width: 90px; }
+.keySelect { min-width: 150px; }
+.defaults { margin-top: 12px; }
+.download { composes: root from "./ds/Button.module.css"; text-decoration: none; }
+.download:hover { text-decoration: none; color: var(--on-accent); }
+.picker { font: inherit; color: var(--text-muted); max-width: 100%; }
+.error { margin-top: 12px; }
+.result { margin-top: 14px; display: grid; gap: 8px; }
+.muted { color: var(--text-muted); }
+.kept { font-size: 13px; color: var(--text-muted); overflow-wrap: anywhere; }
+.actions, .restoreActions { display: flex; gap: 10px; flex-wrap: wrap; }
+.restoreActions { margin-top: 4px; }
+.dangerZone { border: 1px solid var(--fail); border-radius: var(--radius); padding: 16px; }
+.dangerHead { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.dangerText { flex: 1; min-width: min(280px, 100%); }
+.dangerTitle { font-weight: 600; color: var(--fail); }
+.dangerDescription { margin: 4px 0 0; color: var(--text-muted); text-wrap: pretty; }
+.dangerZone .dangerButton:not(:disabled) { color: var(--fail); border-color: var(--fail); }
+.dangerZone .confirmButton:not(:disabled) { background: var(--fail); border-color: var(--fail); color: var(--on-accent); }
+.confirmation { margin-top: 14px; padding: 14px; border-radius: var(--radius); background: var(--fail-bg); display: grid; gap: 10px; }
+.phrase { font-weight: 600; }
+.confirmInput { max-width: 280px; width: 100%; }
+
+/* Keep the supplied row layout readable when a dialog is narrower than its controls. */
+@media (max-width: 540px) {
+  .row, .row:has(.path) { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .control { justify-content: flex-start; }
+  .path { text-align: left; }
+  .actions > button { white-space: normal; }
+}

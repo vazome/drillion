@@ -1,0 +1,22 @@
+.plot{position:relative;padding-right:54px}
+.bars{display:flex;align-items:flex-end;gap:6px}
+.bar{flex:1;display:flex;flex-direction:column;align-items:stretch}
+.count{font-family:var(--font-mono);font-variant-numeric:tabular-nums;height:17px;font-size:11.5px;text-align:center;color:transparent}
+.count[data-today]{color:var(--accent)}
+.column{display:flex;flex-direction:column;justify-content:flex-end}
+.over{border-radius:3px 3px 0 0;border:1px solid var(--accent-line);border-bottom:none;background:repeating-linear-gradient(135deg,var(--accent-line) 0 2px,transparent 2px 5px)}
+.fill{border-radius:3px 3px 0 0;background:var(--accent-tint);box-shadow:inset 0 0 0 1px var(--accent-line)}
+.fill[data-capped]{border-radius:0}
+.fill[data-today]{background:var(--accent);box-shadow:none}
+.fill[data-zero]{background:var(--border);box-shadow:none}
+.capLine{position:absolute;left:0;right:54px;border-top:1px dashed var(--border-strong)}
+.capLabel{font-family:var(--font-mono);font-variant-numeric:tabular-nums;position:absolute;right:0;font-size:11px;color:var(--text-faint)}
+.axis{display:flex;gap:6px;padding-right:54px;margin-top:6px}
+.axisCell{flex:1;text-align:center}
+.dayLetter{font-size:11px;font-weight:400;color:var(--text-muted)}
+.dayLetter[data-today]{font-weight:600;color:var(--accent)}
+.dayNum{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:10.5px;color:var(--text-faint)}
+.foot{display:flex;align-items:baseline;gap:8px;margin-top:12px}
+.note{font-size:13px;color:var(--text-muted)}
+.spacer{flex:1}
+.total{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--text-faint)}

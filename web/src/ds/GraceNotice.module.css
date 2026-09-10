@@ -1,0 +1,6 @@
+.root{width:360px;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow-pop);border-left:3px solid var(--accent);padding:14px 16px 16px}
+.head{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}
+.eyebrow{flex:1;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);line-height:1.35}
+.dismiss{background:transparent;border:none;cursor:pointer;width:26px;height:26px;margin:-5px -6px -5px 0;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);font-size:16px;line-height:1;color:var(--text-faint)}
+.body{margin:0;font-size:14px;line-height:1.5;color:var(--text);text-wrap:pretty}
+.count{font-family:var(--font-mono);font-variant-numeric:tabular-nums}

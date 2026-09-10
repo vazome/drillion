@@ -6,39 +6,3 @@ a:hover{color:var(--accent-hover);text-decoration:underline}
 kbd{font-family:var(--font-mono);font-size:11px;padding:1px 5px;border:1px solid var(--border-strong);border-bottom-width:2px;border-radius:4px;background:var(--surface-2);color:var(--text-muted)}
 code,pre{font-family:var(--font-mono)}
 .tabular{font-variant-numeric:tabular-nums}
-
-/* Callouts (remark-github-blockquote-alert). GitHub's own sheet ships with the plugin: a
-   left rule in the type's colour, and a title row of octicon + word. We keep the rule and
-   drop the icon — the uppercase label already names the type, and one 16px glyph per panel
-   was the only illustration on the page. Each type is tinted with its own token pair, so
-   the panel reads as the same object as a StatusBadge of that colour. */
-.markdown-alert{border-left:3px solid var(--accent);background:var(--accent-tint);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:10px 14px;margin:2px 0 12px;max-width:64ch}
-.markdown-alert>:last-child{margin-bottom:0}
-.markdown-alert-title{display:block;font-size:var(--fs-label);font-weight:600;letter-spacing:var(--ls-label);color:var(--accent);margin:0 0 4px}
-.markdown-alert-title svg{display:none}
-.markdown-alert-tip{border-left-color:var(--pass);background:var(--pass-bg)}
-.markdown-alert-tip .markdown-alert-title{color:var(--pass)}
-.markdown-alert-warning{border-left-color:var(--warn);background:var(--warn-bg)}
-.markdown-alert-warning .markdown-alert-title{color:var(--warn)}
-.markdown-alert-caution{border-left-color:var(--fail);background:var(--fail-bg)}
-.markdown-alert-caution .markdown-alert-title{color:var(--fail)}
-.markdown-alert-important{border-left-color:var(--accent-line);background:var(--surface-2)}
-.markdown-alert-important .markdown-alert-title{color:var(--text-muted)}
-.spec table{display:block;overflow-x:auto;max-width:100%}
-/* A link inside a paragraph is told apart by colour alone otherwise, which is exactly what
-   1.4.1 forbids. Only in prose: a link that is its own row or button reads as one already. */
-.spec a{text-decoration:underline}
-
-/* The modal backdrop. Blurred rather than merely dimmed, so a dialog reads as being in
-   front of the page instead of on it; the dim alone keeps it legible where the browser has
-   no backdrop-filter. */
-dialog::backdrop{background:rgb(0 0 0 / .38);backdrop-filter:blur(3px)}
-
-/* One three-position choice, shaped like a single control rather than a dropdown. Native
-   radios keep arrow-key movement and form semantics; the spans are only their visible faces. */
-.key-binding-segmented{display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:2px;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2)}
-.key-binding-segmented label{position:relative;cursor:pointer}
-.key-binding-segmented input{position:absolute;inset:0;opacity:0;cursor:pointer}
-.key-binding-segmented span{display:block;min-width:56px;padding:7px 8px;border-radius:var(--radius-sm);color:var(--text-muted);font-size:13px;font-weight:600;text-align:center}
-.key-binding-segmented input:checked+span{background:var(--accent);color:var(--on-accent)}
-.key-binding-segmented input:focus-visible+span{box-shadow:var(--focus-ring)}

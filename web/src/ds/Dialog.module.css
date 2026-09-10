@@ -1,0 +1,35 @@
+.root{width:min(760px,calc(100vw - 32px));max-height:calc(100vh - 64px);padding:0;border:none;border-radius:var(--radius);background:var(--bg);color:var(--text);box-shadow:var(--shadow-card);box-sizing:border-box}
+.head{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);flex:none}
+.title{margin:0;font-size:var(--fs-h);font-weight:600}
+.spacer{flex:1}
+.body{flex:1;min-height:0;overflow:auto;padding:20px}
+
+/* A dialog lays its header and body out as a column, but only while it is open: the browser
+   hides a closed one with display:none, and setting display inline would override that and
+   leave the panel on the page.
+
+   It pops in and drops back out. display and overlay have to be in the transition as
+   discrete properties, or the closing half is skipped and the panel vanishes; the opening
+   half comes from @starting-style. Both halves collapse under prefers-reduced-motion with
+   the rest of the system. */
+.root{
+  flex-direction:column;opacity:0;transform:scale(.96);
+  transition:opacity var(--dur-fast) var(--ease-in),transform var(--dur-fast) var(--ease-in),
+    overlay var(--dur-fast) allow-discrete,display var(--dur-fast) allow-discrete;
+}
+.root[open]{
+  display:flex;opacity:1;transform:scale(1);
+  transition:opacity var(--dur-base) var(--ease-out),transform var(--dur-base) var(--ease-step),
+    overlay var(--dur-base) allow-discrete,display var(--dur-base) allow-discrete;
+}
+@starting-style{.root[open]{opacity:0;transform:scale(.96)}}
+
+/* Blurred rather than merely dimmed, so the dialog reads as being in front of the page
+   instead of on it; the dim alone keeps it legible where the browser has no backdrop-filter. */
+.root::backdrop{
+  background:rgb(0 0 0 / .38);backdrop-filter:blur(3px);opacity:0;
+  transition:opacity var(--dur-fast) var(--ease-in),
+    overlay var(--dur-fast) allow-discrete,display var(--dur-fast) allow-discrete;
+}
+.root[open]::backdrop{opacity:1;transition-duration:var(--dur-base);transition-timing-function:var(--ease-out)}
+@starting-style{.root[open]::backdrop{opacity:0}}

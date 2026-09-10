@@ -75,18 +75,14 @@ test("captures the screens a reviewer needs", async ({ page, request }) => {
   // Settings: a dialog over whatever is on screen, reached here by the link that still
   // deep-links to it. The data locations and both halves of the backup workflow.
   await page.goto("/#/settings");
-  const editorTab = page.getByRole("tab", { name: "Editor" });
-  await expect(editorTab).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("heading", { name: "Editor", exact: true })).toBeVisible();
   await shot(page, "5b-settings-editor");
-  await editorTab.focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(page.getByRole("tab", { name: "Data" })).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("heading", { name: "Your data", exact: true }).scrollIntoViewIfNeeded();
   await expect(page.getByText("Download a backup", { exact: true })).toBeVisible();
   await expect(page.getByText(scratchRoot, { exact: true })).toBeVisible();
   await shot(page, "5c-settings-data");
 
-  // The guard, up to the last click and no further: this suite runs against the repository's
-  // own tasks, so the one thing it must never do is press the button it is checking.
+  // Exercise the confirmation and cancellation without erasing the session being photographed.
   await page.getByRole("button", { name: "Erase all progress" }).click();
   const erase = page.getByRole("button", { name: "I understand, erase everything" });
   await expect(erase).toBeDisabled();
@@ -117,8 +113,7 @@ test("captures the screens a reviewer needs", async ({ page, request }) => {
   // Vim mode last: it is a browser preference, so switching it on would follow the page
   // into every shot above. Turned back off before the run ends.
   await page.goto("/#/settings");
-  await page.getByRole("tab", { name: "Editor" }).click();
-  await page.getByRole("radio", { name: "Vim" }).click();
+  await page.getByRole("combobox", { name: "Key binding" }).selectOption("vim");
   await page.keyboard.press("Escape");
   await page.goto(`/#/task/${GATED}`);
   const modeLine = page.locator(".monaco-editor").locator("..").locator("..").getByText("--", { exact: false });
@@ -134,7 +129,7 @@ test("captures the screens a reviewer needs", async ({ page, request }) => {
   // Emacs is the third binding, and the same two rules: the page's chords survive it, and
   // C-g gets you out of a half-typed one.
   await page.goto("/#/settings");
-  await page.getByRole("radio", { name: "Emacs" }).click();
+  await page.getByRole("combobox", { name: "Key binding" }).selectOption("emacs");
   await page.keyboard.press("Escape");
   await page.goto(`/#/task/${GATED}`);
   await page.locator(".monaco-editor .view-lines").first().click();
@@ -147,7 +142,7 @@ test("captures the screens a reviewer needs", async ({ page, request }) => {
   await expect(page.getByText(/Result|Output/).first()).toBeVisible();
 
   await page.goto("/#/settings");
-  await page.getByRole("radio", { name: "Standard" }).click();
+  await page.getByRole("combobox", { name: "Key binding" }).selectOption("regular");
   await page.keyboard.press("Escape");
 });
 

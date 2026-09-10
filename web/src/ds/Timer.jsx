@@ -1,11 +1,12 @@
 import React from "react";
-function fmt(s) { const m = Math.floor(s / 60), r = s % 60; return String(m).padStart(2, "0") + ":" + String(r).padStart(2, "0"); }
-export function Timer({ seconds = 0, parMinutes, paused = false, style }) {
+import s from "./Timer.module.css";
+function fmt(sec) { const m = Math.floor(sec / 60), r = sec % 60; return String(m).padStart(2, "0") + ":" + String(r).padStart(2, "0"); }
+export function Timer({ seconds = 0, parMinutes, paused = false, className, style }) {
   const par = (parMinutes || 0) * 60;
-  const color = par && seconds >= par * 2 ? "var(--fail)" : par && seconds >= par ? "var(--warn)" : "var(--text-muted)";
+  const over = par && seconds >= par * 2 ? "double" : par && seconds >= par ? "par" : undefined;
   return (
-    <span style={{ fontFamily: "var(--font-mono)", fontVariantNumeric: "tabular-nums", fontSize: "15px", color, ...style }}>
-      {paused ? "⏸ " : ""}{fmt(seconds)}{parMinutes ? <span style={{ opacity: .65 }}> / {fmt(par)} par</span> : null}
+    <span data-over={over} className={[s.root, className].filter(Boolean).join(" ")} style={style}>
+      {paused ? "⏸ " : ""}{fmt(seconds)}{parMinutes ? <span className={s.par}> / {fmt(par)} par</span> : null}
     </span>
   );
 }
