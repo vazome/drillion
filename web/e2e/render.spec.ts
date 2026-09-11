@@ -1,9 +1,9 @@
 /** Every task page, in the real browser: the spec Markdown, the editor and the hint panel
- *  all mount without a console error. The one check that has to see all 182 specs. */
+ *  all mount without a console error. The one check that has to see every spec in the set. */
 import { expect, test } from "@playwright/test";
 
 test("every task in the catalogue renders", async ({ page }) => {
-  test.slow(); // 182 navigations
+  test.slow(); // one navigation per task
   const problems: string[] = [];
   let at = "";
   page.on("console", (m) => m.type() === "error" && problems.push(`${at}: ${m.text()}`));
