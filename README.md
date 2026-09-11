@@ -1,4 +1,10 @@
-# drillion
+<picture align="center">
+  <img alt="drillion" src="https://raw.githubusercontent.com/vazome/drillion/main/docs/images/drillion-github-banner-transparent.svg">
+</picture>
+
+---
+
+# drillion: Python practice, on your machine
 
 [![PyPI](https://img.shields.io/pypi/v/drillion)](https://pypi.org/project/drillion/)
 [![Python](https://img.shields.io/pypi/pyversions/drillion)](https://pypi.org/project/drillion/)
@@ -47,7 +53,7 @@ Core ideas I'm keeping in mind during the development:
 - **Categorisation.** Every task is tagged with the concept it drills, and a tag spans
   many tasks, so you can go straight at the thing you are worst at instead of grinding a
   track in order.
-- **Anki-like progression.** A task comes back before you forget it, with a daily cap so a
+- **Anki-like progression.** Tasks return on a fixed review ladder, with a daily cap so a
   backlog cannot bury you.
 - **An editor that behaves like an IDE without the complexity of one.** Every `solve()` is
   typed, so completions, signatures and inline type errors are real as they come from a
@@ -70,7 +76,7 @@ does to your machine**, below, is the detail.
 ## Install
 
 You do not need Python, and you do not need to know what a virtual environment is. Pick your
-system below, run two commands, and drillion opens in your browser at
+system below, install drillion, and it opens in your browser at
 <http://127.0.0.1:8765>. It runs on your machine, so nothing is uploaded and there is no
 account.
 
@@ -85,11 +91,11 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 **Close the terminal and open a new one**, so it picks up the new command. Then:
 
 ```bash
-uvx drillion
+uv tool install drillion
+drillion
 ```
 
-The first run takes a minute while it fetches Python and drillion. After that it starts in
-seconds.
+Installation takes a minute while uv fetches Python and drillion. After that it starts in seconds.
 
 ### Windows
 
@@ -102,7 +108,8 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 **Close PowerShell and open it again**, then:
 
 ```powershell
-uvx drillion
+uv tool install drillion
+drillion
 ```
 
 One difference worth knowing: the code you submit is sandboxed less tightly on Windows than on
@@ -112,17 +119,9 @@ Linux and macOS. Windows blocks what it can write, but not what it can read.
 ### Using it day to day
 
 - **Stop it**: press `Ctrl+C` in the terminal window.
-- **Start it again**: `uvx drillion`, in any terminal.
-- **Update**: nothing to do. `uvx` fetches the current version each time.
-- **Your work is kept** between runs, and an update never overwrites it.
-
-Want a permanent `drillion` command instead of typing `uvx` every time? Either of these
-installs one:
-
-```bash
-uv tool install drillion    # uv tool upgrade drillion to update
-pip install drillion        # the same, if you already have Python 3.14+ and no uv
-```
+- **Start it again**: `drillion`, in any terminal.
+- **Update**: `uv tool upgrade drillion`.
+- **Updates don't delete your progress.** You can also make a backup from **Settings → Back up**.
 
 ### Docker
 
@@ -145,35 +144,6 @@ drillion selfcheck    # solve every task with its own reference, proving the set
 drillion doctor       # say why a task folder would be skipped
 ```
 
-## Your progress
-
-Everything drillion owns lives under one root: `tasks/`, which is where your code is saved, and
-`progress.sqlite3`, which holds your cards, notes and archived solutions. From a clone that root is
-the checkout. Installed, it is a per-user data directory that the first run seeds from the tasks
-inside the wheel. In Docker it is the volume at `/data`. An upgrade never writes over a root that
-already has tasks in it, so nothing you have written is at risk.
-See [docs/configuration.md](docs/configuration.md) for the environment variables and the Docker
-bind-mount recipe.
-
-Existing `progress.json` files are imported automatically on first access and kept untouched.
-After import, SQLite is the source of truth, and the retained JSON is only a snapshot from before
-the upgrade.
-
-**Settings → Back up** writes everything you would miss to one file: your cards, notes, log and
-archive, plus the code you have written in every task. Restore it on another machine or after a
-reinstall and you pick up where you left off. A restore replaces what is there now, and saves
-what it replaced to `backup-before-restore.zip` in the same root first.
-
-**Settings → Danger zone** is the way back to a first run: it deletes the stored progress and
-puts every task back to its stub. You confirm it by typing `erase progress`, and it writes
-`backup-before-reset.zip` in the same root before it does anything, which is the only way to
-undo it.
-
-**Settings → Editor** sets the editor up the way you have it everywhere else: font and size,
-ligatures, Vim or Emacs keys, tab size, word wrap, relative line numbers, and whether the practice
-timer is on screen. Those live in the browser rather than in your progress, so a backup does
-not carry them.
-
 ## What running it does to your machine
 
 drillion runs Python on your computer: the code you write, and the code that ships inside the
@@ -192,8 +162,8 @@ drillion runs Python on your computer: the code you write, and the code that shi
   run that built it, attached to the release itself:
 
   ```bash
-  gh attestation verify drillion-0.5.1-py3-none-any.whl --repo vazome/drillion
-  gh attestation verify oci://ghcr.io/vazome/drillion:0.5.1 --repo vazome/drillion
+  gh attestation verify drillion-0.8.0-py3-none-any.whl --repo vazome/drillion
+  gh attestation verify oci://ghcr.io/vazome/drillion:0.8.0 --repo vazome/drillion
   ```
 
 [SECURITY.md](SECURITY.md) is the whole picture, including which half of it Windows does not

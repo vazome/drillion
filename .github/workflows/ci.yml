@@ -61,8 +61,8 @@ jobs:
             echo "documentation only: skipping the matrix, the client and the image" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-  # the README sells uvx / uv tool install / pip on "Python 3.14 or newer", so Windows and
-  # macOS are advertised platforms: settings._data_home() picks where progress.json lives
+  # the README installs drillion with uv on Windows, macOS and Linux, so all three are
+  # advertised platforms: settings._data_home() picks where progress.json lives
   # from sys.platform, and only its Linux branch had ever been executed
   check:
     needs: changes
