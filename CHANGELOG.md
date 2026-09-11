@@ -4,6 +4,23 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.8.1 — 2026-09-11
+
+Documentation and packaging only. The 0.8.0 wheel is unchanged in what it does.
+
+- The install instructions settle on `uv tool install drillion`, so the command is
+  `drillion` from then on and an update is `uv tool upgrade drillion`. The `uvx` route
+  refetched on every start and left nothing on the machine to upgrade.
+- The README says what an upgrade actually does to a root: drillion's half of each task
+  follows the release, the code you wrote is spliced into it, a task drillion no longer ships
+  moves to `tasks/_retired/<slug>/`, and a task you wrote yourself is left alone. It had
+  promised since #219 that an upgrade never writes into a root that already has tasks, which
+  stopped being true when the splice landed. `docs/configuration.md` had it right all along.
+- The provenance examples verify 0.8.0 rather than 0.5.1, so both commands work as written.
+- The client has a favicon, and the README opens with the project banner.
+- `tasks/.shipped` is ignored. `seed()` writes it per environment to record which task files
+  are drillion's, so it belongs to a machine the way `progress.sqlite3` does.
+
 ## 0.8.0 — 2026-09-11
 
 0.7.5, 0.7.6 and 0.7.7 were tagged but never published: the release run failed on an

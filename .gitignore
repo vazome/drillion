@@ -42,3 +42,6 @@ drillion-backup-*.zip
 
 # IDE settings: one contributor's editor, not the project's opinion
 .idea/
+
+# drillion-owned task files: written by `seed()` per environment, not source
+tasks/.shipped
