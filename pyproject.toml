@@ -1,6 +1,6 @@
 [project]
 name = "drillion"
-version = "0.8.0"
+version = "0.8.1"
 description = "Python practice, on your machine"
 readme = "README.md"
 license = "MIT"
