@@ -197,8 +197,8 @@ drillion runs Python on your computer: the code you write, and the code that shi
   run that built it, attached to the release itself:
 
   ```bash
-  gh attestation verify drillion-0.5.1-py3-none-any.whl --repo vazome/drillion
-  gh attestation verify oci://ghcr.io/vazome/drillion:0.5.1 --repo vazome/drillion
+  gh attestation verify drillion-0.8.0-py3-none-any.whl --repo vazome/drillion
+  gh attestation verify oci://ghcr.io/vazome/drillion:0.8.0 --repo vazome/drillion
   ```
 
 [SECURITY.md](SECURITY.md) is the whole picture, including which half of it Windows does not
