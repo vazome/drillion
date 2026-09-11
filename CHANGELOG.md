@@ -4,22 +4,56 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
-## 0.7.7 — 2026-09-10
+## 0.8.0 — 2026-09-11
 
-- Correct the release workflow metadata so deployment history uses the `release: <version>` name.
+0.7.5, 0.7.6 and 0.7.7 were tagged but never published: the release run failed on an
+attestation upload that GitHub could not persist, so the last release anyone can install is
+0.7.0. Everything those three tags carried ships here.
 
-## 0.7.6 — 2026-09-10
-
-- Release metadata now uses the public `release: <version>` label consistently across deployment
-  history.
-
-## 0.7.5 — 2026-09-10
-
-- The web design system now uses CSS Modules, keeping component styles local while preserving the
-  existing pixels and behavior.
-- Settings has a single-column layout with editor preferences, data backup and restore, and the
-  danger zone; preferences and recovery APIs remain unchanged.
-- Added editor font choices and coverage for the Settings and CSS Modules contracts.
+- **Python 3.14 is the minimum.** It is drillion's packaging floor, its default interpreter,
+  and the only version CI tests. An environment on 3.13 must move up before upgrading.
+- **The catalogue is 267 tasks, up from 189.** Twelve give a second, contrasting practice
+  context to every tag that had only one, so no concept is taught by a single exercise.
+  Sixty-six more cover the three areas the catalogue had left alone: the object model past
+  `@property` (descriptors, `__slots__`, metaclasses, the MRO), about thirty stdlib modules
+  it never touched (`sqlite3`, `pickle`, `graphlib`, `codecs`, `array`, `queue`, `operator`
+  and the rest), and the classical algorithms, from dynamic programming to string search.
+  Every prerequisite still points backward and `drillion doctor` still enforces it.
+- **A failed run shows the case that failed.** The arguments, what your code returned and
+  what was expected, side by side, instead of a wall of pytest output you have to read
+  backward. Long values wrap inside their box with their own lines numbered, so a line too
+  wide for the panel cannot be mistaken for two.
+- **Settings is a dialog rather than a page**, opened over whatever you are working on, with
+  Editor and Data grouped across the top. `#/settings` still works as a link. The editor
+  reads a per-browser preference for font, size, ligatures, tab size, word wrap and relative
+  line numbers, applied to the editor already on screen, and the practice timer can be
+  hidden. Key bindings are a three-position control: standard, Vim, or Emacs, the last of
+  these new here and sharing the status line under the editor.
+- **New picks never pause.** A deep backlog used to stop new tasks from arriving until you
+  had caught up, which stopped the learning to protect the schedule. Reviews are still
+  capped per day; the daily new picks now stand whatever the queue looks like. The
+  catalogue's Recent activity band is a way back in rather than a history, so it shows four
+  rows.
+- **An upgrade replaces the grader and keeps what is yours.** Installing a new version used
+  to leave the original grading machinery on every task you had opened, and to delete any
+  task you had written yourself. Your code is now spliced into the new machinery through the
+  same gate the editor writes through, a task drillion no longer ships moves to
+  `tasks/_retired/<slug>/` instead of vanishing, and a task you added is left alone.
+- **A restore lands completely or not at all.** Every region in a bundle is validated before
+  anything is written, and a write that fails puts the earlier ones back. A restore that
+  reports success succeeded.
+- **Which Python graded a task is now on the record.** The interpreter appears in
+  `/api/health`, beside the version in the header, and under `drillion doctor`'s sandbox
+  line. An archived pass keeps the seed its cases came from, the interpreter that produced
+  the verdict, and a hash of the machinery it was graded against, which matters once an
+  upgrade can splice a new grader around unchanged code.
+- **Tasks using time zones now pass on Windows**, which ships no time-zone database of its
+  own; `tzdata` is a dependency there.
+- The web design system moved to CSS Modules, keeping component styles local with no change
+  to the pixels or the behavior.
+- Playwright now walks the loop with no pointer at all, audits the catalogue, a task,
+  progress and the Settings dialog against WCAG A and AA, checks reflow at 200% zoom, and
+  runs the suite in Firefox and WebKit as well as Chromium.
 
 ## 0.7.0 — 2026-09-08
 
