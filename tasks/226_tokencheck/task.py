@@ -61,7 +61,8 @@ def test_solve():
     assert check_token(token, token[:-1] + ("a" if token[-1] != "a" else "b")) is False, (
         "a token differing in its last character only must not match"
     )
-    assert check_token("a" + token[1:], token) is False, "differing in the first character either"
+    other = "a" if token[0] != "a" else "b"
+    assert check_token(other + token[1:], token) is False, "differing in the first character either"
 
     with pytest.raises(TypeError):
         check_token(token, token.encode())
