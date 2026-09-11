@@ -3,7 +3,7 @@ Third-party notices
 
 drillion (this repository) is MIT licensed — see LICENSE.
 
-89 of the 201 tasks under `tasks/` are adapted from Exercism's Python track:
+89 of the 267 tasks under `tasks/` are adapted from Exercism's Python track:
 the problem each one poses is theirs, restated in drillion's own words. Each
 of those 89 files names its origin in a `source:` frontmatter field and closes
 with an "Adapted from exercism/python — MIT" line; run
@@ -80,10 +80,10 @@ which is MIT licensed:
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-Two tasks about graphs, `245_cheapestroute` and `249_leaselinks`, adapt
+Six tasks — about graphs, dynamic programming, sorting and searching — adapt
 reference implementations from TheAlgorithms/Python. That repository carries no
 problem statements either, so again the algorithm is theirs and the task is
-drillion's. Both name their origin in `source:` and close with an "Adapted from
+drillion's. Each names its origin in `source:` and closes with an "Adapted from
 TheAlgorithms/Python — MIT" line; run
 `grep -rl '^source: TheAlgorithms' tasks/*/README.md` to list them.
 
