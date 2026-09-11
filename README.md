@@ -114,7 +114,8 @@ Linux and macOS. Windows blocks what it can write, but not what it can read.
 - **Stop it**: press `Ctrl+C` in the terminal window.
 - **Start it again**: `uvx drillion`, in any terminal.
 - **Update**: nothing to do. `uvx` fetches the current version each time.
-- **Your work is kept** between runs, and an update never overwrites it.
+- **Your work is kept** between runs. An update replaces drillion's half of each task and
+  leaves the code you wrote where it is.
 
 Want a permanent `drillion` command instead of typing `uvx` every time? Either of these
 installs one:
@@ -150,14 +151,18 @@ drillion doctor       # say why a task folder would be skipped
 Everything drillion owns lives under one root: `tasks/`, which is where your code is saved, and
 `progress.sqlite3`, which holds your cards, notes and archived solutions. From a clone that root is
 the checkout. Installed, it is a per-user data directory that the first run seeds from the tasks
-inside the wheel. In Docker it is the volume at `/data`. An upgrade never writes over a root that
-already has tasks in it, so nothing you have written is at risk.
+inside the wheel. In Docker it is the volume at `/data`. An upgrade brings that root back in line
+with the version you are running: drillion's half of each task follows the new release, and the
+code you wrote is spliced into it, so a grader fix reaches you without touching what you typed. A
+task drillion no longer ships moves to `tasks/_retired/<slug>/` instead of being deleted, and a
+task you wrote yourself is left alone.
 See [docs/configuration.md](docs/configuration.md) for the environment variables and the Docker
 bind-mount recipe.
 
-Existing `progress.json` files are imported automatically on first access and kept untouched.
-After import, SQLite is the source of truth, and the retained JSON is only a snapshot from before
-the upgrade.
+A `progress.json` written by an older drillion is imported on first access, with its own bytes
+left as they are. SQLite is the source of truth from then on, so that JSON is a snapshot of the
+moment before the upgrade rather than a second copy that keeps up. The danger zone below deletes
+it along with the database, since a reset that left it there would import it straight back.
 
 **Settings → Back up** writes everything you would miss to one file: your cards, notes, log and
 archive, plus the code you have written in every task. Restore it on another machine or after a
