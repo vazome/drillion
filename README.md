@@ -1,4 +1,10 @@
-# drillion
+<picture align="center">
+  <img alt="drillion" src="https://raw.githubusercontent.com/vazome/drillion/main/docs/images/drillion-github-banner-transparent.svg">
+</picture>
+
+---
+
+# drillion: Python practice, on your machine
 
 [![PyPI](https://img.shields.io/pypi/v/drillion)](https://pypi.org/project/drillion/)
 [![Python](https://img.shields.io/pypi/pyversions/drillion)](https://pypi.org/project/drillion/)
@@ -47,7 +53,7 @@ Core ideas I'm keeping in mind during the development:
 - **Categorisation.** Every task is tagged with the concept it drills, and a tag spans
   many tasks, so you can go straight at the thing you are worst at instead of grinding a
   track in order.
-- **Anki-like progression.** A task comes back before you forget it, with a daily cap so a
+- **Anki-like progression.** Tasks return on a fixed review ladder, with a daily cap so a
   backlog cannot bury you.
 - **An editor that behaves like an IDE without the complexity of one.** Every `solve()` is
   typed, so completions, signatures and inline type errors are real as they come from a
