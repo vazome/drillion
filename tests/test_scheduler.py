@@ -212,7 +212,8 @@ def test_queue_caps_reviews_but_a_backlog_never_stops_new_picks():
     st["cards"][backlog[-1]]["due"] = "2999-01-01"  # one card back under the cap
     q = scheduler.queue(st, all_tasks)
     assert q["due_total"] == cap and len(q["review"]) == cap  # the whole backlog shows
-    assert len(q["new"]) == scheduler.NEW_PER_DAY  # unchanged: the backlog never gated them
+    # unchanged: the backlog never gated them
+    assert len(q["new"]) == scheduler.NEW_PER_DAY
 
 
 def test_queue_puts_the_most_overdue_review_first():
