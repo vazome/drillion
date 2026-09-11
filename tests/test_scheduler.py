@@ -155,7 +155,6 @@ def test_queue_caps_new_picks_and_skips_open_attempts():
         "new": ["003_c"],
         "done_today": 0,
         "due_total": 0,
-        "behind": False,
         "no_new": None,  # there is something new to offer, so there is no reason to give
     }
     done = [
@@ -180,9 +179,10 @@ def test_queue_caps_new_picks_and_skips_open_attempts():
     assert q["done_today"] == 1 and q["new"] == ["001_a"]  # one new pick left today
 
 
-def test_queue_caps_reviews_and_holds_new_picks_while_behind():
-    """Reviews are capped, nothing new is offered while behind, and both facts ride on the
-    payload — a cap the page cannot see reads as "done for today"."""
+def test_queue_caps_reviews_but_a_backlog_never_stops_new_picks():
+    """Reviews are capped and the real backlog rides on the payload — a cap the page cannot
+    see reads as "done for today". New material is not rationed by the backlog: a deep queue
+    is a reason to review, not a reason to stop learning."""
     cap = scheduler.REVIEWS_PER_DAY
     all_tasks = {
         f"{i:03d}_x": {
@@ -194,7 +194,7 @@ def test_queue_caps_reviews_and_holds_new_picks_while_behind():
         }
         for i in range(1, cap + 7)
     }
-    backlog = list(all_tasks)[: cap + 1]  # one deeper than the cap: behind
+    backlog = list(all_tasks)[: cap + 1]  # one deeper than the review cap
     st = _st(
         cards={
             s: {"box": 2, "due": f"2020-01-{i + 1:02d}", "seen": 1}
@@ -206,14 +206,14 @@ def test_queue_caps_reviews_and_holds_new_picks_while_behind():
         q["due_total"] == cap + 1 and len(q["review"]) == cap
     )  # the rest waits its turn
     assert q["review"] == backlog[:cap]  # still most overdue first
-    assert q["behind"] is True and q["new"] == []  # ...and nothing new today
+    # ...and the day's new picks stand, deep backlog or not
+    assert len(q["new"]) == scheduler.NEW_PER_DAY and q["no_new"] is None
 
     st["cards"][backlog[-1]]["due"] = "2999-01-01"  # one card back under the cap
     q = scheduler.queue(st, all_tasks)
     assert q["due_total"] == cap and len(q["review"]) == cap  # the whole backlog shows
-    assert (
-        q["behind"] is False and len(q["new"]) == scheduler.NEW_PER_DAY
-    )  # new picks return
+    # unchanged: the backlog never gated them
+    assert len(q["new"]) == scheduler.NEW_PER_DAY
 
 
 def test_queue_puts_the_most_overdue_review_first():

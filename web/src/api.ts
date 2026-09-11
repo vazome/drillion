@@ -28,15 +28,16 @@ export interface Catalogue {
   today: {
     /** the day's reviews, most overdue first — CAPPED. `due_total` is the real backlog. */
     review: string[];
-    /** held empty while `behind`: no new material until the backlog is back under the cap */
+    /** today's new picks, capped per day and never held back by the backlog */
     new: string[];
+    /** the last few tasks worked, most recent first — CAPPED, a way back in, not a history */
     recent: string[]; done_today: number;
-    due_total: number; behind: boolean;
+    due_total: number;
     /** the one reason `new` is empty, named by `queue()`; null when there is something to offer */
-    no_new: { why: "behind" | "focus" | "done" } | { why: "cap"; ready: number }
+    no_new: { why: "focus" | "done" } | { why: "cap"; ready: number }
       | { why: "prereqs"; nearest: string } | null;
   };
-  /** `due` is the whole backlog, not `review.length` — the two differ once `behind`.
+  /** `due` is the whole backlog, not `review.length` — the two differ once it is over the cap.
    *  `stuck` is the tag with the most flagged tasks, or null when none stands out. */
   stats: { boxes: number[]; ladder: number[]; due: number; seen: number; total: number; practised: number; window: number; lapse_limit: number; stuck: { tag: string; flagged: number } | null };
   tasks: Row[];

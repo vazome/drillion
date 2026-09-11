@@ -3,11 +3,11 @@
 ## The loop
 
 1. **Today** shows due reviews first, most overdue first and at most 12 of them, then up to 2
-   new tasks whose prerequisites you have passed. While the backlog is deeper than that review
-   cap you are *behind*, and drillion offers nothing new until you are not — starting new
-   material while already behind only makes the backlog worse. The whole catalogue is open
-   either way; the queue is a suggestion, so not being in the mood for one of them costs
-   nothing — open another, or open none.
+   new tasks whose prerequisites you have passed. The review cap is there so a backlog cannot
+   bury you, and it never costs you the new picks: a deep queue is a reason to review, not a
+   reason to stop learning something new. The whole catalogue is open either way; the queue is
+   a suggestion, so not being in the mood for one of them costs nothing — open another, or
+   open none.
 2. Opening a task starts an **attempt**: a fresh seed and an active-seconds timer that pauses
    when the tab is hidden. The first minute of it is free — the clock sits at 00:00 while you
    read, and a corner notice says so ten seconds in. The left pane renders the task's `README.md` — Why / You get /
@@ -34,7 +34,7 @@
 
 ## Why
 
-**Fresh data every sitting.** Nearly every task ships a generator — 189 of the 201 — so when a
+**Fresh data every sitting.** Nearly every task ships a generator — 255 of the 267 — so when a
 task comes back in 8 days the IPs, names and numbers are different. You can't recall the answer
 because that exact answer never existed. This is the one feature that stops spaced repetition
 from degrading into memorising files.

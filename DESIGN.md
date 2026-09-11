@@ -11,7 +11,7 @@ cards on a desk") was not taken.
 
 ## Product in one paragraph
 
-A single-user, local web app for practising Python. A catalogue of 201 short tasks, each
+A single-user, local web app for practising Python. A catalogue of 267 short tasks, each
 with a spec, a code editor, and a test that grades the code on fresh random data.
 A spaced-repetition scheduler decides what comes back when (7-box ladder: 2/4/8/16/28/60/120 days). Hints
 unlock with time; the solution unlocks after real effort. Sessions are 20–40 minutes a day, on a
@@ -49,15 +49,16 @@ Answers: *what do I do now?*
 
 Data: `GET /api/catalogue` →
 - `today.review[]` — due reviews, most overdue first, at most 12; `today.due_total` — how many
-  are really due, and `today.behind` — true once the backlog is past that cap, when `today.new[]`
-  is held empty. Both must be said out loud: "showing 12 of 100 due", "new picks paused while you
-  catch up". A cap the page hides reads as "done for today" with ninety cards waiting.
-  `today.new[]` — up to 2 new picks;
-  `today.recent[]` — every task worked in the last `window` days, newest first, open attempts
+  are really due. Both must be said out loud: "showing 12 of 100 due". A cap the page hides
+  reads as "done for today" with ninety cards waiting.
+  `today.new[]` — up to 2 new picks, never held back by the size of the backlog: being behind
+  on reviews is a reason to review, not a reason to stop learning something new;
+  `today.recent[]` — the last four tasks worked inside the `window`, newest first, open attempts
   included and leading, and a task whose last act was abandoning it left out; never filtered
   against the other two, since a card worked on Friday and due again today is both things at
-  once; `today.done_today` (count); `today.no_new` — null while there are new picks, else the one
-  reason there are none (`behind`, `cap`, `prereqs` with the nearest task, `focus`, `done`)
+  once. It is the way back into what you just had open, not a history — the progress log is the
+  history; `today.done_today` (count); `today.no_new` — null while there are new picks, else the
+  one reason there are none (`cap`, `prereqs` with the nearest task, `focus`, `done`)
 - `stats` — `boxes` (7 counts, one per ladder box), `ladder` (the return intervals, one per box), `due` (the whole backlog, not the capped
   list), `lapse_limit` (the lapse count a task is flagged at), `stuck` (the tag with the most
   flagged tasks, or null), `seen`, `total`, and `practised` of
@@ -98,7 +99,7 @@ because it is the way back into work already started, not a ration of new materi
 
 Tier and tag render as one filesystem-style path, `core/f-strings`, with the tier segment muted —
 one column, not two. Whatever `focus` a row is filtered by, the UI must be able to show it: a
-filter the screen cannot display is a screen that says "0 of 201" with no way to explain itself.
+filter the screen cannot display is a screen that says "0 of 267" with no way to explain itself.
 
 ### 2. Task (`#/task/:slug`)
 

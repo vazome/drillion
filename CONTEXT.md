@@ -14,7 +14,7 @@ words mean.
 
 **Task**:
 The unit of practice: one folder under `tasks/`, holding one spec, one stub to fill in, and one
-test that grades it. There are 201.
+test that grades it. There are 267.
 _Avoid_: exercise, drill, problem, kata, question
 
 **Slug**:
@@ -120,7 +120,7 @@ _Avoid_: repeat, redo, revision
 
 **New pick**:
 An unseen task whose **prereqs** are cleared, offered as new material. Capped per day, and
-held entirely while the backlog is over the **review** cap.
+never withheld because the **review** backlog is deep.
 _Avoid_: suggestion, recommendation, next up
 
 **Focus**:
