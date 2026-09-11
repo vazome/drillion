@@ -70,6 +70,8 @@ from .state import (
 
 log = logging.getLogger(__name__)
 MAX_BODY = 256 * 1024
+# rows in the catalogue's Recent activity band: a way back in, not a history
+RECENT_SHOWN = 4
 # a whole practice history, not one edit: the restore route is exempt from MAX_BODY
 MAX_BUNDLE = 64 * 1024 * 1024
 RESTORE = "/api/restore"
@@ -277,10 +279,11 @@ def _payload(st, slug, meta, src):
 
 
 def _recent(st, all_tasks):
-    """Tasks worked in the last WINDOW days, most recent first — distinct slugs, no cap.
+    """The last RECENT_SHOWN tasks worked inside the WINDOW, most recent first.
 
     An open attempt counts and sorts first; a slug whose latest run is `abandoned` drops off
-    until it is opened or passed again."""
+    until it is opened or passed again. It is a way back into what you just had open, not a
+    history — the log on the progress page is the history."""
     cut = (date.fromisoformat(today()) - timedelta(days=WINDOW - 1)).isoformat()
     last = {
         slug: runs[-1]["date"]
@@ -295,7 +298,7 @@ def _recent(st, all_tasks):
         ),  # a rename leaves a dead key
         key=lambda s: last[s],
         reverse=True,
-    )
+    )[:RECENT_SHOWN]
 
 
 @app.get("/api/health")

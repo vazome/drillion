@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 
 import drillion
 from drillion import region, sandbox, scheduler, state
-from drillion.api import MAX_BODY, _recent, app
+from drillion.api import MAX_BODY, RECENT_SHOWN, _recent, app
 from drillion.catalogue import tasks
 from drillion.settings import settings
 
@@ -55,7 +55,7 @@ async def _stub_to_pass(api, path):
     assert [e["slug"] for e in cat["tasks"]] == [SLUG]
     assert cat["tasks"][0]["status"] == "new" and cat["today"]["new"] == [SLUG]
     assert cat["tags"] == ["f-strings"] and cat["stats"]["total"] == 1
-    assert cat["today"]["due_total"] == 0 and cat["today"]["behind"] is False
+    assert cat["today"]["due_total"] == 0
     assert cat["tasks"][0]["lapses"] == 0  # a card nobody has fought yet
     assert cat["stats"]["lapse_limit"] == scheduler.LAPSE_LIMIT
     assert cat["stats"]["due"] == 0  # the real backlog, not the capped list's length
@@ -495,7 +495,7 @@ async def _blocked_rows(api, _path):
 
 
 async def _why_no_new(api, _path):
-    """An empty New picks band carries one reason, the way `behind` carries the cap."""
+    """An empty New picks band carries one reason, so the page names it rather than guessing."""
     st = state.load()
     for slug in (SLUG, PREREQ):  # started, not passed: box 0 clears no prereq
         st["cards"][slug] = {"box": 0, "due": state.today(), "seen": 1}
@@ -516,8 +516,8 @@ async def _why_no_new(api, _path):
     ]
     state.save(st)
     cat = (await api.get("/api/catalogue")).json()
-    assert cat["today"]["new"] == [] and cat["today"]["behind"] is False
-    # unlocked, and held only by the day's allowance — which is a different sentence
+    assert cat["today"]["new"] == []
+    # unlocked, and held only by the day's allowance — the one thing that still holds it
     assert cat["today"]["no_new"] == {"why": "cap", "ready": 1}
     assert scheduler.unseen(state.load(), tasks()) == [GATED]
 
@@ -644,8 +644,8 @@ def test_an_empty_new_picks_band_carries_its_one_reason():
 
 
 def test_recent_activity_is_the_week_most_recent_first():
-    """Distinct slugs, newest first, capped by the window rather than by a count — and never
-    filtered against today's queue."""
+    """Distinct slugs, newest first, inside the window and capped at RECENT_SHOWN rows — and
+    never filtered against today's queue."""
 
     def day(n):
         return (date.today() - timedelta(days=n)).isoformat()  # noqa: DTZ011
@@ -680,6 +680,14 @@ def test_recent_activity_is_the_week_most_recent_first():
     st["open"] = {}
     st["archive"]["001_a"].append({"date": day(0), "grade": "pass"})
     assert _recent(st, tasks)[0] == "001_a"
+
+    # the band is a way back in, not a history: a busy week still shows RECENT_SHOWN rows
+    busy = {f"{i:03d}_x": {} for i in range(1, 10)}
+    st = {
+        "open": {},
+        "archive": {s: [{"date": day(i % 3)}] for i, s in enumerate(busy)},
+    }
+    assert len(_recent(st, busy)) == RECENT_SHOWN
 
 
 # ── the origin guard ────────────────────────────────────────────────────────────────────

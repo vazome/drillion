@@ -35,11 +35,6 @@ function noPicks(no: NonNullable<Payload["today"]["no_new"]>, today: Payload["to
     return r ? <a href={href(r)}>#{num(r.topic)} {r.title}</a> : null;
   };
   switch (no.why) {
-    case "behind": return {
-      act: "backlog" as const,
-      message: <>New picks are paused while you catch up — {plural(today.due_total, "review")} waiting,
-        and a day holds {today.review.length}. They start again on their own once the backlog is under that.</>,
-    };
     case "cap": return {
       act: null,
       message: <>That is today's new material — {plural(today.done_today, "new task")} done.
@@ -276,9 +271,7 @@ export function Catalogue() {
     if (e.key === "Enter" && !e.nativeEvent.isComposing && sorted.length) location.hash = href(sorted[0]);
   };
   const empty = today.no_new ? noPicks(today.no_new, today, focus, by) : null;
-  const act = empty?.act === "backlog" ? { label: "Show the backlog", run: () => setStatus("due") }
-    : empty?.act === "focus" ? { label: "Clear focus", run: () => setFocus(null) }
-    : null;
+  const act = empty?.act === "focus" ? { label: "Clear focus", run: () => setFocus(null) } : null;
 
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", display: "grid", gap: 18 }}>
@@ -296,9 +289,9 @@ export function Catalogue() {
         style={{ background: "var(--surface-2)" }}
         message={<>Every task you pass comes back later than the last time — {inDays(stats.ladder[0])} at
           first, {inDays(stats.ladder.at(-1)!)} once it is solid — and a sitting you struggle
-          through brings it back sooner instead. Only two new tasks are offered a day. Reviews
-          come first: while the backlog is over the day’s cap, new picks pause until you have
-          caught up.</>}
+          through brings it back sooner instead. Reviews come first and a day holds only so
+          many of them, so a backlog cannot bury you. Two new tasks are offered a day
+          whatever the backlog looks like.</>}
         actions={[
           { label: "How it works", onClick: () => window.open(HOW_IT_WORKS, "_blank", "noopener") },
           { label: "Got it", onClick: dismissFirstRun },
@@ -311,7 +304,7 @@ export function Catalogue() {
             ? recent.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} />)
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
                 message="Nothing yet this week. Whatever you open collects here, passed or not." />}
-          <Band label="New picks" aside={today.behind ? "paused — catching up" : focus ? `from ${focus}` : "any"} />
+          <Band label="New picks" aside={focus ? `from ${focus}` : "any"} />
           {fresh.length
             ? fresh.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} />)
             : <EmptyState align="left" style={{ padding: "4px 0 10px" }}

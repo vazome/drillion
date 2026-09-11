@@ -61,40 +61,36 @@ def unseen(st, all_tasks, held=None):
 
 
 def queue(st, all_tasks):
-    """Today: the most overdue reviews up to the cap, then the new picks left.
+    """Today: the most overdue reviews up to the cap, then today's new picks.
 
-    Both lists are capped: while the backlog is deeper than the review cap you are `behind`,
-    and nothing new is offered. `due_total`, `behind` and `no_new` ride along for the page."""
+    Only reviews are capped. A deep backlog is a reason to review, never a reason to stop
+    learning something new, so the daily new picks stand whatever the queue looks like.
+    `due_total` and `no_new` ride along for the page."""
     done_today = sum(1 for e in st["log"] if e["date"] == today() and e["new"])
     due = sorted(due_today(st, all_tasks), key=lambda s: card(st, s)["due"])
-    behind = len(due) > REVIEWS_PER_DAY
     held = blocked(st, all_tasks)
     fresh = sorted(
         (s for s in unseen(st, all_tasks, held) if s not in st["open"]),
         key=lambda s: all_tasks[s]["topic"],
     )
-    new = [] if behind else fresh[: max(0, NEW_PER_DAY - done_today)]
+    new = fresh[: max(0, NEW_PER_DAY - done_today)]
     return {
         "review": due[:REVIEWS_PER_DAY],
         "new": new,
         "done_today": done_today,
         "due_total": len(due),
-        "behind": behind,
         "no_new": None
         if new
-        else _no_new(st, all_tasks, held, fresh, behind=behind, done_today=done_today),
+        else _no_new(st, all_tasks, held, fresh, done_today=done_today),
     }
 
 
-def _no_new(st, all_tasks, held, fresh, *, behind, done_today):
+def _no_new(st, all_tasks, held, fresh, *, done_today):
     """The one reason there is nothing new to offer, for the page to name rather than guess.
 
-    Ordered the way the rules bite: the backlog, then today's cap, then a prereq, then a
-    focus. `ready` counts what is unlocked and waiting for tomorrow; `nearest` is the task
-    closest to opening."""
+    Ordered the way the rules bite: today's cap, then a prereq, then a focus. `ready` counts
+    what is unlocked and waiting for tomorrow; `nearest` is the task closest to opening."""
     focus = st.get("focus")
-    if behind:
-        return {"why": "behind"}
     waiting, ready = {}, len(fresh)
     for slug, prereqs in held.items():
         if slug in st["open"] or (focus and focus not in _facets(all_tasks[slug])):

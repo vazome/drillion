@@ -120,7 +120,7 @@ _Avoid_: repeat, redo, revision
 
 **New pick**:
 An unseen task whose **prereqs** are cleared, offered as new material. Capped per day, and
-held entirely while the backlog is over the **review** cap.
+never withheld because the **review** backlog is deep.
 _Avoid_: suggestion, recommendation, next up
 
 **Focus**:
