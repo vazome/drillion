@@ -90,14 +90,22 @@ jobs:
         with:
           persist-credentials: false
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
-      # gates: the workflows carry no findings today, so any new one fails this job. The upload
-      # below still runs on that failure, so a red build leaves the findings in the Security tab.
+      # In SARIF mode zizmor keeps its findings in the file and still exits 0, so this step goes
+      # red only on an internal error, never on a finding. `known-vulnerable-actions` is its one
+      # audit that needs the network, and a failed call to api.github.com ends the run before any
+      # SARIF is written at all. So: audit online, and fall back to the offline audits when the
+      # API is unreachable, which keeps the other audits reporting on a day GitHub's is not.
       - name: audit the workflows
+        id: audit
         env:
           GH_TOKEN: ${{ github.token }}
-        run: uvx zizmor@1.29.0 --format sarif --no-progress .github/workflows/ > zizmor.sarif
+        run: |
+          uvx zizmor@1.29.0 --format sarif --no-progress .github/workflows/ > zizmor.sarif ||
+            uvx zizmor@1.29.0 --format sarif --no-progress --no-online-audits .github/workflows/ > zizmor.sarif
+      # a failed audit wrote no SARIF, and uploading the empty file reports as a syntax error
+      # rather than as the audit failure it is
       - uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.audit.outcome == 'success' }}
         with:
           sarif_file: zizmor.sarif
           category: zizmor
