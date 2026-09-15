@@ -4,6 +4,20 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.8.2 — 2026-09-15
+
+An image rebuild. The Python package is unchanged, so an install from PyPI has nothing to do.
+
+- **The Docker image carries Debian's current security updates.** 0.8.1's image was built on
+  11 September and Debian published fixes for perl, PCRE2, glibc, SQLite and gzip over the two
+  days after, so the published image stood at 28 fixable advisories it had been built too early
+  to include. This rebuild installs them. drillion itself never calls into perl, which accounts
+  for thirteen of the twenty-eight, and the wheel was never affected either way.
+- **Auditing the workflows survives an unreachable advisory API.** A failed call to
+  api.github.com used to end the audit before it wrote anything, which reddened the weekly
+  security run twice over and reported as a malformed file rather than as the outage it was.
+  The audit now falls back to the checks that need no network.
+
 ## 0.8.1 — 2026-09-11
 
 Documentation and packaging only. The 0.8.0 wheel is unchanged in what it does.
