@@ -25,7 +25,7 @@ COPY tasks/ ./tasks/
 COPY --from=web /build/dist ./web/dist
 RUN --mount=type=cache,target=/root/.cache/uv uv build --wheel -o /wheel
 
-FROM python:3.14-slim@sha256:cad9a2c871761c413caa6fdd6441c783451e740a48aaeba60ae62a8b53525ef6
+FROM python:3.14-slim@sha256:cad9a2c871761c413caa6fdd6441c783451e740a48aaeba60ae62a8b53525ef6 AS runtime
 
 # v0.12.7
 COPY --from=ghcr.io/astral-sh/uv@sha256:95f2aa1fe59274951cfe9b0cbc7972e879ff1004bc8945d130a32eb0dbd85945 /uv /uvx /usr/local/bin/

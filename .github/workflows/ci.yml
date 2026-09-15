@@ -224,6 +224,11 @@ jobs:
           tags: drillion:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # the runtime stage upgrades its Debian packages, and a cached layer never re-runs
+          # that: nothing in its key changes when a new advisory lands, so the scan below would
+          # report a months-old package set as today's. The two build stages keep their cache,
+          # which is where the minutes are.
+          no-cache-filters: runtime
 
       # Both consumers use the loaded image on this runner. Collect smoke's status
       # after publishing scan reports, so a failing smoke test cannot swallow SARIF.
