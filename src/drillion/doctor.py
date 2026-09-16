@@ -12,6 +12,9 @@ TIERS = ("core", "advanced", "packages")
 REFERENCES = ("prereqs",)  # optional frontmatter lists of task numbers
 # the sections a manifest shows before any sitting has filled a placeholder in
 PLAIN_SECTIONS = ("why", "you get")
+# what names the schema kubeconform will go looking for, read as lines rather than parsed:
+# a solution is a template, and `name: {name}-web` is not YAML
+SCHEMA_FIELD = re.compile(r"^(apiVersion|kind):[ \t]*(\S+)", re.MULTILINE)
 
 
 def _placeholder_rules(spec_md):
@@ -41,6 +44,31 @@ def _render_rules(meta):
     return []
 
 
+def _schema_rules(meta):
+    """Does drillion actually package a schema for the kind this task teaches? kubeconform
+    answers a kind it has no schema for the same way it answers a typo, so a task nobody
+    packaged a schema for tells every learner who gets it right that they got it wrong.
+    Caught here, at contribution time, because at grading time the two are one string."""
+    try:
+        text = (meta["dir"] / "solution.yaml").read_text(encoding="utf-8")
+    except KeyError, OSError:
+        return []  # a solution.yaml that is missing or unreadable is its own reason
+    fields = dict(SCHEMA_FIELD.findall(text))
+    if (kind := fields.get("kind")) is None:
+        return []
+    api = fields.get("apiVersion", "")
+    name = "-".join([kind.lower(), *re.split(r"[/.]", api.lower())]) + ".json"
+    if (tools.SCHEMAS / name).is_file():
+        return []
+    packaged = ", ".join(sorted(p.stem for p in tools.SCHEMAS.glob("*.json")))
+    return [
+        (
+            f"solution.yaml: no packaged schema for {kind} ({api or 'no apiVersion'}); "
+            f"drillion packages {packaged}"
+        )
+    ]
+
+
 def _value_rules(meta):
     """The rules the catalogue never had to check: what a filled-in field actually says."""
     out = []
@@ -60,6 +88,7 @@ def _value_rules(meta):
             out.append("README.md: tier belongs to a python task, not a manifest")
         out += _placeholder_rules(meta.get("spec_md", ""))
         out += _render_rules(meta)
+        out += _schema_rules(meta)
     minutes = meta.get("minutes")
     if minutes is not None and (
         isinstance(minutes, bool) or not isinstance(minutes, int) or minutes <= 0

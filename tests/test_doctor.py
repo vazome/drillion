@@ -276,3 +276,26 @@ def test_a_manifest_readme_that_cannot_render_is_reported():
             "does not render against a brief" in r
             for r in reasons.get("043_manifest", [])
         ), (bad, reasons)
+
+
+def test_a_manifest_teaching_a_kind_with_no_packaged_schema_is_reported():
+    """kubeconform answers a kind it has no schema for exactly as it answers a typo, so a
+    task nobody packaged a schema for would tell every correct learner they were wrong."""
+    manifest_readme = README.replace("tier: core\n", "").replace(
+        "difficulty: easy", "kind: manifest\ndifficulty: easy"
+    )
+    fine = manifest_readme.replace(
+        "Because.", "Because it matters.\n\n## You return\nA Deployment named `{name}`."
+    )
+    base = {"README.md": fine, "task.yaml": "", "grade.py": _GRADER}
+    packaged = "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\n"
+    assert _reasons(**{"043_manifest": {**base, "solution.yaml": packaged}}) == {}
+    missing = packaged.replace("apiVersion: apps/v1", "apiVersion: v1").replace(
+        "kind: Deployment", "kind: ConfigMap"
+    )
+    reasons = _reasons(**{"043_manifest": {**base, "solution.yaml": missing}})[
+        "043_manifest"
+    ]
+    assert any(
+        r.startswith("solution.yaml: no packaged schema for ConfigMap") for r in reasons
+    ), reasons
