@@ -126,7 +126,7 @@ def test_a_rejection_with_no_field_detail_still_says_what_the_validator_said(
 ):
     """Not every rejection is a field comparison, and then `msg` is all there is."""
     passed, headline = _submit(CORRECT.replace("apiVersion: apps/v1\n", ""))
-    assert not passed and "problem validating schema" in headline
+    assert not passed and "error while parsing: missing 'apiVersion' key" in headline
 
 
 def test_a_kind_no_schema_is_packaged_for_is_not_blamed_on_the_learner(

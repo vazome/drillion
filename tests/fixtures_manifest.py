@@ -115,8 +115,7 @@ elif 'replicas: "' in text:
         ],
     }}
 elif "apiVersion:" not in text:
-    # not every rejection is a field comparison, so this one carries no validationErrors
-    resource |= {{"status": "statusInvalid", "msg": BOILERPLATE}}
+    resource |= {{"status": "statusError", "msg": "error while parsing: missing 'apiVersion' key"}}
 print(json.dumps({{"resources": [resource]}}))
 raise SystemExit(0 if resource["status"] == "statusValid" else 1)
 """
