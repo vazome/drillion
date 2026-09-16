@@ -5,6 +5,8 @@ that `sandbox.run_script` starts, and it talks back in JSON. The server never im
 
 import json
 import math
+import os
+import stat
 import subprocess
 import tempfile
 from pathlib import Path
@@ -32,8 +34,9 @@ path, seed, out = sys.argv[1], int(sys.argv[2]), sys.argv[3]
 spec = importlib.util.spec_from_file_location(sys.argv[4], path)
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
+text = json.dumps(module.brief(random.Random(seed)))
 with open(out, "w", encoding="utf-8") as stream:
-    json.dump(module.brief(random.Random(seed)), stream)
+    stream.write(text)
 """
 
 
@@ -62,7 +65,10 @@ def module_name(slug):
 
 
 def generate_brief(meta, seed):
-    """The requirements for one sitting, produced by the task's own code, in the sandbox."""
+    """The requirements for one sitting, produced by the task's own code, in the sandbox.
+
+    The child shares its `sys.argv`, so the grader can write the output file itself instead
+    of returning from `brief()`. What comes back is validated either way."""
     grader = meta["dir"] / "grade.py"
     with tempfile.TemporaryDirectory(
         dir=settings.root, ignore_cleanup_errors=True
@@ -87,10 +93,28 @@ def generate_brief(meta, seed):
             raise Rejected("brief() did not finish") from None
         if result.returncode != 0:
             raise Rejected(f"brief() failed: {result.stderr.strip()[-500:]}")
-        if not out.exists() or out.stat().st_size > MAX_BRIEF_BYTES:
-            raise Rejected("brief() wrote nothing, or wrote too much")
+        return _read_brief(out)
+
+
+def _read_brief(out):
+    """Read back what the child wrote, as the one file object the size check looked at.
+
+    The child owns the scratch directory, so it can unlink `out` and leave a symlink or a
+    fifo in its place. `O_NOFOLLOW` keeps the parent from becoming a confused deputy for a
+    file the sandbox denies the child, `O_NONBLOCK` keeps a fifo from wedging this thread,
+    and `fstat` measures the fd rather than the name, so nothing can be swapped in between."""
+    try:
+        fd = os.open(out, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError:
+        raise Rejected("brief() wrote nothing") from None
+    with open(fd, encoding="utf-8") as stream:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode):
+            raise Rejected("brief() wrote something that is not a plain file")
+        if info.st_size > MAX_BRIEF_BYTES:
+            raise Rejected("brief() wrote too much")
         try:
-            return _validated(json.loads(out.read_text(encoding="utf-8")))
+            return _validated(json.loads(stream.read()))
         except ValueError as exc:
             raise Rejected(f"brief() is not valid JSON: {exc}") from None
 

@@ -15,10 +15,10 @@ from tests.fixtures_manifest import fixture_task
 SLUG = "271_fixture"
 
 
-def _grader(body):
-    """Replace the fixture task's grade.py with one whose `brief` is `body`."""
+def _grader(body, head=""):
+    """Replace the fixture task's grade.py with one whose `brief` is `body`, under `head`."""
     (settings.tasks_dir / SLUG / "grade.py").write_text(
-        f"def brief(r):\n    {body}\n\n\ndef check(doc, b):\n    pass\n",
+        f"{head}\n\n\ndef brief(r):\n    {body}\n\n\ndef check(doc, b):\n    pass\n",
         encoding="utf-8",
     )
 
@@ -114,6 +114,34 @@ def test_a_grader_that_never_finishes_is_rejected_not_crashed(
 
     monkeypatch.setattr(manifest.sandbox, "run_script", slow)
     with pytest.raises(manifest.Rejected):
+        manifest.generate_brief(catalogue.tasks()[SLUG], 7)
+
+
+def test_a_grader_cannot_point_the_server_at_a_file_it_cannot_read(
+    fixture_root, tmp_path
+):
+    """The child owns the scratch directory, so it can leave a symlink where its output goes.
+    The parent must not follow it: that would read, on the grader's behalf, a file the
+    sandbox denies the grader."""
+    secret = tmp_path / "secret.json"
+    secret.write_text('{"aws_key": "AKIAEXFILTRATED"}', encoding="utf-8")
+    _grader(
+        f"os.symlink({str(secret)!r}, sys.argv[3]); os._exit(0)", head="import os, sys"
+    )
+    with pytest.raises(manifest.Rejected):
+        manifest.generate_brief(catalogue.tasks()[SLUG], 7)
+
+
+def test_a_grader_cannot_wedge_the_server_on_a_fifo(fixture_root):
+    """Opening a fifo for reading blocks until someone writes. The parent must not block."""
+    _grader("os.mkfifo(sys.argv[3]); os._exit(0)", head="import os, sys")
+    with pytest.raises(manifest.Rejected, match="not a plain file"):
+        manifest.generate_brief(catalogue.tasks()[SLUG], 7)
+
+
+def test_a_grader_that_exits_clean_without_writing_is_rejected(fixture_root):
+    _grader("os._exit(0)", head="import os")
+    with pytest.raises(manifest.Rejected, match="wrote nothing"):
         manifest.generate_brief(catalogue.tasks()[SLUG], 7)
 
 
