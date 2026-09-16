@@ -223,9 +223,9 @@ export function Editor({ kind, value, onChange, onRun, onSubmit, readOnly, dark,
   useEffect(() => {
     const current = app.current?.getTextModels().modified?.getValue();
     if (current !== undefined && current !== value) app.current?.updateCode({ modified: value });
-  }, [value]);
+  }, [value, ready]);
 
-  useEffect(() => { app.current?.getEditor()?.updateOptions({ readOnly: !!readOnly }); }, [readOnly]);
+  useEffect(() => { app.current?.getEditor()?.updateOptions({ readOnly: !!readOnly }); }, [readOnly, ready]);
   useEffect(() => { app.current?.getEditor()?.updateOptions(looks(prefs)); }, [prefs, ready]);
   // waits for the API rather than testing it: `api` is truthy while still pending, and
   // theming early touches Monaco's standalone services, which makes `start()` throw

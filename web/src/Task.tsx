@@ -4,6 +4,7 @@ import { ApiError, api, post, type Task as TaskData, type RunResult, type Case }
 import { depsHref, prefetch } from "./Deps";
 import { inDays, strength } from "./strength";
 import { DiffView, Editor } from "./Editor";
+import { ManifestBrief, ManifestFailure, ManifestHelp } from "./ManifestWorkspace";
 import { useDraft } from "./useDraft";
 import { usePrefs } from "./prefs";
 
@@ -318,8 +319,10 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
         <div style={narrow
           ? { width: "auto" }
           : { width: "42%", minWidth: 340, maxWidth: "70%", maxHeight: "calc(100vh - 148px)", overflow: "auto", resize: "horizontal" }}>
-          <Card label={`Spec · ${slug}/README.md`}>
-            <SpecText text={task.spec_md} slug={slug} hideTitle />
+          <Card label={meta.kind === "manifest" ? "Your brief" : `Spec · ${slug}/README.md`}>
+            {meta.kind === "manifest"
+              ? <ManifestBrief text={task.spec_md} slug={slug} started={hasAttempt} />
+              : <SpecText text={task.spec_md} slug={slug} hideTitle />}
 
             <div style={{ marginTop: 22, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
               <div style={{ ...LABEL, marginBottom: 10 }}>
@@ -454,14 +457,18 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             {hasAttempt && !passed ? <Button variant="quiet" onClick={abandon} style={{ fontSize: 13 }}>Abandon</Button> : null}
           </div>
 
-          <Editor kind={meta.kind} value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} height={narrow ? "60vh" : "calc(100vh - 364px)"} />
+          {meta.kind === "manifest" ? <ManifestHelp key={`${slug}:${attempt?.seed ?? "new"}`} code={code} onChange={edit} disabled={passed || !!inflight || !!conflict || !!offer} /> : null}
+
+          <Editor kind={meta.kind} value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} height={meta.kind === "manifest" ? "clamp(280px, 42vh, 560px)" : narrow ? "60vh" : "calc(100vh - 364px)"} />
 
           <Card label={ungraded ? "Output · your run" : resultNo ? `Result · attempt ${resultNo}` : "Result"} padding={16}>
             {/* the region stays mounted and only the banner inside it is keyed: a live region
               * that arrives with its text already in place is never announced */}
             <div role="status">
               <div className="m-rise" key={result.state}>
-                {result.state === "ran" ? (
+                {meta.kind === "manifest" && result.state === "failed" && result.output ? (
+                  <ManifestFailure headline={result.headline} />
+                ) : result.state === "ran" ? (
                   <div style={{ borderRadius: "var(--radius)", padding: "12px 16px", fontSize: 14, background: "var(--pass-bg)", borderLeft: "3px solid var(--pass)" }}>
                     <span style={{ fontWeight: 600, color: "var(--pass)", letterSpacing: ".04em" }}>✓ TESTS PASS</span>
                     <span style={{ marginLeft: 10, fontSize: 13, color: "var(--text-muted)" }}>
@@ -488,7 +495,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             ) : null}
 
             {(result.state === "failed" || result.state === "ran") && result.output ? (
-              <Collapsible label="Full output" meta={`pytest · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
+              <Collapsible label={meta.kind === "manifest" ? "Validator details" : "Full output"} meta={`${meta.kind === "manifest" ? "raw report" : "pytest"} · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
                 {result.output}
               </Collapsible>
             ) : null}
