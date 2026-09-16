@@ -231,6 +231,64 @@ def test_the_ruleset_only_asks_for_rights_this_kernel_knows():
     os.close(fd)
 
 
+def test_the_tools_directory_is_executable_and_schemas_are_readable(
+    tmp_path, monkeypatch
+):
+    """A manifest is graded by running the pinned kubeconform against packaged schemas, so
+    the ruleset has to reach both: the tools directory to exec, the schemas to read."""
+    from drillion import tools
+
+    monkeypatch.setattr(settings, "root", tmp_path)
+    (tmp_path / "tools").mkdir()
+    roots = dict(sandbox._roots(str(tmp_path / "scratch"), []))
+    tools_key = os.fsencode(str((tmp_path / "tools").resolve()))
+    assert "execute" in roots.get(tools_key, set())
+    schema_key = os.fsencode(str(tools.SCHEMAS.resolve()))
+    assert "read_file" in roots.get(schema_key, set())
+    assert "write_file" not in roots.get(schema_key, set())
+    # the union in `_roots` keys on resolved paths, so an exec root one level down must
+    # leave the data root itself listable and nothing more
+    assert roots[os.fsencode(str(tmp_path.resolve()))] == {"read_dir"}
+
+
+def test_the_macos_profile_still_denies_the_network():
+    """Grading is offline. `(deny network*)` is the whole of that denial on macOS, so an
+    exec root added to the profile must not have cost it."""
+    assert "(deny network*)" in sandbox._sbpl("/tmp", [])
+
+
+# the Landlock filesystem rights, ABI 1 to 5, spelled out so that growing the vocabulary is
+# a deliberate edit here and not a side effect of widening a root
+FILESYSTEM_RIGHTS = {
+    "execute",
+    "write_file",
+    "read_file",
+    "read_dir",
+    "remove_dir",
+    "remove_file",
+    "make_char",
+    "make_dir",
+    "make_reg",
+    "make_sock",
+    "make_fifo",
+    "make_block",
+    "make_sym",
+    "refer",
+    "truncate",
+    "ioctl_dev",
+}
+
+
+def test_the_ruleset_only_ever_asks_for_filesystem_rights():
+    """Landlock denies its other capability classes, network and scopes, by having no allow
+    rule at all. A right outside this vocabulary reaching `_roots` would be a new class of
+    access granted to every graded process, exec roots included."""
+    assert set(sandbox._FS) == FILESYSTEM_RIGHTS
+    asked = {right for _, rights in sandbox._roots("/tmp", []) for right in rights}
+    assert asked, "no rights at all means this test proves nothing"
+    assert asked <= FILESYSTEM_RIGHTS
+
+
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX resource limits")
 def test_the_resource_limits_never_raise_what_the_machine_already_allows():
     """A cap is a cap: `_limits` may lower a limit and must never hand a learner's process

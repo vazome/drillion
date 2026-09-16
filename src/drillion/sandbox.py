@@ -233,6 +233,9 @@ def _roots(scratch, targets):
     An allowlist rather than a deny-list because `sys.base_prefix` routinely lives *inside*
     `$HOME` — uv keeps its interpreters under `~/.local/share` — so "deny $HOME" would deny
     the interpreter."""
+    # lazily, so that `tools` stays free to import `sandbox` to confine a grader run
+    from . import tools
+
     interpreter = (
         Path(sys.executable).resolve().parent.parent,
         sys.prefix,
@@ -247,6 +250,10 @@ def _roots(scratch, targets):
         # `-c` file inside the scratch dir — so every file under the root stays closed,
         # `progress.sqlite3` and a checkout's `.git/config` included.
         (settings.root, ("read_dir",)),
+        # the pinned graders, executable for the same reason /usr/bin is: a manifest is
+        # graded by running kubeconform, and whatever it starts inherits this sandbox
+        (tools.tools_dir(), _EXEC),
+        (tools.SCHEMAS, _READ),
         *((t, _READ) for t in targets),
         ("/etc", _READ),
         # /usr/bin and /bin are executable on purpose: task 033 grades `subprocess.run` on
@@ -343,6 +350,8 @@ def _sbpl(scratch, targets):
     Paths are resolved because the sandbox matches on real paths and `/tmp` is a symlink
     into `/private` on macOS."""
 
+    from . import tools
+
     def subpaths(paths):
         real = {str(Path(p).resolve()) for p in paths if Path(p).exists()}
         return " ".join(f'(subpath "{p}")' for p in sorted(real))
@@ -361,6 +370,8 @@ def _sbpl(scratch, targets):
             sys.prefix,
             sys.base_prefix,
             settings.tasks_dir,
+            tools.tools_dir(),
+            tools.SCHEMAS,
             *targets,
             scratch,
         ]
