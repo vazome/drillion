@@ -225,3 +225,32 @@ def test_fetch_belongs_to_doctor():
     """Downloading is an explicit act, so the flag that does it is refused anywhere else."""
     with pytest.raises(SystemExit):
         cli.main(["serve", "--fetch"])
+
+
+def test_a_manifest_placeholder_outside_the_requirements_is_reported():
+    """An unopened manifest task serves its README as written, so the sections shown before
+    a sitting has filled anything in must carry no placeholder."""
+    manifest_readme = README.replace("tier: core\n", "").replace(
+        "difficulty: easy", "kind: manifest\ndifficulty: easy"
+    )
+    files = {"task.yaml": "", "grade.py": "", "solution.yaml": ""}
+    leaked = manifest_readme.replace(
+        "Because.", "Because {name} matters.\n\n## You get\nA {replicas}-line file."
+    )
+    assert _reasons(**{"043_manifest": {"README.md": leaked, **files}}) == {
+        "043_manifest": [
+            (
+                "README.md: Why has a placeholder in it, and that section is shown "
+                "before a sitting fills one in"
+            ),
+            (
+                "README.md: You get has a placeholder in it, and that section is "
+                "shown before a sitting fills one in"
+            ),
+        ]
+    }
+    # the requirements are exactly where a placeholder belongs
+    fine = manifest_readme.replace(
+        "Because.", "Because it matters.\n\n## You return\nA Deployment named `{name}`."
+    )
+    assert _reasons(**{"043_manifest": {"README.md": fine, **files}}) == {}

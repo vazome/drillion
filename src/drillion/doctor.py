@@ -4,12 +4,26 @@ import graphlib
 import re
 
 from . import sandbox, tools
-from .catalogue import PYTHON, SLUG, scan
+from .catalogue import PYTHON, SECTION, SLUG, scan
 
 TAG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 DIFFICULTIES = ("easy", "medium", "hard")
 TIERS = ("core", "advanced", "packages")
 REFERENCES = ("prereqs",)  # optional frontmatter lists of task numbers
+# the sections a manifest shows before any sitting has filled a placeholder in
+PLAIN_SECTIONS = ("why", "you get")
+
+
+def _placeholder_rules(spec_md):
+    """A manifest with no sitting open serves its README as written, so only the sections
+    that carry the requirements may hold a placeholder for one to fill in."""
+    parts = SECTION.split(spec_md)  # [before, head, body, head, body, ...]
+    return [
+        f"README.md: {head.strip()} has a placeholder in it, and that section is "
+        "shown before a sitting fills one in"
+        for head, body in zip(parts[1::2], parts[2::2])
+        if head.strip().lower() in PLAIN_SECTIONS and "{" in body
+    ]
 
 
 def _value_rules(meta):
@@ -26,8 +40,10 @@ def _value_rules(meta):
     if meta.get("kind", PYTHON) == PYTHON:
         if tier is not None and tier not in TIERS:
             out.append(f"README.md: tier {tier!r} is not one of {' / '.join(TIERS)}")
-    elif tier is not None:
-        out.append("README.md: tier belongs to a python task, not a manifest")
+    else:
+        if tier is not None:
+            out.append("README.md: tier belongs to a python task, not a manifest")
+        out += _placeholder_rules(meta.get("spec_md", ""))
     minutes = meta.get("minutes")
     if minutes is not None and (
         isinstance(minutes, bool) or not isinstance(minutes, int) or minutes <= 0
