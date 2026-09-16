@@ -12,11 +12,11 @@ from contextlib import closing, contextmanager
 from datetime import date, datetime
 from pathlib import PureWindowsPath
 
-from . import region
+from . import kinds, region
 from .settings import settings
 
 SCHEMA = 1  # legacy JSON/domain shape
-DB_SCHEMA = 1  # SQLite layout, independent of the imported JSON version
+DB_SCHEMA = 2  # SQLite layout, independent of the imported JSON version
 _LOCK = threading.Lock()
 _MAPS = ("cards", "open", "notes")
 log = logging.getLogger(__name__)
@@ -176,7 +176,8 @@ def _store(db, st, before):
         ((*key, value) for key, value in after.items() if before.get(key) != value),
     )
     db.executemany(
-        "INSERT INTO pending_resets VALUES (?, ?, ?)",
+        # Named columns: a migrated table carries `kind` last, a freshly created one third.
+        "INSERT INTO pending_resets (slug, kind, original, replacement) VALUES (?, ?, ?, ?)",
         ((slug, *reset) for slug, reset in st.resets.items()),
     )
 
@@ -196,12 +197,22 @@ def _initialise(db):
             data TEXT NOT NULL CHECK (json_valid(data)),
             PRIMARY KEY (section, key, position))""")
         db.execute("""CREATE TABLE pending_resets (
-            slug TEXT PRIMARY KEY, original TEXT NOT NULL, replacement TEXT NOT NULL)""")
+            slug TEXT PRIMARY KEY, kind TEXT NOT NULL DEFAULT 'python',
+            original TEXT NOT NULL, replacement TEXT NOT NULL)""")
         _store(db, st, {})
+    elif version == 1:
+        # Pending resets predate kinds, so every stored row is a python one: the default
+        # states exactly that, and nothing has to be rewritten to say it.
+        db.execute(
+            "ALTER TABLE pending_resets ADD COLUMN kind TEXT NOT NULL DEFAULT 'python'"
+        )
+    if version < DB_SCHEMA:
         db.execute(f"PRAGMA user_version = {DB_SCHEMA}")
 
 
-def _task_path(slug):
+def _task_path(slug, kind_name):
+    """The learner's file for this task. A pending reset is the one place a stored string
+    becomes a path, so the slug and the kind name are both checked before it is built."""
     if (
         not slug
         or slug in (".", "..")
@@ -210,32 +221,37 @@ def _task_path(slug):
         or PureWindowsPath(slug).drive
     ):
         raise Unreadable("Invalid task slug in a pending reset.")
-    path = settings.tasks_dir / slug / "task.py"
+    kind = kinds.KINDS.get(kind_name)
+    if kind is None:
+        raise Unreadable(f"Unknown task kind {kind_name!r} in a pending reset.")
+    path = settings.tasks_dir / slug / kind.filename
     if not path.resolve().is_relative_to(settings.tasks_dir.resolve()):
         raise Unreadable("Pending task reset points outside the tasks directory.")
     return path
 
 
-def reset_after_commit(st, path, original, replacement):
-    """Schedule a region reset only after the accompanying archive is durable."""
+def reset_after_commit(st, meta, path, original, replacement):
+    """Schedule an artifact reset only after the accompanying archive is durable."""
     slug = path.parent.name
-    if path.resolve() != _task_path(slug).resolve():
+    kind = kinds.of(meta)
+    if path.resolve() != _task_path(slug, kind.name).resolve():
         raise Unreadable("Pending reset is not a task file.")
-    st.resets[slug] = (region.cut(original).body, region.cut(replacement).body)
+    st.resets[slug] = (kind.name, kind.body(original), kind.body(replacement))
 
 
 def _recover(db):
     """Finish committed resets under the database lock, preserving later external edits."""
-    for slug, original, replacement in db.execute(
-        "SELECT * FROM pending_resets"
+    for slug, kind_name, original, replacement in db.execute(
+        "SELECT slug, kind, original, replacement FROM pending_resets"
     ).fetchall():
-        path = _task_path(slug)
+        path = _task_path(slug, kind_name)
+        kind = kinds.KINDS[kind_name]  # _task_path has already refused an unknown name
         try:
             source = path.read_text(encoding="utf-8")
-            body = region.cut(source).body
+            body = kind.body(source)
             if body in (original, replacement):
                 # Repeat even an already-applied reset: sync it before deleting the intent.
-                region.write_region(path, region.splice(source, replacement))
+                region.write_region(path, kind.compose(source, replacement))
             else:
                 log.warning(
                     "Preserving externally edited %s after a committed reset", path

@@ -471,7 +471,7 @@ def run_task(slug: str, edit: Edit):
             )  # drops the attempt
             log.info("%s %s box=%s due in %sd (%s)", slug, grade, box, gap, reason)
             stubbed = kind.empty(new_src)
-            reset_after_commit(st, kind.path(meta), new_src, stubbed)
+            reset_after_commit(st, meta, kind.path(meta), new_src, stubbed)
             new_src = stubbed
             # `from_box` is the direction: `struggled` steps a card *down*
             resp |= {
@@ -545,7 +545,7 @@ def abandon_task(slug: str, sent: Etag):
         _check_etag(kind, src, sent.etag)
         new_src = abandon(st, slug, kind, src)
         log.info("%s abandoned", slug)
-        reset_after_commit(st, kind.path(meta), src, new_src)
+        reset_after_commit(st, meta, kind.path(meta), src, new_src)
         return _payload(st, slug, meta, new_src)
 
 

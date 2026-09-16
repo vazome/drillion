@@ -10,8 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from drillion import state
+from drillion import region, state
 from drillion.settings import settings
+from tests.fixtures import TASK
 
 REPO = Path(__file__).resolve().parent.parent
 
@@ -215,3 +216,65 @@ def test_an_upgraded_progress_file_is_restamped_by_the_build_that_wrote_it(
         assert _stored_version() == state.SCHEMA
 
     _root(check)
+
+
+def _write_legacy_pending_reset(slug, original, replacement):
+    """A database exactly as DB_SCHEMA 1 left it: `pending_resets` has no kind column."""
+    with closing(sqlite3.connect(settings.state_path, isolation_level=None)) as db:
+        db.execute("""CREATE TABLE progress (
+            section TEXT NOT NULL CHECK (section IN ('meta', 'cards', 'open', 'notes', 'log', 'archive')),
+            key TEXT NOT NULL, position INTEGER NOT NULL CHECK (position >= -1),
+            data TEXT NOT NULL CHECK (json_valid(data)),
+            PRIMARY KEY (section, key, position))""")
+        db.execute("""CREATE TABLE pending_resets (
+            slug TEXT PRIMARY KEY, original TEXT NOT NULL, replacement TEXT NOT NULL)""")
+        db.execute(
+            "INSERT INTO pending_resets VALUES (?, ?, ?)",
+            (slug, original, replacement),
+        )
+        db.execute("PRAGMA user_version = 1")
+
+
+def test_a_manifest_reset_empties_the_yaml_file(tmp_path, monkeypatch):
+    """The reset path reads the kind off the task, not the `task.py` name off the slug."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    folder = tmp_path / "tasks" / "271_fixture"
+    folder.mkdir(parents=True)
+    (folder / "task.yaml").write_text("kind: Deployment\n", encoding="utf-8")
+    meta = {"kind": "manifest", "dir": folder}
+
+    with state.writing() as st:
+        state.reset_after_commit(
+            st, meta, folder / "task.yaml", "kind: Deployment\n", ""
+        )
+
+    assert (folder / "task.yaml").read_text(encoding="utf-8") == ""
+
+
+def test_a_legacy_pending_reset_row_still_resets_python(tmp_path, monkeypatch):
+    """Rows written by DB_SCHEMA 1 carry no kind and must migrate as python. A reset
+    committed by the build before this one still has to finish after the upgrade."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    folder = tmp_path / "tasks" / "009_fstrings"
+    folder.mkdir(parents=True)
+    solved = TASK.replace("raise NotImplementedError", "return x")
+    (folder / "task.py").write_text(solved, encoding="utf-8")
+    _write_legacy_pending_reset(
+        "009_fstrings", region.cut(solved).body, region.cut(TASK).body
+    )
+
+    with state.writing():
+        pass
+
+    assert (folder / "task.py").read_text(encoding="utf-8") == TASK
+    with closing(sqlite3.connect(settings.state_path)) as db:
+        assert db.execute("PRAGMA user_version").fetchone()[0] == state.DB_SCHEMA
+        assert db.execute("SELECT count(*) FROM pending_resets").fetchone()[0] == 0
+
+    # A migrated table carries `kind` last, so a new row has to be inserted by name.
+    (folder / "task.py").write_text(solved, encoding="utf-8")
+    with state.writing() as st:
+        state.reset_after_commit(
+            st, {"kind": "python", "dir": folder}, folder / "task.py", solved, TASK
+        )
+    assert (folder / "task.py").read_text(encoding="utf-8") == TASK
