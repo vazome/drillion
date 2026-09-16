@@ -12,7 +12,7 @@ from fastapi import WebSocketDisconnect
 from fastapi.testclient import TestClient
 
 import drillion
-from drillion import region, sandbox, scheduler, state
+from drillion import kinds, region, sandbox, scheduler, state
 from drillion.api import MAX_BODY, RECENT_SHOWN, _recent, app
 from drillion.catalogue import tasks
 from drillion.settings import settings
@@ -884,3 +884,22 @@ def test_damaged_database_returns_an_actionable_error(monkeypatch):
         assert settings.state_path.read_bytes() == before
 
     _api(flow)
+
+
+def test_payload_reads_the_learners_text_through_the_kind(monkeypatch):
+    """Regression guard on the artifact boundary: a spy kind sees every read, so a direct
+    `region.cut()` sneaking back into `_payload` fails here."""
+    seen = []
+
+    class Spy(type(kinds.KINDS["python"])):
+        def body(self, src):
+            seen.append(src)
+            return super().body(src)
+
+    monkeypatch.setitem(kinds.KINDS, "python", Spy())
+
+    async def flow(api, path):
+        assert (await api.get(f"/api/task/{SLUG}")).status_code == 200
+
+    _api(flow)
+    assert seen, "_payload must read the body through kinds.of(meta)"

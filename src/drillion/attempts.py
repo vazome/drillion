@@ -8,7 +8,6 @@ import random
 from datetime import datetime, timedelta
 
 from . import sandbox
-from .region import cut, splice, stub
 from .scheduler import grade_of, reschedule
 from .state import card, own, today
 
@@ -161,16 +160,16 @@ def record_pass(st, slug, meta, code, grader):
     return grade, gap, c["box"], reason
 
 
-def abandon(st, slug, disk_src):
-    """Drop the attempt and return the stubbed source; keep the work if it got anywhere."""
-    body = cut(disk_src).body
-    stubbed = stub(body)
-    if body.strip() != stubbed.strip():
+def abandon(st, slug, kind, disk_src):
+    """Drop the attempt and return the emptied source; keep the work if it got anywhere."""
+    body = kind.body(disk_src)
+    emptied = kind.empty(disk_src)
+    if body.strip() != kind.body(emptied).strip():
         st["archive"].setdefault(slug, []).append(
             {"date": today(), "grade": "abandoned", "code": body}
         )
     st["open"].pop(slug, None)
-    return splice(disk_src, stubbed)
+    return emptied
 
 
 def next_hint(st, slug, hints):

@@ -7,10 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from drillion import attempts, region, sandbox, scheduler, state
+from drillion import attempts, kinds, region, sandbox, scheduler, state
 from drillion.settings import settings
 
 SRC = (settings.tasks_dir / "009_fstrings" / "task.py").read_text(encoding="utf-8")
+PY = kinds.KINDS["python"]
 
 
 def _solved(src=SRC, code="return ''"):
@@ -195,7 +196,7 @@ def test_the_view_answers_the_same_gate_the_action_enforces():
 def test_abandon_archives_real_work_and_resets_the_file():
     st = _st()
     attempts.open_attempt(st, "009_fstrings")
-    assert attempts.abandon(st, "009_fstrings", _solved()) == SRC
+    assert attempts.abandon(st, "009_fstrings", PY, _solved()) == SRC
     assert st["open"] == {}
     kept = st["archive"]["009_fstrings"][0]
     assert kept["grade"] == "abandoned" and "return ''" in kept["code"]
@@ -204,7 +205,7 @@ def test_abandon_archives_real_work_and_resets_the_file():
 def test_abandon_does_not_archive_an_untouched_stub():
     st = _st()
     attempts.open_attempt(st, "009_fstrings")
-    assert attempts.abandon(st, "009_fstrings", SRC) == SRC
+    assert attempts.abandon(st, "009_fstrings", PY, SRC) == SRC
     assert st["archive"] == {} and st["open"] == {}
 
 
