@@ -31,8 +31,8 @@ from .attempts import (
 )
 from .catalogue import public, tasks
 from .lsp import bridge
-from .region import Invalid, bounds, revision, write_region
-from .runner import run_tests, summarise
+from .region import Invalid, revision, write_region
+from .runner import summarise
 from .scheduler import (
     LADDER,
     LAPSE_LIMIT,
@@ -444,7 +444,7 @@ def run_task(slug: str, edit: Edit):
         _check_etag(kind, src, edit.etag)
         new_src = kind.validate(edit.code, src)
         write_region(kind.path(meta), new_src)
-        passed, out, found = run_tests(meta["path"], o["seed"])
+        passed, out, found = kind.grade(meta, o)
         if edit.submit:
             o["attempts"] += 1
         else:
@@ -454,7 +454,7 @@ def run_task(slug: str, edit: Edit):
             "passed": passed,
             "graded": edit.submit,
             "attempts": o["attempts"],
-            **summarise(out, bounds(new_src)),
+            **summarise(out, kind.marker_line(new_src)),
             "case": found,
         }
         log.info(

@@ -256,6 +256,37 @@ def test_the_task_page_is_served_the_sitting_spec_not_the_readme(fixture_root):
     asyncio.run(drive())
 
 
+def test_a_manifest_run_is_graded_by_its_own_kind(fixture_root, monkeypatch):
+    """`api.run_task` already holds a kind. Grading through anything else grades a
+    learner's YAML as if it were Python, and reports "no tests ran" as a wrong answer."""
+    seen = []
+
+    def spy(self, meta, o):
+        seen.append(o["brief"])
+        return True, "1 passed", None
+
+    monkeypatch.setattr(kinds._Manifest, "grade", spy, raising=False)
+
+    async def drive():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://127.0.0.1"
+        ) as api:
+            opened = (await api.post(f"/api/task/{SLUG}/open")).json()
+            reply = await api.post(
+                f"/api/task/{SLUG}/run",
+                json={
+                    "code": "kind: Deployment\n",
+                    "etag": opened["etag"],
+                    "submit": False,
+                },
+            )
+            assert reply.status_code == 200, reply.text
+            assert reply.json()["passed"] is True
+
+    asyncio.run(drive())
+    assert seen and seen[0]["name"] in ("checkout", "billing")
+
+
 def test_grader_revision_is_not_a_raw_concatenation(fixture_root):
     """Two files that concatenate to the same bytes must not share a revision: a digest
     per file is what keeps a change in one from being cancelled by a change in the other."""

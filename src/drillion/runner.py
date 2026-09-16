@@ -74,8 +74,11 @@ def _run_pytest(args, timeout=None, capture_case=None, **env):
         return result
 
 
-def run_tests(path, seed):
-    """Task code only ever runs here, in its own process.
+def run_python(meta, seed):
+    """A python sitting: task code only ever runs here, in its own process.
+
+    Paired with `run_manifest`, which grades the other kind. Neither dispatches — the
+    caller already holds a kind, and `kind.grade` picks the one that fits.
 
     `-l` because the seed makes a different case every sitting: without the failing frame's
     locals the learner can read that `solve` answered wrong and still not know what it was
@@ -90,7 +93,7 @@ def run_tests(path, seed):
         found = Path(box, "case.json")
         try:
             r = _run_pytest(
-                [str(path), "-l", "--verbosity=2", "--timeout=10"],
+                [str(meta["path"]), "-l", "--verbosity=2", "--timeout=10"],
                 timeout=60,
                 capture_case=found,
                 DRILLION_SEED=str(seed),

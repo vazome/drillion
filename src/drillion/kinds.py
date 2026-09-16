@@ -44,6 +44,11 @@ class _Python:
         """True when the region has code above solve() that the learner must keep."""
         return region.has_given(body)
 
+    def marker_line(self, src):
+        """Where the learner's region stops, so pytest's `task.py:12` can be rewritten
+        into the editor's own coordinates."""
+        return region.bounds(src)
+
     def opening(self, meta, seed):
         """Extra state an attempt on this kind carries. A python sitting needs none: its
         cases come from the seed at grading time, not from anything stored."""
@@ -57,7 +62,7 @@ class _Python:
         """(passed, pytest output, case). The one place a kind's grader is chosen."""
         from . import runner
 
-        return runner.run_tests(self.path(meta), o["seed"])
+        return runner.run_python(meta, o["seed"])
 
 
 class _Manifest:
@@ -98,6 +103,10 @@ class _Manifest:
     def has_given(self, body):
         # No code above solve() in a YAML file: nothing precedes what the learner writes.
         return False
+
+    def marker_line(self, src):
+        # No marker, and no .py path in the output to rewrite: the whole file is theirs.
+        return 0
 
     def opening(self, meta, seed):
         """The requirements for this sitting, generated once and then stored on it.
