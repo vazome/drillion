@@ -3,6 +3,7 @@
 `grade.py` is task-authored Python. It is loaded and run only inside the sandboxed child
 that `sandbox.run_script` starts, and it talks back in JSON. The server never imports it."""
 
+import hashlib
 import json
 import math
 import os
@@ -58,6 +59,16 @@ def _validated(raw):
         if isinstance(value, float) and not math.isfinite(value):
             raise Rejected(f"brief value for {key!r} is not a finite number")
     return raw
+
+
+def grader_revision(meta):
+    """Which generator produced a stored brief, so a later run can say whether an upgrade
+    has moved the question underneath it. Both files it takes to make one are hashed, each
+    by its own digest so nothing shifts between them."""
+    digest = hashlib.sha256()
+    for name in ("grade.py", "solution.yaml"):
+        digest.update(hashlib.sha256((meta["dir"] / name).read_bytes()).digest())
+    return digest.hexdigest()[:12]
 
 
 def module_name(slug):

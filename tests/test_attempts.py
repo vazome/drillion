@@ -59,7 +59,7 @@ def test_touch_never_runs_the_timer_backwards():
 def test_the_first_minute_is_free():
     """The reading grace: `last` opens in the future, and nothing spends it early."""
     st = _st()
-    o = attempts.open_attempt(st, "001_a")
+    o = attempts.open_attempt(st, "001_a", {})
     # opening, reading and touching, and still nothing on the clock
     assert attempts.touch(o) == 0
     assert 55 <= attempts.grace_left(o) <= attempts.GRACE_SECS
@@ -71,16 +71,16 @@ def test_the_first_minute_is_free():
 
 def test_the_clock_runs_once_the_grace_is_spent():
     st = _st()
-    o = attempts.open_attempt(st, "001_a")
+    o = attempts.open_attempt(st, "001_a", {})
     o["last"] = (datetime.now() - timedelta(seconds=30)).isoformat()  # noqa: DTZ005
     assert attempts.touch(o) == 30 and attempts.grace_left(o) == 0
 
 
 def test_attempt_lifecycle():
     st, all_tasks = _st(), _exs()
-    o = attempts.open_attempt(st, "001_a")
+    o = attempts.open_attempt(st, "001_a", {})
     assert o["new"] and o["attempts"] == 0 and 1000 <= o["seed"] <= 9999
-    assert attempts.open_attempt(st, "001_a") is o  # reopening keeps the timer
+    assert attempts.open_attempt(st, "001_a", {}) is o  # reopening keeps the timer
     o["attempts"], o["active"] = 1, 30
     grade, gap, box, reason = attempts.record_pass(
         st, "001_a", all_tasks["001_a"], "def solve(x):\n    return x", "a1b2c3d4e5f6"
@@ -101,7 +101,7 @@ def test_attempt_lifecycle():
     assert archived["seed"] == o["seed"] and archived["revision"] == "a1b2c3d4e5f6"
     assert archived["python"] == sandbox.grading_python()
     assert (
-        attempts.open_attempt(st, "001_a")["new"] is False
+        attempts.open_attempt(st, "001_a", {})["new"] is False
     )  # a review, not a new pick
 
 
@@ -130,7 +130,7 @@ def test_a_grade_names_the_cause_that_landed_it():
 def test_the_nudge_offers_a_hint_after_half_an_hour_of_reading():
     """Half an hour of active work with nothing run and no hint taken earns an offer."""
     st = _st()
-    o = attempts.open_attempt(st, "001_a")
+    o = attempts.open_attempt(st, "001_a", {})
     assert attempts.nudge_due(o) is False and attempts.nudge_due(None) is False
     o["active"] = attempts.NUDGE_SECS - 1
     assert attempts.nudge_due(o) is False
@@ -145,7 +145,7 @@ def test_the_nudge_offers_a_hint_after_half_an_hour_of_reading():
 
 def test_hints_are_gated_by_active_time():
     st, hints = _st(), ["one", "two", "three"]
-    o = attempts.open_attempt(st, "001_a")
+    o = attempts.open_attempt(st, "001_a", {})
     assert attempts.next_hint(st, "001_a", hints) == (1, "one")  # the first is free
     with pytest.raises(attempts.Gated) as e:
         attempts.next_hint(st, "001_a", hints)
@@ -159,7 +159,7 @@ def test_hints_are_gated_by_active_time():
 
 def test_solution_unlocks_after_three_attempts_and_ten_minutes():
     st = _st()
-    o = attempts.open_attempt(st, "001_a")
+    o = attempts.open_attempt(st, "001_a", {})
     o.update(attempts=3, active=599)
     with pytest.raises(attempts.Gated) as gate:
         attempts.unlock_solution(st, "001_a")
@@ -180,7 +180,7 @@ def test_the_view_answers_the_same_gate_the_action_enforces():
         "hints": {"total": 3, "shown": [], "next_in": None},
         "solution": {"unlocked": False, "need_attempts": 3, "need_secs": 600},
     }
-    o = attempts.open_attempt(st, "001_a")
+    o = attempts.open_attempt(st, "001_a", {})
     assert attempts.attempt_view(o, hints)["hints"]["next_in"] == 0  # the first is free
     attempts.next_hint(st, "001_a", hints)
     assert attempts.attempt_view(o, hints)["hints"] == {
@@ -195,7 +195,7 @@ def test_the_view_answers_the_same_gate_the_action_enforces():
 
 def test_abandon_archives_real_work_and_resets_the_file():
     st = _st()
-    attempts.open_attempt(st, "009_fstrings")
+    attempts.open_attempt(st, "009_fstrings", {})
     assert attempts.abandon(st, "009_fstrings", PY, _solved()) == SRC
     assert st["open"] == {}
     kept = st["archive"]["009_fstrings"][0]
@@ -204,7 +204,7 @@ def test_abandon_archives_real_work_and_resets_the_file():
 
 def test_abandon_does_not_archive_an_untouched_stub():
     st = _st()
-    attempts.open_attempt(st, "009_fstrings")
+    attempts.open_attempt(st, "009_fstrings", {})
     assert attempts.abandon(st, "009_fstrings", PY, SRC) == SRC
     assert st["archive"] == {} and st["open"] == {}
 

@@ -241,7 +241,7 @@ def _payload(st, slug, meta, src):
     return {
         "slug": slug,
         "meta": public(meta),
-        "spec_md": meta["spec_md"],
+        "spec_md": kind.spec(meta, o),
         "code": body,
         "etag": kind.etag(src),
         "has_given": kind.has_given(body),
@@ -411,7 +411,7 @@ def get_task(slug: str):
 def open_task(slug: str):
     with writing() as st:
         meta = _task(slug)
-        open_attempt(st, slug)
+        open_attempt(st, slug, meta)
         return _payload(st, slug, meta, meta["path"].read_text(encoding="utf-8"))
 
 

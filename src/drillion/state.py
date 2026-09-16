@@ -94,7 +94,19 @@ def _fields(record):
     for key in ("new", "solution_shown"):
         if key in record and type(record[key]) is not bool:
             raise Unreadable(f"Progress {key} must be a boolean.")
-    for key in ("date", "due", "last", "started", "grade", "slug", "code"):
+    if "brief" in record and not isinstance(record["brief"], dict):
+        raise Unreadable("Progress brief must be an object.")
+    for key in (
+        "date",
+        "due",
+        "last",
+        "started",
+        "grade",
+        "slug",
+        "code",
+        "spec_md",
+        "brief_revision",
+    ):
         if key not in record:
             continue
         value = record[key]

@@ -280,3 +280,18 @@ def test_interrupted_import_rolls_back_schema_and_can_retry(root, monkeypatch):
     assert st["focus"] == "core"
     assert st["future_field"] == {"keep": True}
     assert legacy.read_text(encoding="utf-8") == raw
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        '{"open": {"271_t": {"brief": "checkout"}}}',
+        '{"open": {"271_t": {"spec_md": 3}}}',
+        '{"open": {"271_t": {"brief_revision": ["a1b2"]}}}',
+    ],
+)
+def test_a_malformed_manifest_brief_is_refused_like_any_other_field(root, raw):
+    """A stored sitting carries its own question, so its shape is checked like the rest."""
+    (root / "progress.json").write_text(raw, encoding="utf-8")
+    with pytest.raises(state.Unreadable):
+        state.load()

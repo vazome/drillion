@@ -99,6 +99,26 @@ class _Manifest:
         # No code above solve() in a YAML file: nothing precedes what the learner writes.
         return False
 
+    def opening(self, meta, seed):
+        """The requirements for this sitting, generated once and then stored on it.
+
+        Regenerating them from the seed on every render would let an upgraded grader change
+        the question inside a live sitting, so the answer is written down here instead."""
+        from . import manifest
+
+        brief = manifest.generate_brief(meta, seed)
+        return {
+            "brief": brief,
+            "spec_md": manifest.render(meta["spec_md"], brief),
+            "brief_revision": manifest.grader_revision(meta),
+        }
+
+    def spec(self, meta, o):
+        """The guidance this sitting shows. A rendered brief belongs to the sitting that was
+        given it; with nothing open the README is served as written, placeholders and all,
+        which is why `doctor` rejects a manifest whose Why or You get sections hold one."""
+        return o["spec_md"] if o and "spec_md" in o else meta["spec_md"]
+
 
 KINDS = {PYTHON: _Python(), MANIFEST: _Manifest()}
 

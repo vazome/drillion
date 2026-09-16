@@ -7,7 +7,7 @@ The first minute is free — see `GRACE_SECS`."""
 import random
 from datetime import datetime, timedelta
 
-from . import sandbox
+from . import kinds, sandbox
 from .scheduler import grade_of, reschedule
 from .state import card, own, today
 
@@ -65,15 +65,19 @@ def current(st, slug):
     return o
 
 
-def open_attempt(st, slug):
-    """The attempt is the timer: it lives from the first open until the pass."""
+def open_attempt(st, slug, meta):
+    """The attempt is the timer: it lives from the first open until the pass.
+
+    For some kinds it is also the question. Whatever the kind wants written down is asked
+    for once, here, and never again, so nothing an upgrade changes reaches a live sitting."""
     o = st["open"].get(slug)
     if o:
         touch(o)
         return o
     now = datetime.now()
+    seed = random.randint(1000, 9999)
     st["open"][slug] = {
-        "seed": random.randint(1000, 9999),
+        "seed": seed,
         "attempts": 0,
         "runs": 0,
         "hints": 0,
@@ -84,6 +88,7 @@ def open_attempt(st, slug):
         "last": (now + timedelta(seconds=GRACE_SECS)).isoformat(),
         "active": 0,
         "solution_shown": False,
+        **kinds.of(meta).opening(meta, seed),
     }
     return st["open"][slug]
 
