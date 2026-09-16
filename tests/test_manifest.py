@@ -570,7 +570,12 @@ def test_a_manifest_pass_returns_its_reference_and_archives_its_revision(
             assert yaml.safe_load(reply.json()["reference"]) == yaml.safe_load(code)
             saved = state.load()
             assert SLUG not in saved["open"]
-            assert saved["archive"][SLUG][-1]["revision"] == o["brief_revision"]
+            # what judged the pass, which is more than what asked the question: the
+            # validator and the schemas decide a manifest verdict too
+            assert saved["archive"][SLUG][-1]["revision"] == manifest.fingerprint(
+                meta_for()
+            )
+            assert o["brief_revision"] == manifest.grader_revision(meta_for())
             assert meta_for()["path"].read_text(encoding="utf-8") == ""
             closed = await api.get(f"/api/task/{SLUG}")
             assert closed.status_code == 200, closed.text
@@ -613,3 +618,27 @@ def test_a_solution_that_will_not_render_does_not_cost_the_learner_the_pass(
             assert SLUG not in state.load()["open"], "the sitting closed"
 
     asyncio.run(drive())
+
+
+def test_a_grader_upgraded_under_a_live_sitting_is_not_the_learner_s_fault(
+    stubbed_kubeconform,
+):
+    """`brief_revision` is stored for this. A contributor upgrading grade.py mid sitting
+    leaves check() reading a brief the learner was never shown, and its KeyError would
+    otherwise be charged to them as a failed attempt."""
+    meta = meta_for()
+    o = kinds.of(meta).opening(meta, 1)
+    assert o["brief_revision"] == manifest.grader_revision(meta)
+    _grader('return {"name": "checkout", "replicas": 3, "ports": [80]}')
+    with pytest.raises(manifest.Rejected, match="grader changed"):
+        kinds.of(meta_for()).grade(meta_for(), o)
+
+
+def test_a_second_document_can_still_be_saved_while_it_is_being_typed(fixture_root):
+    """Saving only asks that it parses, and a multi document stream does. Rejecting it here
+    made autosave 400 on every keystroke of a second document, and hid the harness's own
+    "expected one document" message behind a PyYAML sentence fragment."""
+    two = "apiVersion: v1\nkind: Pod\n---\napiVersion: v1\nkind: Service\n"
+    assert kinds.of(meta_for()).validate(two, "") == two
+    with pytest.raises(kinds.Invalid):
+        kinds.of(meta_for()).validate("a:\n  - [unclosed\n", "")

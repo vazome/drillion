@@ -97,7 +97,9 @@ def _assert_closed(api_json, meta):
     """A passed sitting leaves the file empty and the grader it met in the archive."""
     assert (settings.tasks_dir / SLUG / "task.yaml").read_text(encoding="utf-8") == ""
     assert api_json["code"] == ""
-    assert api_json["archive"][-1]["revision"] == manifest.grader_revision(meta)
+    revision = api_json["archive"][-1]["revision"]
+    assert revision == manifest.fingerprint(meta), "the archive records what judged it"
+    assert revision.startswith("m1:"), revision
 
 
 def test_a_sitting_goes_from_empty_to_passed_to_reset(stub):

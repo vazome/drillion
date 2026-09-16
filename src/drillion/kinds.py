@@ -94,9 +94,10 @@ class _Manifest:
 
     def validate(self, edited, src):
         """Saving only asks that it parses. An empty file is a legal draft and a legal
-        reset state; whether it is a legal *submission* is the grader's line, not this one."""
+        reset state, and so is a second document half typed; whether either is a legal
+        *submission* is the grader's line, not this one, and it has better words for it."""
         try:
-            yaml.safe_load(edited)
+            list(yaml.safe_load_all(edited))
         except yaml.YAMLError as err:
             mark = getattr(err, "problem_mark", None)
             raise Invalid(
@@ -158,9 +159,12 @@ class _Manifest:
             return None
 
     def revision(self, meta, src):
+        """What judged this pass, not merely what asked the question: the validator and the
+        schemas decide a manifest verdict as much as `grade.py` does, so the archive records
+        all three."""
         from . import manifest
 
-        return manifest.grader_revision(meta)
+        return manifest.fingerprint(meta)
 
     def grade(self, meta, o):
         """(passed, pytest output, None). The brief is the one the sitting was opened
@@ -172,6 +176,14 @@ class _Manifest:
         if "brief" not in o:
             raise manifest.Rejected(
                 "this sitting opened before manifest grading: abandon it and start again"
+            )
+        # `brief_revision` is stored for exactly this: a grader upgraded under a live sitting
+        # checks the brief against code the learner was never shown, and its KeyError would
+        # otherwise reach them as their own failed attempt.
+        if o.get("brief_revision") != manifest.grader_revision(meta):
+            raise manifest.Rejected(
+                "this task's grader changed since this sitting opened: abandon it and "
+                "start again"
             )
         return runner.run_manifest(meta, o["brief"])
 

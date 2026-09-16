@@ -160,7 +160,8 @@ def test_a_download_larger_than_the_bound_is_rejected(tmp_path, monkeypatch):
     monkeypatch.setattr(tools, "MAX_ARCHIVE", 16)
     blob = _archive("kubeconform", b"x" * 4096)
     _pin(monkeypatch, blob, "11" * 32)
-    with pytest.raises(tools.Rejected):
+    # the message, or the binary checksum satisfies this and the size guard can be deleted
+    with pytest.raises(tools.Rejected, match="larger than"):
         tools.acquire("kubeconform")
     assert not (tmp_path / "tools" / "kubeconform").exists()
 
