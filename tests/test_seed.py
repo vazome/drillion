@@ -230,6 +230,68 @@ def test_a_checkout_seeds_nothing():
     assert Path(_default_root()).resolve() == REPO
 
 
+def test_seeding_never_overwrites_a_learner_manifest(tmp_path, monkeypatch):
+    from drillion.settings import settings
+
+    template = tmp_path / "template"
+    (template / "271_fixture").mkdir(parents=True)
+    (template / "271_fixture" / "task.yaml").write_text("", encoding="utf-8")
+    (template / "271_fixture" / "README.md").write_text("shipped\n", encoding="utf-8")
+    monkeypatch.setattr(cli, "TASKS_TEMPLATE", template)
+    monkeypatch.setattr(settings, "root", tmp_path / "root")
+
+    cli.seed()
+    mine = settings.tasks_dir / "271_fixture" / "task.yaml"
+    mine.write_text("kind: Deployment\n", encoding="utf-8")
+    cli.seed()
+
+    assert mine.read_text(encoding="utf-8") == "kind: Deployment\n"
+    assert (settings.tasks_dir / "271_fixture" / "README.md").read_text(
+        encoding="utf-8"
+    ) == "shipped\n"
+
+
+def test_seeding_keeps_an_intentionally_empty_manifest(tmp_path, monkeypatch):
+    """An empty file is the start state and also a legal learner state. Either way it is
+    theirs, and seeding must not treat 'empty' as 'absent'."""
+    from drillion.settings import settings
+
+    template = tmp_path / "template"
+    (template / "271_fixture").mkdir(parents=True)
+    (template / "271_fixture" / "task.yaml").write_text("", encoding="utf-8")
+    monkeypatch.setattr(cli, "TASKS_TEMPLATE", template)
+    monkeypatch.setattr(settings, "root", tmp_path / "root")
+
+    cli.seed()
+    mine = settings.tasks_dir / "271_fixture" / "task.yaml"
+    mine.write_text("", encoding="utf-8")
+    before = mine.stat().st_mtime_ns
+    cli.seed()
+    assert mine.stat().st_mtime_ns == before
+
+
+def test_seeding_still_refreshes_a_packaged_readme_beside_a_manifest(
+    tmp_path, monkeypatch
+):
+    """The fix protects only each kind's learner file, not everything in the folder."""
+    from drillion.settings import settings
+
+    template = tmp_path / "template"
+    (template / "271_fixture").mkdir(parents=True)
+    (template / "271_fixture" / "task.yaml").write_text("", encoding="utf-8")
+    (template / "271_fixture" / "README.md").write_text("stale\n", encoding="utf-8")
+    monkeypatch.setattr(cli, "TASKS_TEMPLATE", template)
+    monkeypatch.setattr(settings, "root", tmp_path / "root")
+
+    cli.seed()
+    (template / "271_fixture" / "README.md").write_text("current\n", encoding="utf-8")
+    cli.seed()
+
+    assert (settings.tasks_dir / "271_fixture" / "README.md").read_text(
+        encoding="utf-8"
+    ) == "current\n"
+
+
 def test_an_install_keeps_progress_out_of_site_packages():
     """With no checkout and no tasks/ in sight, the fallback root is a writable per-user
     directory, never one under the package."""

@@ -10,7 +10,7 @@ import threading
 import webbrowser
 from pathlib import Path
 
-from . import __version__, region
+from . import __version__, kinds, region
 from .settings import TASKS_TEMPLATE, settings
 
 log = logging.getLogger(__name__)
@@ -18,6 +18,10 @@ log = logging.getLogger(__name__)
 
 SHIPPED = ".shipped"
 RETIRED = "_retired"
+
+# the files that belong to the learner once they exist. Everything else under tasks/ is
+# drillion's and follows the installed version.
+LEARNER_FILES = {kind.filename for kind in kinds.KINDS.values()}
 
 
 def _merge(packaged, out):
@@ -85,12 +89,13 @@ def _move_aside(folder, out):
 def seed():
     """Bring root's tasks/ in line with the tasks baked into the wheel, on every run.
 
-    Everything under tasks/ is drillion's except the learner's region inside each
-    `task.py`, so READMEs, `_lib.py` and the test files follow the installed version, a
-    task file gets this version's machinery spliced around the code the learner wrote, and
-    new tasks arrive on upgrade. A task drillion no longer ships is moved aside rather than
-    deleted, and a task the learner added themselves is left alone. A checkout has no
-    template and is untouched."""
+    Everything under tasks/ is drillion's except each kind's own learner file — the region
+    inside `task.py`, the whole of a manifest's `task.yaml` — so READMEs, `_lib.py` and the
+    test files follow the installed version, a `task.py` gets this version's machinery
+    spliced around the code the learner wrote, a learner file of any other kind is left
+    exactly as it is, and new tasks arrive on upgrade. A task drillion no longer ships is
+    moved aside rather than deleted, and a task the learner added themselves is left alone.
+    A checkout has no template and is untouched."""
     if not TASKS_TEMPLATE.is_dir():
         return
     dest = settings.tasks_dir
@@ -107,6 +112,8 @@ def seed():
         shipped.append(rel.as_posix())
         if out.name == "task.py" and out.is_file():
             _merge(src, out)
+        elif out.name in LEARNER_FILES and out.exists():
+            continue  # theirs now, in whatever state they left it, empty included
         else:
             shutil.copy2(src, out)
     _retire(dest, set(shipped))
