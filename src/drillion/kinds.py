@@ -128,6 +128,19 @@ class _Manifest:
         which is why `doctor` rejects a manifest whose Why or You get sections hold one."""
         return o["spec_md"] if o and "spec_md" in o else meta["spec_md"]
 
+    def grade(self, meta, o):
+        """(passed, pytest output, None). The brief is the one the sitting was opened
+        with; a sitting from before manifest grading has none, and its spec still holds
+        raw placeholders, so grading it against anything now would grade requirements the
+        learner was never shown. Refused with the way out instead."""
+        from . import manifest, runner
+
+        if "brief" not in o:
+            raise manifest.Rejected(
+                "this sitting opened before manifest grading: abandon it and start again"
+            )
+        return runner.run_manifest(meta, o["brief"])
+
 
 KINDS = {PYTHON: _Python(), MANIFEST: _Manifest()}
 

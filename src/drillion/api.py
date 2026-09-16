@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from . import __version__, backup, kinds, sandbox
+from . import __version__, backup, kinds, manifest, sandbox
 from .attempts import (
     Gated,
     NoAttempt,
@@ -116,6 +116,14 @@ async def _no_attempt(_request, _exc):
 
 @app.exception_handler(Unreadable)
 async def _unreadable(_request, exc):
+    return JSONResponse({"error": str(exc)}, 503)
+
+
+@app.exception_handler(manifest.Rejected)
+async def _not_gradable(_request, exc):
+    """A manifest nothing could grade: a missing validator, a grader that will not give up
+    a brief, a sitting older than the grading itself. None of them say anything about the
+    learner's answer, so none of them may reach the page as a failed test."""
     return JSONResponse({"error": str(exc)}, 503)
 
 

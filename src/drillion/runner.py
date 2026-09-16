@@ -109,6 +109,25 @@ def run_python(meta, seed):
     return r.returncode == 0, r.stdout, case
 
 
+def run_manifest(meta, brief):
+    """A manifest sitting: the generated harness, graded like any other test.
+
+    No case comes back — a manifest's question is the brief the sitting was opened with,
+    and the learner already has it in front of them."""
+    from . import manifest
+
+    with tempfile.TemporaryDirectory(dir=settings.root) as box:
+        test = Path(box, "test_manifest.py")
+        test.write_text(manifest.harness(meta, brief), encoding="utf-8")
+        try:
+            r = _run_pytest(
+                [str(test), "-l", "--verbosity=2", "--timeout=45"], timeout=60
+            )
+        except subprocess.TimeoutExpired:
+            return False, "timed out after 60s", None
+    return r.returncode == 0, r.stdout, None
+
+
 def _posix(out):
     """Every .py path in pytest's output with "/" separators, whatever printed it."""
     return _PY_PATH.sub(lambda m: m.group(0).replace("\\", "/"), out)

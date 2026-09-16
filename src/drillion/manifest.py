@@ -12,7 +12,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from . import sandbox
+from . import sandbox, tools
 from .settings import settings
 
 MAX_BRIEF_BYTES = 8192
@@ -43,7 +43,13 @@ with open(out, "w", encoding="utf-8") as stream:
 
 
 class Rejected(Exception):
-    """A grader that did not produce a usable brief. Nothing was graded."""
+    """Nothing was graded, and nothing about the learner's answer is known. Every one of
+    these is infrastructure or a task-authoring bug, so the API answers them with a 503
+    carrying the message rather than with a failing test."""
+
+
+class ToolMissing(Rejected):
+    """The external grader is not installed. Never a learner's mistake."""
 
 
 def _validated(raw):
@@ -145,3 +151,94 @@ def render(template, brief):
     if len(filled) > MAX_SPEC_CHARS:
         raise Rejected("the filled spec is too long")
     return filled
+
+
+# Written into a scratch dir and collected by pytest like any other test, so a manifest
+# verdict comes out of the same sandboxed runner as a python one. Every literal brace in
+# the generated code is doubled: the template goes through `str.format`.
+_HARNESS = '''
+import importlib.util, json, subprocess, sys
+from pathlib import Path
+
+import yaml
+
+BRIEF = json.loads({brief!r})
+
+
+def _one_mapping(text):
+    """What the learner wrote, or the reason it is not yet a manifest. These come before
+    the validator because kubeconform has nothing useful to say about any of them."""
+    if not text.strip():
+        raise AssertionError("task.yaml is empty: write the manifest before submitting")
+    docs = list(yaml.safe_load_all(text))
+    if len(docs) != 1:
+        raise AssertionError(f"expected one document, found {{len(docs)}}")
+    if not isinstance(docs[0], dict):
+        raise AssertionError("the document must be a mapping, not a list or a scalar")
+    return docs[0]
+
+
+def _readable(out):
+    """kubeconform's verdict in the learner's words. A run that printed no report at all
+    failed to start rather than failed to validate, so its own output is what is shown."""
+    try:
+        report = json.loads(out.stdout)
+    except ValueError:
+        return (out.stderr or out.stdout).strip()[-1000:]
+    lines = []
+    for entry in report.get("resources", []):
+        if entry.get("status") not in ("statusValid", "statusSkipped"):
+            lines.append(f"{{entry.get('path', 'task.yaml')}}: {{entry.get('msg', 'invalid')}}")
+    return "\\n".join(lines) or "the manifest is not valid against the schema"
+
+
+def test_manifest():
+    text = Path({learner!r}).read_text(encoding="utf-8")
+    doc = _one_mapping(text)
+    out = subprocess.run(
+        [{tool!r}, "-strict", "-kubernetes-version", {kube!r},
+         "-schema-location", {schemas!r}, "-output", "json", {learner!r}],
+        capture_output=True, text=True, timeout=30,
+    )
+    assert out.returncode == 0, _readable(out)
+    spec = importlib.util.spec_from_file_location({module!r}, {grader!r})
+    grade = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(grade)
+    grade.check(doc, BRIEF)
+'''
+
+
+def harness(meta, brief):
+    """The generated test for one manifest sitting. Never regenerates the brief: the
+    requirements were written down when the sitting opened, and they are passed in."""
+    tool = tools.installed(tools.KUBECONFORM)
+    if tool is None:
+        raise ToolMissing("kubeconform is not installed: run `drillion doctor --fetch`")
+    return _HARNESS.format(
+        brief=json.dumps(brief),
+        learner=str(meta["path"]),
+        tool=str(tool),
+        kube=tools.KUBERNETES_VERSION,
+        schemas=tools.schema_location(),
+        module=module_name(meta["dir"].name),
+        grader=str(meta["dir"] / "grade.py"),
+    )
+
+
+def fingerprint(meta):
+    """What decided this verdict: the grader, the validator and the schemas alike.
+
+    The etag says what the learner wrote. This says what judged it, which is why the
+    validator version and the schema digest are in here and not only `grade.py`."""
+    pin = tools.pin_for(tools.KUBECONFORM)
+    h = hashlib.sha256()
+    for part in (
+        grader_revision(meta),
+        pin.version,
+        pin.binary_sha256,
+        tools.KUBERNETES_VERSION,
+        tools.schema_digest(),
+    ):
+        h.update(part.encode())
+        h.update(b"\0")
+    return "m1:" + h.hexdigest()[:12]

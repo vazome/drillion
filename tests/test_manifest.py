@@ -9,13 +9,18 @@ import sys
 import httpx
 import pytest
 
-from drillion import attempts, catalogue, kinds, manifest, sandbox, state
+from drillion import attempts, catalogue, kinds, manifest, runner, sandbox, state, tools
 from drillion.api import app
 from drillion.settings import settings
 from tests.fixtures import tasks_root
-from tests.fixtures_manifest import fixture_task
+from tests.fixtures_manifest import fixture_task, stub_kubeconform
 
 SLUG = "271_fixture"
+CORRECT = (
+    "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: checkout\n"
+    "spec:\n  replicas: 3\n"
+)
+BRIEF = {"name": "checkout", "replicas": 3}
 
 
 def _grader(body, head=""):
@@ -34,6 +39,149 @@ def fixture_root():
     yield tmp
     settings.root = keep
     shutil.rmtree(tmp, ignore_errors=True)
+
+
+@pytest.fixture
+def installed_kubeconform():
+    """The real grader, once the release gate has filled the pins."""
+    if tools.installed(tools.KUBECONFORM) is None:
+        pytest.skip("kubeconform is not installed: run `drillion doctor --fetch`")
+
+
+@pytest.fixture
+def stubbed_kubeconform(fixture_root, monkeypatch):
+    """The stand-in, so the grading path is exercised before the pins land rather than
+    skipped until then. `installed_kubeconform` is the same tests against the real tool."""
+    if os.name == "nt":
+        pytest.skip("the stand-in is a shebang script, so it needs a posix exec")
+    # written once, so a test that moves a grading input moves what the harness passes
+    # rather than what the stand-in expects
+    path = stub_kubeconform(fixture_root)
+    monkeypatch.setattr(tools, "installed", lambda name: path)
+
+
+def _submit(text):
+    """(passed, the first line of the page's headline) — the grader's own words.
+
+    The first line rather than the whole output, because pytest's assertion introspection
+    prints the whole `CompletedProcess` underneath, stderr included, and a check against
+    the raw output would pass on that repr whatever the grader chose to say."""
+    (settings.tasks_dir / SLUG / "task.yaml").write_text(text, encoding="utf-8")
+    passed, out, case = runner.run_manifest(catalogue.tasks()[SLUG], BRIEF)
+    assert case is None, "a manifest run has no generated-arguments case"
+    headline = runner.summarise(out, 0)["headline"]
+    return passed, headline[0] if headline else ""
+
+
+def test_a_correct_manifest_passes(stubbed_kubeconform):
+    passed, headline = _submit(CORRECT)
+    assert passed, headline
+
+
+def test_a_correct_manifest_passes_the_real_validator(
+    fixture_root, installed_kubeconform
+):
+    """The same submission against the pinned tool rather than the stand-in. Skipped until
+    the release gate fills the pins, and then it is what says the stand-in told the truth."""
+    passed, headline = _submit(CORRECT)
+    assert passed, headline
+
+
+def test_a_manifest_that_misses_the_brief_says_which_requirement(stubbed_kubeconform):
+    passed, headline = _submit(CORRECT.replace("replicas: 3", "replicas: 9"))
+    assert not passed and "replicas" in headline
+
+
+@pytest.mark.parametrize(
+    "submission, says",
+    [
+        ("", "empty"),
+        ("  \n\n", "empty"),
+        ("kind: Deployment\n---\nkind: Service\n", "one document"),
+        ("- kind: Deployment\n", "must be a mapping"),
+    ],
+)
+def test_a_submission_that_is_not_one_document_is_rejected(
+    stubbed_kubeconform, submission, says
+):
+    """These are refused before the schema: kubeconform has nothing useful to say about a
+    file the learner has not written yet."""
+    passed, headline = _submit(submission)
+    assert not passed and says in headline.lower()
+
+
+def test_what_the_schema_rejects_reaches_the_learner(stubbed_kubeconform):
+    """kubeconform's own message for the resource, not just a non-zero exit code."""
+    passed, headline = _submit(CORRECT.replace("apiVersion: apps/v1\n", ""))
+    assert not passed and "missing 'apiVersion' key" in headline
+
+
+def test_a_validator_that_cannot_run_is_not_silently_a_wrong_answer(
+    stubbed_kubeconform, monkeypatch
+):
+    """An invocation the validator refuses prints no JSON report. What it did say is what
+    the learner is shown, or a grader that never ran reads as their mistake."""
+    monkeypatch.setattr(tools, "KUBERNETES_VERSION", "9.9.9")
+    passed, headline = _submit(CORRECT)
+    assert not passed and "unexpected invocation" in headline
+
+
+def test_a_missing_tool_is_not_a_wrong_answer(fixture_root, monkeypatch):
+    monkeypatch.setattr(tools, "installed", lambda name: None)
+    with pytest.raises(manifest.ToolMissing):
+        manifest.harness(catalogue.tasks()[SLUG], BRIEF)
+
+
+def test_a_missing_tool_reaches_the_learner_as_infrastructure(
+    fixture_root, monkeypatch
+):
+    """A 503 naming the fix, never a failing test: nothing about their answer is known."""
+    monkeypatch.setattr(tools, "installed", lambda name: None)
+
+    async def drive():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://127.0.0.1"
+        ) as api:
+            opened = (await api.post(f"/api/task/{SLUG}/open")).json()
+            reply = await api.post(
+                f"/api/task/{SLUG}/run",
+                json={"code": CORRECT, "etag": opened["etag"], "submit": True},
+            )
+            assert reply.status_code == 503, reply.text
+            assert "doctor --fetch" in reply.json()["error"]
+
+    asyncio.run(drive())
+
+
+def test_a_sitting_with_no_brief_is_refused_rather_than_graded(fixture_root):
+    """An attempt opened before manifest grading existed has no stored requirements, and
+    the spec it was given still holds raw placeholders. There is nothing to grade against,
+    so it is refused with the way out rather than graded against a brief nobody read."""
+    meta = catalogue.tasks()[SLUG]
+    with pytest.raises(manifest.Rejected, match="abandon"):
+        kinds.of(meta).grade(meta, {"seed": 7})
+
+
+@pytest.mark.parametrize("term", ["grader", "version", "pin", "schemas"])
+def test_the_fingerprint_changes_when_any_grading_input_changes(
+    fixture_root, monkeypatch, term
+):
+    """What decided the verdict, not what the learner wrote: every input is in the digest."""
+    meta = catalogue.tasks()[SLUG]
+    before = manifest.fingerprint(meta)
+    assert before.startswith("m1:") and before == manifest.fingerprint(meta)
+    if term == "grader":
+        _grader("return {'name': 'checkout'}")
+    elif term == "version":
+        monkeypatch.setattr(tools, "KUBERNETES_VERSION", "9.9.9")
+    elif term == "pin":
+        moved = tools.pin_for(tools.KUBECONFORM)._replace(
+            version="9.9.9", binary_sha256="ff"
+        )
+        monkeypatch.setattr(tools, "pin_for", lambda name: moved)
+    else:
+        monkeypatch.setattr(tools, "schema_digest", lambda: "a different set")
+    assert manifest.fingerprint(meta) != before
 
 
 def test_a_brief_is_generated_and_is_deterministic(fixture_root):
