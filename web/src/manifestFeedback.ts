@@ -16,8 +16,5 @@ export function manifestFeedback(headline: string) {
     };
     return { title: "Your manifest needs another look", fields: [], message: requirement[assertion] ?? assertion };
   }
-  if (lines.some((line) => /^(?:yaml\.)?(?:parser\.ParserError|scanner\.ScannerError)/.test(line))) {
-    return { title: "YAML could not be read", fields: [], message: "Check indentation, colons and quotes. The validator details below include the reported location." };
-  }
   return { title: "The check did not complete successfully", fields: [], message: "Open the validator details for the reported reason. This may be a manifest problem or a checker problem." };
 }

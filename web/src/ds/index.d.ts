@@ -196,7 +196,8 @@ export declare function Timer(props: TimerProps): El;
 /** The failing case as the grader saw it: what `solve()` was called with, what it answered,
  *  and what it should have. A run that raised has no two sides and shows the input alone. */
 export interface FailedCaseProps {
-  case: {
+  fields?: { label: string; value: string }[];
+  case?: {
     args: Record<string, string>;
     expected: string | null;
     actual: string | null;

@@ -10,10 +10,3 @@
 .explanation{margin:0 0 10px;max-width:65ch}
 .outline{font:var(--fs-small)/var(--lh-code) var(--font-mono);white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 12px}
 .actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:var(--fs-small);color:var(--text-muted)}
-.failure{border-left:3px solid var(--fail);padding:4px 0 4px 14px;overflow-wrap:anywhere}
-.failure h3{margin:0;font-size:var(--fs-h);font-weight:600;color:var(--fail)}
-.failure p{font-size:var(--fs-small);line-height:var(--lh-body);margin:8px 0}
-.fields{padding:0;list-style:none;margin:14px 0;display:grid;gap:10px}
-.fields li{display:grid;gap:6px;background:var(--surface-2);border-radius:var(--radius-sm);padding:12px;font-size:var(--fs-body)}
-.fields code{font-family:var(--font-mono);font-size:var(--fs-code)}
-.fields small{color:var(--text-muted);line-height:var(--lh-body)}

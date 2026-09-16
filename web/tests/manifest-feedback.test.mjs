@@ -16,7 +16,7 @@ test("manifest feedback preserves field diagnostics and falls back without inven
     assert.match(manifestFeedback("E   AssertionError: replicas\nE   assert 3 == 2").message, /spec.replicas/);
     assert.match(manifestFeedback("E   AssertionError: name").message, /metadata.name/);
     assert.match(manifestFeedback("E   AssertionError: expected one document, found 2").message, /found 2/);
-    assert.match(manifestFeedback("E   yaml.parser.ParserError: bad YAML").title, /could not be read/);
+    assert.match(manifestFeedback("E   yaml.parser.ParserError: bad YAML").message, /checker problem/);
     assert.match(manifestFeedback("timed out after 60s").message, /checker problem/);
     const { ManifestHelp, ManifestFailure, ManifestBrief } = await server.ssrLoadModule("/src/ManifestWorkspace.tsx");
     const render = (component, props) => renderToStaticMarkup(createElement(component, props));
@@ -26,7 +26,19 @@ test("manifest feedback preserves field diagnostics and falls back without inven
     assert.doesNotMatch(help, /undefined/);
     const failure = render(ManifestFailure, { headline: "E   AssertionError: /spec/replicas: expected integer, but got string" });
     assert.match(failure, /without quotes/);
+    assert.match(failure, /data-state="failed"/);
+    assert.match(failure, /kubeconform/);
+    assert.match(failure, /data-wrong/);
+    assert.match(failure, /\/spec\/replicas/);
+    assert.doesNotMatch(failure, /undefined|Your output|Expected/);
     assert.doesNotMatch(failure, /AssertionError/);
+    const { FailedCase } = await server.ssrLoadModule("/src/ds/FailedCase.jsx");
+    const python = render(FailedCase, { case: { args: { n: "2" }, expected: "4", actual: "3", source: "assert solve(n) == 4" } });
+    assert.match(python, /Input/);
+    assert.match(python, /Your output/);
+    assert.match(python, /Expected/);
+    assert.match(python, /data-wrong/);
+    assert.match(python, /data-right/);
     const brief = render(ManifestBrief, { text: "## You return\nA Deployment named `billing` with 4 replicas.", slug: "example", started: true });
     assert.match(brief, /billing/);
     assert.match(brief, /4 replicas/);
