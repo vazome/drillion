@@ -61,7 +61,7 @@ def stubbed_kubeconform(fixture_root, monkeypatch):
 
 
 def _submit(text):
-    """(passed, the first line of the page's headline) — the grader's own words.
+    """(passed, the first line of the page's headline): the grader's own words.
 
     The first line rather than the whole output, because pytest's assertion introspection
     prints the whole `CompletedProcess` underneath, stderr included, and a check against

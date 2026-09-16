@@ -77,7 +77,7 @@ def _run_pytest(args, timeout=None, capture_case=None, **env):
 def run_python(meta, seed):
     """A python sitting: task code only ever runs here, in its own process.
 
-    Paired with `run_manifest`, which grades the other kind. Neither dispatches — the
+    Paired with `run_manifest`, which grades the other kind. Neither dispatches: the
     caller already holds a kind, and `kind.grade` picks the one that fits.
 
     `-l` because the seed makes a different case every sitting: without the failing frame's
@@ -112,7 +112,7 @@ def run_python(meta, seed):
 def run_manifest(meta, brief):
     """A manifest sitting: the generated harness, graded like any other test.
 
-    No case comes back — a manifest's question is the brief the sitting was opened with,
+    No case comes back. A manifest's question is the brief the sitting was opened with,
     and the learner already has it in front of them."""
     from . import manifest
 
