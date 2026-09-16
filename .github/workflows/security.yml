@@ -49,7 +49,7 @@ jobs:
           exit-code: 0
       # setup-trivy above puts the binary on PATH, so every `trivy` below is the same version
       - run: trivy convert --format sarif --output trivy-fs.sarif trivy-fs.json
-      - uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+      - uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
         with:
           sarif_file: trivy-fs.sarif
           # distinct per scan: code scanning replaces an upload with the next one in the same category
@@ -67,7 +67,7 @@ jobs:
           exit-code: 0
           skip-setup-trivy: true
       - run: trivy convert --format sarif --output trivy-config.sarif trivy-config.json
-      - uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+      - uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
         with:
           sarif_file: trivy-config.sarif
           category: trivy-config
@@ -89,7 +89,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
       # In SARIF mode zizmor keeps its findings in the file and still exits 0, so this step goes
       # red only on an internal error, never on a finding. `known-vulnerable-actions` is its one
       # audit that needs the network, and a failed call to api.github.com ends the run before any
@@ -104,7 +104,7 @@ jobs:
             uvx zizmor@1.29.0 --format sarif --no-progress --no-online-audits .github/workflows/ > zizmor.sarif
       # a failed audit wrote no SARIF, and uploading the empty file reports as a syntax error
       # rather than as the audit failure it is
-      - uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+      - uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
         if: ${{ !cancelled() && steps.audit.outcome == 'success' }}
         with:
           sarif_file: zizmor.sarif
