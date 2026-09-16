@@ -61,13 +61,19 @@ def _archive(member, payload):
     return buf.getvalue()
 
 
-def _link_archive(member):
+def _link_archive(member, payload):
+    """A payload member plus a symlink named `member` that points at it, so following the
+    link (rather than rejecting it outright) would successfully return real bytes."""
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as tar:
-        info = tarfile.TarInfo(member)
-        info.type = tarfile.SYMTYPE
-        info.linkname = "/bin/sh"
-        tar.addfile(info)
+        payload_info = tarfile.TarInfo("payload")
+        payload_info.size = len(payload)
+        payload_info.mode = 0o644
+        tar.addfile(payload_info, io.BytesIO(payload))
+        link_info = tarfile.TarInfo(member)
+        link_info.type = tarfile.SYMTYPE
+        link_info.linkname = "payload"
+        tar.addfile(link_info)
     return buf.getvalue()
 
 
@@ -136,10 +142,12 @@ def test_an_archive_member_that_escapes_is_rejected(tmp_path, monkeypatch):
 
 @responses.activate
 def test_a_member_that_is_not_a_regular_file_is_rejected(tmp_path, monkeypatch):
-    """A symlink where the executable belongs is a rejection, never something to follow."""
+    """A symlink where the executable belongs is a rejection, never something to follow,
+    even when the link points at a real member of the same archive."""
     monkeypatch.setattr(settings, "root", tmp_path)
-    blob = _link_archive("kubeconform")
-    _pin(monkeypatch, blob, "11" * 32)
+    payload = b"a payload living elsewhere in the archive"
+    blob = _link_archive("kubeconform", payload)
+    _pin(monkeypatch, blob, hashlib.sha256(payload).hexdigest())
     with pytest.raises(tools.Rejected):
         tools.acquire("kubeconform")
     assert not (tmp_path / "tools" / "kubeconform").exists()
