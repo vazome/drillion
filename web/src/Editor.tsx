@@ -12,6 +12,7 @@ import { configureDefaultWorkerFactory } from "monaco-languageclient/workerFacto
 import { initVimMode } from "monaco-vim";
 import { EmacsExtension } from "monaco-emacs";
 import { DEFAULTS, fontStack, type Prefs } from "./prefs";
+import "./Editor.css";
 
 // Every mono face is `font-display: swap`, and Monaco measures the character advance once
 // at construction: an editor built before the woff2 lands keeps drawing the caret and the
@@ -97,6 +98,9 @@ function applyTheme(dark: boolean) {
       "editorLineNumber.foreground": token("--text-faint"),
       "editorLineNumber.activeForeground": token("--text-muted"),
       "editorGutter.background": token("--gutter"),
+      "editorHoverWidget.background": token("--surface"),
+      "editorHoverWidget.foreground": token("--text"),
+      "editorHoverWidget.border": token("--border-strong"),
       // accent on both sides: pass/fail already mean the tests, and the left pane is code
       // that passed
       "diffEditor.insertedLineBackground": token("--accent-tint"),
@@ -249,11 +253,16 @@ export function Editor({ kind, value, onChange, onRun, onSubmit, readOnly, dark,
       range: new monaco.Range(line, model.getLineFirstNonWhitespaceColumn(line) || 1, line, model.getLineMaxColumn(line)),
       options: {
         className: "squiggly-error",
-        hoverMessage: { value: problem.message },
+        hoverMessage: {
+          // Diagnostic text is data, never markdown links, HTML or executable commands.
+          value: `${problem.message.replace(/[\\`*_{}[\]()<>#+.!|~-]/g, "\\$&").replace(/\n/g, "  \n")}\n\n*${kind === "manifest" ? "YAML · server parser" : "Python · server parser"}*`,
+          isTrusted: false,
+          supportHtml: false,
+        },
         overviewRuler: { color: token("--fail"), position: monaco.editor.OverviewRulerLane.Right },
       },
     }]);
-  }, [problem, value, ready]);
+  }, [problem, value, ready, kind]);
   // waits for the API rather than testing it: `api` is truthy while still pending, and
   // theming early touches Monaco's standalone services, which makes `start()` throw
   useEffect(() => { void api?.then(() => applyTheme(dark)).catch(() => {}); }, [dark]);
