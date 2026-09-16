@@ -2,6 +2,7 @@
 
 import hashlib
 import io
+import json
 import tarfile
 
 import pytest
@@ -200,3 +201,23 @@ def test_report_names_the_command_that_fixes_a_missing_tool(tmp_path, monkeypatc
     assert tools.report() == [
         ("kubeconform", "missing or altered: run `drillion doctor --fetch`")
     ]
+
+
+def test_packaged_schemas_are_present_and_pinned():
+    assert tools.SCHEMAS.is_dir(), (
+        "schemas must ship with the package, not be downloaded"
+    )
+    assert tools.KUBERNETES_VERSION.count(".") == 2, "pin a concrete X.Y.Z"
+    assert (tools.SCHEMAS / "deployment-apps-v1.json").is_file()
+    assert len(tools.schema_digest()) == 64
+
+
+def test_schema_location_is_a_local_template_with_no_remote_fallback():
+    location = tools.schema_location()
+    assert location.startswith(str(tools.SCHEMAS))
+    assert "{{.ResourceKind}}" in location and "http" not in location
+
+
+def test_manifest_digest_matches_the_live_computation():
+    manifest = json.loads((tools.SCHEMAS.parent / "manifest.json").read_text())
+    assert manifest["digest"] == tools.schema_digest()

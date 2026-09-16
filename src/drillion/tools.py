@@ -5,6 +5,7 @@ pinned by checksum rather than by version string, and checked before every run r
 only after a download."""
 
 import hashlib
+import json
 import os
 import platform
 import stat
@@ -17,11 +18,15 @@ from typing import NamedTuple
 
 import requests
 
-from .settings import settings
+from .settings import PKG, settings
 
 KUBECONFORM = "kubeconform"
 TIMEOUT = (10, 60)  # connect, read
 MAX_ARCHIVE = 64 << 20
+
+_MANIFEST = json.loads((PKG / "_schemas" / "manifest.json").read_text(encoding="utf-8"))
+KUBERNETES_VERSION = _MANIFEST["kubernetes_version"]
+SCHEMAS = PKG / "_schemas" / f"{KUBERNETES_VERSION}-standalone-strict"
 
 
 class Unsupported(Exception):
@@ -77,6 +82,21 @@ def digest(path):
         for block in iter(lambda: stream.read(1 << 20), b""):
             h.update(block)
     return h.hexdigest()
+
+
+def schema_digest():
+    """One digest over the whole packaged set: part of a manifest verdict's identity."""
+    h = hashlib.sha256()
+    for path in sorted(SCHEMAS.rglob("*.json")):
+        h.update(path.name.encode())
+        h.update(path.read_bytes())
+    return h.hexdigest()
+
+
+def schema_location():
+    """kubeconform's local template. No remote location is ever passed, so a schema that
+    is not packaged is an error rather than a silent download."""
+    return str(SCHEMAS / "{{.ResourceKind}}{{.KindSuffix}}.json")
 
 
 def installed(name):
