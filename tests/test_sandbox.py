@@ -359,3 +359,27 @@ def test_the_windows_child_hands_back_unix_line_endings(tmp_path):
         [sys.executable, "-c", "print('a'); print('b')"], tmp_path, timeout=60
     )
     assert done.stdout == "a\nb\n"
+
+
+def test_run_script_keeps_the_macos_wrapper(tmp_path, monkeypatch):
+    """`confine` confines macOS by *prefixing* the command, so a bare script has to keep
+    everything ahead of the interpreter and replace only the pytest tail behind it."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    monkeypatch.setattr(sandbox, "status", lambda: ("sandbox-exec", "forced by a test"))
+    seen = {}
+
+    def capture(**kwargs):
+        seen.update(kwargs)
+        return subprocess.CompletedProcess(kwargs["args"], 0, "", "")
+
+    monkeypatch.setattr(subprocess, "run", capture)
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    script = tmp_path / "src" / "brief.py"
+    script.parent.mkdir()
+    script.write_text("", encoding="utf-8")
+    sandbox.run_script([str(script), "7"], scratch, 5)
+    assert seen["args"][:2] == [sandbox.SANDBOX_EXEC, "-p"]
+    assert seen["args"][3:] == [sys.executable, str(script), "7"]
+    # the real args reach `confine`, so the script's own directory is a read root
+    assert f'(subpath "{script.parent.resolve()}")' in seen["args"][2]

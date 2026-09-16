@@ -588,6 +588,29 @@ def run(args, scratch, cpu, **env):
     )
 
 
+def run_script(args, scratch, cpu, **env):
+    """A bare interpreter under the same tier as a graded run: `confine` without pytest.
+
+    Only the `-m pytest` tail is replaced. Everything `confine` puts *ahead* of the
+    interpreter is the confinement itself on macOS, and dropping it would run task code
+    loose."""
+    plan = confine(args, scratch, cpu, **env)
+    wrapper = plan["args"][: plan["args"].index(sys.executable)]
+    plan["args"] = [*wrapper, sys.executable, *args]
+    if status()[0] == "restricted-token":
+        from . import winsandbox
+
+        return winsandbox.run(plan["args"], scratch, timeout=cpu, **env)
+    return subprocess.run(
+        **plan,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+        timeout=cpu,
+    )
+
+
 def confine(args, scratch, cpu, **env):
     """What `subprocess.run` needs to grade pytest `args` under the strongest tier this
     machine has. `cpu` is the caller's wall-clock timeout, reused as the CPU limit."""
