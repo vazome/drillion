@@ -139,12 +139,47 @@ def test_a_grader_cannot_wedge_the_server_on_a_fifo(fixture_root):
         manifest.generate_brief(catalogue.tasks()[SLUG], 7)
 
 
+def test_a_brief_over_the_size_cap_is_rejected(fixture_root):
+    _grader(f"return {{'pad': 'x' * {manifest.MAX_BRIEF_BYTES}}}")
+    with pytest.raises(manifest.Rejected, match="too much"):
+        manifest.generate_brief(catalogue.tasks()[SLUG], 7)
+
+
 def test_a_grader_that_exits_clean_without_writing_is_rejected(fixture_root):
     _grader("os._exit(0)", head="import os")
     with pytest.raises(manifest.Rejected, match="wrote nothing"):
         manifest.generate_brief(catalogue.tasks()[SLUG], 7)
 
 
+def test_a_grader_that_writes_a_good_brief_then_fails_is_rejected(fixture_root):
+    """A non-zero exit is a rejection even when the output file is perfectly valid, and the
+    grader's own stderr is what tells the author why."""
+    _grader(
+        "open(sys.argv[3], 'w').write(json.dumps({'name': 'c', 'replicas': 2}));"
+        " raise SystemExit('the grader gave up')",
+        head="import json, sys",
+    )
+    with pytest.raises(manifest.Rejected, match="the grader gave up"):
+        manifest.generate_brief(catalogue.tasks()[SLUG], 7)
+
+
 def test_render_fills_placeholders_and_survives_doubled_braces():
     assert manifest.render("a {name} b", {"name": "x"}) == "a x b"
     assert manifest.render("a {{literal}} b", {}) == "a {literal} b"
+
+
+@pytest.mark.parametrize(
+    "template",
+    ["{missing}", "{name.nope}", "{replicas[0]}", "{name:d}", "{0}", "{name"],
+)
+def test_a_template_the_brief_does_not_fit_is_rejected(template):
+    """Every placeholder mistake a task author can make is a `Rejected`, never a traceback
+    out of the server."""
+    with pytest.raises(manifest.Rejected):
+        manifest.render(template, {"name": "checkout", "replicas": 2})
+
+
+def test_a_template_cannot_allocate_without_bound():
+    with pytest.raises(manifest.Rejected, match="too long"):
+        wide = "{name:>" + str(manifest.MAX_SPEC_CHARS + 1) + "}"
+        manifest.render(wide, {"name": "x"})

@@ -15,6 +15,7 @@ from . import sandbox
 from .settings import settings
 
 MAX_BRIEF_BYTES = 8192
+MAX_SPEC_CHARS = 65536
 SCALARS = (str, int, float, bool)
 BRIEF_SECONDS = 30
 
@@ -120,8 +121,16 @@ def _read_brief(out):
 
 
 def render(template, brief):
-    """Plain-text substitution for a README. Doubled braces stay literal, as in str.format."""
+    """Plain-text substitution for a README. Doubled braces stay literal, as in str.format.
+
+    Every way a placeholder can go wrong is a task-authoring bug, so they all come back as
+    `Rejected`: a missing name, a malformed spec, and the attribute and index traversal that
+    `{name.title}` and `{replicas[0]}` ask for. The length bound is here because a width like
+    `{name:>1000000000}` allocates in the one process that has no `RLIMIT_AS`."""
     try:
-        return template.format(**brief)
-    except (KeyError, IndexError, ValueError) as exc:
+        filled = template.format(**brief)
+    except (LookupError, ValueError, AttributeError, TypeError, MemoryError) as exc:
         raise Rejected(f"the spec template does not match the brief: {exc}") from None
+    if len(filled) > MAX_SPEC_CHARS:
+        raise Rejected("the filled spec is too long")
+    return filled
