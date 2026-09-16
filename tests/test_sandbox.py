@@ -243,6 +243,7 @@ def test_the_tools_directory_is_executable_and_schemas_are_readable(
     roots = dict(sandbox._roots(str(tmp_path / "scratch"), []))
     tools_key = os.fsencode(str((tmp_path / "tools").resolve()))
     assert "execute" in roots.get(tools_key, set())
+    assert "write_file" not in roots.get(tools_key, set())
     schema_key = os.fsencode(str(tools.SCHEMAS.resolve()))
     assert "read_file" in roots.get(schema_key, set())
     assert "write_file" not in roots.get(schema_key, set())

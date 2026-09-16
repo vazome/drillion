@@ -47,10 +47,12 @@ rights are rebuilt from the answer, because a right the kernel has not heard of 
 whole ruleset fail.
 
 - **Reads** are confined to the interpreter and its libraries, `/usr`, `/lib`, `/etc`,
-  `/dev`, `tasks/`, the task being graded and the scratch directory. Your home directory,
-  every other user's files, and everything else on the disk are denied. The data root is
-  listable — pytest builds its collection tree from there — but the files under it, including
-  `progress.sqlite3`, are not readable.
+  `/dev`, `tasks/`, the task being graded, the packaged config schemas and the scratch
+  directory. Your home directory, every other user's files, and everything else on the disk
+  are denied. The data root is listable — pytest builds its collection tree from there — and
+  the files under it, `progress.sqlite3` included, are not readable. The one subtree under it
+  that is readable is `tools/`, which holds the checksum-pinned graders and is also
+  executable: a manifest task is graded by running one of them.
 - **Writes** are confined to the scratch directory.
 - **TCP** — every bind and connect is refused, on ABI 4 and above. UDP and Unix sockets are
   not covered by Landlock; on ABI 6 and above, abstract Unix sockets and signals are scoped

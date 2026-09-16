@@ -9,8 +9,8 @@ Five tiers, strongest first, with `status()` saying which one is actually in for
 back from a child that tried it, never from intent:
 
 - **landlock** (Linux) — the kernel decides. Reads are confined to the interpreter, the
-  system libraries, `tasks/` and the scratch directory; writes to the scratch directory;
-  TCP is denied outright.
+  system libraries, `tasks/`, the pinned tools and their schemas, and the scratch
+  directory; writes to the scratch directory; TCP is denied outright.
 - **sandbox-exec** (macOS) — the same shape expressed as an SBPL profile.
 - **restricted-token** (Windows) — `drillion.winsandbox`: a restricted token at Low
   integrity in a job object. Writes are confined and memory is capped, but reads and the
@@ -504,13 +504,15 @@ def status():
     if _landlock_works():
         return "landlock", (
             f"kernel Landlock ABI {abi()}: reads confined to the interpreter, system "
-            f"libraries, tasks/ and a scratch HOME; writes to scratch only; "
+            f"libraries, tasks/, tools/, the packaged schemas and a scratch HOME; "
+            f"writes to scratch only; "
             f"{'TCP denied' if abi() >= 4 else 'no network control below ABI 4'}"
         )
     if _sandbox_exec_works():
         return "sandbox-exec", (
-            "SBPL profile: reads confined to the interpreter, system frameworks, tasks/ "
-            "and a scratch HOME; writes to scratch only; network denied"
+            "SBPL profile: reads confined to the interpreter, system frameworks, tasks/, "
+            "tools/, the packaged schemas and a scratch HOME; writes to scratch only; "
+            "network denied"
         )
     if _restricted_token_works():
         return "restricted-token", (
