@@ -6,7 +6,7 @@ import re
 import yaml
 
 from . import sandbox, tools
-from .catalogue import PYTHON, SECTION, SLUG, scan
+from .catalogue import MANIFEST, PYTHON, SECTION, SLUG, scan
 from .manifest import MAX_SPEC_CHARS
 
 TAG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -99,6 +99,29 @@ def _schema_rules(meta):
     ]
 
 
+def _python_rules(meta):
+    tier = meta.get("tier")
+    if tier is not None and tier not in TIERS:
+        return [f"README.md: tier {tier!r} is not one of {' / '.join(TIERS)}"]
+    return []
+
+
+def _manifest_rules(meta):
+    out = []
+    if meta.get("tier") is not None:
+        out.append("README.md: tier belongs to a python task, not a manifest")
+    return (
+        out
+        + _placeholder_rules(meta.get("spec_md", ""))
+        + _render_rules(meta)
+        + _schema_rules(meta)
+    )
+
+
+# One row per kind, as `catalogue.CHECKS` is: a third kind adds a row rather than a branch.
+KIND_RULES = {PYTHON: _python_rules, MANIFEST: _manifest_rules}
+
+
 def _value_rules(meta):
     """The rules the catalogue never had to check: what a filled-in field actually says."""
     out = []
@@ -109,16 +132,7 @@ def _value_rules(meta):
             f"README.md: difficulty {difficulty!r} is not one of "
             f"{' / '.join(DIFFICULTIES)}"
         )
-    tier = meta.get("tier")
-    if meta.get("kind", PYTHON) == PYTHON:
-        if tier is not None and tier not in TIERS:
-            out.append(f"README.md: tier {tier!r} is not one of {' / '.join(TIERS)}")
-    else:
-        if tier is not None:
-            out.append("README.md: tier belongs to a python task, not a manifest")
-        out += _placeholder_rules(meta.get("spec_md", ""))
-        out += _render_rules(meta)
-        out += _schema_rules(meta)
+    out += KIND_RULES[meta.get("kind", PYTHON)](meta)
     minutes = meta.get("minutes")
     if minutes is not None and (
         isinstance(minutes, bool) or not isinstance(minutes, int) or minutes <= 0

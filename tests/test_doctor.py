@@ -321,3 +321,13 @@ def test_a_manifest_solution_that_cannot_render_is_reported():
     assert any(
         r.startswith("solution.yaml: does not render against a brief") for r in reasons
     ), reasons
+
+
+def test_every_kind_has_its_own_rule_row():
+    """One row per kind, as `catalogue.CHECKS` is. A third kind adds a row; if this grows
+    back into a branch, the new kind silently inherits the previous one's rules."""
+    from drillion import kinds
+
+    assert set(doctor.KIND_RULES) == set(kinds.KINDS)
+    with pytest.raises(KeyError):
+        doctor.KIND_RULES["compose"]
