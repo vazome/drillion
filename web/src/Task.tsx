@@ -7,6 +7,7 @@ import { DiffView, Editor } from "./Editor";
 import { ManifestBrief, ManifestFailure, ManifestHelp } from "./ManifestWorkspace";
 import { useDraft } from "./useDraft";
 import { usePrefs } from "./prefs";
+import { TaskPanes } from "./TaskPanes";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
 const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };
@@ -315,10 +316,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
         </div>
       ) : null}
 
-      <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", gap: 20, alignItems: narrow ? "stretch" : "flex-start" }}>
-        <div style={narrow
-          ? { width: "auto" }
-          : { width: "42%", minWidth: 340, maxWidth: "70%", maxHeight: "calc(100vh - 148px)", overflow: "auto", resize: "horizontal" }}>
+      <TaskPanes narrow={narrow}>
+        <div>
           <Card label={meta.kind === "manifest" ? "Your brief" : `Spec · ${slug}/README.md`}>
             {meta.kind === "manifest"
               ? <ManifestBrief text={task.spec_md} slug={slug} started={hasAttempt} />
@@ -403,7 +402,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
           </Card>
         </div>
 
-        <div style={{ flex: 1, minWidth: narrow ? 0 : 420, display: "grid", gap: 12 }}>
+        <div style={{ minWidth: 0, display: "grid", gap: 12 }}>
           {conflict ? <div className="m-drop"><ConflictBanner detail="Your draft and the file on disk have diverged." onReload={takeDisk} onKeep={keepMine} /></div> : null}
           {offer ? (
             <div className="m-drop">
@@ -525,7 +524,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             ) : null}
           </Card>
         </div>
-      </div>
+      </TaskPanes>
     </div>
   );
 }

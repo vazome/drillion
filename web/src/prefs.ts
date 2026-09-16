@@ -18,6 +18,7 @@ export type Prefs = {
   wordWrap: boolean;
   relativeLines: boolean;
   showTimer: boolean;
+  taskPanePercent: number;
 };
 
 /** Every default is what drillion did before there was a setting, so a first visit after an
@@ -31,6 +32,7 @@ export const DEFAULTS: Prefs = {
   wordWrap: true,
   relativeLines: false,
   showTimer: true,
+  taskPanePercent: 42,
 };
 
 /** Only what a self-hosted install already has on disk: the faces drillion ships, and
