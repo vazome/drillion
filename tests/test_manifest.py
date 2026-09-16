@@ -8,6 +8,7 @@ import sys
 
 import httpx
 import pytest
+import yaml
 
 from drillion import attempts, catalogue, kinds, manifest, runner, sandbox, state, tools
 from drillion.api import app
@@ -470,3 +471,110 @@ def test_grader_revision_is_not_a_raw_concatenation(fixture_root):
         (folder / "solution.yaml").write_bytes(solution)
         revisions.add(manifest.grader_revision({"dir": folder}))
     assert len(revisions) == 2, "the two files were concatenated, not hashed apart"
+
+
+def meta_for():
+    return catalogue.tasks()[SLUG]
+
+
+def test_a_solution_placeholder_keeps_its_type(fixture_root):
+    doc = yaml.safe_load(
+        manifest.render_solution(meta_for(), {"name": "checkout", "replicas": 3})
+    )
+    assert doc["spec"]["replicas"] == 3 and doc["metadata"]["name"] == "checkout"
+
+
+def test_a_yaml_looking_string_stays_a_string(fixture_root):
+    """`y`, `no` and `1.0` are all YAML traps. A name is a name."""
+    for value in ("y", "no", "1.0", "on"):
+        doc = yaml.safe_load(
+            manifest.render_solution(meta_for(), {"name": value, "replicas": 2})
+        )
+        assert doc["metadata"]["name"] == value, value
+
+
+def test_a_value_with_a_colon_does_not_break_the_document(fixture_root):
+    doc = yaml.safe_load(
+        manifest.render_solution(meta_for(), {"name": "a: b", "replicas": 2})
+    )
+    assert doc["metadata"]["name"] == "a: b"
+
+
+def test_a_placeholder_that_is_not_a_whole_scalar_is_rejected(fixture_root):
+    solution = settings.tasks_dir / SLUG / "solution.yaml"
+    solution.write_text("metadata:\n  name: prefix-{name}\n", encoding="utf-8")
+    with pytest.raises(manifest.Rejected):
+        manifest.render_solution(meta_for(), {"name": "checkout"})
+
+
+def test_a_solution_missing_a_brief_value_is_rejected(fixture_root):
+    with pytest.raises(
+        manifest.Rejected, match="line 6: no brief value for 'replicas'"
+    ):
+        manifest.render_solution(meta_for(), {"name": "checkout"})
+
+
+def test_a_solution_with_invalid_yaml_is_rejected(fixture_root):
+    (settings.tasks_dir / SLUG / "solution.yaml").write_text(
+        "metadata: [\n", encoding="utf-8"
+    )
+    with pytest.raises(manifest.Rejected, match="rendered solution is not valid YAML"):
+        manifest.render_solution(meta_for(), BRIEF)
+
+
+def test_the_manifest_solution_reveal_uses_the_stored_brief(fixture_root):
+    async def drive():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://127.0.0.1"
+        ) as api:
+            opened = await api.post(f"/api/task/{SLUG}/open")
+            assert opened.status_code == 200, opened.text
+            assert opened.json()["reference"] is None
+            locked = await api.post(f"/api/task/{SLUG}/solution")
+            assert locked.status_code == 423, locked.text
+            with state.writing() as st:
+                o = st["open"][SLUG]
+                o.update(attempts=3, active=600, brief={"name": "no", "replicas": 2})
+            revealed = await api.post(f"/api/task/{SLUG}/solution")
+            assert revealed.status_code == 200, revealed.text
+            doc = yaml.safe_load(revealed.json()["reference"])
+            assert doc["metadata"]["name"] == "no"
+            assert doc["spec"]["replicas"] == 2
+            page = await api.get(f"/api/task/{SLUG}")
+            assert page.json()["reference"] == revealed.json()["reference"]
+
+    asyncio.run(drive())
+
+
+def test_a_manifest_pass_returns_its_reference_and_archives_its_revision(
+    stubbed_kubeconform,
+):
+    async def drive():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://127.0.0.1"
+        ) as api:
+            opened = await api.post(f"/api/task/{SLUG}/open")
+            assert opened.status_code == 200, opened.text
+            o = state.load()["open"][SLUG]
+            brief = o["brief"]
+            code = (
+                "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n"
+                f"  name: {brief['name']}\nspec:\n  replicas: {brief['replicas']}\n"
+            )
+            reply = await api.post(
+                f"/api/task/{SLUG}/run",
+                json={"code": code, "etag": opened.json()["etag"], "submit": True},
+            )
+            assert reply.status_code == 200, reply.text
+            assert reply.json()["passed"] is True
+            assert yaml.safe_load(reply.json()["reference"]) == yaml.safe_load(code)
+            saved = state.load()
+            assert SLUG not in saved["open"]
+            assert saved["archive"][SLUG][-1]["revision"] == o["brief_revision"]
+            assert meta_for()["path"].read_text(encoding="utf-8") == ""
+            closed = await api.get(f"/api/task/{SLUG}")
+            assert closed.status_code == 200, closed.text
+            assert closed.json()["status"] == "done"
+            assert closed.json()["reference"] is None
+
+    asyncio.run(drive())

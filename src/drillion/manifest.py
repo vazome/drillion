@@ -7,10 +7,13 @@ import hashlib
 import json
 import math
 import os
+import re
 import stat
 import subprocess
 import tempfile
 from pathlib import Path
+
+import yaml
 
 from . import sandbox, tools
 from .settings import settings
@@ -151,6 +154,49 @@ def render(template, brief):
     if len(filled) > MAX_SPEC_CHARS:
         raise Rejected("the filled spec is too long")
     return filled
+
+
+_WHOLE_SCALAR = re.compile(
+    r"^(?P<lead>[^\S\n]*(?:- )?(?:[\w.-]+:[^\S\n]+)?)\{(\w+)\}[^\S\n]*$"
+)
+_ANY_PLACEHOLDER = re.compile(r"(?<!\{)\{(\w+)\}")
+
+
+def render_solution(meta, brief):
+    """Render this sitting's reference with each placeholder as a typed YAML scalar."""
+    template = (meta["dir"] / "solution.yaml").read_text(encoding="utf-8")
+    out = []
+    for number, line in enumerate(template.split("\n"), 1):
+        match = _WHOLE_SCALAR.match(line)
+        if match:
+            key = match.group(2)
+            if key not in brief:
+                raise Rejected(
+                    f"solution.yaml line {number}: no brief value for {key!r}"
+                )
+            out.append(match.group("lead") + _scalar(brief[key]))
+        elif _ANY_PLACEHOLDER.search(line):
+            raise Rejected(
+                f"solution.yaml line {number}: a placeholder must be a whole value; "
+                "build the combined value in brief() instead"
+            )
+        else:
+            out.append(line)
+    rendered = "\n".join(out)
+    try:
+        yaml.safe_load(rendered)
+    except yaml.YAMLError as exc:
+        raise Rejected(f"the rendered solution is not valid YAML: {exc}") from None
+    return rendered
+
+
+def _scalar(value):
+    """One YAML value with its type and quoting intact."""
+    return (
+        yaml.safe_dump(value, default_flow_style=True, width=1 << 30)
+        .strip()
+        .removesuffix("\n...")
+    )
 
 
 # Written into a scratch dir and collected by pytest like any other test, so a manifest

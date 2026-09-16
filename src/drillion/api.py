@@ -26,12 +26,11 @@ from .attempts import (
     nudge_due,
     open_attempt,
     record_pass,
-    solution_text,
     unlock_solution,
 )
 from .catalogue import public, tasks
 from .lsp import bridge
-from .region import Invalid, revision, write_region
+from .region import Invalid, write_region
 from .runner import summarise
 from .scheduler import (
     LADDER,
@@ -261,7 +260,7 @@ def _payload(st, slug, meta, src):
         **_deps(st, tasks(), meta),
         "ladder": LADDER,
         "note": st["notes"].get(slug, ""),
-        "reference": solution_text(meta["path"]) if reveal else None,
+        "reference": kind.reference(meta, o) if reveal else None,
         **att,
         "archive": [
             {
@@ -475,7 +474,7 @@ def run_task(slug: str, edit: Edit):
         if passed and edit.submit:
             was = card(st, slug)["box"]
             grade, gap, box, reason = record_pass(
-                st, slug, meta, body, revision(new_src)
+                st, slug, meta, body, kind.revision(meta, new_src)
             )  # drops the attempt
             log.info("%s %s box=%s due in %sd (%s)", slug, grade, box, gap, reason)
             stubbed = kind.empty(new_src)
@@ -490,7 +489,7 @@ def run_task(slug: str, edit: Edit):
                 "reason": reason,
                 "due_in": gap,
                 "code": body,
-                "reference": solution_text(meta["path"]),  # passing is what opens it
+                "reference": kind.reference(meta, o),  # passing is what opens it
                 "lapses": card(st, slug)["lapses"],
                 "next": pick(st, tasks())[0],
             }

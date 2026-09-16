@@ -58,6 +58,14 @@ class _Python:
         """The guidance this sitting shows. A python task's is the README as written."""
         return meta["spec_md"]
 
+    def reference(self, meta, o):
+        from . import attempts
+
+        return attempts.solution_text(meta["path"])
+
+    def revision(self, meta, src):
+        return region.revision(src)
+
     def grade(self, meta, o):
         """(passed, pytest output, case). The one place a kind's grader is chosen."""
         from . import runner
@@ -127,6 +135,19 @@ class _Manifest:
         given it; with nothing open the README is served as written, placeholders and all,
         which is why `doctor` rejects a manifest whose Why or You get sections hold one."""
         return o["spec_md"] if o and "spec_md" in o else meta["spec_md"]
+
+    def reference(self, meta, o):
+        from . import manifest
+
+        # A closed sitting has no stored brief to render a reference against.
+        if o is None:
+            return None
+        return manifest.render_solution(meta, o["brief"])
+
+    def revision(self, meta, src):
+        from . import manifest
+
+        return manifest.grader_revision(meta)
 
     def grade(self, meta, o):
         """(passed, pytest output, None). The brief is the one the sitting was opened
