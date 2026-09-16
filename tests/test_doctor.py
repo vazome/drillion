@@ -25,6 +25,44 @@ def test_a_good_task_has_nothing_said_about_it():
     assert _reasons(**{"042_thing": {"README.md": README, "task.py": TASK}}) == {}
 
 
+def test_a_manifest_needs_no_tier_and_is_not_asked_for_one():
+    manifest_readme = README.replace("tier: core\n", "").replace(
+        "difficulty: easy", "kind: manifest\ndifficulty: easy"
+    )
+    assert (
+        _reasons(
+            **{
+                "043_manifest": {
+                    "README.md": manifest_readme,
+                    "task.yaml": "",
+                    "grade.py": "",
+                    "solution.yaml": "",
+                }
+            }
+        )
+        == {}
+    )
+
+
+def test_a_manifest_with_a_tier_is_told_it_does_not_belong():
+    manifest_readme = README.replace(
+        "difficulty: easy", "kind: manifest\ndifficulty: easy"
+    )
+    reasons = _reasons(
+        **{
+            "043_manifest": {
+                "README.md": manifest_readme,
+                "task.yaml": "",
+                "grade.py": "",
+                "solution.yaml": "",
+            }
+        }
+    )
+    assert reasons == {
+        "043_manifest": ["README.md: tier belongs to a python task, not a manifest"]
+    }
+
+
 def test_a_malformed_prereqs_is_reported_rather_than_crashed_on():
     """`prereqs: 3` — a scalar where a list belongs — is reported, not crashed on."""
     scalar = README.replace("prereqs: []", "prereqs: 3")

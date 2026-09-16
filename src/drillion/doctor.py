@@ -4,7 +4,7 @@ import graphlib
 import re
 
 from . import sandbox
-from .catalogue import SLUG, scan
+from .catalogue import PYTHON, SLUG, scan
 
 TAG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 DIFFICULTIES = ("easy", "medium", "hard")
@@ -22,8 +22,12 @@ def _value_rules(meta):
             f"README.md: difficulty {difficulty!r} is not one of "
             f"{' / '.join(DIFFICULTIES)}"
         )
-    if (tier := meta.get("tier")) is not None and tier not in TIERS:
-        out.append(f"README.md: tier {tier!r} is not one of {' / '.join(TIERS)}")
+    tier = meta.get("tier")
+    if meta.get("kind", PYTHON) == PYTHON:
+        if tier is not None and tier not in TIERS:
+            out.append(f"README.md: tier {tier!r} is not one of {' / '.join(TIERS)}")
+    elif tier is not None:
+        out.append("README.md: tier belongs to a python task, not a manifest")
     minutes = meta.get("minutes")
     if minutes is not None and (
         isinstance(minutes, bool) or not isinstance(minutes, int) or minutes <= 0
