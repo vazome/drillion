@@ -3,7 +3,7 @@
 import graphlib
 import re
 
-from . import sandbox
+from . import sandbox, tools
 from .catalogue import PYTHON, SLUG, scan
 
 TAG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -116,16 +116,33 @@ def problems():
     return out
 
 
-def doctor():
-    """Print what is confining graded code, which interpreter grades it, and every problem
-    under tasks/, one line each,
+def _graders(fetch):
+    """Print where each pinned external grader stands, downloading the ones that are
+    missing or altered when asked to. Information, never a failure: a machine that has not
+    fetched a grader yet has nothing wrong with its tasks, and only an explicit `--fetch`
+    ever reaches the network."""
+    if fetch:
+        for name in tools.PINS:
+            try:
+                if tools.installed(name) is None:
+                    tools.acquire(name)
+            except (tools.Unsupported, tools.Rejected, OSError) as exc:
+                print(f"{name}: {exc}")
+    for name, status in tools.report():
+        print(f"{name}: {status}")
+
+
+def doctor(fetch=False):
+    """Print what is confining graded code, which interpreter grades it, where the pinned
+    graders stand, and every problem under tasks/, one line each,
     and return how many problems there were. Non-zero from the CLI on any, so CI can gate a
-    contribution on it — the sandbox line is information, never a failure."""
+    contribution on it — the sandbox and grader lines are information, never a failure."""
     tier, why = sandbox.status()
     print(f"sandbox: {tier} — {why}")
     print(
         f"python: {sandbox.grading_python()} — every task is graded on this interpreter"
     )
+    _graders(fetch)
     found = problems()
     if found:
         width = max(len(name) for name, _ in found) + 8

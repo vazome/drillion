@@ -2,7 +2,9 @@
 
 import shutil
 
-from drillion import doctor
+import pytest
+
+from drillion import cli, doctor
 from drillion.settings import settings
 from tests.fixtures import README, TASK, tasks_root
 
@@ -210,3 +212,16 @@ def test_tooling_directories_are_not_broken_tasks():
 
     named = _reasons(bad_name={"README.md": README, "task.py": TASK})
     assert any("three digits" in r for r in named["bad_name"]), named
+
+
+def test_doctor_says_where_each_pinned_grader_stands(capsys):
+    """An external grader is part of a verdict, so doctor says whether it is there."""
+    doctor.doctor()
+    out = capsys.readouterr().out
+    assert any(line.startswith("kubeconform: ") for line in out.splitlines())
+
+
+def test_fetch_belongs_to_doctor():
+    """Downloading is an explicit act, so the flag that does it is refused anywhere else."""
+    with pytest.raises(SystemExit):
+        cli.main(["serve", "--fetch"])

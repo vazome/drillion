@@ -204,7 +204,15 @@ def main(argv=None):
         help="serve the web UI (default), solve every task with its reference, "
         "or report why a task folder would be skipped",
     )
+    ap.add_argument(
+        "--fetch",
+        action="store_true",
+        help="with doctor: download any pinned external grader that is missing or "
+        "altered. The only thing in drillion that reaches the network.",
+    )
     args = ap.parse_args(argv)
+    if args.fetch and args.command != "doctor":
+        ap.error("--fetch belongs to `drillion doctor`")
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
     )
@@ -217,7 +225,7 @@ def main(argv=None):
     if args.command == "doctor":
         from .doctor import doctor
 
-        raise SystemExit(1 if doctor() else 0)
+        raise SystemExit(1 if doctor(fetch=args.fetch) else 0)
     if args.command == "selfcheck":
         from .runner import selfcheck
 

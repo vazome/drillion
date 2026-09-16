@@ -1,8 +1,11 @@
 """Pinned external graders: verified on every use, never trusted because they exist."""
 
 import hashlib
+import io
+import tarfile
 
 import pytest
+import responses
 
 from drillion import tools
 from drillion.settings import settings
@@ -46,3 +49,146 @@ def test_every_pin_is_filled_in():
                 name,
                 host,
             )
+
+
+def _archive(member, payload):
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+        info = tarfile.TarInfo(member)
+        info.size = len(payload)
+        info.mode = 0o755
+        tar.addfile(info, io.BytesIO(payload))
+    return buf.getvalue()
+
+
+def _link_archive(member):
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+        info = tarfile.TarInfo(member)
+        info.type = tarfile.SYMTYPE
+        info.linkname = "/bin/sh"
+        tar.addfile(info)
+    return buf.getvalue()
+
+
+def _pin(monkeypatch, blob, binary_sha256):
+    """Point the kubeconform pin at a fake endpoint serving `blob`."""
+    monkeypatch.setitem(
+        tools.PINS["kubeconform"],
+        tools.host(),
+        tools.Pin(
+            "0.8.0",
+            "https://example.invalid/k.tar.gz",
+            hashlib.sha256(blob).hexdigest(),
+            "kubeconform",
+            binary_sha256,
+        ),
+    )
+    responses.add(responses.GET, "https://example.invalid/k.tar.gz", body=blob)
+
+
+@responses.activate
+def test_acquire_verifies_the_archive_then_the_binary(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "root", tmp_path)
+    payload = b"pretend kubeconform"
+    blob = _archive("kubeconform", payload)
+    _pin(monkeypatch, blob, hashlib.sha256(payload).hexdigest())
+    path = tools.acquire("kubeconform")
+    assert path.read_bytes() == payload and tools.installed("kubeconform") == path
+
+
+@responses.activate
+def test_a_tampered_archive_is_rejected_and_the_old_tool_survives(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setattr(settings, "root", tmp_path)
+    good = tmp_path / "tools" / "kubeconform"
+    good.parent.mkdir(parents=True)
+    good.write_bytes(b"the one that already worked")
+    responses.add(
+        responses.GET, "https://example.invalid/k.tar.gz", body=b"wrong bytes"
+    )
+    monkeypatch.setitem(
+        tools.PINS["kubeconform"],
+        tools.host(),
+        tools.Pin(
+            "0.8.0",
+            "https://example.invalid/k.tar.gz",
+            "00" * 32,
+            "kubeconform",
+            "11" * 32,
+        ),
+    )
+    with pytest.raises(tools.Rejected):
+        tools.acquire("kubeconform")
+    assert good.read_bytes() == b"the one that already worked"
+
+
+@responses.activate
+def test_an_archive_member_that_escapes_is_rejected(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "root", tmp_path)
+    blob = _archive("../../escape", b"nope")
+    _pin(monkeypatch, blob, "11" * 32)
+    with pytest.raises(tools.Rejected):
+        tools.acquire("kubeconform")
+    assert not (tmp_path / "escape").exists()
+
+
+@responses.activate
+def test_a_member_that_is_not_a_regular_file_is_rejected(tmp_path, monkeypatch):
+    """A symlink where the executable belongs is a rejection, never something to follow."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    blob = _link_archive("kubeconform")
+    _pin(monkeypatch, blob, "11" * 32)
+    with pytest.raises(tools.Rejected):
+        tools.acquire("kubeconform")
+    assert not (tmp_path / "tools" / "kubeconform").exists()
+
+
+@responses.activate
+def test_a_download_larger_than_the_bound_is_rejected(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "root", tmp_path)
+    monkeypatch.setattr(tools, "MAX_ARCHIVE", 16)
+    blob = _archive("kubeconform", b"x" * 4096)
+    _pin(monkeypatch, blob, "11" * 32)
+    with pytest.raises(tools.Rejected):
+        tools.acquire("kubeconform")
+    assert not (tmp_path / "tools" / "kubeconform").exists()
+
+
+@responses.activate
+def test_a_download_that_fails_leaves_nothing_behind(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "root", tmp_path)
+    responses.add(responses.GET, "https://example.invalid/k.tar.gz", status=404)
+    monkeypatch.setitem(
+        tools.PINS["kubeconform"],
+        tools.host(),
+        tools.Pin(
+            "0.8.0",
+            "https://example.invalid/k.tar.gz",
+            "00" * 32,
+            "kubeconform",
+            "11" * 32,
+        ),
+    )
+    with pytest.raises(tools.Rejected):
+        tools.acquire("kubeconform")
+    assert list((tmp_path / "tools").iterdir()) == []
+
+
+def test_report_names_the_command_that_fixes_a_missing_tool(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "root", tmp_path)
+    monkeypatch.setitem(
+        tools.PINS["kubeconform"],
+        tools.host(),
+        tools.Pin(
+            "0.8.0",
+            "https://example.invalid/k.tar.gz",
+            "00" * 32,
+            "kubeconform",
+            "11" * 32,
+        ),
+    )
+    assert tools.report() == [
+        ("kubeconform", "missing or altered: run `drillion doctor --fetch`")
+    ]

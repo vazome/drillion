@@ -45,3 +45,6 @@ drillion-backup-*.zip
 
 # drillion-owned task files: written by `seed()` per environment, not source
 tasks/.shipped
+
+# pinned external graders: fetched per environment by `drillion doctor --fetch`
+tools/
