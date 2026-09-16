@@ -178,17 +178,41 @@ def _one_mapping(text):
     return docs[0]
 
 
+def _no_detail(entry):
+    """A rejected resource with no per-field errors: the validator stopped before it could
+    compare anything. "could not find schema" is the one of those that is as easily a gap
+    in what drillion packages as a typo, and from here the two are the same string."""
+    msg = entry.get("msg", "invalid")
+    if "could not find schema" in msg:
+        return (
+            f"task.yaml: {{msg}}. Check the spelling of `kind:` and `apiVersion:`; if they "
+            "are right then drillion packages no schema for that kind, which is ours to "
+            "fix and not your mistake"
+        )
+    return f"task.yaml: {{msg}}"
+
+
 def _readable(out):
     """kubeconform's verdict in the learner's words. A run that printed no report at all
-    failed to start rather than failed to validate, so its own output is what is shown."""
+    failed to start rather than failed to validate, so its own output is what is shown.
+
+    `msg` is boilerplate naming the schema's install path; the field that is actually wrong
+    is in `validationErrors`, so that is what is read when the validator got that far."""
     try:
         report = json.loads(out.stdout)
     except ValueError:
         return (out.stderr or out.stdout).strip()[-1000:]
     lines = []
     for entry in report.get("resources", []):
-        if entry.get("status") not in ("statusValid", "statusSkipped"):
-            lines.append(f"{{entry.get('path', 'task.yaml')}}: {{entry.get('msg', 'invalid')}}")
+        if entry.get("status") in ("statusValid", "statusSkipped"):
+            continue
+        found = entry.get("validationErrors") or []
+        lines += [
+            f"{{bad.get('path', 'task.yaml')}}: {{bad.get('msg', 'invalid')}}"
+            for bad in found
+        ]
+        if not found:
+            lines.append(_no_detail(entry))
     return "\\n".join(lines) or "the manifest is not valid against the schema"
 
 

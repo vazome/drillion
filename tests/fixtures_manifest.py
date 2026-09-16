@@ -74,6 +74,7 @@ def fixture_task():
 # that a harness that stops passing `-strict` fails a test rather than passing quietly.
 STUB_KUBECONFORM = """#!{python}
 import json
+import re
 import sys
 
 args = sys.argv[1:]
@@ -90,9 +91,32 @@ if args[:-1] != expected:
     sys.stderr.write("kubeconform: unexpected invocation: " + " ".join(args))
     raise SystemExit(2)
 
-resource = {{"path": args[-1], "status": "statusValid"}}
-if "apiVersion:" not in open(args[-1], encoding="utf-8").read():
-    resource |= {{"status": "statusInvalid", "msg": "missing 'apiVersion' key"}}
+# The real shapes, not tidied up: `msg` is boilerplate naming the schema's install path
+# whatever went wrong, the per-field detail lives in `validationErrors`, and a kind with no
+# packaged schema is a `statusError` carrying neither.
+BOILERPLATE = (
+    "problem validating schema. Check JSON formatting: jsonschema validation failed "
+    "with 'file://{schemas}#'"
+)
+text = open(args[-1], encoding="utf-8").read()
+kind = re.search(r"^kind:[ \\t]*(\\S+)", text, re.M)
+resource = {{"filename": args[-1], "status": "statusValid"}}
+if kind is None or kind.group(1) != "Deployment":
+    resource |= {{
+        "status": "statusError",
+        "msg": "could not find schema for " + (kind.group(1) if kind else ""),
+    }}
+elif 'replicas: "' in text:
+    resource |= {{
+        "status": "statusInvalid",
+        "msg": BOILERPLATE,
+        "validationErrors": [
+            {{"path": "/spec/replicas", "msg": "expected integer, but got string"}}
+        ],
+    }}
+elif "apiVersion:" not in text:
+    # not every rejection is a field comparison, so this one carries no validationErrors
+    resource |= {{"status": "statusInvalid", "msg": BOILERPLATE}}
 print(json.dumps({{"resources": [resource]}}))
 raise SystemExit(0 if resource["status"] == "statusValid" else 1)
 """

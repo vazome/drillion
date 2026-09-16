@@ -111,9 +111,34 @@ def test_a_submission_that_is_not_one_document_is_rejected(
 
 
 def test_what_the_schema_rejects_reaches_the_learner(stubbed_kubeconform):
-    """kubeconform's own message for the resource, not just a non-zero exit code."""
+    """The field that is wrong, not kubeconform's boilerplate: `msg` says only "problem
+    validating schema" and carries the absolute path drillion installed the schema at."""
+    passed, headline = _submit(CORRECT.replace("replicas: 3", 'replicas: "3"'))
+    assert not passed
+    assert "/spec/replicas: expected integer, but got string" in headline, headline
+    assert "problem validating schema" not in headline, (
+        "boilerplate reached the learner"
+    )
+
+
+def test_a_rejection_with_no_field_detail_still_says_what_the_validator_said(
+    stubbed_kubeconform,
+):
+    """Not every rejection is a field comparison, and then `msg` is all there is."""
     passed, headline = _submit(CORRECT.replace("apiVersion: apps/v1\n", ""))
-    assert not passed and "missing 'apiVersion' key" in headline
+    assert not passed and "problem validating schema" in headline
+
+
+def test_a_kind_no_schema_is_packaged_for_is_not_blamed_on_the_learner(
+    stubbed_kubeconform,
+):
+    """kubeconform says "could not find schema" both for a typo in `kind:` and for a kind
+    drillion never packaged. It cannot tell them apart from here, so it says so rather than
+    telling a learner with a correct manifest that they are wrong."""
+    passed, headline = _submit(CORRECT.replace("kind: Deployment", "kind: ConfigMap"))
+    assert not passed
+    assert "could not find schema for ConfigMap" in headline
+    assert "not your mistake" in headline, headline
 
 
 def test_a_validator_that_cannot_run_is_not_silently_a_wrong_answer(
