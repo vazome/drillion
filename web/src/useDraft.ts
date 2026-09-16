@@ -25,7 +25,8 @@ export function useDraft(
   onError: (message: string, at?: "editor" | "note") => void,
 ) {
   const [buf, setBuf] = useState<Live>(EMPTY);
-  const [syntaxBad, setSyntaxBad] = useState(false);
+  // what the server refused and where, so the editor can mark it rather than only flag it
+  const [syntax, setSyntax] = useState<{ message: string; line: number | null } | null>(null);
   const [conflict, setConflict] = useState<{ etag: string; code: string } | null>(null);
   const [offer, setOffer] = useState<string | null>(null);
 
@@ -78,7 +79,11 @@ export function useDraft(
   /** A failure the draft owns: a 409 becomes the conflict banner, a 400 the amber dot. */
   const absorb = (e: unknown) => {
     if (!(e instanceof ApiError)) return false;
-    if (e.status === 400) { setSyntaxBad(true); return true; }    // silent: an amber dot, no banner
+    // silent: a marker in the editor and an amber dot, no banner
+    if (e.status === 400) {
+      setSyntax({ message: e.detail?.error || e.message, line: e.detail?.line ?? null });
+      return true;
+    }
     const clash = conflictOf(e);
     if (clash) { setConflict(clash); return true; }
     return false;
@@ -92,7 +97,7 @@ export function useDraft(
         method: "PUT", body: JSON.stringify({ code: sent, etag: live.current.etag }),
       });
       commit({ saved: sent, etag: r.etag });
-      setSyntaxBad(false);
+      setSyntax(null);
     } catch (e) {
       // never rethrow: `edit()` fires this unawaited and `run()` awaits it
       if (absorb(e)) return;
@@ -136,12 +141,12 @@ export function useDraft(
   }, [slug, saveNote]);
 
   return {
-    code: buf.code, dirty: buf.code !== buf.saved, syntaxBad, conflict, offer,
+    code: buf.code, dirty: buf.code !== buf.saved, syntaxBad: !!syntax, syntax, conflict, offer,
     note: buf.note, noteDirty: buf.note !== buf.noteSaved,
     adopt, reset, edit, editNote, ensureOpen, discard, absorb,
     /** A run came back: its etag, and on a pass its archived code over the local draft. */
     landed: (etag: string, code?: string) => {
-      setSyntaxBad(false);
+      setSyntax(null);
       if (code === undefined) commit({ saved: live.current.code, etag });
       else { discard(); commit({ code, saved: code, etag }); }
     },

@@ -101,7 +101,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   }, []);
 
   const onSaveError = useCallback((message: string, at: "editor" | "note" = "editor") => setGate({ at, message }), []);
-  const { code, dirty, syntaxBad, conflict, offer, note, noteDirty, adopt, reset, edit, editNote,
+  const { code, dirty, syntax, conflict, offer, note, noteDirty, adopt, reset, edit, editNote,
     landed, ensureOpen, current, pending, settle, takeDisk, keepMine, discard, restore, absorb } =
     useDraft(slug, onPayload, onSaveError);
 
@@ -448,9 +448,14 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               * content: a status that appears while you type must not re-wrap the row and
               * push the editor down under the cursor */}
             <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textAlign: "right", whiteSpace: "nowrap" }}>
-              {dirty || syntaxBad ? (
-                <span style={{ fontSize: 12.5, color: syntaxBad ? "var(--warn)" : "var(--text-faint)" }}>
-                  ● {syntaxBad ? "syntax error, not saved" : "unsaved"}
+              {dirty || syntax ? (
+                <span style={{ fontSize: 12.5, color: syntax ? "var(--warn)" : "var(--text-faint)" }}
+                  title={syntax ? syntax.message : undefined}>
+                  {/* the editor's squiggle carries the reason; this row only has width for
+                    * the fact, and truncating a sentence mid-word reads as a bug */}
+                  ● {syntax
+                    ? `syntax error${syntax.line != null ? ` on line ${syntax.line}` : ""}, not saved`
+                    : "unsaved"}
                 </span>
               ) : null}
             </div>
@@ -459,7 +464,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
 
           {meta.kind === "manifest" ? <ManifestHelp key={`${slug}:${attempt?.seed ?? "new"}`} code={code} onChange={edit} disabled={passed || !!inflight || !!conflict || !!offer} /> : null}
 
-          <Editor kind={meta.kind} value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} height={meta.kind === "manifest" ? "clamp(280px, 42vh, 560px)" : narrow ? "60vh" : "calc(100vh - 364px)"} />
+          <Editor kind={meta.kind} value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} problem={syntax} height={meta.kind === "manifest" ? "clamp(280px, 42vh, 560px)" : narrow ? "60vh" : "calc(100vh - 364px)"} />
 
           <Card label={ungraded ? "Output · your run" : resultNo ? `Result · attempt ${resultNo}` : "Result"} padding={16}>
             {/* the region stays mounted and only the banner inside it is keyed: a live region

@@ -159,13 +159,16 @@ function Failed({ height }: { height: string }) {
   );
 }
 
-export function Editor({ kind, value, onChange, onRun, onSubmit, readOnly, dark, height, prefs }: {
+export function Editor({ kind, value, onChange, onRun, onSubmit, readOnly, dark, height, prefs, problem }: {
   kind: Meta["kind"]; value: string; onChange: (v: string) => void; onRun: () => void; onSubmit: () => void;
   readOnly?: boolean; dark: boolean; height: string; prefs: Prefs;
+  problem?: { message: string; line: number | null } | null;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const status = useRef<HTMLDivElement>(null);
   const app = useRef<EditorApp>(null);
+  // tied to the editor that owns them: a rebuild for a new kind leaves the old ones behind
+  const marks = useRef<{ editor: unknown; col: monaco.editor.IEditorDecorationsCollection } | null>(null);
   const [failed, setFailed] = useState(false);
   const [pending, setPending] = useState("");   // Emacs's half-typed chord
   // a key binding needs the editor instance, which only exists once `start()` resolved
@@ -227,6 +230,30 @@ export function Editor({ kind, value, onChange, onRun, onSubmit, readOnly, dark,
 
   useEffect(() => { app.current?.getEditor()?.updateOptions({ readOnly: !!readOnly }); }, [readOnly, ready]);
   useEffect(() => { app.current?.getEditor()?.updateOptions(looks(prefs)); }, [prefs, ready]);
+
+  /** The server owns the only YAML parser in play, so its refusal is the editor's
+   *  diagnostic: a squiggle on the line it named, carrying the reason on hover. These are
+   *  decorations rather than markers because the editor builds its models through the
+   *  vscode API's model references, which monaco's standalone marker registry never sees:
+   *  `setModelMarkers` accepts the call and nothing renders. A refusal that names no line
+   *  still has to be visible, so it marks the last line rather than going quiet. */
+  useEffect(() => {
+    const editor = app.current?.getEditor();
+    const model = editor?.getModel();
+    if (!editor || !model) return;
+    if (marks.current?.editor !== editor) marks.current = { editor, col: editor.createDecorationsCollection() };
+    if (!problem) return marks.current.col.clear();
+    const last = model.getLineCount();
+    const line = problem.line && problem.line >= 1 && problem.line <= last ? problem.line : last;
+    marks.current.col.set([{
+      range: new monaco.Range(line, model.getLineFirstNonWhitespaceColumn(line) || 1, line, model.getLineMaxColumn(line)),
+      options: {
+        className: "squiggly-error",
+        hoverMessage: { value: problem.message },
+        overviewRuler: { color: token("--fail"), position: monaco.editor.OverviewRulerLane.Right },
+      },
+    }]);
+  }, [problem, value, ready]);
   // waits for the API rather than testing it: `api` is truthy while still pending, and
   // theming early touches Monaco's standalone services, which makes `start()` throw
   useEffect(() => { void api?.then(() => applyTheme(dark)).catch(() => {}); }, [dark]);
