@@ -85,11 +85,15 @@ def digest(path):
 
 
 def schema_digest():
-    """One digest over the whole packaged set: part of a manifest verdict's identity."""
+    """One digest over the whole packaged set: part of a manifest verdict's identity.
+
+    Every field is length-prefixed, so no rename or split can reproduce another set's
+    digest by concatenating to the same bytes."""
     h = hashlib.sha256()
     for path in sorted(SCHEMAS.rglob("*.json")):
-        h.update(path.name.encode())
-        h.update(path.read_bytes())
+        for field in (path.name.encode(), path.read_bytes()):
+            h.update(b"%d:" % len(field))
+            h.update(field)
     return h.hexdigest()
 
 
