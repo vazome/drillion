@@ -400,7 +400,8 @@ export declare function SortReset(props: SortResetProps): El;
  *  a separate tier column repeated the word. Truncates with an ellipsis and keeps the whole
  *  path in its tooltip. */
 export interface TaskPathProps {
-  tier: string;
+  tier?: string;
+  track?: string;
   tags?: string[];
   /** between tags; " · " by default */
   separator?: string;

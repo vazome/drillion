@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import * as monaco from "@codingame/monaco-vscode-editor-api";
+import type { Meta } from "./api";
 // classic mode highlights with Monarch, and the editor API ships no grammars. The package
-// index pulls all ~90 languages; drillion is a Python trainer, so it takes the one.
+// index pulls all ~90 languages; drillion takes only the ones a task artifact is written in.
 import "@codingame/monaco-vscode-standalone-languages/languages/definitions/python/register.js";
+import "@codingame/monaco-vscode-standalone-languages/languages/definitions/yaml/register.js";
 import { EditorApp } from "monaco-languageclient/editorApp";
 import { MonacoVscodeApiWrapper } from "monaco-languageclient/vscodeApiWrapper";
 import { LanguageClientWrapper } from "monaco-languageclient/lcwrapper";
@@ -24,7 +26,9 @@ const bare = (name: string) => token(name).replace("#", "");
  *  about. `/workspace` is a placeholder the bridge swaps for the real tasks directory: a
  *  browser has no business knowing filesystem paths. */
 const WORKSPACE = "file:///workspace";
-const FILE = `${WORKSPACE}/solve.py`;
+// Monaco reads the language off the extension, so naming the file is choosing the mode.
+const ext = (kind: Meta["kind"]) => (kind === "manifest" ? "yaml" : "py");
+const fileFor = (kind: Meta["kind"]) => `${WORKSPACE}/${kind === "manifest" ? "task" : "solve"}.${ext(kind)}`;
 
 /** wss on a served-over-TLS page: a tunnel or a reverse proxy in front of drillion makes a
  *  plain ws:// socket mixed content, which the browser blocks outright. */
@@ -155,8 +159,8 @@ function Failed({ height }: { height: string }) {
   );
 }
 
-export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, height, prefs }: {
-  value: string; onChange: (v: string) => void; onRun: () => void; onSubmit: () => void;
+export function Editor({ kind, value, onChange, onRun, onSubmit, readOnly, dark, height, prefs }: {
+  kind: Meta["kind"]; value: string; onChange: (v: string) => void; onRun: () => void; onSubmit: () => void;
   readOnly?: boolean; dark: boolean; height: string; prefs: Prefs;
 }) {
   const host = useRef<HTMLDivElement>(null);
@@ -180,10 +184,12 @@ export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, heigh
       .then(() => {
         if (!live || !host.current) return;
         applyTheme(dark);
-        startLanguageClient();
+        // `documentSelector: ["python"]` already keeps the server off a YAML model, so this
+        // is about not opening a socket a manifest-only session never needs.
+        if (kind === "python") startLanguageClient();
         started = app.current = new EditorApp({
           id: "solve",
-          codeResources: { modified: { text: value, uri: FILE } },
+          codeResources: { modified: { text: value, uri: fileFor(kind) } },
           editorOptions: { ...editorOptions, ...looks(first.current) },
         });
         started.registerOnTextChangedCallback((t) => latest.current.onChange(t.modified ?? ""));
@@ -211,7 +217,7 @@ export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, heigh
       app.current = null;
       void started?.dispose();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [kind]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // `value` is also the truth after a reset or a 409, so push it when it drifts
   useEffect(() => {
@@ -259,8 +265,8 @@ export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, heigh
 
 /** Two read-only panes with the changed lines marked: what the learner wrote on the left,
  *  the reference on the right. Shares the editor's theme, so the two read as one surface. */
-export function DiffView({ mine, reference, dark, maxHeight, prefs = DEFAULTS }: {
-  mine: string; reference: string; dark: boolean; maxHeight: string; prefs?: Prefs;
+export function DiffView({ kind, mine, reference, dark, maxHeight, prefs = DEFAULTS }: {
+  kind: Meta["kind"]; mine: string; reference: string; dark: boolean; maxHeight: string; prefs?: Prefs;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
@@ -277,8 +283,8 @@ export function DiffView({ mine, reference, dark, maxHeight, prefs = DEFAULTS }:
           useDiffEditor: true,
           readOnly: true,
           codeResources: {
-            original: { text: mine, uri: "file:///workspace/mine.py" },
-            modified: { text: reference, uri: "file:///workspace/reference.py" },
+            original: { text: mine, uri: `${WORKSPACE}/mine.${ext(kind)}` },
+            modified: { text: reference, uri: `${WORKSPACE}/reference.${ext(kind)}` },
           },
           diffEditorOptions: {
             ...editorOptions, ...looks(prefs), readOnly: true, renderSideBySide: true,
@@ -298,7 +304,7 @@ export function DiffView({ mine, reference, dark, maxHeight, prefs = DEFAULTS }:
       live = false;
       void started?.dispose();
     };
-  }, [mine, reference, dark, prefs]);
+  }, [kind, mine, reference, dark, prefs]);
 
   if (failed) return <Failed height={maxHeight} />;
   return <div ref={host} style={{ height: maxHeight, fontSize: prefs.fontSize, ...frame }} />;

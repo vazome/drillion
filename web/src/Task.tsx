@@ -292,7 +292,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             unlocks {task.unlocks.length} →
           </button>
         ) : null}
-        <TaskPath tier={meta.tier} tags={meta.tags} />
+        <TaskPath tier={meta.tier} track={meta.track} tags={meta.tags} />
         {meta.source ? <span style={ASIDE}>{meta.source}</span> : null}
       </div>
 
@@ -360,8 +360,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                         ? "Your solution on the left, the reference on the right. It closes again when this task comes back."
                         : "The reference answer, for comparison with what you wrote. It closes again when this task comes back."}</div>}
                   {mine
-                    ? <DiffView mine={mine} reference={reference} dark={dark} maxHeight="46vh" prefs={prefs} />
-                    : <SpecText text={"```python\n" + reference + "\n```"} slug={slug} />}
+                    ? <DiffView kind={meta.kind} mine={mine} reference={reference} dark={dark} maxHeight="46vh" prefs={prefs} />
+                    : <SpecText text={"```" + (meta.kind === "manifest" ? "yaml" : "python") + "\n" + reference + "\n```"} slug={slug} />}
                 </div>
               ) : (
                 <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
@@ -454,7 +454,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             {hasAttempt && !passed ? <Button variant="quiet" onClick={abandon} style={{ fontSize: 13 }}>Abandon</Button> : null}
           </div>
 
-          <Editor value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} height={narrow ? "60vh" : "calc(100vh - 364px)"} />
+          <Editor kind={meta.kind} value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} height={narrow ? "60vh" : "calc(100vh - 364px)"} />
 
           <Card label={ungraded ? "Output · your run" : resultNo ? `Result · attempt ${resultNo}` : "Result"} padding={16}>
             {/* the region stays mounted and only the banner inside it is keyed: a live region
@@ -478,7 +478,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               </div>
             </div>
 
-            {result.state === "failed" && result.case ? <FailedCase case={result.case} /> : null}
+            {meta.kind === "python" && result.state === "failed" && result.case ? <FailedCase case={result.case} /> : null}
 
             {/* the learner's own print() first, open: it is the one line of the report they wrote */}
             {(result.state === "failed" || result.state === "ran") && result.printed ? (
