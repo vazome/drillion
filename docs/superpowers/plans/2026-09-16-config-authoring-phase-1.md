@@ -4,7 +4,7 @@
 
 **Goal:** A learner opens an empty YAML editor on a fixture task, reads requirements that were generated in a sandbox and persisted on the attempt, types a Kubernetes Deployment, and gets strict schema and semantic feedback through the existing output panel, all the way through pass, archive and reset.
 
-**Architecture:** A second task kind alongside Python. One new module, `artifact.py`, owns the difference between "the learner's text is a region inside `task.py`" and "the learner's text is all of `task.yaml`", and every lifecycle consumer routes through it. Task-authored Python (`brief()`, `check()`) only ever executes inside the existing sandboxed pytest child, never in the server. Grading is `kubeconform` against packaged offline schemas, then plain asserts against the brief that was persisted when the attempt opened.
+**Architecture:** A second task kind alongside Python. One new module, `kinds.py`, is the platform seam: a kind owns its filename, its editor language, the learner's text inside its file, what a folder of that kind must contain, what opening an attempt on it produces, and how it is graded. Every lifecycle consumer asks the kind instead of branching on its name. Task-authored Python (`brief()`, `check()`) only ever executes inside the existing sandboxed pytest child, never in the server. Grading is `kubeconform` against packaged offline schemas, then plain asserts against the brief that was persisted when the attempt opened.
 
 **Tech Stack:** Python 3.14, FastAPI, pytest, pyyaml and requests (both already runtime dependencies), kubeconform (pinned Go binary fetched by `drillion doctor`), Monaco via `@codingame/monaco-vscode-standalone-languages`, React 19.
 
@@ -24,15 +24,36 @@
 
 ---
 
+## Platform shape
+
+drillion is the platform; Python and Kubernetes are kinds that plug into it. A third kind
+(Helm, Compose, Terraform) must be a new class in `kinds.py` plus a task-folder convention,
+never a seventh pass through the same six modules.
+
+The rule for this plan: **kind-specific behavior lives on the kind.** Any consumer that
+would write `if meta["kind"] == MANIFEST` calls a method on `kinds.of(meta)` instead. There
+are exactly two places a kind name is compared to a literal, both of them in `kinds.py`
+itself: the `KINDS` registry, and `of()`.
+
+This costs nothing now. It is the same code in a different file, and it is what makes the
+third kind cheap.
+
+`kinds.py` imports `runner` and `manifest` inside the methods that need them rather than at
+module scope, because both import `kinds`. The codebase already does this where a cycle
+would otherwise form; `sandbox.run` importing `winsandbox` inside the function is the
+precedent to follow.
+
+---
+
 ## File Structure
 
 **New:**
-- `src/drillion/artifact.py` - the learner-artifact boundary. Two kinds, one shape. Owns filename, editor language, body extraction, composition, validation, empty state and etag.
+- `src/drillion/kinds.py` - the platform seam. Two kinds, one shape. Owns filename, editor language, required folder contents, body extraction, composition, validation, empty state, etag, attempt opening, the spec served, and grading.
 - `src/drillion/tools.py` - pinned external graders: the pin table, verification, acquisition, and resolving an installed binary.
 - `src/drillion/manifest.py` - everything specific to grading a manifest: generating a brief in a child, rendering a template, and building the pytest harness.
 - `src/drillion/_schemas/` - packaged Kubernetes JSON schemas plus `manifest.json` recording version and digest.
 - `tests/fixtures_manifest.py` - the fixture manifest task used by every test in this phase.
-- `tests/test_artifact.py`, `tests/test_tools.py`, `tests/test_manifest.py`, `tests/test_manifest_e2e.py`.
+- `tests/test_kinds.py`, `tests/test_tools.py`, `tests/test_manifest.py`, `tests/test_manifest_e2e.py`.
 
 **Modified:**
 - `src/drillion/catalogue.py` - `kind` frontmatter, conditional required fields, `kind` and `filename` in `public()`.
@@ -138,21 +159,34 @@ In `_read`, resolve the kind before the per-kind file checks and use it for the 
     ]
 ```
 
-Move the existing `task.py` validation into a `if kind == PYTHON:` branch, and add the manifest branch beside it:
+Move the existing `task.py` validation into a named function and register one per kind, so a
+third kind adds a function and a dict entry rather than another branch. `catalogue` cannot
+import `kinds` (that module imports these constants), so the registry lives here as data:
 
 ```python
-    if kind == PYTHON:
-        src = folder / "task.py"
-        ...  # the existing bounds/cut/_solve/_reference checks, unchanged
-    else:
-        src = folder / "task.yaml"
-        if not src.is_file():
-            out.append("task.yaml: missing")
-        if not (folder / "grade.py").is_file():
-            out.append("grade.py: missing")
-        if not (folder / "solution.yaml").is_file():
-            out.append("solution.yaml: missing")
+def _check_python(folder):
+    """Every rule a python task folder must pass. The body is the existing checks, moved."""
+    out = []
+    src = folder / "task.py"
+    if not src.is_file():
+        return ["task.py: missing"]
+    ...  # the existing bounds/cut/_solve/_reference checks, unchanged
+    return out
+
+
+def _check_manifest(folder):
+    """A manifest task is four files: the learner's, the grader's, and the reference."""
+    return [
+        f"{name}: missing"
+        for name in ("task.yaml", "grade.py", "solution.yaml")
+        if not (folder / name).is_file()
+    ]
+
+
+CHECKS = {PYTHON: _check_python, MANIFEST: _check_manifest}
 ```
+
+`_read` then calls `out += CHECKS[kind](folder)` where the `task.py` block used to be.
 
 Set `"kind": kind` in the returned record, and add `kind: str` to `TaskMeta`.
 
@@ -191,47 +225,48 @@ git commit -m "feat(catalogue): read a task's kind and ask each kind for its own
 Introduce the boundary with one implementation and no behavior change. This task is pure refactoring: every existing test must pass untouched.
 
 **Files:**
-- Create: `src/drillion/artifact.py`
-- Test: `tests/test_artifact.py`
+- Create: `src/drillion/kinds.py`
+- Test: `tests/test_kinds.py`
 
 **Interfaces:**
 - Consumes: `catalogue.PYTHON`, `catalogue.MANIFEST` from Task 1.
-- Produces: `artifact.of(meta) -> Kind`. A `Kind` has attributes `name: str`, `filename: str`, `language: str` and methods `body(src) -> str`, `compose(src, body) -> str`, `validate(edited, src) -> str`, `empty(src) -> str`, `etag(src) -> str`, `path(meta) -> Path`. `artifact.Invalid` is re-exported from `region` so callers catch one exception type.
+- Produces: `kinds.of(meta) -> Kind`. A `Kind` has attributes `name: str`, `filename: str`, `language: str` and methods `path(meta) -> Path`, `body(src) -> str`, `compose(src, body) -> str`, `validate(edited, src) -> str`, `empty(src) -> str`, `etag(src) -> str`, plus the three platform-seam methods every consumer calls instead of branching: `opening(meta, seed) -> dict` (extra attempt state), `spec(meta, o) -> str` (the guidance to serve), and `grade(meta, o) -> tuple[bool, str, dict | None]`. `kinds.Invalid` is re-exported from `region` so callers catch one exception type.
+- Note: `opening`, `spec` and `grade` are defined in this task with their Python behavior and are filled in for the manifest kind by Tasks 11, 12 and 13. Do not add a manifest branch to `attempts`, `runner` or `api` in those tasks.
 
 - [ ] **Step 1: Write the failing test**
 
-Create `tests/test_artifact.py`:
+Create `tests/test_kinds.py`:
 
 ```python
 """The learner-artifact boundary: what a kind says about the learner's own text."""
 
-from drillion import artifact, region
+from drillion import kinds, region
 from tests.fixtures import TASK
 
 META = {"kind": "python", "dir": None}
 
 
 def test_python_body_is_the_region_above_the_marker():
-    k = artifact.of(META)
+    k = kinds.of(META)
     assert k.name == "python" and k.filename == "task.py" and k.language == "python"
     assert k.body(TASK) == region.cut(TASK).body
     assert "_reference" not in k.body(TASK)
 
 
 def test_python_compose_round_trips():
-    k = artifact.of(META)
+    k = kinds.of(META)
     assert k.compose(TASK, k.body(TASK)) == TASK
 
 
 def test_python_empty_is_the_stub_not_an_empty_file():
-    k = artifact.of(META)
+    k = kinds.of(META)
     emptied = k.empty(TASK.replace("raise NotImplementedError", "return x"))
     assert "raise NotImplementedError" in emptied
     assert region.MARKER in emptied
 
 
 def test_python_etag_ignores_the_machinery():
-    k = artifact.of(META)
+    k = kinds.of(META)
     moved = TASK.replace("return x", "return x  # changed")
     assert k.etag(TASK) != k.etag(moved.replace("def solve(x)", "def solve(y)"))
     assert k.etag(TASK) == region.etag(TASK)
@@ -239,7 +274,7 @@ def test_python_etag_ignores_the_machinery():
 
 def test_an_unknown_kind_raises_rather_than_guessing():
     try:
-        artifact.of({"kind": "terraform"})
+        kinds.of({"kind": "terraform"})
     except KeyError:
         return
     raise AssertionError("an unknown kind must not silently fall back to python")
@@ -247,12 +282,12 @@ def test_an_unknown_kind_raises_rather_than_guessing():
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `uv run pytest tests/test_artifact.py -v`
+Run: `uv run pytest tests/test_kinds.py -v`
 Expected: FAIL with `ModuleNotFoundError: No module named 'drillion.artifact'`.
 
 - [ ] **Step 3: Write the implementation**
 
-Create `src/drillion/artifact.py`:
+Create `src/drillion/kinds.py`:
 
 ```python
 """The learner's own text, whatever kind of task it lives in.
@@ -293,6 +328,21 @@ class _Python:
     def etag(self, src):
         return region.etag(src)
 
+    def opening(self, meta, seed):
+        """Extra state an attempt on this kind carries. A python sitting needs none: its
+        cases come from the seed at grading time, not from anything stored."""
+        return {}
+
+    def spec(self, meta, o):
+        """The guidance this sitting shows. A python task's is the README as written."""
+        return meta["spec_md"]
+
+    def grade(self, meta, o):
+        """(passed, pytest output, case). The one place a kind's grader is chosen."""
+        from . import runner
+
+        return runner.run_python(meta, o["seed"])
+
 
 KINDS = {PYTHON: _Python()}
 
@@ -305,7 +355,7 @@ def of(meta):
 
 - [ ] **Step 4: Run the tests**
 
-Run: `uv run pytest tests/test_artifact.py -v`
+Run: `uv run pytest tests/test_kinds.py -v`
 Expected: PASS.
 
 - [ ] **Step 5: Run the full suite and lint**
@@ -316,7 +366,7 @@ Expected: all green, nothing else touched.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/drillion/artifact.py tests/test_artifact.py
+git add src/drillion/kinds.py tests/test_kinds.py
 git commit -m "feat(artifact): add the learner-artifact boundary with the python kind"
 ```
 
@@ -332,8 +382,8 @@ Still no behavior change. This is the task that proves the boundary is complete 
 - Test: `tests/test_api.py`
 
 **Interfaces:**
-- Consumes: `artifact.of` from Task 2.
-- Produces: no new public names. `_payload(st, slug, meta, src)` now derives `code`, `etag` and `has_given` through `artifact.of(meta)`.
+- Consumes: `kinds.of` from Task 2.
+- Produces: no new public names. `_payload(st, slug, meta, src)` now derives `code`, `etag` and `has_given` through `kinds.of(meta)`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -342,20 +392,20 @@ Add to `tests/test_api.py`:
 ```python
 def test_payload_reads_the_learner_text_through_the_adapter(monkeypatch):
     """A kind whose body() is identity proves the payload is not calling cut() directly."""
-    from drillion import api, artifact
+    from drillion import api, kinds
 
     calls = []
 
-    class _Spy(artifact.KINDS["python"].__class__):
+    class _Spy(kinds.KINDS["python"].__class__):
         def body(self, src):
             calls.append(src)
             return super().body(src)
 
-    monkeypatch.setitem(artifact.KINDS, "python", _Spy())
+    monkeypatch.setitem(kinds.KINDS, "python", _Spy())
     with api_client() as client:
         client.post("/api/task/009_fstrings/open")
         assert client.get("/api/task/009_fstrings").status_code == 200
-    assert calls, "_payload must go through artifact.of(meta).body"
+    assert calls, "_payload must go through kinds.of(meta).body"
 ```
 
 Use the existing client helper in `tests/test_api.py`; if it is named differently there, use that name rather than `api_client`.
@@ -363,7 +413,7 @@ Use the existing client helper in `tests/test_api.py`; if it is named differentl
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `uv run pytest tests/test_api.py::test_payload_reads_the_learner_text_through_the_adapter -v`
-Expected: FAIL with `AssertionError: _payload must go through artifact.of(meta).body`.
+Expected: FAIL with `AssertionError: _payload must go through kinds.of(meta).body`.
 
 - [ ] **Step 3: Write the implementation**
 
@@ -372,12 +422,12 @@ In `src/drillion/api.py`, replace the direct `region` imports at the call sites.
 ```python
 def _payload(st, slug, meta, src):
     """Everything the task page needs, and nothing the answer lives in."""
-    kind = artifact.of(meta)
+    kind = kinds.of(meta)
     body = kind.body(src)
     ...
         "code": body,
         "etag": kind.etag(src),
-        "has_given": has_given(body) if kind.name == PYTHON else False,
+        "has_given": kind.has_given(body),
 ```
 
 `_check_etag(src, sent)` takes the kind:
@@ -405,7 +455,7 @@ def abandon(st, slug, kind, disk_src):
     return emptied
 ```
 
-Update the one caller in `api.abandon_task` to pass `artifact.of(meta)`.
+Update the one caller in `api.abandon_task` to pass `kinds.of(meta)`.
 
 - [ ] **Step 4: Run the tests**
 
@@ -429,16 +479,16 @@ git commit -m "refactor(api): reach the learner's text through the artifact boun
 ### Task 4: The manifest kind
 
 **Files:**
-- Modify: `src/drillion/artifact.py`
-- Test: `tests/test_artifact.py`
+- Modify: `src/drillion/kinds.py`
+- Test: `tests/test_kinds.py`
 
 **Interfaces:**
-- Consumes: `artifact.KINDS` from Task 2.
-- Produces: `artifact.KINDS["manifest"]`, with `filename = "task.yaml"` and `language = "yaml"`. `validate` raises `region.Invalid` with a 1-based `line` when the YAML does not parse.
+- Consumes: `kinds.KINDS` from Task 2.
+- Produces: `kinds.KINDS["manifest"]`, with `filename = "task.yaml"` and `language = "yaml"`. `validate` raises `region.Invalid` with a 1-based `line` when the YAML does not parse.
 
 - [ ] **Step 1: Write the failing test**
 
-Add to `tests/test_artifact.py`:
+Add to `tests/test_kinds.py`:
 
 ```python
 MANIFEST_META = {"kind": "manifest", "dir": None}
@@ -446,28 +496,28 @@ DEPLOY = "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: checkout\n"
 
 
 def test_manifest_body_is_the_whole_file():
-    k = artifact.of(MANIFEST_META)
+    k = kinds.of(MANIFEST_META)
     assert k.name == "manifest" and k.filename == "task.yaml" and k.language == "yaml"
     assert k.body(DEPLOY) == DEPLOY
     assert k.compose(DEPLOY, "other: 1\n") == "other: 1\n"
 
 
 def test_manifest_empty_is_an_empty_file():
-    assert artifact.of(MANIFEST_META).empty(DEPLOY) == ""
+    assert kinds.of(MANIFEST_META).empty(DEPLOY) == ""
 
 
 def test_manifest_etag_covers_every_byte():
-    k = artifact.of(MANIFEST_META)
+    k = kinds.of(MANIFEST_META)
     assert k.etag(DEPLOY) != k.etag(DEPLOY + "\n")
 
 
 def test_manifest_validate_accepts_a_draft_and_rejects_broken_yaml():
-    k = artifact.of(MANIFEST_META)
+    k = kinds.of(MANIFEST_META)
     assert k.validate(DEPLOY, "") == DEPLOY
     assert k.validate("", "") == ""  # an unfinished draft saves; grading rejects it later
     try:
         k.validate("a:\n  - b\n c: broken\n", "")
-    except artifact.Invalid as err:
+    except kinds.Invalid as err:
         assert err.line
         return
     raise AssertionError("broken YAML must be rejected on save")
@@ -475,12 +525,12 @@ def test_manifest_validate_accepts_a_draft_and_rejects_broken_yaml():
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `uv run pytest tests/test_artifact.py -v -k manifest`
+Run: `uv run pytest tests/test_kinds.py -v -k manifest`
 Expected: FAIL with `KeyError: 'manifest'`.
 
 - [ ] **Step 3: Write the implementation**
 
-Add to `src/drillion/artifact.py`:
+Add to `src/drillion/kinds.py`:
 
 ```python
 import hashlib
@@ -529,7 +579,7 @@ KINDS = {PYTHON: _Python(), MANIFEST: _Manifest()}
 
 - [ ] **Step 4: Run the tests**
 
-Run: `uv run pytest tests/test_artifact.py -v`
+Run: `uv run pytest tests/test_kinds.py -v`
 Expected: PASS.
 
 - [ ] **Step 5: Run the full suite and lint**
@@ -539,7 +589,7 @@ Run: `uv run pytest tests/ -q && uv run ruff check && uv run ruff format --check
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/drillion/artifact.py tests/test_artifact.py
+git add src/drillion/kinds.py tests/test_kinds.py
 git commit -m "feat(artifact): add the manifest kind, whose artifact is the whole file"
 ```
 
@@ -554,7 +604,7 @@ git commit -m "feat(artifact): add the manifest kind, whose artifact is the whol
 - Test: `tests/test_state.py`, `tests/test_sqlite.py`
 
 **Interfaces:**
-- Consumes: `artifact.of` from Tasks 2 and 4.
+- Consumes: `kinds.of` from Tasks 2 and 4.
 - Produces: `reset_after_commit(st, meta, path, original, replacement)` now takes `meta` so it can resolve the kind. `st.resets[slug]` becomes `(kind_name, original_body, replacement_body)`. The `pending_resets` table gains a `kind TEXT NOT NULL` column.
 
 - [ ] **Step 1: Write the failing test**
@@ -634,7 +684,7 @@ def _task_path(slug, kind_name):
         or PureWindowsPath(slug).drive
     ):
         raise Unreadable("Invalid task slug in a pending reset.")
-    kind = artifact.KINDS.get(kind_name)
+    kind = kinds.KINDS.get(kind_name)
     if kind is None:
         raise Unreadable(f"Unknown task kind {kind_name!r} in a pending reset.")
     path = settings.tasks_dir / slug / kind.filename
@@ -647,7 +697,7 @@ def _task_path(slug, kind_name):
 def reset_after_commit(st, meta, path, original, replacement):
     """Schedule an artifact reset only after the accompanying archive is durable."""
     slug = path.parent.name
-    kind = artifact.of(meta)
+    kind = kinds.of(meta)
     if path.resolve() != _task_path(slug, kind.name).resolve():
         raise Unreadable("Pending reset is not a task file.")
     st.resets[slug] = (kind.name, kind.body(original), kind.body(replacement))
@@ -684,8 +734,8 @@ git commit -m "fix(state): key pending resets by artifact kind, not a task.py pa
 - Test: `tests/test_seed.py`
 
 **Interfaces:**
-- Consumes: `artifact.KINDS` from Task 4.
-- Produces: `cli.LEARNER_FILES = {kind.filename for kind in artifact.KINDS.values()}`.
+- Consumes: `kinds.KINDS` from Task 4.
+- Produces: `cli.LEARNER_FILES = {kind.filename for kind in kinds.KINDS.values()}`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -742,11 +792,11 @@ Expected: FAIL. The learner's `kind: Deployment` is replaced by the packaged emp
 In `src/drillion/cli.py`, add the constant and branch on it in `seed()`:
 
 ```python
-from . import artifact
+from . import kinds
 
 # the files that belong to the learner once they exist. Everything else under tasks/ is
 # drillion's and follows the installed version.
-LEARNER_FILES = {kind.filename for kind in artifact.KINDS.values()}
+LEARNER_FILES = {kind.filename for kind in kinds.KINDS.values()}
 ```
 
 ```python
@@ -1334,7 +1384,7 @@ The load-bearing correction from the audit. `brief()` is task-authored Python an
 - Test: `tests/test_manifest.py`, `tests/fixtures_manifest.py`
 
 **Interfaces:**
-- Consumes: `sandbox.run`, `settings.root`, `artifact.of`.
+- Consumes: `sandbox.run`, `settings.root`, `kinds.of`.
 - Produces: `manifest.generate_brief(meta, seed) -> dict` runs in a child and returns a validated mapping. `manifest.Rejected` is raised when the child fails or returns something unusable. `manifest.MAX_BRIEF_BYTES = 8192`. `manifest.render(template, brief) -> str` for plain text.
 
 - [ ] **Step 1: Write the failing test**
@@ -1682,16 +1732,29 @@ def open_attempt(st, slug, meta):
         return o
     now = datetime.now()
     seed = random.randint(1000, 9999)
-    extra = {}
-    if meta.get("kind") == MANIFEST:
+    st["open"][slug] = {"seed": seed, ..., **kinds.of(meta).opening(meta, seed)}
+    return st["open"][slug]
+```
+
+`attempts` never names a kind. The manifest kind's `opening` is what produces the brief:
+
+```python
+class _Manifest:
+    def opening(self, meta, seed):
+        from . import manifest
+
         brief = manifest.generate_brief(meta, seed)
-        extra = {
+        return {
             "brief": brief,
             "spec_md": manifest.render(meta["spec_md"], brief),
             "brief_revision": manifest.grader_revision(meta),
         }
-    st["open"][slug] = {"seed": seed, ..., **extra}
-    return st["open"][slug]
+
+    def spec(self, meta, o):
+        """A rendered brief belongs to the sitting that was given it. With no attempt open
+        the README is served as written, placeholders and all, which is why `doctor` rejects
+        a manifest whose Why or You get sections contain one."""
+        return o["spec_md"] if o and "spec_md" in o else meta["spec_md"]
 ```
 
 Add `manifest.grader_revision(meta)`, a sha256 prefix over `grade.py` and `solution.yaml`, so a later run can say which generator produced the stored brief.
@@ -1701,7 +1764,7 @@ In `state._fields`, allow the new keys: `brief` must be a dict, `spec_md` and `b
 In `api._payload`, prefer the stored spec:
 
 ```python
-        "spec_md": o["spec_md"] if o and "spec_md" in o else meta["spec_md"],
+        "spec_md": kind.spec(meta, o),
 ```
 
 An unopened manifest task therefore shows the README with its placeholders still in it, which is why the spec requires `## Why` and `## You get` to contain none. Add that rule to `doctor._value_rules`: for `kind: manifest`, a `{` in the `Why` or `You get` sections is a reported reason.
@@ -1734,7 +1797,7 @@ git commit -m "feat(attempts): persist a manifest sitting's brief and its render
 
 **Interfaces:**
 - Consumes: `tools.installed`, `tools.schema_location`, `tools.KUBERNETES_VERSION`, `manifest.module_name`, the persisted `o["brief"]`.
-- Produces: `manifest.harness(meta, brief) -> str`, the generated test source. `manifest.ToolMissing` is raised when the grader is not installed. `runner.run_tests(meta, seed, brief=None)` dispatches by kind and keeps returning `(passed, output, case)`, with `case` None for a manifest. `manifest.fingerprint(meta) -> str`.
+- Produces: `manifest.harness(meta, brief) -> str`, the generated test source. `manifest.ToolMissing` is raised when the grader is not installed. `runner.run_tests` splits into `runner.run_python(meta, seed)` and `runner.run_manifest(meta, brief)`, both returning `(passed, output, case)`, with `case` None for a manifest. `manifest.fingerprint(meta) -> str`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1882,7 +1945,7 @@ def harness(meta, brief):
     tool = tools.installed(tools.KUBECONFORM)
     if tool is None:
         raise ToolMissing("kubeconform is not installed: run `drillion doctor --fetch`")
-    kind = artifact.of(meta)
+    kind = kinds.of(meta)
     return _HARNESS.format(
         brief=json.dumps(brief),
         learner=str(kind.path(meta)),
@@ -1917,16 +1980,19 @@ Note the doubled braces inside `_HARNESS`: the template goes through `str.format
 
 In `src/drillion/runner.py`, dispatch:
 
+`runner` gains a second entry point and loses nothing. There is no dispatch here: the caller
+already holds a kind, and `kind.grade` picks the path.
+
 ```python
-def run_tests(meta, seed, brief=None):
-    """Task code only ever runs here, in its own process."""
-    if meta.get("kind") == MANIFEST:
-        return _run_manifest(meta, brief)
-    ...  # the existing Python path, unchanged, using artifact.of(meta).path(meta)
+def run_python(meta, seed):
+    """The existing run_tests body, renamed. Unchanged otherwise."""
+    ...
 
 
-def _run_manifest(meta, brief):
+def run_manifest(meta, brief):
     """Write the generated harness into the scratch dir and grade it like any other test."""
+    from . import manifest
+
     with tempfile.TemporaryDirectory(dir=settings.root) as box:
         test = Path(box, "test_manifest.py")
         test.write_text(manifest.harness(meta, brief), encoding="utf-8")
@@ -1935,6 +2001,16 @@ def _run_manifest(meta, brief):
         except subprocess.TimeoutExpired:
             return False, "timed out after 60s", None
     return r.returncode == 0, r.stdout, None
+```
+
+The manifest kind wires it up, and `api.run_task` calls `kind.grade(meta, o)` for both kinds:
+
+```python
+class _Manifest:
+    def grade(self, meta, o):
+        from . import runner
+
+        return runner.run_manifest(meta, o["brief"])
 ```
 
 Update `api.run_task` to pass `meta` and `o.get("brief")`, to catch `manifest.ToolMissing` and return a 503 naming the fix rather than a failing test, and to record `manifest.fingerprint(meta)` as the pass's `revision` for a manifest.
@@ -2256,5 +2332,6 @@ Carried to the phase 2 plan, per the spec:
 ## Self-review notes
 
 - **Spec coverage.** Tasks 1 to 16 cover the spec's Vocabulary, A task on disk, grade.py contract, The seeded spec, Grading, The region, Pending reset and recovery, Grading fingerprint, Acquiring the tools, Sandbox and Editor sections. selfcheck and Backup are intentionally out of this plan and named above.
-- **Known type consistency risk.** `run_tests` changes signature in Task 13 from `(path, seed)` to `(meta, seed, brief=None)`. Task 3 touches its caller and Task 13 changes it; whichever runs second must update `tests/test_runner.py` alongside.
-- **`has_given`** stays Python-only: a manifest has no code above `solve()`. Task 3 returns False for a manifest rather than generalising a concept that has no manifest meaning.
+- **Known type consistency risk.** `runner.run_tests(path, seed)` becomes `runner.run_python(meta, seed)` in Task 13, and every caller goes through `kinds.of(meta).grade(meta, o)` instead. Task 3 touches the caller and Task 13 renames the callee; whichever runs second updates `tests/test_runner.py` alongside. Task 2 defines `grade()` against the old name, so Task 13 must update `_Python.grade` in the same commit that renames it.
+- **`has_given`** becomes a kind method rather than a branch in `_payload`. `_Python.has_given` is the existing function; `_Manifest.has_given` returns False, because a manifest has no code above `solve()` to keep. Add it to the class in Task 2 alongside `opening`, `spec` and `grade`.
+- **One per-kind table is left outside `kinds.py` on purpose.** `doctor._value_rules` decides which frontmatter fields each kind may carry, and `catalogue.CHECKS` decides which files it must have. Both are data keyed by kind name, one entry per kind, and both live in modules that `kinds` imports from. A third kind adds a row to each; neither grows a branch.
