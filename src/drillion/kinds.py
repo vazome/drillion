@@ -4,8 +4,12 @@ A Python task's artifact is the region above the marker in `task.py`; a manifest
 the whole of `task.yaml`. Everything that reads, writes, resets, archives or fingerprints
 a learner's work asks a kind rather than calling `region` directly."""
 
+import hashlib
+
+import yaml
+
 from . import region
-from .catalogue import PYTHON
+from .catalogue import MANIFEST, PYTHON
 from .region import Invalid
 
 __all__ = ["Invalid", "of"]
@@ -56,7 +60,47 @@ class _Python:
         return runner.run_tests(self.path(meta), o["seed"])
 
 
-KINDS = {PYTHON: _Python()}
+class _Manifest:
+    """The learner's artifact is the entire file: no marker, no machinery below it."""
+
+    name = MANIFEST
+    filename = "task.yaml"
+    language = "yaml"
+
+    def path(self, meta):
+        return meta["dir"] / self.filename
+
+    def body(self, src):
+        return src
+
+    def compose(self, src, body):
+        return body
+
+    def validate(self, edited, src):
+        """Saving only asks that it parses. An empty file is a legal draft and a legal
+        reset state; whether it is a legal *submission* is the grader's line, not this one."""
+        try:
+            yaml.safe_load(edited)
+        except yaml.YAMLError as err:
+            mark = getattr(err, "problem_mark", None)
+            raise Invalid(
+                getattr(err, "problem", None) or "this is not valid YAML",
+                mark.line + 1 if mark else None,
+            ) from None
+        return edited
+
+    def empty(self, src):
+        return ""
+
+    def etag(self, src):
+        return hashlib.sha256(src.encode()).hexdigest()[:12]
+
+    def has_given(self, body):
+        # No code above solve() in a YAML file: nothing precedes what the learner writes.
+        return False
+
+
+KINDS = {PYTHON: _Python(), MANIFEST: _Manifest()}
 
 
 def of(meta):
