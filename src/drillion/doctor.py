@@ -26,6 +26,21 @@ def _placeholder_rules(spec_md):
     ]
 
 
+def _render_rules(meta):
+    """Does the README actually fit a brief this task produces? `_placeholder_rules` asks
+    only about the two sections shown before a sitting opens; a stray brace anywhere else,
+    or a placeholder the grader never fills, reaches the learner as a failed open."""
+    if "dir" not in meta:
+        return []
+    from . import manifest
+
+    try:
+        manifest.render(meta.get("spec_md", ""), manifest.generate_brief(meta, 1))
+    except manifest.Rejected as err:
+        return [f"README.md: the spec does not render against a brief - {err}"]
+    return []
+
+
 def _value_rules(meta):
     """The rules the catalogue never had to check: what a filled-in field actually says."""
     out = []
@@ -44,6 +59,7 @@ def _value_rules(meta):
         if tier is not None:
             out.append("README.md: tier belongs to a python task, not a manifest")
         out += _placeholder_rules(meta.get("spec_md", ""))
+        out += _render_rules(meta)
     minutes = meta.get("minutes")
     if minutes is not None and (
         isinstance(minutes, bool) or not isinstance(minutes, int) or minutes <= 0

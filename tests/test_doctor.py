@@ -37,7 +37,7 @@ def test_a_manifest_needs_no_tier_and_is_not_asked_for_one():
                 "043_manifest": {
                     "README.md": manifest_readme,
                     "task.yaml": "",
-                    "grade.py": "",
+                    "grade.py": _GRADER,
                     "solution.yaml": "",
                 }
             }
@@ -55,7 +55,7 @@ def test_a_manifest_with_a_tier_is_told_it_does_not_belong():
             "043_manifest": {
                 "README.md": manifest_readme,
                 "task.yaml": "",
-                "grade.py": "",
+                "grade.py": _GRADER,
                 "solution.yaml": "",
             }
         }
@@ -227,13 +227,17 @@ def test_fetch_belongs_to_doctor():
         cli.main(["serve", "--fetch"])
 
 
+# a working grader, so the render rule below judges the README and not the grade.py
+_GRADER = 'def brief(r):\n    return {"name": "checkout", "replicas": 3}\n'
+
+
 def test_a_manifest_placeholder_outside_the_requirements_is_reported():
     """An unopened manifest task serves its README as written, so the sections shown before
     a sitting has filled anything in must carry no placeholder."""
     manifest_readme = README.replace("tier: core\n", "").replace(
         "difficulty: easy", "kind: manifest\ndifficulty: easy"
     )
-    files = {"task.yaml": "", "grade.py": "", "solution.yaml": ""}
+    files = {"task.yaml": "", "grade.py": _GRADER, "solution.yaml": ""}
     leaked = manifest_readme.replace(
         "Because.", "Because {name} matters.\n\n## You get\nA {replicas}-line file."
     )
@@ -254,3 +258,21 @@ def test_a_manifest_placeholder_outside_the_requirements_is_reported():
         "Because.", "Because it matters.\n\n## You return\nA Deployment named `{name}`."
     )
     assert _reasons(**{"043_manifest": {"README.md": fine, **files}}) == {}
+
+
+def test_a_manifest_readme_that_cannot_render_is_reported():
+    """`_placeholder_rules` only guards the two sections shown before a sitting opens. A
+    brace anywhere else still reaches `render`, and a failure there is a failed open."""
+    manifest_readme = README.replace("tier: core\n", "").replace(
+        "difficulty: easy", "kind: manifest\ndifficulty: easy"
+    )
+    files = {"task.yaml": "", "grade.py": _GRADER, "solution.yaml": ""}
+    for bad in ("Use {} for an empty selector.", "A Deployment named `{nmae}`."):
+        broken = manifest_readme.replace(
+            "Because.", f"Because it matters.\n\n## Rules\n{bad}"
+        )
+        reasons = _reasons(**{"043_manifest": {"README.md": broken, **files}})
+        assert any(
+            "does not render against a brief" in r
+            for r in reasons.get("043_manifest", [])
+        ), (bad, reasons)

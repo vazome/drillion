@@ -254,3 +254,15 @@ def test_the_task_page_is_served_the_sitting_spec_not_the_readme(fixture_root):
             assert (await api.get(f"/api/task/{SLUG}")).json()["spec_md"] == opened
 
     asyncio.run(drive())
+
+
+def test_grader_revision_is_not_a_raw_concatenation(fixture_root):
+    """Two files that concatenate to the same bytes must not share a revision: a digest
+    per file is what keeps a change in one from being cancelled by a change in the other."""
+    folder = settings.tasks_dir / SLUG
+    revisions = set()
+    for grade, solution in ((b"ab", b"c"), (b"a", b"bc")):
+        (folder / "grade.py").write_bytes(grade)
+        (folder / "solution.yaml").write_bytes(solution)
+        revisions.add(manifest.grader_revision({"dir": folder}))
+    assert len(revisions) == 2, "the two files were concatenated, not hashed apart"
