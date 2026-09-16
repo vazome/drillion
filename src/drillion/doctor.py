@@ -32,17 +32,24 @@ def _placeholder_rules(spec_md):
 
 
 def _render_rules(meta):
-    """Does the README actually fit a brief this task produces? `_placeholder_rules` asks
-    only about the two sections shown before a sitting opens; a stray brace anywhere else,
-    or a placeholder the grader never fills, reaches the learner as a failed open."""
+    """Do the README and the answer key actually fit a brief this task produces?
+    `_placeholder_rules` asks only about the two sections shown before a sitting opens; a
+    stray brace anywhere else, or a placeholder the grader never fills, reaches the learner
+    as a failed open. A solution.yaml that will not render reaches them later and worse, on
+    the run that should have passed, so both are rendered against the same brief here."""
     if "dir" not in meta:
         return []
     from . import manifest
 
+    brief = manifest.generate_brief(meta, 1)
     try:
-        manifest.render(meta.get("spec_md", ""), manifest.generate_brief(meta, 1))
+        manifest.render(meta.get("spec_md", ""), brief)
     except manifest.Rejected as err:
         return [f"README.md: the spec does not render against a brief - {err}"]
+    try:
+        manifest.render_solution(meta, brief)
+    except manifest.Rejected as err:
+        return [f"solution.yaml: does not render against a brief - {err}"]
     return []
 
 

@@ -578,3 +578,38 @@ def test_a_manifest_pass_returns_its_reference_and_archives_its_revision(
             assert closed.json()["reference"] is None
 
     asyncio.run(drive())
+
+
+def test_a_solution_that_will_not_render_does_not_cost_the_learner_the_pass(
+    stubbed_kubeconform,
+):
+    """An answer key that cannot render is the task's bug. Raising here once cost a correct
+    submission its pass: `kind.reference` runs inside the same transaction as `record_pass`,
+    so the whole thing rolled back and retrying failed forever. `doctor` reports such a task;
+    the run still passes, without a reference."""
+    solution = settings.tasks_dir / SLUG / "solution.yaml"
+    solution.write_text(
+        solution.read_text(encoding="utf-8").replace("name: {name}", "name: x-{name}"),
+        encoding="utf-8",
+    )
+
+    async def drive():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://127.0.0.1"
+        ) as api:
+            opened = (await api.post(f"/api/task/{SLUG}/open")).json()
+            b = state.load()["open"][SLUG]["brief"]
+            correct = (
+                "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n"
+                f"  name: {b['name']}\nspec:\n  replicas: {b['replicas']}\n"
+            )
+            done = await api.post(
+                f"/api/task/{SLUG}/run",
+                json={"code": correct, "etag": opened["etag"], "submit": True},
+            )
+            assert done.status_code == 200, done.text
+            assert done.json()["passed"], done.text
+            assert done.json()["reference"] is None, "no key, but the pass stands"
+            assert SLUG not in state.load()["open"], "the sitting closed"
+
+    asyncio.run(drive())

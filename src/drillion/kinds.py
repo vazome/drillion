@@ -5,6 +5,7 @@ the whole of `task.yaml`. Everything that reads, writes, resets, archives or fin
 a learner's work asks a kind rather than calling `region` directly."""
 
 import hashlib
+import logging
 
 import yaml
 
@@ -13,6 +14,8 @@ from .catalogue import MANIFEST, PYTHON
 from .region import Invalid
 
 __all__ = ["Invalid", "of"]
+
+log = logging.getLogger(__name__)
 
 
 class _Python:
@@ -137,12 +140,22 @@ class _Manifest:
         return o["spec_md"] if o and "spec_md" in o else meta["spec_md"]
 
     def reference(self, meta, o):
+        """The answer key for this sitting. A closed sitting has no stored brief to render
+        one against, and an answer key that will not render is the task's bug, never the
+        learner's: it must not cost them the pass that asked for it. `doctor` reports such a
+        task, which is where it is meant to be caught."""
         from . import manifest
 
-        # A closed sitting has no stored brief to render a reference against.
         if o is None:
             return None
-        return manifest.render_solution(meta, o["brief"])
+        try:
+            return manifest.render_solution(meta, o["brief"])
+        except manifest.Rejected:
+            log.exception(
+                "%s: the solution does not render; run `drillion doctor`",
+                meta["dir"].name,
+            )
+            return None
 
     def revision(self, meta, src):
         from . import manifest

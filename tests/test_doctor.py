@@ -299,3 +299,25 @@ def test_a_manifest_teaching_a_kind_with_no_packaged_schema_is_reported():
     assert any(
         r.startswith("solution.yaml: no packaged schema for ConfigMap") for r in reasons
     ), reasons
+
+
+def test_a_manifest_solution_that_cannot_render_is_reported():
+    """The answer key is rendered against the same brief as the README. Left unchecked, a
+    partial placeholder here is invisible until the run that should have passed, where it
+    reaches the learner as a contributor's error message."""
+    manifest_readme = README.replace("tier: core\n", "").replace(
+        "difficulty: easy", "kind: manifest\ndifficulty: easy"
+    )
+    fine = manifest_readme.replace(
+        "Because.", "Because it matters.\n\n## You return\nA Deployment named `{name}`."
+    )
+    good = "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: {name}\n"
+    base = {"README.md": fine, "task.yaml": "", "grade.py": _GRADER}
+    assert _reasons(**{"043_manifest": {**base, "solution.yaml": good}}) == {}
+    broken = good.replace("name: {name}", "name: prefix-{name}")
+    reasons = _reasons(**{"043_manifest": {**base, "solution.yaml": broken}})[
+        "043_manifest"
+    ]
+    assert any(
+        r.startswith("solution.yaml: does not render against a brief") for r in reasons
+    ), reasons
