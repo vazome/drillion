@@ -3,8 +3,11 @@
 import graphlib
 import re
 
+import yaml
+
 from . import sandbox, tools
 from .catalogue import PYTHON, SECTION, SLUG, scan
+from .manifest import MAX_SPEC_CHARS
 
 TAG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 DIFFICULTIES = ("easy", "medium", "hard")
@@ -12,8 +15,7 @@ TIERS = ("core", "advanced", "packages")
 REFERENCES = ("prereqs",)  # optional frontmatter lists of task numbers
 # the sections a manifest shows before any sitting has filled a placeholder in
 PLAIN_SECTIONS = ("why", "you get")
-# what names the schema kubeconform will go looking for, read as lines rather than parsed:
-# a solution is a template, and `name: {name}-web` is not YAML
+# Templates such as `name: {name}-web` need a line-based fallback.
 SCHEMA_FIELD = re.compile(r"^(apiVersion|kind):[ \t]*(\S+)", re.MULTILINE)
 
 
@@ -50,14 +52,35 @@ def _schema_rules(meta):
     packaged a schema for tells every learner who gets it right that they got it wrong.
     Caught here, at contribution time, because at grading time the two are one string."""
     try:
-        text = (meta["dir"] / "solution.yaml").read_text(encoding="utf-8")
+        with (meta["dir"] / "solution.yaml").open(encoding="utf-8") as stream:
+            text = stream.read(MAX_SPEC_CHARS + 1)
+    except UnicodeDecodeError:
+        return ["solution.yaml: is not valid UTF-8"]
     except KeyError, OSError:
         return []  # a solution.yaml that is missing or unreadable is its own reason
-    fields = dict(SCHEMA_FIELD.findall(text))
-    if (kind := fields.get("kind")) is None:
+    if len(text) > MAX_SPEC_CHARS:
+        return [f"solution.yaml: exceeds {MAX_SPEC_CHARS} characters"]
+    if not text:
         return []
+    try:
+        fields = yaml.safe_load(text)
+    except yaml.YAMLError:
+        fields = {}
+        for key, value in SCHEMA_FIELD.findall(text):
+            fields.setdefault(key, value)
+    if not isinstance(fields, dict):
+        fields = {}
+    kind = fields.get("kind")
+    if not isinstance(kind, str) or not kind:
+        return ["solution.yaml: cannot determine kind"]
     api = fields.get("apiVersion", "")
-    name = "-".join([kind.lower(), *re.split(r"[/.]", api.lower())]) + ".json"
+    if not isinstance(api, str):
+        return ["solution.yaml: cannot determine apiVersion"]
+    group_parts = api.split("/")
+    suffix = "-" + group_parts[0].split(".")[0].lower()
+    if len(group_parts) > 1:
+        suffix += "-" + group_parts[1].lower()
+    name = kind.lower() + suffix + ".json"
     if (tools.SCHEMAS / name).is_file():
         return []
     packaged = ", ".join(sorted(p.stem for p in tools.SCHEMAS.glob("*.json")))
