@@ -1,12 +1,1 @@
-.brief{border-top:3px solid var(--accent);padding-top:14px}
-.intro,.filebar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;color:var(--text-muted);font-size:var(--fs-small)}
-.intro{margin-bottom:20px}
-.file{font-family:var(--font-mono);font-size:var(--fs-code);font-weight:600;color:var(--text)}
-.brief h2{font-size:var(--fs-body);text-transform:none;letter-spacing:0}
-.brief code{color:var(--accent);font-weight:600}
 .aside{font-size:var(--fs-small);line-height:var(--lh-body);color:var(--text-muted);margin:14px 0 0}
-.help{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;min-width:0}
-.filebar{padding:0 6px 8px}
-.explanation{margin:0 0 10px;max-width:65ch}
-.outline{font:var(--fs-small)/var(--lh-code) var(--font-mono);white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 12px}
-.actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:var(--fs-small);color:var(--text-muted)}

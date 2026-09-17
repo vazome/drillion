@@ -4,7 +4,7 @@ import { ApiError, api, post, type Task as TaskData, type RunResult, type Case }
 import { depsHref, prefetch } from "./Deps";
 import { inDays, strength } from "./strength";
 import { DiffView, Editor } from "./Editor";
-import { ManifestBrief, ManifestFailure, ManifestHelp } from "./ManifestWorkspace";
+import { ManifestFailure } from "./ManifestWorkspace";
 import { useDraft } from "./useDraft";
 import { usePrefs } from "./prefs";
 import { TaskPanes } from "./TaskPanes";
@@ -318,10 +318,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
 
       <TaskPanes narrow={narrow}>
         <div>
-          <Card label={meta.kind === "manifest" ? "Your brief" : `Spec · ${slug}/README.md`}>
-            {meta.kind === "manifest"
-              ? <ManifestBrief text={task.spec_md} slug={slug} started={hasAttempt} />
-              : <SpecText text={task.spec_md} slug={slug} hideTitle />}
+          <Card label={`Spec · ${slug}/README.md`}>
+            <SpecText text={task.spec_md} slug={slug} hideTitle />
 
             <div style={{ marginTop: 22, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
               <div style={{ ...LABEL, marginBottom: 10 }}>
@@ -460,8 +458,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             </div>
             {hasAttempt && !passed ? <Button variant="quiet" onClick={abandon} style={{ fontSize: 13 }}>Abandon</Button> : null}
           </div>
-
-          {meta.kind === "manifest" ? <ManifestHelp key={`${slug}:${attempt?.seed ?? "new"}`} code={code} onChange={edit} disabled={passed || !!inflight || !!conflict || !!offer} /> : null}
 
           <Editor kind={meta.kind} value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} problem={syntax} height={meta.kind === "manifest" ? "clamp(280px, 42vh, 560px)" : narrow ? "60vh" : "calc(100vh - 364px)"} />
 
