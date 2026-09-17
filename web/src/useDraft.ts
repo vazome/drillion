@@ -57,6 +57,7 @@ export function useDraft(
   /** The first payload, or the stub an abandon puts back: the buffer is the file's again,
    *  and a stored draft about that same file is offered over it. */
   const reset = useCallback((p: TaskData) => {
+    setSyntax(null);
     live.current.attempt = !!p.attempt;
     commit({ code: p.code, saved: p.code, etag: p.etag, ...serverNote(p) });
     try {
@@ -153,6 +154,7 @@ export function useDraft(
     restore: () => { if (offer !== null) edit(offer); setOffer(null); },
     takeDisk: () => {
       if (!conflict) return;
+      setSyntax(null);
       commit({ code: conflict.code, saved: conflict.code, etag: conflict.etag });
       discard();
       setConflict(null);
