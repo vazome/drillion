@@ -7,7 +7,12 @@ from drillion import catalogue
 from drillion.settings import settings
 from tests.fixtures import README, TASK, tasks_root
 
-DIRS = sorted(p for p in settings.tasks_dir.iterdir() if (p / "task.py").exists())
+# every folder holding a learner's file, whatever its kind calls one
+DIRS = sorted(
+    p
+    for p in settings.tasks_dir.iterdir()
+    if any((p / name).exists() for name in catalogue.FILENAMES.values())
+)
 
 
 def test_every_task_folder_is_read():
