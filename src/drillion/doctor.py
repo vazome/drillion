@@ -5,7 +5,7 @@ import re
 
 import yaml
 
-from . import sandbox, tools
+from . import kinds, sandbox, tools
 from .catalogue import MANIFEST, PYTHON, SECTION, SLUG, scan
 from .manifest import MAX_SPEC_CHARS
 
@@ -41,7 +41,7 @@ def _render_rules(meta):
         return []
     from . import manifest
 
-    brief = manifest.generate_brief(meta, 1)
+    brief = manifest.generate_brief(meta, kinds.SELFCHECK_SEED)
     try:
         manifest.render(meta.get("spec_md", ""), brief)
     except manifest.Rejected as err:

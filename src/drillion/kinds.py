@@ -4,6 +4,7 @@ A Python task's artifact is the region above the marker in `task.py`; a manifest
 the whole of `task.yaml`. Everything that reads, writes, resets, archives or fingerprints
 a learner's work asks a kind rather than calling `region` directly."""
 
+import ast
 import hashlib
 import logging
 
@@ -11,11 +12,30 @@ import yaml
 
 from . import region
 from .catalogue import MANIFEST, PYTHON
-from .region import Invalid
+from .region import Invalid, _solve
 
 __all__ = ["Invalid", "of"]
 
 log = logging.getLogger(__name__)
+
+# The seed a self-check asks its questions with, shared with `doctor` so that a task which
+# renders for one and fails the other is not the seed's doing.
+SELFCHECK_SEED = 1
+
+
+def _reference_call(body):
+    """solve()'s own signature, wired straight to the reference answer."""
+    fn = _solve(ast.parse(body))
+    a = fn.args
+    args = [p.arg for p in a.posonlyargs + a.args]
+    args += [f"*{a.vararg.arg}"] if a.vararg else []
+    args += [f"{p.arg}={p.arg}" for p in a.kwonlyargs]
+    args += [f"**{a.kwarg.arg}"] if a.kwarg else []
+    stubbed = region.stub(body)
+    return (
+        stubbed[: stubbed.rindex("raise NotImplementedError")]
+        + f"return _reference({', '.join(args)})"
+    )
 
 
 class _Python:
@@ -74,6 +94,17 @@ class _Python:
         from . import runner
 
         return runner.run_python(meta, o["seed"])
+
+    def selfcheck(self, meta):
+        """{filename: text} for the files that prove this task's own reference answer
+        passes, written beside the task and deleted afterwards. `_selfcheck.py` is the one
+        pytest is handed; a kind that needs more may name them alongside it.
+
+        A python task proves itself by answering with `_reference`: the region is spliced
+        so that `solve` forwards to it, and the task's own tests judge the result."""
+        src = meta["path"].read_text(encoding="utf-8")
+        body = _reference_call(region.cut(src).body)
+        return {"_selfcheck.py": region.splice(src, body)}
 
 
 class _Manifest:
@@ -186,6 +217,22 @@ class _Manifest:
                 "start again"
             )
         return runner.run_manifest(meta, o["brief"])
+
+    def selfcheck(self, meta):
+        """The same proof for the other kind: `solution.yaml` rendered against a real
+        brief, then put through the validator and the `check()` that judge a learner's.
+
+        `doctor` already asks whether the answer key renders. This asks the question only
+        the grader can answer, which is whether the rendered key actually passes."""
+        from . import manifest
+
+        brief = manifest.generate_brief(meta, SELFCHECK_SEED)
+        return {
+            "_selfcheck.yaml": manifest.render_solution(meta, brief),
+            "_selfcheck.py": manifest.harness(
+                meta, brief, learner=meta["dir"] / "_selfcheck.yaml"
+            ),
+        }
 
 
 KINDS = {PYTHON: _Python(), MANIFEST: _Manifest()}

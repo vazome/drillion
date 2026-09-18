@@ -278,15 +278,18 @@ def test_manifest():
 '''
 
 
-def harness(meta, brief):
+def harness(meta, brief, learner=None):
     """The generated test for one manifest sitting. Never regenerates the brief: the
-    requirements were written down when the sitting opened, and they are passed in."""
+    requirements were written down when the sitting opened, and they are passed in.
+
+    `learner` is the file to grade, and defaults to the learner's own. A self-check grades
+    the answer key instead, and passes the path it rendered it to."""
     tool = tools.installed(tools.KUBECONFORM)
     if tool is None:
         raise ToolMissing("kubeconform is not installed: run `drillion doctor --fetch`")
     return _HARNESS.format(
         brief=json.dumps(brief),
-        learner=str(meta["path"]),
+        learner=str(learner or meta["path"]),
         tool=str(tool),
         kube=tools.KUBERNETES_VERSION,
         schemas=tools.schema_location(),
