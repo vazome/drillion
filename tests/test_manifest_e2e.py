@@ -29,6 +29,11 @@ SLUG = "271_fixture"
 def fixture_root():
     tmp = tasks_root(**{SLUG: fixture_task()})
     keep = settings.root
+    # A verified grader is found under the root, and this swaps the root for a throwaway.
+    # Without carrying it across, `real` skips on the very machine that has one, which is
+    # how the release gate could be passed and its test still never run.
+    if (graders := keep / "tools").is_dir():
+        shutil.copytree(graders, tmp / "tools")
     settings.root = tmp
     yield tmp
     settings.root = keep
@@ -46,7 +51,7 @@ def stub(fixture_root, monkeypatch):
 
 @pytest.fixture
 def real(fixture_root):
-    """The same flow against the pinned binary, once the release gate has filled the pins."""
+    """The same flow against the pinned binary, for a root that has fetched one."""
     if tools.installed(tools.KUBECONFORM) is None:
         pytest.skip("kubeconform is not installed: run `drillion doctor --fetch`")
     return fixture_root

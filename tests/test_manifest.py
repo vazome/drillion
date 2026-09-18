@@ -557,10 +557,9 @@ def test_a_manifest_pass_returns_its_reference_and_archives_its_revision(
             assert opened.status_code == 200, opened.text
             o = state.load()["open"][SLUG]
             brief = o["brief"]
-            code = (
-                "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n"
-                f"  name: {brief['name']}\nspec:\n  replicas: {brief['replicas']}\n"
-            )
+            # the answer key itself, rather than a hand-written manifest that would have to
+            # be kept schema-valid here as well as in the fixture
+            code = manifest.render_solution(meta_for(), brief)
             reply = await api.post(
                 f"/api/task/{SLUG}/run",
                 json={"code": code, "etag": opened.json()["etag"], "submit": True},

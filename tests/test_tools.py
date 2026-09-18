@@ -40,7 +40,6 @@ def test_an_unsupported_platform_says_so(monkeypatch):
         tools.pin_for("kubeconform")
 
 
-@pytest.mark.xfail(reason="pins are filled at the phase 2 release gate", strict=True)
 def test_every_pin_is_filled_in():
     """A placeholder pin is a release blocker, not a TODO."""
     for name, by_host in tools.PINS.items():

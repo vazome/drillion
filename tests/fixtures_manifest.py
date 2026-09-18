@@ -48,6 +48,10 @@ def check(doc, b):
     assert doc["spec"]["replicas"] == b["replicas"], "replicas"
 """
 
+# `selector` and `template` are not decoration: a Deployment without them is rejected by
+# kubeconform before `check()` ever sees it, so an answer key missing them fails the run it
+# is supposed to pass. The stand-in validator does not know that, which is why the fixture
+# carried a shape the real one refuses until the release gate fetched it.
 SOLUTION = """\
 apiVersion: apps/v1
 kind: Deployment
@@ -55,6 +59,17 @@ metadata:
   name: {name}
 spec:
   replicas: {replicas}
+  selector:
+    matchLabels:
+      app: {name}
+  template:
+    metadata:
+      labels:
+        app: {name}
+    spec:
+      containers:
+        - name: {name}
+          image: nginx:1.27
 """
 
 

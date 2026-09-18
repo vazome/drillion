@@ -51,16 +51,50 @@ def host():
     return sys.platform, {"x86_64": "amd64", "aarch64": "arm64"}.get(machine, machine)
 
 
+_KUBECONFORM_RELEASE = "https://github.com/yannh/kubeconform/releases/download/v0.8.0"
+
 PINS: dict[str, dict[tuple[str, str], Pin]] = {
     KUBECONFORM: {
-        # Filled in by the release gate. Upstream publishes .tar.gz per platform, a .zip
-        # for Windows, and a separate CHECKSUMS file:
-        # https://github.com/yannh/kubeconform/blob/v0.8.0/.goreleaser.yml
-        ("linux", "amd64"): Pin("", "", "", "kubeconform", ""),
-        ("linux", "arm64"): Pin("", "", "", "kubeconform", ""),
-        ("darwin", "amd64"): Pin("", "", "", "kubeconform", ""),
-        ("darwin", "arm64"): Pin("", "", "", "kubeconform", ""),
-        ("win32", "amd64"): Pin("", "", "", "kubeconform.exe", ""),
+        # Upstream publishes a .tar.gz per platform, a .zip for Windows, and a CHECKSUMS
+        # file covering the archives: https://github.com/yannh/kubeconform/releases.
+        # `archive_sha256` is that file's line; `binary_sha256` is the member inside it,
+        # which upstream does not publish and which is what `installed` rechecks on every
+        # use. Both are recomputed by hand when the version moves.
+        ("linux", "amd64"): Pin(
+            "v0.8.0",
+            f"{_KUBECONFORM_RELEASE}/kubeconform-linux-amd64.tar.gz",
+            "9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883",
+            "kubeconform",
+            "457722b36e98d7bdbc91525e594951ef5d7ea3a29da2d13b9b28a2fb8a5097b7",
+        ),
+        ("linux", "arm64"): Pin(
+            "v0.8.0",
+            f"{_KUBECONFORM_RELEASE}/kubeconform-linux-arm64.tar.gz",
+            "1f53fc8e81258197a35e8603054162a5af1de8c5af13746c71ab680d9534ed87",
+            "kubeconform",
+            "7e77b104b3ae696389f91971c60fd58c72f1f3dc218f139df67a1b070959c012",
+        ),
+        ("darwin", "amd64"): Pin(
+            "v0.8.0",
+            f"{_KUBECONFORM_RELEASE}/kubeconform-darwin-amd64.tar.gz",
+            "71dbc87ac9f24099a62b93570e65aa06312ba6ac8aea63b7f86e9d999edf5a92",
+            "kubeconform",
+            "2138fc51a0b15efe827f49c1ded8eb63da049d59864ae74a9384715f9ab6f94d",
+        ),
+        ("darwin", "arm64"): Pin(
+            "v0.8.0",
+            f"{_KUBECONFORM_RELEASE}/kubeconform-darwin-arm64.tar.gz",
+            "f84f4dfbebf4a6b0b230385fa065a39ea35e02608c2b50d025dcf64775a69d67",
+            "kubeconform",
+            "858ceb584915c256262090195eda2579299149050c5c6a9788d0985076832313",
+        ),
+        ("win32", "amd64"): Pin(
+            "v0.8.0",
+            f"{_KUBECONFORM_RELEASE}/kubeconform-windows-amd64.zip",
+            "e3f56102bcf4f50b034a567e2482a1c5330799983ddd655952310211aef73d93",
+            "kubeconform.exe",
+            "642bf8ea0d614a8c75d2bd012eb6042a90589ff846c69f04863afa446b30f2c1",
+        ),
     }
 }
 
