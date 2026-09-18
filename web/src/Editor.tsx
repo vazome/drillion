@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import * as monaco from "@codingame/monaco-vscode-editor-api";
+// the extension API, for the one thing the editor API cannot do: publish a diagnostic the
+// editor renders exactly as it renders the language server's
+import * as vscode from "vscode";
 import type { Meta } from "./api";
 // classic mode highlights with Monarch, and the editor API ships no grammars. The package
 // index pulls all ~90 languages; drillion takes only the ones a task artifact is written in.
@@ -171,8 +174,7 @@ export function Editor({ kind, value, onChange, onRun, onSubmit, readOnly, dark,
   const host = useRef<HTMLDivElement>(null);
   const status = useRef<HTMLDivElement>(null);
   const app = useRef<EditorApp>(null);
-  // tied to the editor that owns them: a rebuild for a new kind leaves the old ones behind
-  const marks = useRef<{ editor: unknown; col: monaco.editor.IEditorDecorationsCollection } | null>(null);
+  const marks = useRef<vscode.DiagnosticCollection | null>(null);
   const [failed, setFailed] = useState(false);
   const [pending, setPending] = useState("");   // Emacs's half-typed chord
   // a key binding needs the editor instance, which only exists once `start()` resolved
@@ -235,34 +237,51 @@ export function Editor({ kind, value, onChange, onRun, onSubmit, readOnly, dark,
   useEffect(() => { app.current?.getEditor()?.updateOptions({ readOnly: !!readOnly }); }, [readOnly, ready]);
   useEffect(() => { app.current?.getEditor()?.updateOptions(looks(prefs)); }, [prefs, ready]);
 
-  /** The server owns the only YAML parser in play, so its refusal is the editor's
-   *  diagnostic: a squiggle on the line it named, carrying the reason on hover. These are
-   *  decorations rather than markers because the editor builds its models through the
-   *  vscode API's model references, which monaco's standalone marker registry never sees:
-   *  `setModelMarkers` accepts the call and nothing renders. A refusal that names no line
-   *  still has to be visible, so it marks the last line rather than going quiet. */
+  /** The server owns the only parser that can refuse a save, so its refusal is a diagnostic
+   *  like any other and is published the way a language server publishes its own. That is
+   *  the whole point of the collection: going through the same channel is what makes the
+   *  editor draw it in VS Code's own shape, with the severity colour, the `source` suffix,
+   *  the Problems entry and the Quick Fix bar, and stack it in one hover beside whatever
+   *  the language server reported on the same line. Drawing it as a decoration with a
+   *  hand-written hover instead produces a panel that only resembles one.
+   *
+   *  `monaco.editor.setModelMarkers` is the other obvious route and silently does nothing
+   *  here: the editor builds its models through the vscode API's model references, which
+   *  monaco's standalone marker registry never sees.
+   *
+   *  Diagnostics are never fatal. A vscode API that failed to start leaves an editor that
+   *  still edits, which is the same bargain the language server is held to.
+   *
+   *  A refusal that names no line still has to be visible, so it marks the last line rather
+   *  than going quiet. The collection holds one file at a time, so clearing it first also
+   *  retires the diagnostic left on the other kind's URI when a task swaps the model. */
   useEffect(() => {
-    const editor = app.current?.getEditor();
-    const model = editor?.getModel();
-    if (!editor || !model) return;
-    if (marks.current?.editor !== editor) marks.current = { editor, col: editor.createDecorationsCollection() };
-    if (!problem) return marks.current.col.clear();
+    const model = app.current?.getEditor()?.getModel();
+    if (!model) return;
+    try {
+      marks.current ??= vscode.languages.createDiagnosticCollection("drillion");
+    } catch (err) {
+      console.error("diagnostics unavailable", err);
+      return;
+    }
+    marks.current.clear();
+    if (!problem) return;
     const last = model.getLineCount();
     const line = problem.line && problem.line >= 1 && problem.line <= last ? problem.line : last;
-    marks.current.col.set([{
-      range: new monaco.Range(line, model.getLineFirstNonWhitespaceColumn(line) || 1, line, model.getLineMaxColumn(line)),
-      options: {
-        className: "squiggly-error",
-        hoverMessage: {
-          // Diagnostic text is data, never markdown links, HTML or executable commands.
-          value: `${problem.message.replace(/[\\`*_{}[\]()<>#+.!|~-]/g, "\\$&").replace(/\n/g, "  \n")}\n\n*${kind === "manifest" ? "YAML · server parser" : "Python · server parser"}*`,
-          isTrusted: false,
-          supportHtml: false,
-        },
-        overviewRuler: { color: token("--fail"), position: monaco.editor.OverviewRulerLane.Right },
-      },
-    }]);
+    // vscode counts lines and characters from zero; monaco counts both from one
+    const found = new vscode.Diagnostic(
+      new vscode.Range(
+        line - 1, (model.getLineFirstNonWhitespaceColumn(line) || 1) - 1,
+        line - 1, model.getLineMaxColumn(line) - 1,
+      ),
+      problem.message,
+      vscode.DiagnosticSeverity.Error,
+    );
+    found.source = "drillion";
+    marks.current.set(vscode.Uri.parse(model.uri.toString()), [found]);
   }, [problem, value, ready, kind]);
+
+  useEffect(() => () => { marks.current?.dispose(); marks.current = null; }, []);
   // waits for the API rather than testing it: `api` is truthy while still pending, and
   // theming early touches Monaco's standalone services, which makes `start()` throw
   useEffect(() => { void api?.then(() => applyTheme(dark)).catch(() => {}); }, [dark]);

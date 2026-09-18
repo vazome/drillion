@@ -7,5 +7,4 @@
 .monaco-editor .monaco-hover .markdown-hover > .hover-contents:not(.code-hover-contents){max-width:100%;white-space:normal;overflow-wrap:anywhere;font-family:var(--font-sans);font-size:var(--fs-body);line-height:var(--lh-body)}
 .monaco-editor .monaco-hover .hover-contents p{margin:0 0 8px}
 .monaco-editor .monaco-hover .hover-contents p:last-child{margin-bottom:0}
-.monaco-editor .monaco-hover .hover-contents p:last-child > em:only-child{color:var(--text-muted);font-size:var(--fs-small);font-style:normal}
 .monaco-editor .monaco-hover code{font-family:var(--font-mono);background:var(--surface-2);border-radius:var(--radius-sm)}
