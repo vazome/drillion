@@ -641,3 +641,47 @@ def test_a_second_document_can_still_be_saved_while_it_is_being_typed(fixture_ro
     assert kinds.of(meta_for()).validate(two, "") == two
     with pytest.raises(kinds.Invalid):
         kinds.of(meta_for()).validate("a:\n  - [unclosed\n", "")
+
+
+MULTI = (
+    "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: checkout\n"
+    "spec:\n  replicas: 3\n---\n"
+    "apiVersion: v1\nkind: Pod\nmetadata:\n  name: app\n"
+)
+
+
+def _multi_grader():
+    """Swap the fixture task's grader for one that asks for several objects in one file."""
+    (settings.tasks_dir / SLUG / "grade.py").write_text(
+        "def brief(r):\n"
+        "    return {}\n"
+        "\n"
+        "\n"
+        "def check_many(docs, b):\n"
+        "    assert [d['kind'] for d in docs] == ['Deployment', 'Pod'], 'kinds'\n"
+        "    assert docs[1]['metadata']['name'] == 'app', 'name'\n",
+        encoding="utf-8",
+    )
+
+
+def test_a_grader_with_check_many_grades_every_document(stubbed_kubeconform):
+    """A task whose answer is several objects in one file is graded on all of them. The
+    one-document refusal only belongs to graders still defining `check` alone."""
+    _multi_grader()
+    passed, headline = _submit(MULTI)
+    assert passed, headline
+
+
+def test_a_check_many_grader_says_which_requirement_missed(stubbed_kubeconform):
+    _multi_grader()
+    passed, headline = _submit(MULTI.replace("name: app", "name: other"))
+    assert not passed and "name" in headline
+
+
+def test_a_stray_separator_is_not_a_document(stubbed_kubeconform):
+    """A trailing `---` makes PyYAML see one more, empty document. kubectl shrugs at it;
+    here it is refused by name, because a learner who shipped it to a cluster would get a
+    blank object in `kubectl get` and no error at all."""
+    _multi_grader()
+    passed, headline = _submit(MULTI + "\n---\n")
+    assert not passed and "document 3 is not a mapping" in headline

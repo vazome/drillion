@@ -108,32 +108,45 @@ if args[:-1] != expected:
 
 # The real shapes, not tidied up: `msg` is boilerplate naming the schema's install path
 # whatever went wrong, the per-field detail lives in `validationErrors`, and a kind with no
-# packaged schema is a `statusError` carrying neither.
+# packaged schema is a `statusError` carrying neither. A stream is validated one resource
+# per document, because that is what the real tool does with `---`-separated files. The
+# two kinds it holds schemas for are the two the fixture tests grade; ConfigMap is left
+# out on purpose, as the kind a test pins the could-not-find-schema message to.
+KINDS = ("Deployment", "Pod")
 BOILERPLATE = (
     "problem validating schema. Check JSON formatting: jsonschema validation failed "
     "with 'file://{schemas}#'"
 )
-text = open(args[-1], encoding="utf-8").read()
-kind = re.search(r"^kind:[ \\t]*(\\S+)", text, re.M)
-resource = {{"filename": args[-1], "status": "statusValid"}}
-if kind is None or kind.group(1) != "Deployment":
-    resource |= {{
-        "status": "statusError",
-        "msg": "could not find schema for " + (kind.group(1) if kind else ""),
-    }}
-elif 'replicas: "' in text:
-    resource |= {{
-        "status": "statusInvalid",
-        "msg": BOILERPLATE,
-        "validationErrors": [
-            {{"path": "/spec/replicas", "msg": "expected integer, but got string"}}
-        ],
-    }}
-elif "apiVersion:" not in text:
-    resource |= {{"status": "statusError", "msg": "error while parsing: missing 'apiVersion' key"}}
-print(json.dumps({{"resources": [resource]}}))
-raise SystemExit(0 if resource["status"] == "statusValid" else 1)
-"""
+
+
+def resource_for(part):
+    kind = re.search(r"^kind:[ \\t]*(\\S+)", part, re.M)
+    resource = {{"filename": args[-1], "status": "statusValid"}}
+    if kind is None or kind.group(1) not in KINDS:
+        resource |= {{
+            "status": "statusError",
+            "msg": "could not find schema for " + (kind.group(1) if kind else ""),
+        }}
+    elif 'replicas: "' in part:
+        resource |= {{
+            "status": "statusInvalid",
+            "msg": BOILERPLATE,
+            "validationErrors": [
+                {{"path": "/spec/replicas", "msg": "expected integer, but got string"}}
+            ],
+        }}
+    elif "apiVersion:" not in part:
+        resource |= {{"status": "statusError", "msg": "error while parsing: missing 'apiVersion' key"}}
+    return resource
+
+
+resources = [
+    resource_for(part)
+    for part in re.split(r"(?m)^---[ \\t]*\\n", open(args[-1], encoding="utf-8").read())
+    if part.strip()
+]
+print(json.dumps({{"resources": resources}}))
+raise SystemExit(0 if all(r["status"] == "statusValid" for r in resources) else 1)"""
 
 
 def stub_kubeconform(root):

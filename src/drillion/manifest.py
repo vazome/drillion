@@ -184,7 +184,8 @@ def render_solution(meta, brief):
             out.append(line)
     rendered = "\n".join(out)
     try:
-        yaml.safe_load(rendered)
+        # an answer key may hold several objects, `---`-separated, so validate them all
+        list(yaml.safe_load_all(rendered))
     except yaml.YAMLError as exc:
         raise Rejected(f"the rendered solution is not valid YAML: {exc}") from None
     return rendered
@@ -211,17 +212,23 @@ import yaml
 BRIEF = json.loads({brief!r})
 
 
-def _one_mapping(text):
+def _shape(text, many):
     """What the learner wrote, or the reason it is not yet a manifest. These come before
-    the validator because kubeconform has nothing useful to say about any of them."""
+    the validator because kubeconform has nothing useful to say about any of them. A task
+    whose grader defines `check_many` asks for several objects in one file, `---`-separated,
+    and then every document has to be a mapping."""
     if not text.strip():
         raise AssertionError("task.yaml is empty: write the manifest before submitting")
     docs = list(yaml.safe_load_all(text))
-    if len(docs) != 1:
+    if many:
+        for i, d in enumerate(docs, 1):
+            if not isinstance(d, dict):
+                raise AssertionError(f"document {{i}} is not a mapping")
+    elif len(docs) != 1:
         raise AssertionError(f"expected one document, found {{len(docs)}}")
-    if not isinstance(docs[0], dict):
+    elif not isinstance(docs[0], dict):
         raise AssertionError("the document must be a mapping, not a list or a scalar")
-    return docs[0]
+    return docs
 
 
 def _no_detail(entry):
@@ -264,17 +271,21 @@ def _readable(out):
 
 def test_manifest():
     text = Path({learner!r}).read_text(encoding="utf-8")
-    doc = _one_mapping(text)
+    spec = importlib.util.spec_from_file_location({module!r}, {grader!r})
+    grade = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(grade)
+    many = hasattr(grade, "check_many")
+    docs = _shape(text, many)
     out = subprocess.run(
         [{tool!r}, "-strict", "-kubernetes-version", {kube!r},
          "-schema-location", {schemas!r}, "-output", "json", {learner!r}],
         capture_output=True, text=True, timeout=30,
     )
     assert out.returncode == 0, _readable(out)
-    spec = importlib.util.spec_from_file_location({module!r}, {grader!r})
-    grade = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(grade)
-    grade.check(doc, BRIEF)
+    if many:
+        grade.check_many(docs, BRIEF)
+    else:
+        grade.check(docs[0], BRIEF)
 '''
 
 

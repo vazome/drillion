@@ -291,13 +291,13 @@ def test_a_manifest_teaching_a_kind_with_no_packaged_schema_is_reported():
     packaged = "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\n"
     assert _reasons(**{"043_manifest": {**base, "solution.yaml": packaged}}) == {}
     missing = packaged.replace("apiVersion: apps/v1", "apiVersion: v1").replace(
-        "kind: Deployment", "kind: ConfigMap"
+        "kind: Deployment", "kind: Namespace"
     )
     reasons = _reasons(**{"043_manifest": {**base, "solution.yaml": missing}})[
         "043_manifest"
     ]
     assert any(
-        r.startswith("solution.yaml: no packaged schema for ConfigMap") for r in reasons
+        r.startswith("solution.yaml: no packaged schema for Namespace") for r in reasons
     ), reasons
 
 
