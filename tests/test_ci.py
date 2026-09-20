@@ -13,6 +13,8 @@ pytestmark = pytest.mark.skipif(
     sys.platform == "win32", reason="CI filter runs on Linux"
 )
 WORKFLOW = Path(__file__).parents[1] / ".github/workflows/ci.yml"
+RELEASE_WORKFLOW = Path(__file__).parents[1] / ".github/workflows/release.yml"
+ROOT = Path(__file__).parents[1]
 
 
 @pytest.mark.parametrize(
@@ -109,7 +111,10 @@ def test_smoke_reaches_volume_check_and_propagates_failures(tmp_path, failure):
         'if [[ "$*" == *"$FAIL_ON"* && -n "$FAIL_ON" ]]; then exit 7; fi\n'
     )
     # the script checks the served count against the checkout, so the fake has to agree
-    served = len(list((WORKFLOW.parents[2] / "tasks").glob("*/task.py")))
+    task_dir = WORKFLOW.parents[2] / "tasks"
+    served = sum(
+        len(list(task_dir.glob(pattern))) for pattern in ("*/task.py", "*/task.yaml")
+    )
     curl = tmp_path / "curl"
     curl.write_text(
         f'#!/usr/bin/env bash\necho "$*" >> "$CALLS"\necho \'{{"tasks":{served}}}\'\n'
@@ -134,3 +139,63 @@ def test_smoke_reaches_volume_check_and_propagates_failures(tmp_path, failure):
     assert result.returncode == (7 if failure else 0), result.stdout + result.stderr
     if not failure:
         assert "/api/task/009_fstrings/open" in calls.read_text()
+
+
+def test_release_publishes_only_the_attested_container_image():
+    release = yaml.safe_load(RELEASE_WORKFLOW.read_text())
+    jobs = release["jobs"]
+
+    assert set(jobs) == {"gate", "image", "image-scan", "notes"}
+    assert jobs["notes"]["needs"] == ["image"]
+    assert jobs["notes"]["permissions"] == {"contents": "write"}
+
+    metadata = next(step for step in jobs["image"]["steps"] if step.get("id") == "meta")
+    assert metadata["with"]["tags"] == "type=pep440,pattern={{version}}"
+    assert metadata["with"]["flavor"] == "latest=auto"
+
+    attestations = [
+        step
+        for step in jobs["image"]["steps"]
+        if step.get("uses", "").startswith("actions/attest@")
+    ]
+    assert [step["with"]["subject-digest"] for step in attestations] == [
+        "${{ steps.push.outputs.digest }}",
+        "${{ steps.platform-digests.outputs.amd64 }}",
+        "${{ steps.platform-digests.outputs.arm64 }}",
+    ]
+    assert all(step["with"]["push-to-registry"] is True for step in attestations)
+    assert [step["with"].get("sbom-path") for step in attestations] == [
+        None,
+        "sbom-amd64.spdx.json",
+        "sbom-arm64.spdx.json",
+    ]
+
+    release_step = jobs["notes"]["steps"][-1]
+    assert release_step["env"]["DIGEST"] == "${{ needs.image.outputs.digest }}"
+    notes = release_step["run"]
+    assert "ghcr.io/${GITHUB_REPOSITORY}@${DIGEST}" in notes
+    assert 'gh release create "$GITHUB_REF_NAME"' in notes
+    assert "dist/" not in notes
+
+
+def test_user_docs_describe_docker_as_the_only_distribution():
+    docs = {
+        "README.md": (ROOT / "README.md").read_text(),
+        "docs/configuration.md": (ROOT / "docs/configuration.md").read_text(),
+        "CONTRIBUTING.md": (ROOT / "CONTRIBUTING.md").read_text(),
+        "SECURITY.md": (ROOT / "SECURITY.md").read_text(),
+    }
+
+    for text in docs.values():
+        assert "uv tool install drillion" not in text
+        assert "uv tool upgrade drillion" not in text
+        assert "pypi-attestations" not in text
+
+    assert "docker compose up -d" in docs["README.md"]
+    assert "docker exec drillion drillion selfcheck" in docs["README.md"]
+    assert "docker stop drillion" in docs["README.md"]
+    assert "docker rm -f drillion" not in docs["README.md"]
+    assert (
+        "gh attestation verify oci://ghcr.io/vazome/drillion:<version>"
+        in docs["docs/configuration.md"]
+    )

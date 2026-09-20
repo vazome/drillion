@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import * as monaco from "@codingame/monaco-vscode-editor-api";
+// the extension API, for the one thing the editor API cannot do: publish a diagnostic the
+// editor renders exactly as it renders the language server's
+import * as vscode from "vscode";
+import type { Meta } from "./api";
 // classic mode highlights with Monarch, and the editor API ships no grammars. The package
-// index pulls all ~90 languages; drillion is a Python trainer, so it takes the one.
+// index pulls all ~90 languages; drillion takes only the ones a task artifact is written in.
 import "@codingame/monaco-vscode-standalone-languages/languages/definitions/python/register.js";
+import "@codingame/monaco-vscode-standalone-languages/languages/definitions/yaml/register.js";
 import { EditorApp } from "monaco-languageclient/editorApp";
 import { MonacoVscodeApiWrapper } from "monaco-languageclient/vscodeApiWrapper";
 import { LanguageClientWrapper } from "monaco-languageclient/lcwrapper";
@@ -10,6 +15,7 @@ import { configureDefaultWorkerFactory } from "monaco-languageclient/workerFacto
 import { initVimMode } from "monaco-vim";
 import { EmacsExtension } from "monaco-emacs";
 import { DEFAULTS, fontStack, type Prefs } from "./prefs";
+import "./Editor.css";
 
 // Every mono face is `font-display: swap`, and Monaco measures the character advance once
 // at construction: an editor built before the woff2 lands keeps drawing the caret and the
@@ -24,7 +30,9 @@ const bare = (name: string) => token(name).replace("#", "");
  *  about. `/workspace` is a placeholder the bridge swaps for the real tasks directory: a
  *  browser has no business knowing filesystem paths. */
 const WORKSPACE = "file:///workspace";
-const FILE = `${WORKSPACE}/solve.py`;
+// Monaco reads the language off the extension, so naming the file is choosing the mode.
+const ext = (kind: Meta["kind"]) => (kind === "manifest" ? "yaml" : "py");
+const fileFor = (kind: Meta["kind"]) => `${WORKSPACE}/${kind === "manifest" ? "task" : "solve"}.${ext(kind)}`;
 
 /** wss on a served-over-TLS page: a tunnel or a reverse proxy in front of drillion makes a
  *  plain ws:// socket mixed content, which the browser blocks outright. */
@@ -93,6 +101,9 @@ function applyTheme(dark: boolean) {
       "editorLineNumber.foreground": token("--text-faint"),
       "editorLineNumber.activeForeground": token("--text-muted"),
       "editorGutter.background": token("--gutter"),
+      "editorHoverWidget.background": token("--surface"),
+      "editorHoverWidget.foreground": token("--text"),
+      "editorHoverWidget.border": token("--border-strong"),
       // accent on both sides: pass/fail already mean the tests, and the left pane is code
       // that passed
       "diffEditor.insertedLineBackground": token("--accent-tint"),
@@ -155,13 +166,15 @@ function Failed({ height }: { height: string }) {
   );
 }
 
-export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, height, prefs }: {
-  value: string; onChange: (v: string) => void; onRun: () => void; onSubmit: () => void;
+export function Editor({ kind, value, onChange, onRun, onSubmit, readOnly, dark, height, prefs, problem }: {
+  kind: Meta["kind"]; value: string; onChange: (v: string) => void; onRun: () => void; onSubmit: () => void;
   readOnly?: boolean; dark: boolean; height: string; prefs: Prefs;
+  problem?: { message: string; line: number | null } | null;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const status = useRef<HTMLDivElement>(null);
   const app = useRef<EditorApp>(null);
+  const marks = useRef<vscode.DiagnosticCollection | null>(null);
   const [failed, setFailed] = useState(false);
   const [pending, setPending] = useState("");   // Emacs's half-typed chord
   // a key binding needs the editor instance, which only exists once `start()` resolved
@@ -180,10 +193,12 @@ export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, heigh
       .then(() => {
         if (!live || !host.current) return;
         applyTheme(dark);
-        startLanguageClient();
+        // `documentSelector: ["python"]` already keeps the server off a YAML model, so this
+        // is about not opening a socket a manifest-only session never needs.
+        if (kind === "python") startLanguageClient();
         started = app.current = new EditorApp({
           id: "solve",
-          codeResources: { modified: { text: value, uri: FILE } },
+          codeResources: { modified: { text: value, uri: fileFor(kind) } },
           editorOptions: { ...editorOptions, ...looks(first.current) },
         });
         started.registerOnTextChangedCallback((t) => latest.current.onChange(t.modified ?? ""));
@@ -211,16 +226,62 @@ export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, heigh
       app.current = null;
       void started?.dispose();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [kind]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // `value` is also the truth after a reset or a 409, so push it when it drifts
   useEffect(() => {
     const current = app.current?.getTextModels().modified?.getValue();
     if (current !== undefined && current !== value) app.current?.updateCode({ modified: value });
-  }, [value]);
+  }, [value, ready]);
 
-  useEffect(() => { app.current?.getEditor()?.updateOptions({ readOnly: !!readOnly }); }, [readOnly]);
+  useEffect(() => { app.current?.getEditor()?.updateOptions({ readOnly: !!readOnly }); }, [readOnly, ready]);
   useEffect(() => { app.current?.getEditor()?.updateOptions(looks(prefs)); }, [prefs, ready]);
+
+  /** The server owns the only parser that can refuse a save, so its refusal is a diagnostic
+   *  like any other and is published the way a language server publishes its own. That is
+   *  the whole point of the collection: going through the same channel is what makes the
+   *  editor draw it in VS Code's own shape, with the severity colour, the `source` suffix,
+   *  the Problems entry and the Quick Fix bar, and stack it in one hover beside whatever
+   *  the language server reported on the same line. Drawing it as a decoration with a
+   *  hand-written hover instead produces a panel that only resembles one.
+   *
+   *  `monaco.editor.setModelMarkers` is the other obvious route and silently does nothing
+   *  here: the editor builds its models through the vscode API's model references, which
+   *  monaco's standalone marker registry never sees.
+   *
+   *  Diagnostics are never fatal. A vscode API that failed to start leaves an editor that
+   *  still edits, which is the same bargain the language server is held to.
+   *
+   *  A refusal that names no line still has to be visible, so it marks the last line rather
+   *  than going quiet. The collection holds one file at a time, so clearing it first also
+   *  retires the diagnostic left on the other kind's URI when a task swaps the model. */
+  useEffect(() => {
+    const model = app.current?.getEditor()?.getModel();
+    if (!model) return;
+    try {
+      marks.current ??= vscode.languages.createDiagnosticCollection("drillion");
+    } catch (err) {
+      console.error("diagnostics unavailable", err);
+      return;
+    }
+    marks.current.clear();
+    if (!problem) return;
+    const last = model.getLineCount();
+    const line = problem.line && problem.line >= 1 && problem.line <= last ? problem.line : last;
+    // vscode counts lines and characters from zero; monaco counts both from one
+    const found = new vscode.Diagnostic(
+      new vscode.Range(
+        line - 1, (model.getLineFirstNonWhitespaceColumn(line) || 1) - 1,
+        line - 1, model.getLineMaxColumn(line) - 1,
+      ),
+      problem.message,
+      vscode.DiagnosticSeverity.Error,
+    );
+    found.source = "drillion";
+    marks.current.set(vscode.Uri.parse(model.uri.toString()), [found]);
+  }, [problem, value, ready, kind]);
+
+  useEffect(() => () => { marks.current?.dispose(); marks.current = null; }, []);
   // waits for the API rather than testing it: `api` is truthy while still pending, and
   // theming early touches Monaco's standalone services, which makes `start()` throw
   useEffect(() => { void api?.then(() => applyTheme(dark)).catch(() => {}); }, [dark]);
@@ -259,8 +320,8 @@ export function Editor({ value, onChange, onRun, onSubmit, readOnly, dark, heigh
 
 /** Two read-only panes with the changed lines marked: what the learner wrote on the left,
  *  the reference on the right. Shares the editor's theme, so the two read as one surface. */
-export function DiffView({ mine, reference, dark, maxHeight, prefs = DEFAULTS }: {
-  mine: string; reference: string; dark: boolean; maxHeight: string; prefs?: Prefs;
+export function DiffView({ kind, mine, reference, dark, maxHeight, prefs = DEFAULTS }: {
+  kind: Meta["kind"]; mine: string; reference: string; dark: boolean; maxHeight: string; prefs?: Prefs;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
@@ -277,8 +338,8 @@ export function DiffView({ mine, reference, dark, maxHeight, prefs = DEFAULTS }:
           useDiffEditor: true,
           readOnly: true,
           codeResources: {
-            original: { text: mine, uri: "file:///workspace/mine.py" },
-            modified: { text: reference, uri: "file:///workspace/reference.py" },
+            original: { text: mine, uri: `${WORKSPACE}/mine.${ext(kind)}` },
+            modified: { text: reference, uri: `${WORKSPACE}/reference.${ext(kind)}` },
           },
           diffEditorOptions: {
             ...editorOptions, ...looks(prefs), readOnly: true, renderSideBySide: true,
@@ -298,7 +359,7 @@ export function DiffView({ mine, reference, dark, maxHeight, prefs = DEFAULTS }:
       live = false;
       void started?.dispose();
     };
-  }, [mine, reference, dark, prefs]);
+  }, [kind, mine, reference, dark, prefs]);
 
   if (failed) return <Failed height={maxHeight} />;
   return <div ref={host} style={{ height: maxHeight, fontSize: prefs.fontSize, ...frame }} />;

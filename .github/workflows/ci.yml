@@ -100,6 +100,11 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest tests -q
+      # A manifest task is graded by a pinned external validator, and `selfcheck` proves
+      # every task still passes its own answer key, so the validator has to be here before
+      # it runs. The download is checksum-pinned per platform; an unpinned or altered one
+      # is refused rather than installed.
+      - run: uv run drillion doctor --fetch
       - run: uv run drillion selfcheck
 
   # Linux-only on purpose: this builds the client and checks the sdist, neither of which

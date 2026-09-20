@@ -1,11 +1,14 @@
 """Runner: pytest output turned into editor coordinates, and the selfcheck splice."""
 
+import os
 import shutil
 
 import pytest
 
-from drillion import runner
+from drillion import kinds, runner, tools
 from drillion.settings import settings
+from tests.fixtures import tasks_root
+from tests.fixtures_manifest import SOLUTION, fixture_task, stub_kubeconform
 
 CANNED = """\
 =================================== FAILURES ===================================
@@ -44,7 +47,7 @@ def test_a_reference_call_rebuilds_every_kind_of_parameter():
     """Positional-only, varargs, keyword-only and **kwargs each need a different spelling
     at the call site, and only keyword-only ones are passed by name."""
     every_kind = "def solve(a, /, b, *rest, c, **kw):\n    raise NotImplementedError\n"
-    assert runner._reference_call(every_kind) == (
+    assert kinds._reference_call(every_kind) == (
         "def solve(a, /, b, *rest, c, **kw):\n    return _reference(a, b, *rest, c=c, **kw)"
     )
 
@@ -53,7 +56,7 @@ def test_a_reference_call_replaces_a_written_body_not_just_the_raise():
     """The splice cuts at the *last* `raise NotImplementedError`, so setup work above it goes
     too — the reference answer is the whole implementation."""
     with_setup = "def solve(rows):\n    total = 0\n    raise NotImplementedError\n"
-    assert runner._reference_call(with_setup) == (
+    assert kinds._reference_call(with_setup) == (
         "def solve(rows):\n    return _reference(rows)"
     )
 
@@ -64,7 +67,7 @@ def test_the_output_panel_never_shows_terminal_escapes(tmp_path, monkeypatch):
     monkeypatch.setenv("FORCE_COLOR", "1")
     task = tmp_path / "task.py"
     task.write_text("def test_solve():\n    assert 1 == 2\n", encoding="utf-8")
-    passed, out, _ = runner.run_tests(task, seed=1)
+    passed, out, _ = runner.run_python({"path": task}, seed=1)
     assert passed is False
     assert "\x1b[" not in out, "terminal escapes reached the output panel"
 
@@ -80,7 +83,7 @@ def test_the_learners_code_cannot_litter_the_data_root(tmp_path, monkeypatch):
         "    (Path.cwd() / 'litter.txt').write_text('x')\n",
         encoding="utf-8",
     )
-    passed, out, _ = runner.run_tests(task, seed=1)
+    passed, out, _ = runner.run_python({"path": task}, seed=1)
     assert passed, out  # the write itself succeeded
     assert not list(tmp_path.rglob("litter.txt"))
 
@@ -101,7 +104,7 @@ def test_a_warning_in_the_learners_code_is_not_a_failure(tmp_path, monkeypatch):
         "    warnings.warn('old api', DeprecationWarning)\n"
         "    assert True\n"
     )
-    passed, out, _ = runner.run_tests(task, seed=1)
+    passed, out, _ = runner.run_python({"path": task}, seed=1)
     assert passed, out
 
 
@@ -115,7 +118,7 @@ def test_what_the_learner_printed_comes_back_either_way(tmp_path, monkeypatch, v
     task.write_text(
         f"def test_solve():\n    print('rows =', 3)\n    {verdict}\n", encoding="utf-8"
     )
-    _, out, _ = runner.run_tests(task, seed=1)
+    _, out, _ = runner.run_python({"path": task}, seed=1)
     assert runner.summarise(out, marker_line=1)["printed"] == "rows = 3"
 
 
@@ -125,7 +128,7 @@ def test_a_silent_run_has_nothing_to_show_and_says_so_with_nothing(
     monkeypatch.setattr(settings, "root", tmp_path)
     task = tmp_path / "task.py"
     task.write_text("def test_solve():\n    assert True\n", encoding="utf-8")
-    _, out, _ = runner.run_tests(task, seed=1)
+    _, out, _ = runner.run_python({"path": task}, seed=1)
     assert runner.summarise(out, marker_line=1)["printed"] == ""
 
 
@@ -144,7 +147,7 @@ def test_a_failure_names_the_task_the_short_way(tmp_path, monkeypatch):
     task = tmp_path / "tasks" / "009_fstrings" / "task.py"
     task.parent.mkdir(parents=True)
     task.write_text("def test_solve():\n    assert 1 == 2\n", encoding="utf-8")
-    _, out, _ = runner.run_tests(task, seed=1)
+    _, out, _ = runner.run_python({"path": task}, seed=1)
     text = runner.summarise(out, marker_line=1)["output"]
     assert "../tasks/009_fstrings/task.py" in text
     assert "task.py" not in text.replace("../tasks/009_fstrings/task.py", ""), text
@@ -173,6 +176,63 @@ def test_selfcheck_solves_each_task_with_its_own_reference(
     )
     assert runner.selfcheck() == 1
     assert "FAILED 009_fstrings" in capsys.readouterr().out
+
+
+@pytest.fixture
+def manifest_root(tmp_path, monkeypatch):
+    """One manifest task, with the stand-in validator the pins do not supply yet."""
+    if os.name == "nt":
+        pytest.skip("the stand-in is a shebang script, so it needs a posix exec")
+    root = tasks_root(**{"271_fixture": fixture_task()})
+    monkeypatch.setattr(settings, "root", root)
+    monkeypatch.setattr(tools, "installed", lambda name: stub_kubeconform(root))
+    return root / "tasks" / "271_fixture"
+
+
+def test_selfcheck_grades_a_manifest_with_its_own_solution(
+    manifest_root, monkeypatch, capsys
+):
+    """The other kind's proof, and the reason `selfcheck` had to stop assuming task.py:
+    the answer key is rendered against a brief and put through the real grader.
+
+    A green run is checked against what pytest was actually handed, because a kind that
+    produced no check at all would also come back green with nothing run."""
+    handed = []
+    run = runner._run_pytest
+    monkeypatch.setattr(
+        runner,
+        "_run_pytest",
+        lambda args, **kw: (handed.extend(args), run(args, **kw))[1],
+    )
+
+    assert runner.selfcheck() == 0
+    assert "1/1 ok" in capsys.readouterr().out
+    assert str(manifest_root / "_selfcheck.py") in handed
+    assert not list(manifest_root.glob("_selfcheck.*"))
+
+
+def test_selfcheck_names_a_manifest_whose_answer_key_stopped_passing(
+    manifest_root, capsys
+):
+    """An answer key that no longer satisfies `check()` is the task's bug, and the whole
+    point of running the set: it must come back named rather than quietly pass."""
+    (manifest_root / "solution.yaml").write_text(
+        SOLUTION.replace("replicas: {replicas}", "replicas: 1"), encoding="utf-8"
+    )
+    assert runner.selfcheck() == 1
+    assert "FAILED 271_fixture" in capsys.readouterr().out
+
+
+def test_selfcheck_names_a_task_it_cannot_even_prepare(
+    manifest_root, monkeypatch, capsys
+):
+    """No validator, no harness. One task that cannot produce its own check is a named
+    failure, not a traceback out of `drillion selfcheck`."""
+    monkeypatch.setattr(tools, "installed", lambda name: None)
+    assert runner.selfcheck() == 1
+    out = capsys.readouterr().out
+    assert "FAILED 271_fixture" in out
+    assert "kubeconform is not installed" in out
 
 
 WINDOWS_OUT = (
@@ -219,7 +279,7 @@ def test_the_failing_case_is_named_not_just_the_assertion(tmp_path, monkeypatch)
         "        assert sum(rows) == 99\n",
         encoding="utf-8",
     )
-    passed, out, _ = runner.run_tests(task, seed=1)
+    passed, out, _ = runner.run_python({"path": task}, seed=1)
     assert passed is False
     assert "rows       = [1, 2]" in out, out
 
@@ -237,7 +297,7 @@ def test_the_headline_names_the_difference_and_asks_for_no_flags(tmp_path, monke
         "    assert {'a': [0], 'rev': list(range(9))} == {'a': [0], 'rev': list(reversed(range(9)))}\n",
         encoding="utf-8",
     )
-    _, out, _ = runner.run_tests(task, seed=1)
+    _, out, _ = runner.run_python({"path": task}, seed=1)
     headline = "\n".join(runner.summarise(out, marker_line=99)["headline"])
     assert "use -vv" not in headline and "use -v " not in headline
     assert "Common items:" not in headline, "the half that is right is not the report"
@@ -270,7 +330,7 @@ def test_the_failing_case_comes_back_as_data(tmp_path, monkeypatch):
         "        assert sum(rows) == 99\n",
         encoding="utf-8",
     )
-    passed, _, case = runner.run_tests(task, seed=1)
+    passed, _, case = runner.run_python({"path": task}, seed=1)
     assert passed is False
     assert case["args"] == {"n": "3", "rows": "[3, 4]"}, case
     assert (case["actual"], case["expected"]) == ("7", "99")
@@ -286,7 +346,7 @@ def test_a_case_survives_a_failure_that_is_not_a_comparison(tmp_path, monkeypatc
         "def test_solve():\n    rows = [1, 2]\n    assert rows[9] == 1\n",
         encoding="utf-8",
     )
-    _, _, case = runner.run_tests(task, seed=1)
+    _, _, case = runner.run_python({"path": task}, seed=1)
     assert case["expected"] is None and case["actual"] is None
     assert case["args"] == {"rows": "[1, 2]"}
     assert "IndexError" in case["error"]
@@ -296,5 +356,5 @@ def test_a_passing_run_has_no_case(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "root", tmp_path)
     task = tmp_path / "task.py"
     task.write_text("def test_solve():\n    assert 1 + 1 == 2\n", encoding="utf-8")
-    passed, _, case = runner.run_tests(task, seed=1)
+    passed, _, case = runner.run_python({"path": task}, seed=1)
     assert passed and case is None

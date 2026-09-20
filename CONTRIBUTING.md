@@ -54,11 +54,9 @@ Link them by absolute URL pinned to `main` — never a tag, never a relative pat
 https://raw.githubusercontent.com/vazome/drillion/main/docs/images/task-screen-1-light.png
 ```
 
-Two reasons, and both matter. `README.md` is also the PyPI long description, and PyPI resolves
-nothing relative, so a relative path is a broken image there. And a screenshot is reshot when it
-is worth reshooting, not to match a release: a reader takes the picture as the current one, so
-the link should mean the same thing. Pinning a tag would freeze a published page on whatever was
-true that day and add a step to the release checklist that would eventually be missed.
+Screenshots are linked at `main` because a reader takes the picture as the current one, so the link
+should mean the same thing. Pinning a tag would freeze a published page on whatever was true that
+day and add a step to the release checklist that would eventually be missed.
 
 The cost is that such a link cannot resolve until the image is on `main`. So land the images
 first, in their own pull request, and link them in a second one — then the README renders while
@@ -161,22 +159,19 @@ Never tag a local branch, and never tag the release branch you just merged: a sq
 rewrites the commit, so that branch's head is not what landed on `main` and the gate will refuse
 it. The tag is the whole trigger — the `gate` job fails a tag whose name disagrees with the
 declared version, and fails a commit that is not on `main`, because the `main` ruleset is what
-proves the commit went green. Past the gate it publishes to PyPI and ghcr and cuts the GitHub
-release, with the wheel and sdist attached and the changelog entry verbatim as its notes. A tag
-with no matching `## <version>` section in the changelog fails rather than publishing a release
-with nothing in it.
+proves the commit went green. Past the gate it publishes the multi-platform GHCR image, its
+provenance and SBOM, then cuts the GitHub Release with the changelog entry and immutable image
+digest. A tag with no matching `## <version>` section in the changelog fails rather than publishing
+a release with nothing in it.
 
-Every artifact is attested where it lands, and the release carries its own copy of the wheel and
-sdist provenance so a download can be checked without trusting an index or a registry:
+The image is attested at its multi-platform index digest:
 
 ```bash
-gh attestation verify drillion-<version>-py3-none-any.whl --repo vazome/drillion
 gh attestation verify oci://ghcr.io/vazome/drillion:<version> --repo vazome/drillion
 ```
 
-When a publish dies for a reason that is not the code — a network blip, a `pypi` approval that
-arrives after the job timed out — rerun it from **Actions → release → Run workflow**, choosing the
-tag rather than a branch.
+When image publication dies for a reason that is not the code, rerun it from **Actions → release →
+Run workflow**, choosing the tag rather than a branch.
 
 Never move a published tag, and note that you could not if you wanted to: the `published version
 tags` ruleset makes `refs/tags/v*` immutable with no bypass actors. A tag pushed at the wrong
@@ -197,6 +192,7 @@ does about 0.4.5.
 
 ## Pull requests
 
-Keep the title short, imperative and focused on user impact — skip `feat:`/`fix:` style prefixes
-in the title itself. Describe the change at the top of the PR body and reference the issue it
-closes, if any.
+Use a conventional, scoped title in the same form as the commit, for example
+`feat(release): distribute Drillion as a Docker image`. Keep it short, imperative, and focused on
+user impact. Describe the change at the top of the PR body and reference the issue it closes, if
+any.

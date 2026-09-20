@@ -83,6 +83,8 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: type=pep440,pattern={{version}}
+          # Stable releases receive `latest`; pre-releases stay version-addressable only.
+          flavor: latest=auto
       - id: push
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
@@ -105,23 +107,44 @@ jobs:
           subject-name: ghcr.io/${{ github.repository }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
-      # provenance above says where the image came from; this says what is inside it. Read off the
-      # pushed digest, so it lists the vendored trees — nodejs_wheel's npm above all — that appear
-      # in no manifest we own and that no scanner of ours publishes. Trivy resolves the index to
-      # the runner's own arch, so this lists amd64's build of a package set both arches share.
+      # Provenance above describes the multi-platform index. An SBOM describes a filesystem, so
+      # resolve each Linux manifest and attest its own inventory rather than claiming the amd64
+      # runner's scan represents arm64 too.
+      - id: platform-digests
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          index="$(docker buildx imagetools inspect --raw "${IMAGE}@${DIGEST}")"
+          for arch in amd64 arm64; do
+            digest="$(jq -er --arg arch "$arch" '
+              .manifests[] | select(.platform.os == "linux" and .platform.architecture == $arch) | .digest
+            ' <<<"$index")"
+            echo "${arch}=${digest}" >> "$GITHUB_OUTPUT"
+          done
       - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
-          image-ref: ghcr.io/${{ github.repository }}@${{ steps.push.outputs.digest }}
+          image-ref: ghcr.io/${{ github.repository }}@${{ steps.platform-digests.outputs.amd64 }}
           format: spdx-json
-          output: sbom.spdx.json
-      # `actions/attest` with sbom-path is what `actions/attest-sbom` now forwards to, so this is
-      # the same attestation without the deprecated wrapper
+          output: sbom-amd64.spdx.json
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-name: ghcr.io/${{ github.repository }}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          sbom-path: sbom.spdx.json
+          subject-digest: ${{ steps.platform-digests.outputs.amd64 }}
+          sbom-path: sbom-amd64.spdx.json
+          push-to-registry: true
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: ghcr.io/${{ github.repository }}@${{ steps.platform-digests.outputs.arm64 }}
+          format: spdx-json
+          output: sbom-arm64.spdx.json
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ghcr.io/${{ github.repository }}
+          subject-digest: ${{ steps.platform-digests.outputs.arm64 }}
+          sbom-path: sbom-arm64.spdx.json
           push-to-registry: true
 
   # the image is public the moment the job above finishes; record what we shipped, in the release's
@@ -144,86 +167,21 @@ jobs:
           exit-code: 0
       - run: '{ echo "### fixable CRITICAL/HIGH in ${GITHUB_REF_NAME}"; echo "```"; cat trivy-release.txt; echo "```"; } >> "$GITHUB_STEP_SUMMARY"'
 
-  # separate from `pypi`: this job runs a third-party npm build and must never hold the PyPI credential
-  dists:
-    needs: gate
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      # both caches are off here and on in ci.yml: a cache entry is writable by any branch that
-      # ran the same workflow, so a poisoned one could reach the artifacts this job hands to PyPI.
-      # CI can afford the cache because it publishes nothing.
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
-        with:
-          enable-cache: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-          package-manager-cache: false
-      - run: corepack enable
-      - run: pnpm install --frozen-lockfile
-        working-directory: web
-      - run: pnpm build
-        working-directory: web
-      - run: uv build
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: dists
-          path: dist/
-
-  # PyPI's trusted publisher is scoped to owner/repo + this filename + the `pypi` environment;
-  # renaming any of the three stops releases until PyPI is updated to match
-  pypi:
-    needs: dists
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    environment:
-      name: pypi
-      url: https://pypi.org/p/drillion
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: dists
-          path: dist/
-      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
-
-  # the release notes are the changelog section for this tag: one hand-written source, so a
-  # published release can never drift from what shipped. The same wheel and sdist `pypi` uploaded
-  # are attached, so the release is checkable without trusting the index.
+  # The release notes are the changelog section plus the immutable image reference. The GHCR image
+  # is the only learner-facing artifact; the GitHub Release remains its human-readable record.
   notes:
-    needs: [pypi, image]
+    needs: [image]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: write
-      # the wheel and sdist are attested here rather than in `dists`, for the same reason `dists`
-      # holds no PyPI credential: that job runs a third-party npm build, so it gets no signing
-      # identity either. This one runs a checkout, a download and `gh release create`.
-      id-token: write
-      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: dists
-          path: dist/
-      # ghcr has the image's provenance and PyPI has its own; neither is visible to somebody who
-      # downloads the wheel from the releases page. With two subjects the bundle is one JSON line
-      # each, which is what `gh attestation verify` and every scanner read as `.intoto.jsonl`.
-      - id: attest
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
-        with:
-          subject-path: dist/*
       - env:
           GH_TOKEN: ${{ github.token }}
-          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+          DIGEST: ${{ needs.image.outputs.digest }}
         run: |
           version=${GITHUB_REF_NAME#v}
           awk -v pat="^## ${version} " '/^## / && p {exit} p; $0 ~ pat {p=1}' CHANGELOG.md > notes.md
@@ -231,6 +189,10 @@ jobs:
             echo "::error::CHANGELOG.md has no '## $version' section"
             exit 1
           fi
-          cp "$BUNDLE" "drillion-${version}.intoto.jsonl"
-          gh release create "$GITHUB_REF_NAME" dist/* "drillion-${version}.intoto.jsonl" \
-            --title "drillion $version" --notes-file notes.md --latest
+          {
+            echo
+            echo '## Container image'
+            echo
+            echo "\`ghcr.io/${GITHUB_REPOSITORY}@${DIGEST}\`"
+          } >> notes.md
+          gh release create "$GITHUB_REF_NAME" --title "drillion $version" --notes-file notes.md --latest

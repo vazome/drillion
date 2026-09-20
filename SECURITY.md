@@ -4,12 +4,13 @@
 
 drillion runs arbitrary Python on your machine, by design, and only on your machine. The
 sharpest exposure is not a learner attacking themselves: `task.py` executes on import, and
-201 of them ship inside the wheel, so a contributed task is code execution on every user's
+the tasks ship inside the Docker image, so a contributed task is code execution on every user's
 machine. That is what the sandbox is for.
 
 - **Graded code runs in a sandboxed pytest subprocess** (`src/drillion/sandbox.py`). What it
   can reach depends on what your kernel offers; `drillion doctor` prints the tier in force
-  and, when it is not the strongest one, why. Docker is not required for any of it.
+  and, when it is not the strongest one, why. The image is an additional process boundary, not a
+  replacement for this sandbox.
 - **The server is local and single-user.** It binds `127.0.0.1`, and `TrustedHostMiddleware`
   refuses any host but `127.0.0.1` and `localhost` (`src/drillion/api.py`). There is no
   hosted or multi-user mode, no accounts, and none is planned. Do not expose the port.
@@ -46,10 +47,12 @@ rights are rebuilt from the answer, because a right the kernel has not heard of 
 whole ruleset fail.
 
 - **Reads** are confined to the interpreter and its libraries, `/usr`, `/lib`, `/etc`,
-  `/dev`, `tasks/`, the task being graded and the scratch directory. Your home directory,
-  every other user's files, and everything else on the disk are denied. The data root is
-  listable — pytest builds its collection tree from there — but the files under it, including
-  `progress.sqlite3`, are not readable.
+  `/dev`, `tasks/`, the task being graded, the packaged config schemas and the scratch
+  directory. Your home directory, every other user's files, and everything else on the disk
+  are denied. The data root is listable — pytest builds its collection tree from there — and
+  the files under it, `progress.sqlite3` included, are not readable. The one subtree under it
+  that is readable is `tools/`, which holds the checksum-pinned graders and is also
+  executable: a manifest task is graded by running one of them.
 - **Writes** are confined to the scratch directory.
 - **TCP** — every bind and connect is refused, on ABI 4 and above. UDP and Unix sockets are
   not covered by Landlock; on ABI 6 and above, abstract Unix sockets and signals are scoped
