@@ -10,8 +10,9 @@ import json
 import logging
 import zipfile
 from datetime import datetime
+from pathlib import Path
 
-from . import __version__, region, state
+from . import __version__, kinds, region, state
 from .catalogue import tasks
 from .settings import settings
 
@@ -36,10 +37,10 @@ def bundle():
     """Progress and saved code as one zip, taken while no write is in flight."""
     with state.frozen() as st:
         progress = json.dumps(st, indent=2)
-        saved = {
-            slug: region.cut(meta["path"].read_text(encoding="utf-8")).body
-            for slug, meta in tasks().items()
-        }
+        saved = {}
+        for slug, meta in tasks().items():
+            kind = kinds.of(meta)
+            saved[slug] = kind, kind.body(meta["path"].read_text(encoding="utf-8"))
     manifest = {
         "format": FORMAT,
         "drillion": __version__,
@@ -49,8 +50,8 @@ def bundle():
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         zf.writestr(MANIFEST, json.dumps(manifest, indent=2))
         zf.writestr(PROGRESS, progress)
-        for slug, body in saved.items():
-            zf.writestr(f"{REGIONS}{slug}.py", body)
+        for slug, (kind, body) in saved.items():
+            zf.writestr(f"{REGIONS}{slug}{Path(kind.filename).suffix}", body)
     return buf.getvalue()
 
 
@@ -78,11 +79,15 @@ def _open(data):
             raise Rejected("That backup has no progress in it.") from exc
         except ValueError as exc:
             raise Rejected("The progress in that backup is damaged.") from exc
-        saved = {
-            name[len(REGIONS) : -len(".py")]: zf.read(name).decode("utf-8")
-            for name in zf.namelist()
-            if name.startswith(REGIONS) and name.endswith(".py")
-        }
+        saved = {}
+        for name in zf.namelist():
+            suffix = Path(name).suffix
+            if not name.startswith(REGIONS) or suffix not in {".py", ".yaml"}:
+                continue
+            slug = name[len(REGIONS) : -len(suffix)]
+            if slug in saved:
+                raise Rejected(f"That backup saves {slug} more than once.")
+            saved[slug] = suffix, zf.read(name).decode("utf-8")
     try:
         # the same gate an imported state passes, so a bad shape is refused up front
         progress = state._checked(progress)
@@ -118,13 +123,17 @@ def _planned(saved, known):
     the whole restore: a history restored against half the code it was written for is worse
     than a restore the learner can retry."""
     plan, refused = [], []
-    for slug, body in sorted(saved.items()):
+    for slug, (suffix, body) in sorted(saved.items()):
         if slug not in known:
             continue
-        path = known[slug]["path"]
+        meta = known[slug]
+        kind = kinds.of(meta)
+        path = meta["path"]
         try:
             src = path.read_text(encoding="utf-8")
-            plan.append((path, region.validate(body, src), src))
+            if suffix != Path(kind.filename).suffix:
+                raise region.Invalid("a different kind of task saved this artifact")
+            plan.append((path, kind.validate(body, src), src))
         except (OSError, region.Invalid) as exc:
             refused.append(f"{slug} ({exc})")
     if refused:
@@ -211,10 +220,9 @@ def erase():
             path = meta["path"]
             try:
                 src = path.read_text(encoding="utf-8")
-                body = region.cut(src).body
-                stubbed = region.stub(body)
-                if stubbed != body:
-                    region.write_region(path, region.splice(src, stubbed))
+                empty = kinds.of(meta).empty(src)
+                if empty != src:
+                    region.write_region(path, empty)
                     cleared += 1
             except (OSError, SyntaxError, region.Invalid) as exc:
                 log.warning("Could not clear the code for %s: %s", slug, exc)

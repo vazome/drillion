@@ -327,6 +327,7 @@ def test_a_grader_cannot_point_the_server_at_a_file_it_cannot_read(
         manifest.generate_brief(catalogue.tasks()[SLUG], 7)
 
 
+@pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="Windows has no FIFO API")
 def test_a_grader_cannot_wedge_the_server_on_a_fifo(fixture_root):
     """Opening a fifo for reading blocks until someone writes. The parent must not block."""
     _grader("os.mkfifo(sys.argv[3]); os._exit(0)", head="import os, sys")

@@ -107,7 +107,7 @@ def pin_for(name):
 
 
 def tools_dir():
-    return settings.root / "tools"
+    return Path(os.environ.get("DRILLION_TOOLS_DIR", settings.root / "tools"))
 
 
 def digest(path):
@@ -125,7 +125,10 @@ def schema_digest():
     digest by concatenating to the same bytes."""
     h = hashlib.sha256()
     for path in sorted(SCHEMAS.rglob("*.json")):
-        for field in (path.name.encode(), path.read_bytes()):
+        # Git may check a text schema out as CRLF on Windows. The validator accepts either
+        # spelling, so the verdict identity must not depend on the checkout platform.
+        content = path.read_bytes().replace(b"\r\n", b"\n")
+        for field in (path.name.encode(), content):
             h.update(b"%d:" % len(field))
             h.update(field)
     return h.hexdigest()

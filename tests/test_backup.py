@@ -16,6 +16,7 @@ from drillion.settings import settings
 
 SLUG = "009_fstrings"
 OTHER = "008_slicing"
+MANIFEST = "268_first_deployment"
 SOURCE = settings.tasks_dir
 
 
@@ -48,6 +49,14 @@ def _body(slug):
     return region.cut(path.read_text(encoding="utf-8")).body
 
 
+def _add_manifest(root):
+    shutil.copytree(SOURCE / MANIFEST, root / "tasks" / MANIFEST)
+
+
+def _manifest_body():
+    return (settings.tasks_dir / MANIFEST / "task.yaml").read_text(encoding="utf-8")
+
+
 def test_a_bundle_round_trips_progress_and_saved_code(root):
     with state.writing() as st:
         st["notes"][SLUG] = "my note"
@@ -67,6 +76,22 @@ def test_a_bundle_round_trips_progress_and_saved_code(root):
     assert state.load()["notes"][SLUG] == "my note"
     assert state.load()["cards"][SLUG]["box"] == 3
     assert _body(SLUG) == mine.strip("\n")
+
+
+def test_a_bundle_restores_a_manifest_artifact(root):
+    _add_manifest(root)
+    saved = "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: mine\n"
+    (settings.tasks_dir / MANIFEST / "task.yaml").write_text(saved, encoding="utf-8")
+
+    data = backup.bundle()
+
+    (settings.tasks_dir / MANIFEST / "task.yaml").write_text(
+        "apiVersion: v1\nkind: Pod\n", encoding="utf-8"
+    )
+    summary = backup.restore(data)
+
+    assert summary["brings"]["tasks"] == 2
+    assert _manifest_body() == saved
 
 
 def test_restoring_keeps_the_data_it_replaces(root):
@@ -242,6 +267,17 @@ def test_erasing_clears_progress_and_puts_every_task_back_to_its_stub(root):
     assert not (settings.root / "progress.json").exists()
     st = state.load()
     assert st["cards"] == {} and st["notes"] == {} and st["archive"] == {}
+
+
+def test_erasing_clears_a_manifest_artifact(root):
+    _add_manifest(root)
+    path = settings.tasks_dir / MANIFEST / "task.yaml"
+    path.write_text("apiVersion: v1\nkind: Pod\n", encoding="utf-8")
+
+    summary = backup.erase()
+
+    assert summary["cleared"] == 1 and summary["failed"] == []
+    assert path.read_text(encoding="utf-8") == ""
 
 
 def test_what_an_erase_destroys_is_in_the_backup_it_writes_first(root):

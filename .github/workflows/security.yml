@@ -62,6 +62,10 @@ jobs:
         with:
           scan-type: config
           scan-ref: .
+          # These are curriculum answer keys, intentionally stripped to the concept each
+          # exercise teaches; they are not deployment manifests. The Dockerfile and every
+          # other repository configuration file remain in this scan.
+          skip-files: ./tasks/*/solution.yaml
           format: json
           output: trivy-config.json
           exit-code: 0

@@ -22,16 +22,27 @@ def test_a_binary_that_does_not_match_its_pin_is_not_installed(tmp_path, monkeyp
 
 def test_a_matching_binary_is_installed(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "root", tmp_path)
-    binary = tmp_path / "tools" / "kubeconform"
+    monkeypatch.setattr(tools, "host", lambda: ("win32", "amd64"))
+    pin = tools.pin_for("kubeconform")
+    binary = tmp_path / "tools" / pin.member
     binary.parent.mkdir(parents=True)
     binary.write_bytes(b"pretend")
-    pin = tools.pin_for("kubeconform")
     monkeypatch.setitem(
         tools.PINS["kubeconform"],
         tools.host(),
         pin._replace(binary_sha256=hashlib.sha256(b"pretend").hexdigest()),
     )
     assert tools.installed("kubeconform") == binary
+
+
+def test_an_image_can_keep_its_validator_outside_the_mounted_data_root(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setattr(settings, "root", tmp_path / "data")
+    baked = tmp_path / "app" / "tools"
+    monkeypatch.setenv("DRILLION_TOOLS_DIR", str(baked))
+
+    assert tools.tools_dir() == baked
 
 
 def test_an_unsupported_platform_says_so(monkeypatch):
@@ -216,6 +227,19 @@ def test_schema_location_is_a_local_template_with_no_remote_fallback():
     location = tools.schema_location()
     assert location.startswith(str(tools.SCHEMAS))
     assert "{{.ResourceKind}}" in location and "http" not in location
+
+
+def test_schema_digest_ignores_checkout_line_endings(tmp_path, monkeypatch):
+    schemas = tmp_path / "schemas"
+    schemas.mkdir()
+    path = schemas / "pod-v1.json"
+    path.write_bytes(b'{"kind": "Pod"}\n')
+    monkeypatch.setattr(tools, "SCHEMAS", schemas)
+    expected = tools.schema_digest()
+
+    path.write_bytes(b'{"kind": "Pod"}\r\n')
+
+    assert tools.schema_digest() == expected
 
 
 def test_manifest_digest_matches_the_live_computation():
