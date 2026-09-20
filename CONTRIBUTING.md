@@ -192,6 +192,7 @@ does about 0.4.5.
 
 ## Pull requests
 
-Keep the title short, imperative and focused on user impact — skip `feat:`/`fix:` style prefixes
-in the title itself. Describe the change at the top of the PR body and reference the issue it
-closes, if any.
+Use a conventional, scoped title in the same form as the commit, for example
+`feat(release): distribute Drillion as a Docker image`. Keep it short, imperative, and focused on
+user impact. Describe the change at the top of the PR body and reference the issue it closes, if
+any.
