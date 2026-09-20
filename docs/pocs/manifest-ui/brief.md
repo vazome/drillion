@@ -85,7 +85,7 @@ something not on this list if it is better.
 
 ## Report
 
-Write `/tmp/drillion-ui-poc/UI-POC-REPORT.md`: what you changed and why, what you tried
+Write `/tmp/drillion-ui-poc/docs/pocs/manifest-ui/report.md`: what you changed and why, what you tried
 and rejected, whether you managed to actually run and look at the app, and what you would
 do next. Screenshots are welcome if you can take them (`pnpm --dir web screens` runs
 Playwright and already has a config).

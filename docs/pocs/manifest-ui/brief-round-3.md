@@ -1,7 +1,7 @@
 # Round 3: delete the two pieces that made a manifest look like a different app, then review my edits
 
 Same worktree, branch `poc/manifest-ui`. Rounds 1 and 2 are committed through `554dcd8`.
-Read `UI-POC-BRIEF.md` for background and the standing constraints; they all still apply,
+Read [`brief.md`](brief.md) for background and the standing constraints; they all still apply,
 especially **no new dependencies**.
 
 The maintainer has used round 2 in a browser. His verdict: *"other than that I think it is
@@ -106,6 +106,6 @@ report and do not fix is a good outcome.
   did. A browser pass will be run against your work.
 - Never write into `tasks/`. No push, no merge, no other branches.
 
-Write `/tmp/drillion-ui-poc/UI-POC-REPORT-3.md`: what you deleted, what you chose on the
+Write `/tmp/drillion-ui-poc/docs/pocs/manifest-ui/report-round-3.md`: what you deleted, what you chose on the
 `ManifestWorkspace.tsx` question, and your review findings as a numbered list separating
 what you fixed from what you only report.

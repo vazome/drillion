@@ -4,7 +4,7 @@ Same worktree, branch `poc/manifest-ui`. Round 1 is committed (`345a93d`, `54a9e
 maintainer has now used it in a browser and has three pieces of feedback. He is the person
 whose taste decides this, so treat his words as the spec.
 
-Read `UI-POC-BRIEF.md` for the project background and the hard constraints. They all still
+Read [`brief.md`](brief.md) for the project background and the hard constraints. They all still
 apply, especially: **no new dependencies**, React 19 + Vite + CSS Modules + the local design
 system in `web/src/ds/`, no Tailwind, no component library.
 
@@ -139,6 +139,6 @@ now shows as an editor squiggle instead. Remove the dead branch.
   yours to fix.
 - Never write into `tasks/`. Do not push, do not merge, do not touch other branches.
 
-Write `/tmp/drillion-ui-poc/UI-POC-REPORT-2.md`: what you changed, what you researched and
+Write `/tmp/drillion-ui-poc/docs/pocs/manifest-ui/report-round-2.md`: what you changed, what you researched and
 what you took from it, what you could not verify, and anything you think is wrong with the
 feedback.
