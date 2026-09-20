@@ -4,12 +4,13 @@
 
 drillion runs arbitrary Python on your machine, by design, and only on your machine. The
 sharpest exposure is not a learner attacking themselves: `task.py` executes on import, and
-201 of them ship inside the wheel, so a contributed task is code execution on every user's
+the tasks ship inside the Docker image, so a contributed task is code execution on every user's
 machine. That is what the sandbox is for.
 
 - **Graded code runs in a sandboxed pytest subprocess** (`src/drillion/sandbox.py`). What it
   can reach depends on what your kernel offers; `drillion doctor` prints the tier in force
-  and, when it is not the strongest one, why. Docker is not required for any of it.
+  and, when it is not the strongest one, why. The image is an additional process boundary, not a
+  replacement for this sandbox.
 - **The server is local and single-user.** It binds `127.0.0.1`, and `TrustedHostMiddleware`
   refuses any host but `127.0.0.1` and `localhost` (`src/drillion/api.py`). There is no
   hosted or multi-user mode, no accounts, and none is planned. Do not expose the port.
