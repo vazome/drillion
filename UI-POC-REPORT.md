@@ -1,6 +1,6 @@
 # Manifest UI proof of concept
 
-Worktree: `/tmp/drillion-ui-poc`  
+Worktree: `/tmp/drillion-ui-poc`
 Branch: `poc/manifest-ui`
 
 ## What I built

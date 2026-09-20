@@ -1,6 +1,6 @@
 # Config authoring in drillion
 
-Date: 2026-09-16  
+Date: 2026-09-16
 Status: merged design; implementation pending
 
 ## Why
@@ -513,5 +513,3 @@ the browser solution gate, and hides the manifest generated-arguments panel.
 | A17 | P1 | `str.format()` on YAML has quoting/type hazards beyond README brace escaping. | Scalar-aware solution renderer with defined placeholder positions; parse and grade output. Cover difficult scalar values in selfcheck. | 1–2 |
 | A18 | P1 | “Several seeds” samples satisfiability rather than proving it. | Document deterministic corpus and branch/boundary coverage; exhaust small meaningful domains where practical and state the limit of sampled evidence. | 1–2 |
 | A19 | P2 / Docker | Hadolint CLI diagnostics do not supply the instruction AST required by semantic assertions. | Choose and validate a separate parser/API before Docker tasks; define its instruction model, pin/fingerprint it and test semantic checks independently of lint diagnostics. | 4 |
-
-
