@@ -2,6 +2,7 @@
 title: "one Pod, no controller: the smallest object that runs anything"
 difficulty: easy
 minutes: 10
+prereqs: [268]
 track: kubernetes
 tags: [kubernetes, pod, containers]
 kind: manifest
@@ -9,6 +10,10 @@ kind: manifest
 # one Pod, no controller: the smallest object that runs anything
 
 *Every controller in Kubernetes exists to stamp out Pods. Before you let one, write a Pod yourself and see exactly what it is they have been abstracting away.*
+
+## Read first
+- [Pods](https://kubernetes.io/docs/concepts/workloads/pods/): the pod and what `spec.containers` needs
+- [Pod API reference](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/): the schema every field is checked against
 
 ## Why
 A Pod is one address, one filesystem for its containers to share, and one localhost. Anything that runs on Kubernetes runs inside one, and every workload object you will ever write carries a Pod inside it as a template.

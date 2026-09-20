@@ -2,6 +2,7 @@
 title: a StatefulSet is nothing without its headless Service
 difficulty: hard
 minutes: 25
+prereqs: [268, 272]
 track: kubernetes
 tags: [kubernetes, statefulset, service, headless]
 kind: manifest
@@ -9,6 +10,10 @@ kind: manifest
 # a StatefulSet is nothing without its headless Service
 
 *A Deployment's pods are interchangeable. A StatefulSet's pods have names, and the names come from a Service that resolves to nobody in particular.*
+
+## Read first
+- [StatefulSet](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/): stable names for stateful workloads
+- [Headless Services](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services): `clusterIP: None` and one DNS record per pod
 
 ## Why
 Databases and queues are not interchangeable the way web servers are. The second replica of a database is not "another database", it is the follower of a specific first, and it has to find that first again after every restart. A StatefulSet is the controller for that: it gives its pods stable names, `ledger-0`, `ledger-1`, `ledger-2`, created in order and replaced by the same name when they die, so that storage and peer lists can be bolted onto the names.

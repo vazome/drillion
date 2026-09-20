@@ -2,6 +2,7 @@
 title: a PV holds and a PVC asks, and 1Gi is not 1G
 difficulty: medium
 minutes: 20
+prereqs: [269]
 track: kubernetes
 tags: [kubernetes, persistentvolume, persistentvolumeclaim, storage]
 kind: manifest
@@ -9,6 +10,9 @@ kind: manifest
 # a PV holds and a PVC asks, and 1Gi is not 1G
 
 *Storage outlives every pod, so it gets its own objects: one that holds, one that asks, and a binding made when what is asked fits what is held.*
+
+## Read first
+- [Persistent Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/): a PV holds, a PVC asks, and `1Gi` is not `1G`
 
 ## Why
 A pod's filesystem dies with the pod. The objects that outlive it are the two halves of Kubernetes storage. A PersistentVolume is a piece of storage that exists: a disk someone attached, a directory on a node, a network share. A PersistentVolumeClaim is a request for storage: this much, readable this way. The API binds a claim to a volume when the two agree, and from then on the claim is all a pod needs to know; the volume behind it can be a thumb drive today and a SAN volume tomorrow without anyone rewriting the pod.

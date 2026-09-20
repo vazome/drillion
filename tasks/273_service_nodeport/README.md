@@ -2,6 +2,7 @@
 title: "NodePort: three port fields, and 30000 to 32767 is the law"
 difficulty: medium
 minutes: 15
+prereqs: [272]
 track: kubernetes
 tags: [kubernetes, service, nodeport]
 kind: manifest
@@ -9,6 +10,9 @@ kind: manifest
 # NodePort: three port fields, and 30000 to 32767 is the law
 
 *A ClusterIP is reachable from inside the cluster. A NodePort cuts a hole in every node's firewall, and the hole has a legal range.*
+
+## Read first
+- [Service](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport): the NodePort type and the 30000 to 32767 port range
 
 ## Why
 The default Service answers on a virtual IP that only the cluster can see. Sooner or later somebody outside wants in: a machine in the office, a browser on your laptop. The oldest way is `type: NodePort`: Kubernetes opens one port on every node, and traffic hitting any node on that port is forwarded into the Service you already know.

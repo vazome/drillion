@@ -2,6 +2,7 @@
 title: "LoadBalancer: the cloud's IP in front of the same three ports"
 difficulty: medium
 minutes: 15
+prereqs: [273]
 track: kubernetes
 tags: [kubernetes, service, loadbalancer]
 kind: manifest
@@ -9,6 +10,9 @@ kind: manifest
 # LoadBalancer: the cloud's IP in front of the same three ports
 
 *Everything a NodePort is, a LoadBalancer is too, plus one thing only the cloud can give: an address the internet can find.*
+
+## Read first
+- [Service](https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer): the LoadBalancer type on top of a NodePort
 
 ## Why
 A NodePort makes the Service reachable on any node's IP, on a port in the legal range. That still leaves the client holding a node's address, and holding every node's address if one may be down. `type: LoadBalancer` hands the problem to whoever runs the cluster: the cloud provisions a load balancer with its own public IP and aims it at your nodes' NodePorts. From the manifest side, that whole sentence is one word of difference.

@@ -2,6 +2,7 @@
 title: "the default Service: a selector finds the pods, and two ports do two jobs"
 difficulty: medium
 minutes: 15
+prereqs: [269]
 track: kubernetes
 tags: [kubernetes, service, clusterip, labels]
 kind: manifest
@@ -9,6 +10,9 @@ kind: manifest
 # the default Service: a selector finds the pods, and two ports do two jobs
 
 *Pods are born and die with new IPs every time. A Service is the stable address in front of them, and a label is how it finds them.*
+
+## Read first
+- [Service](https://kubernetes.io/docs/concepts/services-networking/service/): the stable address, its selector, and the two ports
 
 ## Why
 A Pod's IP belongs to the Pod, and the Pod is mortal. Any client that memorised the IP is memorising a corpse's address. A Service is the fixed virtual IP that outlives them, forwarding to whichever pods are alive, and it finds those pods the way a Deployment does: a `selector` matching labels, the same agreement you wrote in your first Deployment, this time read from the other side.

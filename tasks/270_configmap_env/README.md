@@ -2,6 +2,7 @@
 title: "two documents, one file: a ConfigMap and the Pod that reads it"
 difficulty: easy
 minutes: 15
+prereqs: [269]
 track: kubernetes
 tags: [kubernetes, configmap, multi-document]
 kind: manifest
@@ -9,6 +10,10 @@ kind: manifest
 # two documents, one file: a ConfigMap and the Pod that reads it
 
 *Config does not live inside the container. It lives in its own object, and a Pod reaches into it by name at the moment it starts.*
+
+## Read first
+- [ConfigMaps](https://kubernetes.io/docs/concepts/configuration/configmap/): keys and values that live outside the container
+- [Configure a Pod to Use a ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/): env from a `configMapKeyRef`
 
 ## Why
 A container image is built once and run everywhere, which is exactly why the things that change between everywhere do not go inside it. A ConfigMap is Kubernetes' envelope for that: keys and values that live separately from the pods that read them, so the same image runs with the log level it is given rather than the log level it was built with.

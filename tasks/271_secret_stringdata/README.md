@@ -2,6 +2,7 @@
 title: a Secret's data is base64, and stringData is the honest way in
 difficulty: easy
 minutes: 15
+prereqs: [270]
 track: kubernetes
 tags: [kubernetes, secret, base64]
 kind: manifest
@@ -9,6 +10,9 @@ kind: manifest
 # a Secret's data is base64, and stringData is the honest way in
 
 *A Secret is a ConfigMap that treats its contents as sensitive. The price of that is an encoding step, and the API built a door around it.*
+
+## Read first
+- [Secrets](https://kubernetes.io/docs/concepts/configuration/secret/): `data`, base64, and the `stringData` convenience field
 
 ## Why
 A Secret holds the credentials a workload needs: API keys, passwords, tokens. It looks exactly like a ConfigMap, `metadata` and a mapping of keys, until you look at what is inside `data`. That field holds base64, because Secrets are stored and passed around in places that are not safe for raw bytes. It is an encoding, and encryption is a different thing entirely: anyone who can read the Secret can decode it.

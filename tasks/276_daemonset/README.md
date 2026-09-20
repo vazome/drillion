@@ -2,6 +2,7 @@
 title: "a DaemonSet has no replicas: one per node, and that is the whole point"
 difficulty: medium
 minutes: 18
+prereqs: [268]
 track: kubernetes
 tags: [kubernetes, daemonset]
 kind: manifest
@@ -9,6 +10,9 @@ kind: manifest
 # a DaemonSet has no replicas: one per node, and that is the whole point
 
 *Log shippers, metric collectors, network agents: one of these has to run on every machine, and "how many?" is not a number you get to answer.*
+
+## Read first
+- [DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/): one pod per node, no replica count
 
 ## Why
 Every controller so far answered the question "how many?". A Deployment counts replicas against `spec.replicas`. A StatefulSet does the same, with names. A DaemonSet refuses the question: it puts exactly one pod on every node in the cluster, and when a node joins, one starts there; when a node leaves, its pod goes with it. The size of the fleet is the size of the cluster, which is a number the controller reads from the world and never from the manifest.

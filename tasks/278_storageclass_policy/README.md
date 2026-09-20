@@ -2,6 +2,7 @@
 title: a StorageClass decides who provisions and what happens when you walk away
 difficulty: hard
 minutes: 20
+prereqs: [277]
 track: kubernetes
 tags: [kubernetes, storageclass, persistentvolumeclaim, reclaim-policy]
 kind: manifest
@@ -9,6 +10,9 @@ kind: manifest
 # a StorageClass decides who provisions and what happens when you walk away
 
 *So far a volume had to exist before a claim could bind to it. A StorageClass makes volumes on demand, and the interesting decision is what becomes of the disk after the claim is gone.*
+
+## Read first
+- [Storage Classes](https://kubernetes.io/docs/concepts/storage/storage-classes/): on-demand provisioning and `reclaimPolicy`
 
 ## Why
 Hand-writing a PersistentVolume per claim, as the last task did, is how storage worked before it worked well. A StorageClass is the modern half: a named policy saying that when a claim names this class, a volume is provisioned for it on the spot by a `provisioner`, a controller that knows how to talk to some storage back end and cut a disk there. The claim never names a volume again; it names a class and the disk appears.

@@ -10,6 +10,11 @@ Purpose: preserve the branch review and decide whether drillion should replace n
 > implementation in this branch applies the distribution and release-documentation portion while
 > keeping `uv` as an internal build and development tool.
 
+> **Decision update (2026-09-20):** The maintainer authorized the Docker-image-only transition.
+> The original assessment and staged safeguards remain evidence for maintaining that path; the
+> implementation in this branch applies the distribution and release-documentation portion while
+> keeping `uv` as an internal build and development tool.
+
 ## Executive decision
 
 Do **not** make Docker the only deployment path yet.
