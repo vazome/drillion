@@ -9,8 +9,8 @@ Five tiers, strongest first, with `status()` saying which one is actually in for
 back from a child that tried it, never from intent:
 
 - **landlock** (Linux) — the kernel decides. Reads are confined to the interpreter, the
-  system libraries, `tasks/` and the scratch directory; writes to the scratch directory;
-  TCP is denied outright.
+  system libraries, `tasks/`, the pinned tools and their schemas, and the scratch
+  directory; writes to the scratch directory; TCP is denied outright.
 - **sandbox-exec** (macOS) — the same shape expressed as an SBPL profile.
 - **restricted-token** (Windows) — `drillion.winsandbox`: a restricted token at Low
   integrity in a job object. Writes are confined and memory is capped, but reads and the
@@ -233,6 +233,9 @@ def _roots(scratch, targets):
     An allowlist rather than a deny-list because `sys.base_prefix` routinely lives *inside*
     `$HOME` — uv keeps its interpreters under `~/.local/share` — so "deny $HOME" would deny
     the interpreter."""
+    # lazily, so that `tools` stays free to import `sandbox` to confine a grader run
+    from . import tools
+
     interpreter = (
         Path(sys.executable).resolve().parent.parent,
         sys.prefix,
@@ -247,6 +250,10 @@ def _roots(scratch, targets):
         # `-c` file inside the scratch dir — so every file under the root stays closed,
         # `progress.sqlite3` and a checkout's `.git/config` included.
         (settings.root, ("read_dir",)),
+        # the pinned graders, executable for the same reason /usr/bin is: a manifest is
+        # graded by running kubeconform, and whatever it starts inherits this sandbox
+        (tools.tools_dir(), _EXEC),
+        (tools.SCHEMAS, _READ),
         *((t, _READ) for t in targets),
         ("/etc", _READ),
         # /usr/bin and /bin are executable on purpose: task 033 grades `subprocess.run` on
@@ -343,6 +350,8 @@ def _sbpl(scratch, targets):
     Paths are resolved because the sandbox matches on real paths and `/tmp` is a symlink
     into `/private` on macOS."""
 
+    from . import tools
+
     def subpaths(paths):
         real = {str(Path(p).resolve()) for p in paths if Path(p).exists()}
         return " ".join(f'(subpath "{p}")' for p in sorted(real))
@@ -361,6 +370,8 @@ def _sbpl(scratch, targets):
             sys.prefix,
             sys.base_prefix,
             settings.tasks_dir,
+            tools.tools_dir(),
+            tools.SCHEMAS,
             *targets,
             scratch,
         ]
@@ -493,13 +504,15 @@ def status():
     if _landlock_works():
         return "landlock", (
             f"kernel Landlock ABI {abi()}: reads confined to the interpreter, system "
-            f"libraries, tasks/ and a scratch HOME; writes to scratch only; "
+            f"libraries, tasks/, tools/, the packaged schemas and a scratch HOME; "
+            f"writes to scratch only; "
             f"{'TCP denied' if abi() >= 4 else 'no network control below ABI 4'}"
         )
     if _sandbox_exec_works():
         return "sandbox-exec", (
-            "SBPL profile: reads confined to the interpreter, system frameworks, tasks/ "
-            "and a scratch HOME; writes to scratch only; network denied"
+            "SBPL profile: reads confined to the interpreter, system frameworks, tasks/, "
+            "tools/, the packaged schemas and a scratch HOME; writes to scratch only; "
+            "network denied"
         )
     if _restricted_token_works():
         return "restricted-token", (
@@ -561,6 +574,29 @@ def run(args, scratch, cpu, **env):
     `subprocess.run` would have. The one entry point the runner calls: Windows needs
     `CreateProcessAsUser` for a restricted token, so it cannot go through `subprocess`."""
     plan = confine(args, scratch, cpu, **env)
+    if status()[0] == "restricted-token":
+        from . import winsandbox
+
+        return winsandbox.run(plan["args"], scratch, timeout=cpu, **env)
+    return subprocess.run(
+        **plan,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+        timeout=cpu,
+    )
+
+
+def run_script(args, scratch, cpu, **env):
+    """A bare interpreter under the same tier as a graded run: `confine` without pytest.
+
+    Only the `-m pytest` tail is replaced. Everything `confine` puts *ahead* of the
+    interpreter is the confinement itself on macOS, and dropping it would run task code
+    loose."""
+    plan = confine(args, scratch, cpu, **env)
+    wrapper = plan["args"][: plan["args"].index(sys.executable)]
+    plan["args"] = [*wrapper, sys.executable, *args]
     if status()[0] == "restricted-token":
         from . import winsandbox
 

@@ -6,11 +6,9 @@
 
 # drillion: Python practice, on your machine
 
-[![PyPI](https://img.shields.io/pypi/v/drillion)](https://pypi.org/project/drillion/)
-[![Python](https://img.shields.io/pypi/pyversions/drillion)](https://pypi.org/project/drillion/)
 [![CI](https://github.com/vazome/drillion/actions/workflows/ci.yml/badge.svg)](https://github.com/vazome/drillion/actions/workflows/ci.yml)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14269/badge)](https://www.bestpractices.dev/projects/14269)
-[![License](https://img.shields.io/pypi/l/drillion)](https://github.com/vazome/drillion/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/vazome/drillion)](https://github.com/vazome/drillion/blob/main/LICENSE)
 
 TL;DR: self-hosted Python practice with a UI that stays out of your way. No streaks,
 no leaderboard nonsense, no badges and no engagement bait. Made by a neurodivergent
@@ -73,75 +71,41 @@ runs on import. Shipping tasks as code is what makes the sandbox necessary, so g
 is confined by the kernel and you do not have to take my word for it. **What running it
 does to your machine**, below, is the detail.
 
-## Install
+## Run
 
-You do not need Python, and you do not need to know what a virtual environment is. Pick your
-system below, install drillion, and it opens in your browser at
-<http://127.0.0.1:8765>. It runs on your machine, so nothing is uploaded and there is no
-account.
-
-### Linux, macOS, or Windows with WSL
-
-Open a terminal. Install [uv](https://docs.astral.sh/uv/), which is the one tool drillion needs:
+Drillion is distributed as a Docker image. Install Docker Engine on Linux or Docker Desktop on
+macOS or Windows, then start the local service:
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
+docker run -d --name drillion --restart unless-stopped -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion:latest
 ```
 
-**Close the terminal and open a new one**, so it picks up the new command. Then:
+Open <http://127.0.0.1:8765>. The image never opens a host browser. Its named volume keeps your
+work across container replacement and upgrades. [compose.yaml](compose.yaml) is the same service in
+a file; save it anywhere and run `docker compose up -d`.
+
+To update or roll back, choose `latest`, a version, or the immutable digest in the GitHub Release
+notes. Stop the old container cleanly, remove only that container, then start the selected image
+against the same named volume. The `drillion` volume is not removed by `docker rm`.
 
 ```bash
-uv tool install drillion
-drillion
+docker pull ghcr.io/vazome/drillion:latest
+docker stop drillion
+docker rm drillion
+docker run -d --name drillion --restart unless-stopped -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion:latest
 ```
 
-Installation takes a minute while uv fetches Python and drillion. After that it starts in seconds.
-
-### Windows
-
-Open **PowerShell** from the Start menu. Install uv:
-
-```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
-
-**Close PowerShell and open it again**, then:
-
-```powershell
-uv tool install drillion
-drillion
-```
-
-One difference worth knowing: the code you submit is sandboxed less tightly on Windows than on
-Linux and macOS. Windows blocks what it can write, but not what it can read.
-[SECURITY.md](SECURITY.md) says exactly which half is which.
-
-### Using it day to day
-
-- **Stop it**: press `Ctrl+C` in the terminal window.
-- **Start it again**: `drillion`, in any terminal.
-- **Update**: `uv tool upgrade drillion`.
-- **Updates don't delete your progress.** You can also make a backup from **Settings → Back up**.
-
-### Docker
-
-Same on every system, if you already run Docker:
-
-```bash
-docker run -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion
-```
-
-Open <http://127.0.0.1:8765> yourself, since the container never opens a browser. The image carries
-the tasks and the page; the named volume keeps your work across upgrades.
-[compose.yaml](compose.yaml) is the same thing plus `restart: unless-stopped`, so drillion comes
-back after a reboot; save that one file anywhere and `docker compose up -d`.
+For a reproducible rollback, replace `latest` with `ghcr.io/vazome/drillion:<version>` or the
+immutable `ghcr.io/vazome/drillion@sha256:...` reference in that release's notes **only when that
+release is compatible with the data already in the volume**. Before a major upgrade, back up from
+**Settings → Back up**. To return to an older, incompatible release, restore that backup into a
+separate volume rather than reusing the upgraded one.
 
 ## Commands
 
 ```bash
-drillion              # serve the web UI (default)
-drillion selfcheck    # solve every task with its own reference, proving the set still works
-drillion doctor       # say why a task folder would be skipped
+docker exec drillion drillion selfcheck  # solve every task with its own reference
+docker exec drillion drillion doctor     # report why a task folder would be skipped
 ```
 
 ## What running it does to your machine
@@ -149,25 +113,22 @@ drillion doctor       # say why a task folder would be skipped
 drillion runs Python on your computer: the code you write, and the code that ships inside the
 267 tasks. So it is worth saying plainly what that costs you.
 
-- **Your submissions are confined by the kernel.** Landlock on Linux, an
-  `sandbox-exec` profile on macOS, a restricted token at low integrity on Windows. On Linux and
-  macOS graded code reads only the interpreter, the system libraries and the tasks, writes only
-  to a scratch directory deleted after the run, and cannot open a network connection. Windows
-  confines the writes but not the reads or the network. `drillion doctor` prints the tier you
-  actually got, read back from a process that tried it.
+- **Your submissions are confined by the Linux kernel.** The image runs them with Landlock: they
+  read only the interpreter, system libraries and tasks, write only to a scratch directory deleted
+  after the run, and cannot open a network connection. `drillion doctor` prints the tier actually
+  obtained from a probe process. Docker is an additional process boundary, not a replacement for
+  this sandbox.
 - **Nothing leaves your machine.** No account, no telemetry, no fonts or scripts fetched from
   anyone. The server binds `127.0.0.1`, and refuses a request from a page it did not serve, so
   a website you happen to have open cannot drive your local drillion.
-- **What you downloaded can be checked.** Every release carries provenance naming the workflow
-  run that built it, attached to the release itself:
+- **What you downloaded can be checked.** Every image carries provenance naming the workflow run
+  that built it:
 
   ```bash
-  gh attestation verify drillion-0.8.0-py3-none-any.whl --repo vazome/drillion
   gh attestation verify oci://ghcr.io/vazome/drillion:0.8.0 --repo vazome/drillion
   ```
 
-[SECURITY.md](SECURITY.md) is the whole picture, including which half of it Windows does not
-cover, and how to report something.
+[SECURITY.md](SECURITY.md) is the whole picture and explains how to report something.
 
 ## Docs
 

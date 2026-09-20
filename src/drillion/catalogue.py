@@ -12,8 +12,14 @@ import yaml
 from .region import Invalid, _solve, bounds, cut
 from .settings import settings
 
-REQUIRED = ("title", "difficulty", "tier", "minutes", "tags")
-BROWSER = ("topic", "title", "difficulty", "tier", "track", "tags", "source")
+PYTHON = "python"
+MANIFEST = "manifest"
+KINDS = (PYTHON, MANIFEST)
+# what every task needs, then what each kind adds. `tier` is Python depth and a manifest
+# reaches nowhere into the language, so it is not asked of one.
+REQUIRED = ("title", "difficulty", "minutes", "tags")
+REQUIRED_BY_KIND = {PYTHON: ("tier",), MANIFEST: ()}
+BROWSER = ("topic", "title", "difficulty", "tier", "track", "tags", "source", "kind")
 # `minutes` is deliberately absent: par time is grade_of()'s input, not the learner's to see.
 HINT = re.compile(r"^### Hint \d+[ \t]*$", re.MULTILINE)
 # the only sections `search_text` keeps: the rest is links and imported prose that
@@ -54,6 +60,7 @@ class TaskMeta(_Built, total=False):
     tags: list[str]
     source: str
     track: str
+    kind: str
 
 
 Scan = list[tuple[str, TaskMeta | None, list[str]]]
@@ -77,9 +84,9 @@ def search_text(spec_md):
 
 
 def _stamp(folder):
-    """Cheap identity for a task folder: its name and both files' mtimes."""
+    """Cheap identity for a task folder: its name and every file a kind could name mtime."""
     out = [folder.name]
-    for name in ("README.md", "task.py"):
+    for name in ("README.md", *FILENAMES.values()):
         try:
             out.append((folder / name).stat().st_mtime_ns)
         except OSError:
@@ -103,6 +110,46 @@ def guidance(md):
     return spec.strip(), [h.strip() for h in HINT.split(rest)[1:]]
 
 
+def _check_python(folder):
+    """Every rule a python task folder must pass. The body is the existing checks, moved."""
+    out = []
+    src = folder / "task.py"
+    if not src.is_file():
+        return ["task.py: missing"]
+    try:
+        text = src.read_text(encoding="utf-8")
+        bounds(text)  # no marker line, no task
+        region = cut(text)
+        _solve(ast.parse(region.body))
+        if "def _reference(" not in region.tail:
+            out.append("task.py: the machinery has no `def _reference(`")
+    except Invalid as err:
+        out.append(f"task.py: {err}")
+    except SyntaxError as err:
+        out.append(
+            f"task.py: the region above the marker is not valid Python — {err.msg}"
+        )
+    except UnicodeDecodeError:
+        out.append("task.py: is not valid UTF-8")
+    except OSError as err:
+        out.append(f"task.py: cannot be read — {err.strerror}")
+    return out
+
+
+def _check_manifest(folder):
+    """A manifest task is four files: the learner's, the grader's, and the reference."""
+    return [
+        f"{name}: missing"
+        for name in ("task.yaml", "grade.py", "solution.yaml")
+        if not (folder / name).is_file()
+    ]
+
+
+CHECKS = {PYTHON: _check_python, MANIFEST: _check_manifest}
+# the learner's own file per kind — what a browser tab opens and `path` points at
+FILENAMES = {PYTHON: "task.py", MANIFEST: "task.yaml"}
+
+
 def _read(folder) -> tuple[TaskMeta | None, list[str]]:
     """(record | None, [reason]) for one folder: every rule a task must pass to reach the
     menu, and the record whenever the frontmatter parsed — wrong folder or not."""
@@ -111,28 +158,6 @@ def _read(folder) -> tuple[TaskMeta | None, list[str]]:
         out.append(
             "folder name is not <NNN>_<name>: three digits, then a lowercase name"
         )
-    src = folder / "task.py"
-    if not src.is_file():
-        out.append("task.py: missing")
-    else:
-        try:
-            text = src.read_text(encoding="utf-8")
-            bounds(text)  # no marker line, no task
-            region = cut(text)
-            _solve(ast.parse(region.body))
-            if "def _reference(" not in region.tail:
-                out.append("task.py: the machinery has no `def _reference(`")
-        except Invalid as err:
-            out.append(f"task.py: {err}")
-        except SyntaxError as err:
-            out.append(
-                f"task.py: the region above the marker is not valid Python — {err.msg}"
-            )
-        except UnicodeDecodeError:
-            out.append("task.py: is not valid UTF-8")
-        except OSError as err:
-            out.append(f"task.py: cannot be read — {err.strerror}")
-
     readme = folder / "README.md"
     if not readme.is_file():
         return None, [*out, "README.md: missing"]
@@ -151,11 +176,16 @@ def _read(folder) -> tuple[TaskMeta | None, list[str]]:
             *out,
             "README.md: the frontmatter is not a block of key: value lines",
         ]
+    kind = meta.get("kind", PYTHON)
+    if kind not in KINDS:
+        out.append(f"README.md: kind {kind!r} is not one of {' / '.join(KINDS)}")
+        kind = PYTHON
     out += [
         f"README.md: frontmatter is missing `{k}`"
-        for k in REQUIRED
+        for k in (*REQUIRED, *REQUIRED_BY_KIND[kind])
         if meta.get(k) in (None, "", [])
     ]
+    out += CHECKS[kind](folder)
     spec_md, hints = guidance(md)
     if len(hints) != 3:
         out.append(f"README.md: found {len(hints)} hints, need exactly 3")
@@ -165,8 +195,9 @@ def _read(folder) -> tuple[TaskMeta | None, list[str]]:
         {
             "prereqs": [],
             **meta,
+            "kind": kind,
             "topic": int(slug.group(1)) if slug else None,
-            "path": src,
+            "path": folder / FILENAMES[kind],
             "dir": folder,
             "hints": hints,
             "spec_md": spec_md,

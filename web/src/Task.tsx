@@ -4,8 +4,10 @@ import { ApiError, api, post, type Task as TaskData, type RunResult, type Case }
 import { depsHref, prefetch } from "./Deps";
 import { inDays, strength } from "./strength";
 import { DiffView, Editor } from "./Editor";
+import { ManifestFailure } from "./ManifestWorkspace";
 import { useDraft } from "./useDraft";
 import { usePrefs } from "./prefs";
+import { TaskPanes } from "./TaskPanes";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
 const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };
@@ -100,7 +102,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   }, []);
 
   const onSaveError = useCallback((message: string, at: "editor" | "note" = "editor") => setGate({ at, message }), []);
-  const { code, dirty, syntaxBad, conflict, offer, note, noteDirty, adopt, reset, edit, editNote,
+  const { code, dirty, syntax, conflict, offer, note, noteDirty, adopt, reset, edit, editNote,
     landed, ensureOpen, current, pending, settle, takeDisk, keepMine, discard, restore, absorb } =
     useDraft(slug, onPayload, onSaveError);
 
@@ -292,7 +294,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             unlocks {task.unlocks.length} →
           </button>
         ) : null}
-        <TaskPath tier={meta.tier} tags={meta.tags} />
+        <TaskPath tier={meta.tier} track={meta.track} tags={meta.tags} />
         {meta.source ? <span style={ASIDE}>{meta.source}</span> : null}
       </div>
 
@@ -314,10 +316,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
         </div>
       ) : null}
 
-      <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", gap: 20, alignItems: narrow ? "stretch" : "flex-start" }}>
-        <div style={narrow
-          ? { width: "auto" }
-          : { width: "42%", minWidth: 340, maxWidth: "70%", maxHeight: "calc(100vh - 148px)", overflow: "auto", resize: "horizontal" }}>
+      <TaskPanes narrow={narrow}>
+        <div>
           <Card label={`Spec · ${slug}/README.md`}>
             <SpecText text={task.spec_md} slug={slug} hideTitle />
 
@@ -360,8 +360,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                         ? "Your solution on the left, the reference on the right. It closes again when this task comes back."
                         : "The reference answer, for comparison with what you wrote. It closes again when this task comes back."}</div>}
                   {mine
-                    ? <DiffView mine={mine} reference={reference} dark={dark} maxHeight="46vh" prefs={prefs} />
-                    : <SpecText text={"```python\n" + reference + "\n```"} slug={slug} />}
+                    ? <DiffView kind={meta.kind} mine={mine} reference={reference} dark={dark} maxHeight="46vh" prefs={prefs} />
+                    : <SpecText text={"```" + (meta.kind === "manifest" ? "yaml" : "python") + "\n" + reference + "\n```"} slug={slug} />}
                 </div>
               ) : (
                 <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
@@ -400,7 +400,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
           </Card>
         </div>
 
-        <div style={{ flex: 1, minWidth: narrow ? 0 : 420, display: "grid", gap: 12 }}>
+        <div style={{ minWidth: 0, display: "grid", gap: 12 }}>
           {conflict ? <div className="m-drop"><ConflictBanner detail="Your draft and the file on disk have diverged." onReload={takeDisk} onKeep={keepMine} /></div> : null}
           {offer ? (
             <div className="m-drop">
@@ -445,23 +445,30 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               * content: a status that appears while you type must not re-wrap the row and
               * push the editor down under the cursor */}
             <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textAlign: "right", whiteSpace: "nowrap" }}>
-              {dirty || syntaxBad ? (
-                <span style={{ fontSize: 12.5, color: syntaxBad ? "var(--warn)" : "var(--text-faint)" }}>
-                  ● {syntaxBad ? "syntax error, not saved" : "unsaved"}
+              {dirty || syntax ? (
+                <span style={{ fontSize: 12.5, color: syntax ? "var(--warn)" : "var(--text-faint)" }}
+                  title={syntax ? syntax.message : undefined}>
+                  {/* the editor's squiggle carries the reason; this row only has width for
+                    * the fact, and truncating a sentence mid-word reads as a bug */}
+                  ● {syntax
+                    ? `syntax error${syntax.line != null ? ` on line ${syntax.line}` : ""}, not saved`
+                    : "unsaved"}
                 </span>
               ) : null}
             </div>
             {hasAttempt && !passed ? <Button variant="quiet" onClick={abandon} style={{ fontSize: 13 }}>Abandon</Button> : null}
           </div>
 
-          <Editor value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} height={narrow ? "60vh" : "calc(100vh - 364px)"} />
+          <Editor kind={meta.kind} value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} problem={syntax} height={meta.kind === "manifest" ? "clamp(280px, 42vh, 560px)" : narrow ? "60vh" : "calc(100vh - 364px)"} />
 
           <Card label={ungraded ? "Output · your run" : resultNo ? `Result · attempt ${resultNo}` : "Result"} padding={16}>
             {/* the region stays mounted and only the banner inside it is keyed: a live region
               * that arrives with its text already in place is never announced */}
             <div role="status">
               <div className="m-rise" key={result.state}>
-                {result.state === "ran" ? (
+                {meta.kind === "manifest" && result.state === "failed" && result.output ? (
+                  <ManifestFailure headline={result.headline} />
+                ) : result.state === "ran" ? (
                   <div style={{ borderRadius: "var(--radius)", padding: "12px 16px", fontSize: 14, background: "var(--pass-bg)", borderLeft: "3px solid var(--pass)" }}>
                     <span style={{ fontWeight: 600, color: "var(--pass)", letterSpacing: ".04em" }}>✓ TESTS PASS</span>
                     <span style={{ marginLeft: 10, fontSize: 13, color: "var(--text-muted)" }}>
@@ -478,7 +485,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               </div>
             </div>
 
-            {result.state === "failed" && result.case ? <FailedCase case={result.case} /> : null}
+            {meta.kind === "python" && result.state === "failed" && result.case ? <FailedCase case={result.case} /> : null}
 
             {/* the learner's own print() first, open: it is the one line of the report they wrote */}
             {(result.state === "failed" || result.state === "ran") && result.printed ? (
@@ -488,7 +495,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             ) : null}
 
             {(result.state === "failed" || result.state === "ran") && result.output ? (
-              <Collapsible label="Full output" meta={`pytest · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
+              <Collapsible label={meta.kind === "manifest" ? "Validator details" : "Full output"} meta={`${meta.kind === "manifest" ? "raw report" : "pytest"} · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
                 {result.output}
               </Collapsible>
             ) : null}
@@ -513,7 +520,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             ) : null}
           </Card>
         </div>
-      </div>
+      </TaskPanes>
     </div>
   );
 }

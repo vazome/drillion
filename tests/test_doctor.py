@@ -2,7 +2,9 @@
 
 import shutil
 
-from drillion import doctor
+import pytest
+
+from drillion import cli, doctor
 from drillion.settings import settings
 from tests.fixtures import README, TASK, tasks_root
 
@@ -23,6 +25,44 @@ def _reasons(**folders):
 
 def test_a_good_task_has_nothing_said_about_it():
     assert _reasons(**{"042_thing": {"README.md": README, "task.py": TASK}}) == {}
+
+
+def test_a_manifest_needs_no_tier_and_is_not_asked_for_one():
+    manifest_readme = README.replace("tier: core\n", "").replace(
+        "difficulty: easy", "kind: manifest\ndifficulty: easy"
+    )
+    assert (
+        _reasons(
+            **{
+                "043_manifest": {
+                    "README.md": manifest_readme,
+                    "task.yaml": "",
+                    "grade.py": _GRADER,
+                    "solution.yaml": "",
+                }
+            }
+        )
+        == {}
+    )
+
+
+def test_a_manifest_with_a_tier_is_told_it_does_not_belong():
+    manifest_readme = README.replace(
+        "difficulty: easy", "kind: manifest\ndifficulty: easy"
+    )
+    reasons = _reasons(
+        **{
+            "043_manifest": {
+                "README.md": manifest_readme,
+                "task.yaml": "",
+                "grade.py": _GRADER,
+                "solution.yaml": "",
+            }
+        }
+    )
+    assert reasons == {
+        "043_manifest": ["README.md: tier belongs to a python task, not a manifest"]
+    }
 
 
 def test_a_malformed_prereqs_is_reported_rather_than_crashed_on():
@@ -172,3 +212,122 @@ def test_tooling_directories_are_not_broken_tasks():
 
     named = _reasons(bad_name={"README.md": README, "task.py": TASK})
     assert any("three digits" in r for r in named["bad_name"]), named
+
+
+def test_doctor_says_where_each_pinned_grader_stands(capsys):
+    """An external grader is part of a verdict, so doctor says whether it is there."""
+    doctor.doctor()
+    out = capsys.readouterr().out
+    assert any(line.startswith("kubeconform: ") for line in out.splitlines())
+
+
+def test_fetch_belongs_to_doctor():
+    """Downloading is an explicit act, so the flag that does it is refused anywhere else."""
+    with pytest.raises(SystemExit):
+        cli.main(["serve", "--fetch"])
+
+
+# a working grader, so the render rule below judges the README and not the grade.py
+_GRADER = 'def brief(r):\n    return {"name": "checkout", "replicas": 3}\n'
+
+
+def test_a_manifest_placeholder_outside_the_requirements_is_reported():
+    """An unopened manifest task serves its README as written, so the sections shown before
+    a sitting has filled anything in must carry no placeholder."""
+    manifest_readme = README.replace("tier: core\n", "").replace(
+        "difficulty: easy", "kind: manifest\ndifficulty: easy"
+    )
+    files = {"task.yaml": "", "grade.py": _GRADER, "solution.yaml": ""}
+    leaked = manifest_readme.replace(
+        "Because.", "Because {name} matters.\n\n## You get\nA {replicas}-line file."
+    )
+    assert _reasons(**{"043_manifest": {"README.md": leaked, **files}}) == {
+        "043_manifest": [
+            (
+                "README.md: Why has a placeholder in it, and that section is shown "
+                "before a sitting fills one in"
+            ),
+            (
+                "README.md: You get has a placeholder in it, and that section is "
+                "shown before a sitting fills one in"
+            ),
+        ]
+    }
+    # the requirements are exactly where a placeholder belongs
+    fine = manifest_readme.replace(
+        "Because.", "Because it matters.\n\n## You return\nA Deployment named `{name}`."
+    )
+    assert _reasons(**{"043_manifest": {"README.md": fine, **files}}) == {}
+
+
+def test_a_manifest_readme_that_cannot_render_is_reported():
+    """`_placeholder_rules` only guards the two sections shown before a sitting opens. A
+    brace anywhere else still reaches `render`, and a failure there is a failed open."""
+    manifest_readme = README.replace("tier: core\n", "").replace(
+        "difficulty: easy", "kind: manifest\ndifficulty: easy"
+    )
+    files = {"task.yaml": "", "grade.py": _GRADER, "solution.yaml": ""}
+    for bad in ("Use {} for an empty selector.", "A Deployment named `{nmae}`."):
+        broken = manifest_readme.replace(
+            "Because.", f"Because it matters.\n\n## Rules\n{bad}"
+        )
+        reasons = _reasons(**{"043_manifest": {"README.md": broken, **files}})
+        assert any(
+            "does not render against a brief" in r
+            for r in reasons.get("043_manifest", [])
+        ), (bad, reasons)
+
+
+def test_a_manifest_teaching_a_kind_with_no_packaged_schema_is_reported():
+    """kubeconform answers a kind it has no schema for exactly as it answers a typo, so a
+    task nobody packaged a schema for would tell every correct learner they were wrong."""
+    manifest_readme = README.replace("tier: core\n", "").replace(
+        "difficulty: easy", "kind: manifest\ndifficulty: easy"
+    )
+    fine = manifest_readme.replace(
+        "Because.", "Because it matters.\n\n## You return\nA Deployment named `{name}`."
+    )
+    base = {"README.md": fine, "task.yaml": "", "grade.py": _GRADER}
+    packaged = "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\n"
+    assert _reasons(**{"043_manifest": {**base, "solution.yaml": packaged}}) == {}
+    missing = packaged.replace("apiVersion: apps/v1", "apiVersion: v1").replace(
+        "kind: Deployment", "kind: Namespace"
+    )
+    reasons = _reasons(**{"043_manifest": {**base, "solution.yaml": missing}})[
+        "043_manifest"
+    ]
+    assert any(
+        r.startswith("solution.yaml: no packaged schema for Namespace") for r in reasons
+    ), reasons
+
+
+def test_a_manifest_solution_that_cannot_render_is_reported():
+    """The answer key is rendered against the same brief as the README. Left unchecked, a
+    partial placeholder here is invisible until the run that should have passed, where it
+    reaches the learner as a contributor's error message."""
+    manifest_readme = README.replace("tier: core\n", "").replace(
+        "difficulty: easy", "kind: manifest\ndifficulty: easy"
+    )
+    fine = manifest_readme.replace(
+        "Because.", "Because it matters.\n\n## You return\nA Deployment named `{name}`."
+    )
+    good = "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: {name}\n"
+    base = {"README.md": fine, "task.yaml": "", "grade.py": _GRADER}
+    assert _reasons(**{"043_manifest": {**base, "solution.yaml": good}}) == {}
+    broken = good.replace("name: {name}", "name: prefix-{name}")
+    reasons = _reasons(**{"043_manifest": {**base, "solution.yaml": broken}})[
+        "043_manifest"
+    ]
+    assert any(
+        r.startswith("solution.yaml: does not render against a brief") for r in reasons
+    ), reasons
+
+
+def test_every_kind_has_its_own_rule_row():
+    """One row per kind, as `catalogue.CHECKS` is. A third kind adds a row; if this grows
+    back into a branch, the new kind silently inherits the previous one's rules."""
+    from drillion import kinds
+
+    assert set(doctor.KIND_RULES) == set(kinds.KINDS)
+    with pytest.raises(KeyError):
+        doctor.KIND_RULES["compose"]

@@ -25,7 +25,7 @@ const localToday = () => new Date().toLocaleDateString("en-CA");
 
 /** Everything `focus` may name — tier, track and tags alike, as `_facets()` in scheduler.py.
  * All three, or the screen disagrees with the scheduler. */
-const facets = (row: Row) => [row.tier, row.track, ...row.tags];
+const facets = (row: Row) => [row.tier, row.track, ...row.tags].filter(Boolean) as string[];
 
 /** The copy for `today.no_new`: the one reason New picks is empty, and the way back out. */
 function noPicks(no: NonNullable<Payload["today"]["no_new"]>, today: Payload["today"],
@@ -141,7 +141,7 @@ function ListRow({ row, blocked, ladder, limit, first = false }: { row: Row; blo
         <RowFlags needs={blocked} onNeedsClick={() => { location.hash = `${href(row)}/deps`; }}
           lapses={row.lapses} lapseLimit={limit} />
       </span>
-      <span style={{ width: COL.path, display: "flex", overflow: "hidden" }}><TaskPath tier={row.tier} tags={row.tags} /></span>
+      <span style={{ width: COL.path, display: "flex", overflow: "hidden" }}><TaskPath tier={row.tier} track={row.track} tags={row.tags} /></span>
       <span style={{ width: COL.difficulty }}><StatusBadge status={row.difficulty} /></span>
       <span style={{ width: COL.strength, height: 16, display: "flex", alignItems: "center" }}><Known row={row} ladder={ladder} /></span>
       <span style={{ width: COL.status }}><StatusBadge status={row.status} /></span>

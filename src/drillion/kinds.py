@@ -1,0 +1,244 @@
+"""The learner's own text, whatever kind of task it lives in.
+
+A Python task's artifact is the region above the marker in `task.py`; a manifest task's is
+the whole of `task.yaml`. Everything that reads, writes, resets, archives or fingerprints
+a learner's work asks a kind rather than calling `region` directly."""
+
+import ast
+import hashlib
+import logging
+
+import yaml
+
+from . import region
+from .catalogue import MANIFEST, PYTHON
+from .region import Invalid, _solve
+
+__all__ = ["Invalid", "of"]
+
+log = logging.getLogger(__name__)
+
+# The seed a self-check asks its questions with, shared with `doctor` so that a task which
+# renders for one and fails the other is not the seed's doing.
+SELFCHECK_SEED = 1
+
+
+def _reference_call(body):
+    """solve()'s own signature, wired straight to the reference answer."""
+    fn = _solve(ast.parse(body))
+    a = fn.args
+    args = [p.arg for p in a.posonlyargs + a.args]
+    args += [f"*{a.vararg.arg}"] if a.vararg else []
+    args += [f"{p.arg}={p.arg}" for p in a.kwonlyargs]
+    args += [f"**{a.kwarg.arg}"] if a.kwarg else []
+    stubbed = region.stub(body)
+    return (
+        stubbed[: stubbed.rindex("raise NotImplementedError")]
+        + f"return _reference({', '.join(args)})"
+    )
+
+
+class _Python:
+    """The original artifact: a region inside a file it shares with the grader."""
+
+    name = PYTHON
+    filename = "task.py"
+    language = "python"
+
+    def path(self, meta):
+        return meta["dir"] / self.filename
+
+    def body(self, src):
+        return region.cut(src).body
+
+    def compose(self, src, body):
+        return region.splice(src, body)
+
+    def validate(self, edited, src):
+        return region.validate(edited, src)
+
+    def empty(self, src):
+        return region.splice(src, region.stub(region.cut(src).body))
+
+    def etag(self, src):
+        return region.etag(src)
+
+    def has_given(self, body):
+        """True when the region has code above solve() that the learner must keep."""
+        return region.has_given(body)
+
+    def marker_line(self, src):
+        """Where the learner's region stops, so pytest's `task.py:12` can be rewritten
+        into the editor's own coordinates."""
+        return region.bounds(src)
+
+    def opening(self, meta, seed):
+        """Extra state an attempt on this kind carries. A python sitting needs none: its
+        cases come from the seed at grading time, not from anything stored."""
+        return {}
+
+    def spec(self, meta, o):
+        """The guidance this sitting shows. A python task's is the README as written."""
+        return meta["spec_md"]
+
+    def reference(self, meta, o):
+        from . import attempts
+
+        return attempts.solution_text(meta["path"])
+
+    def revision(self, meta, src):
+        return region.revision(src)
+
+    def grade(self, meta, o):
+        """(passed, pytest output, case). The one place a kind's grader is chosen."""
+        from . import runner
+
+        return runner.run_python(meta, o["seed"])
+
+    def selfcheck(self, meta):
+        """{filename: text} for the files that prove this task's own reference answer
+        passes, written beside the task and deleted afterwards. `_selfcheck.py` is the one
+        pytest is handed; a kind that needs more may name them alongside it.
+
+        A python task proves itself by answering with `_reference`: the region is spliced
+        so that `solve` forwards to it, and the task's own tests judge the result."""
+        src = meta["path"].read_text(encoding="utf-8")
+        body = _reference_call(region.cut(src).body)
+        return {"_selfcheck.py": region.splice(src, body)}
+
+
+class _Manifest:
+    """The learner's artifact is the entire file: no marker, no machinery below it."""
+
+    name = MANIFEST
+    filename = "task.yaml"
+    language = "yaml"
+
+    def path(self, meta):
+        return meta["dir"] / self.filename
+
+    def body(self, src):
+        return src
+
+    def compose(self, src, body):
+        return body
+
+    def validate(self, edited, src):
+        """Saving only asks that it parses. An empty file is a legal draft and a legal
+        reset state, and so is a second document half typed; whether either is a legal
+        *submission* is the grader's line, not this one, and it has better words for it."""
+        try:
+            list(yaml.safe_load_all(edited))
+        except yaml.YAMLError as err:
+            mark = getattr(err, "problem_mark", None)
+            raise Invalid(
+                getattr(err, "problem", None) or "this is not valid YAML",
+                mark.line + 1 if mark else None,
+            ) from None
+        return edited
+
+    def empty(self, src):
+        return ""
+
+    def etag(self, src):
+        return hashlib.sha256(src.encode()).hexdigest()[:12]
+
+    def has_given(self, body):
+        # No code above solve() in a YAML file: nothing precedes what the learner writes.
+        return False
+
+    def marker_line(self, src):
+        # No marker, and no .py path in the output to rewrite: the whole file is theirs.
+        return 0
+
+    def opening(self, meta, seed):
+        """The requirements for this sitting, generated once and then stored on it.
+
+        Regenerating them from the seed on every render would let an upgraded grader change
+        the question inside a live sitting, so the answer is written down here instead."""
+        from . import manifest
+
+        brief = manifest.generate_brief(meta, seed)
+        return {
+            "brief": brief,
+            "spec_md": manifest.render(meta["spec_md"], brief),
+            "brief_revision": manifest.grader_revision(meta),
+        }
+
+    def spec(self, meta, o):
+        """The guidance this sitting shows. A rendered brief belongs to the sitting that was
+        given it; with nothing open the README is served as written, placeholders and all,
+        which is why `doctor` rejects a manifest whose Why or You get sections hold one."""
+        return o["spec_md"] if o and "spec_md" in o else meta["spec_md"]
+
+    def reference(self, meta, o):
+        """The answer key for this sitting. A closed sitting has no stored brief to render
+        one against, and an answer key that will not render is the task's bug, never the
+        learner's: it must not cost them the pass that asked for it. `doctor` reports such a
+        task, which is where it is meant to be caught."""
+        from . import manifest
+
+        if o is None:
+            return None
+        try:
+            return manifest.render_solution(meta, o["brief"])
+        except manifest.Rejected:
+            log.exception(
+                "%s: the solution does not render; run `drillion doctor`",
+                meta["dir"].name,
+            )
+            return None
+
+    def revision(self, meta, src):
+        """What judged this pass, not merely what asked the question: the validator and the
+        schemas decide a manifest verdict as much as `grade.py` does, so the archive records
+        all three."""
+        from . import manifest
+
+        return manifest.fingerprint(meta)
+
+    def grade(self, meta, o):
+        """(passed, pytest output, None). The brief is the one the sitting was opened
+        with; a sitting from before manifest grading has none, and its spec still holds
+        raw placeholders, so grading it against anything now would grade requirements the
+        learner was never shown. Refused with the way out instead."""
+        from . import manifest, runner
+
+        if "brief" not in o:
+            raise manifest.Rejected(
+                "this sitting opened before manifest grading: abandon it and start again"
+            )
+        # `brief_revision` is stored for exactly this: a grader upgraded under a live sitting
+        # checks the brief against code the learner was never shown, and its KeyError would
+        # otherwise reach them as their own failed attempt.
+        if o.get("brief_revision") != manifest.grader_revision(meta):
+            raise manifest.Rejected(
+                "this task's grader changed since this sitting opened: abandon it and "
+                "start again"
+            )
+        return runner.run_manifest(meta, o["brief"])
+
+    def selfcheck(self, meta):
+        """The same proof for the other kind: `solution.yaml` rendered against a real
+        brief, then put through the validator and the `check()` that judge a learner's.
+
+        `doctor` already asks whether the answer key renders. This asks the question only
+        the grader can answer, which is whether the rendered key actually passes."""
+        from . import manifest
+
+        brief = manifest.generate_brief(meta, SELFCHECK_SEED)
+        return {
+            "_selfcheck.yaml": manifest.render_solution(meta, brief),
+            "_selfcheck.py": manifest.harness(
+                meta, brief, learner=meta["dir"] / "_selfcheck.yaml"
+            ),
+        }
+
+
+KINDS = {PYTHON: _Python(), MANIFEST: _Manifest()}
+
+
+def of(meta):
+    """The kind that owns this task's learner artifact. Raises KeyError on an unknown
+    kind rather than guessing: the catalogue has already rejected those by name."""
+    return KINDS[meta.get("kind", PYTHON)]

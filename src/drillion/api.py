@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from . import __version__, backup, sandbox
+from . import __version__, backup, kinds, manifest, sandbox
 from .attempts import (
     Gated,
     NoAttempt,
@@ -26,24 +26,12 @@ from .attempts import (
     nudge_due,
     open_attempt,
     record_pass,
-    solution_text,
     unlock_solution,
 )
 from .catalogue import public, tasks
 from .lsp import bridge
-from .region import (
-    Invalid,
-    bounds,
-    cut,
-    etag,
-    has_given,
-    revision,
-    splice,
-    stub,
-    validate,
-    write_region,
-)
-from .runner import run_tests, summarise
+from .region import Invalid, write_region
+from .runner import summarise
 from .scheduler import (
     LADDER,
     LAPSE_LIMIT,
@@ -130,6 +118,14 @@ async def _unreadable(_request, exc):
     return JSONResponse({"error": str(exc)}, 503)
 
 
+@app.exception_handler(manifest.Rejected)
+async def _not_gradable(_request, exc):
+    """A manifest nothing could grade: a missing validator, a grader that will not give up
+    a brief, a sitting older than the grading itself. None of them say anything about the
+    learner's answer, so none of them may reach the page as a failed test."""
+    return JSONResponse({"error": str(exc)}, 503)
+
+
 @app.exception_handler(StarletteHTTPException)
 async def _error(_request, exc):
     """One error shape for the page: {"error": ...} plus whatever the case adds."""
@@ -180,15 +176,15 @@ def _task(slug):
     return all_tasks[slug]
 
 
-def _check_etag(src, sent):
+def _check_etag(kind, src, sent):
     """Optimistic lock: the editor may only write what it last read."""
-    if sent != etag(src):
+    if sent != kind.etag(src):
         raise HTTPException(
             409,
             {
                 "error": "the file changed on disk",
-                "etag": etag(src),
-                "code": cut(src).body,
+                "etag": kind.etag(src),
+                "code": kind.body(src),
             },
         )
 
@@ -240,7 +236,8 @@ def _deps(st, all_tasks, meta):
 
 def _payload(st, slug, meta, src):
     """Everything the task page needs, and nothing the answer lives in."""
-    body = cut(src).body
+    kind = kinds.of(meta)
+    body = kind.body(src)
     o = st["open"].get(slug)
     c = card(st, slug)
     att = attempt_view(o, meta["hints"])
@@ -251,10 +248,10 @@ def _payload(st, slug, meta, src):
     return {
         "slug": slug,
         "meta": public(meta),
-        "spec_md": meta["spec_md"],
+        "spec_md": kind.spec(meta, o),
         "code": body,
-        "etag": etag(src),
-        "has_given": has_given(body),
+        "etag": kind.etag(src),
+        "has_given": kind.has_given(body),
         "status": status,
         "seen": c["seen"],
         "box": c["box"],
@@ -263,7 +260,7 @@ def _payload(st, slug, meta, src):
         **_deps(st, tasks(), meta),
         "ladder": LADDER,
         "note": st["notes"].get(slug, ""),
-        "reference": solution_text(meta["path"]) if reveal else None,
+        "reference": kind.reference(meta, o) if reveal else None,
         **att,
         "archive": [
             {
@@ -421,7 +418,7 @@ def get_task(slug: str):
 def open_task(slug: str):
     with writing() as st:
         meta = _task(slug)
-        open_attempt(st, slug)
+        open_attempt(st, slug, meta)
         return _payload(st, slug, meta, meta["path"].read_text(encoding="utf-8"))
 
 
@@ -431,11 +428,12 @@ def save_task(slug: str, edit: Edit):
         meta = _task(slug)
         if slug not in st["open"]:  # a closed task is a stub; keep it one
             raise NoAttempt(slug)
-        src = meta["path"].read_text(encoding="utf-8")
-        _check_etag(src, edit.etag)
-        new_src = validate(edit.code, src)
-        write_region(meta["path"], new_src)
-        return {"etag": etag(new_src)}
+        kind = kinds.of(meta)
+        src = kind.path(meta).read_text(encoding="utf-8")
+        _check_etag(kind, src, edit.etag)
+        new_src = kind.validate(edit.code, src)
+        write_region(kind.path(meta), new_src)
+        return {"etag": kind.etag(new_src)}
 
 
 @app.post("/api/task/{slug}/run")
@@ -448,21 +446,22 @@ def run_task(slug: str, edit: Edit):
     with writing() as st:
         meta = _task(slug)
         o = current(st, slug)
-        src = meta["path"].read_text(encoding="utf-8")
-        _check_etag(src, edit.etag)
-        new_src = validate(edit.code, src)
-        write_region(meta["path"], new_src)
-        passed, out, found = run_tests(meta["path"], o["seed"])
+        kind = kinds.of(meta)
+        src = kind.path(meta).read_text(encoding="utf-8")
+        _check_etag(kind, src, edit.etag)
+        new_src = kind.validate(edit.code, src)
+        write_region(kind.path(meta), new_src)
+        passed, out, found = kind.grade(meta, o)
         if edit.submit:
             o["attempts"] += 1
         else:
             o["runs"] = o.get("runs", 0) + 1  # not graded, but it answers the nudge
-        body = cut(new_src).body
+        body = kind.body(new_src)
         resp = {
             "passed": passed,
             "graded": edit.submit,
             "attempts": o["attempts"],
-            **summarise(out, bounds(new_src)),
+            **summarise(out, kind.marker_line(new_src)),
             "case": found,
         }
         log.info(
@@ -475,11 +474,11 @@ def run_task(slug: str, edit: Edit):
         if passed and edit.submit:
             was = card(st, slug)["box"]
             grade, gap, box, reason = record_pass(
-                st, slug, meta, body, revision(new_src)
+                st, slug, meta, body, kind.revision(meta, new_src)
             )  # drops the attempt
             log.info("%s %s box=%s due in %sd (%s)", slug, grade, box, gap, reason)
-            stubbed = splice(new_src, stub(body))
-            reset_after_commit(st, meta["path"], new_src, stubbed)
+            stubbed = kind.empty(new_src)
+            reset_after_commit(st, meta, kind.path(meta), new_src, stubbed)
             new_src = stubbed
             # `from_box` is the direction: `struggled` steps a card *down*
             resp |= {
@@ -490,11 +489,11 @@ def run_task(slug: str, edit: Edit):
                 "reason": reason,
                 "due_in": gap,
                 "code": body,
-                "reference": solution_text(meta["path"]),  # passing is what opens it
+                "reference": kind.reference(meta, o),  # passing is what opens it
                 "lapses": card(st, slug)["lapses"],
                 "next": pick(st, tasks())[0],
             }
-        return resp | {"etag": etag(new_src)}
+        return resp | {"etag": kind.etag(new_src)}
 
 
 @app.post("/api/task/{slug}/touch")
@@ -548,11 +547,12 @@ def abandon_task(slug: str, sent: Etag):
     with writing() as st:
         meta = _task(slug)
         current(st, slug)
-        src = meta["path"].read_text(encoding="utf-8")
-        _check_etag(src, sent.etag)
-        new_src = abandon(st, slug, src)
+        kind = kinds.of(meta)
+        src = kind.path(meta).read_text(encoding="utf-8")
+        _check_etag(kind, src, sent.etag)
+        new_src = abandon(st, slug, kind, src)
         log.info("%s abandoned", slug)
-        reset_after_commit(st, meta["path"], src, new_src)
+        reset_after_commit(st, meta, kind.path(meta), src, new_src)
         return _payload(st, slug, meta, new_src)
 
 

@@ -7,7 +7,8 @@ export type Grade = "quick" | "pass" | "struggled" | "abandoned";
  *  in `Task.meta`. */
 export interface Meta {
   topic: number; title: string;
-  difficulty: "easy" | "medium" | "hard"; tier: "core" | "advanced" | "packages"; track?: string;
+  difficulty: "easy" | "medium" | "hard"; tier?: "core" | "advanced" | "packages"; track?: string;
+  kind: "python" | "manifest";
   tags: string[]; source?: string;
 }
 /** A catalogue row: the task's facts plus this learner's card. */
