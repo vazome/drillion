@@ -128,7 +128,9 @@ def _read_brief(out):
         before = os.lstat(out)
         if not stat.S_ISREG(before.st_mode):
             raise Rejected("brief() wrote something that is not a plain file")
-        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+        flags = (
+            os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+        )
         fd = os.open(out, flags)
     except OSError:
         raise Rejected("brief() wrote nothing") from None
