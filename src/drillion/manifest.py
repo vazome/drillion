@@ -121,16 +121,20 @@ def _read_brief(out):
     """Read back what the child wrote, as the one file object the size check looked at.
 
     The child owns the scratch directory, so it can unlink `out` and leave a symlink or a
-    fifo in its place. `O_NOFOLLOW` keeps the parent from becoming a confused deputy for a
-    file the sandbox denies the child, `O_NONBLOCK` keeps a fifo from wedging this thread,
-    and `fstat` measures the fd rather than the name, so nothing can be swapped in between."""
+    fifo in its place. The lstat/open/fstat identity check prevents following a replacement;
+    where the platform has them, `O_NOFOLLOW` rejects a symlink at open and `O_NONBLOCK`
+    keeps a fifo from wedging this thread."""
     try:
-        fd = os.open(out, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        before = os.lstat(out)
+        if not stat.S_ISREG(before.st_mode):
+            raise Rejected("brief() wrote something that is not a plain file")
+        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+        fd = os.open(out, flags)
     except OSError:
         raise Rejected("brief() wrote nothing") from None
     with open(fd, encoding="utf-8") as stream:
         info = os.fstat(fd)
-        if not stat.S_ISREG(info.st_mode):
+        if not stat.S_ISREG(info.st_mode) or not os.path.samestat(before, info):
             raise Rejected("brief() wrote something that is not a plain file")
         if info.st_size > MAX_BRIEF_BYTES:
             raise Rejected("brief() wrote too much")
