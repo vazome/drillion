@@ -77,8 +77,7 @@ Drillion is distributed as a Docker image. Install Docker Engine on Linux or Doc
 macOS or Windows, then start the local service:
 
 ```bash
-docker run -d --name drillion --restart unless-stopped \
-  -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion:latest
+docker run -d --name drillion --restart unless-stopped -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion:latest
 ```
 
 Open <http://127.0.0.1:8765>. The image never opens a host browser. Its named volume keeps your
@@ -90,12 +89,10 @@ notes. Stop the old container cleanly, remove only that container, then start th
 against the same named volume. The `drillion` volume is not removed by `docker rm`.
 
 ```bash
-IMAGE=ghcr.io/vazome/drillion:latest
-docker pull "$IMAGE"
+docker pull ghcr.io/vazome/drillion:latest
 docker stop drillion
 docker rm drillion
-docker run -d --name drillion --restart unless-stopped \
-  -p 127.0.0.1:8765:8765 -v drillion:/data "$IMAGE"
+docker run -d --name drillion --restart unless-stopped -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion:latest
 ```
 
 For a reproducible rollback, replace `latest` with `ghcr.io/vazome/drillion:<version>` or the
