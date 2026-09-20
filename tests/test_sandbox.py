@@ -87,7 +87,7 @@ def grade(tmp_path, monkeypatch, *body):
     task = tmp_path / "root" / "tasks" / "999_probe" / "task.py"
     task.parent.mkdir(parents=True, exist_ok=True)
     task.write_text(PROBE.format(canary=str(canary), body="".join(body)))
-    return runner.run_tests(task, seed=1)[
+    return runner.run_python({"path": task}, seed=1)[
         :2
     ]  # these tests grade the sandbox, not the case
 
@@ -169,7 +169,7 @@ def test_grading_survives_a_machine_with_no_kernel_tier(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "root", tmp_path)
     task = tmp_path / "task.py"
     task.write_text("def test_solve():\n    assert 1 + 1 == 2\n")
-    passed, out, _ = runner.run_tests(task, seed=1)
+    passed, out, _ = runner.run_python({"path": task}, seed=1)
     assert passed, out
 
 
@@ -229,6 +229,65 @@ def test_the_ruleset_only_asks_for_rights_this_kernel_knows():
     )
     assert fd >= 0, f"kernel refused the ruleset: errno {ctypes.get_errno()}"
     os.close(fd)
+
+
+def test_the_tools_directory_is_executable_and_schemas_are_readable(
+    tmp_path, monkeypatch
+):
+    """A manifest is graded by running the pinned kubeconform against packaged schemas, so
+    the ruleset has to reach both: the tools directory to exec, the schemas to read."""
+    from drillion import tools
+
+    monkeypatch.setattr(settings, "root", tmp_path)
+    (tmp_path / "tools").mkdir()
+    roots = dict(sandbox._roots(str(tmp_path / "scratch"), []))
+    tools_key = os.fsencode(str((tmp_path / "tools").resolve()))
+    assert "execute" in roots.get(tools_key, set())
+    assert "write_file" not in roots.get(tools_key, set())
+    schema_key = os.fsencode(str(tools.SCHEMAS.resolve()))
+    assert "read_file" in roots.get(schema_key, set())
+    assert "write_file" not in roots.get(schema_key, set())
+    # the union in `_roots` keys on resolved paths, so an exec root one level down must
+    # leave the data root itself listable and nothing more
+    assert roots[os.fsencode(str(tmp_path.resolve()))] == {"read_dir"}
+
+
+def test_the_macos_profile_still_denies_the_network():
+    """Grading is offline. `(deny network*)` is the whole of that denial on macOS, so an
+    exec root added to the profile must not have cost it."""
+    assert "(deny network*)" in sandbox._sbpl("/tmp", [])
+
+
+# the Landlock filesystem rights, ABI 1 to 5, spelled out so that growing the vocabulary is
+# a deliberate edit here and not a side effect of widening a root
+FILESYSTEM_RIGHTS = {
+    "execute",
+    "write_file",
+    "read_file",
+    "read_dir",
+    "remove_dir",
+    "remove_file",
+    "make_char",
+    "make_dir",
+    "make_reg",
+    "make_sock",
+    "make_fifo",
+    "make_block",
+    "make_sym",
+    "refer",
+    "truncate",
+    "ioctl_dev",
+}
+
+
+def test_the_ruleset_only_ever_asks_for_filesystem_rights():
+    """Landlock denies its other capability classes, network and scopes, by having no allow
+    rule at all. A right outside this vocabulary reaching `_roots` would be a new class of
+    access granted to every graded process, exec roots included."""
+    assert set(sandbox._FS) == FILESYSTEM_RIGHTS
+    asked = {right for _, rights in sandbox._roots("/tmp", []) for right in rights}
+    assert asked, "no rights at all means this test proves nothing"
+    assert asked <= FILESYSTEM_RIGHTS
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX resource limits")
@@ -300,3 +359,27 @@ def test_the_windows_child_hands_back_unix_line_endings(tmp_path):
         [sys.executable, "-c", "print('a'); print('b')"], tmp_path, timeout=60
     )
     assert done.stdout == "a\nb\n"
+
+
+def test_run_script_keeps_the_macos_wrapper(tmp_path, monkeypatch):
+    """`confine` confines macOS by *prefixing* the command, so a bare script has to keep
+    everything ahead of the interpreter and replace only the pytest tail behind it."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    monkeypatch.setattr(sandbox, "status", lambda: ("sandbox-exec", "forced by a test"))
+    seen = {}
+
+    def capture(**kwargs):
+        seen.update(kwargs)
+        return subprocess.CompletedProcess(kwargs["args"], 0, "", "")
+
+    monkeypatch.setattr(subprocess, "run", capture)
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    script = tmp_path / "src" / "brief.py"
+    script.parent.mkdir()
+    script.write_text("", encoding="utf-8")
+    sandbox.run_script([str(script), "7"], scratch, 5)
+    assert seen["args"][:2] == [sandbox.SANDBOX_EXEC, "-p"]
+    assert seen["args"][3:] == [sys.executable, str(script), "7"]
+    # the real args reach `confine`, so the script's own directory is a read root
+    assert f'(subpath "{script.parent.resolve()}")' in seen["args"][2]

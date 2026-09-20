@@ -125,6 +125,7 @@ def test_reset_failure_keeps_archive_and_recovers_on_next_access(
     path = root / "tasks" / "task" / "task.py"
     path.parent.mkdir(parents=True)
     source = f"def solve():\n    return 42\n\n\n{region.MARKER}\n"
+    meta = {"kind": "python", "dir": path.parent}
     replacement = region.splice(source, region.stub(region.cut(source).body))
     path.write_text(source, encoding="utf-8")
     with monkeypatch.context() as patch:
@@ -140,7 +141,7 @@ def test_reset_failure_keeps_archive_and_recovers_on_next_access(
             st["archive"]["task"] = [
                 {"date": "2026-09-08", "grade": "pass", "code": "return 42"}
             ]
-            state.reset_after_commit(st, path, source, replacement)
+            state.reset_after_commit(st, meta, path, source, replacement)
         assert path.read_text(encoding="utf-8") == source
         with closing(sqlite3.connect(settings.state_path)) as db:
             assert db.execute("SELECT count(*) FROM pending_resets").fetchone()[0] == 1
@@ -165,6 +166,7 @@ def test_a_reset_for_a_task_that_is_gone_clears_itself(root, monkeypatch):
     path = root / "tasks" / "task" / "task.py"
     path.parent.mkdir(parents=True)
     source = f"def solve():\n    return 42\n\n\n{region.MARKER}\n"
+    meta = {"kind": "python", "dir": path.parent}
     replacement = region.splice(source, region.stub(region.cut(source).body))
     path.write_text(source, encoding="utf-8")
     with monkeypatch.context() as patch:
@@ -180,9 +182,39 @@ def test_a_reset_for_a_task_that_is_gone_clears_itself(root, monkeypatch):
             st["archive"]["task"] = [
                 {"date": "2026-09-08", "grade": "pass", "code": "return 42"}
             ]
-            state.reset_after_commit(st, path, source, replacement)
+            state.reset_after_commit(st, meta, path, source, replacement)
     shutil.rmtree(path.parent)
     assert state.load()["archive"]["task"][0]["code"] == "return 42"
+    with closing(sqlite3.connect(settings.state_path)) as db:
+        assert db.execute("SELECT count(*) FROM pending_resets").fetchone()[0] == 0
+
+
+def test_an_interrupted_manifest_reset_is_repeated_then_cleared(root, monkeypatch):
+    """A crash between emptying the yaml and clearing the intent must still settle: the
+    reset is applied again rather than mistaken for an external edit and preserved."""
+    path = root / "tasks" / "task" / "task.yaml"
+    path.parent.mkdir(parents=True)
+    meta = {"kind": "manifest", "dir": path.parent}
+    source = "kind: Deployment\n"
+    path.write_text(source, encoding="utf-8")
+    with monkeypatch.context() as patch:
+
+        def fail(*args):
+            raise OSError("disk unavailable")
+
+        patch.setattr(region, "write_region", fail)
+        with (
+            pytest.raises(state.Unreadable, match="Progress is saved"),
+            state.writing() as st,
+        ):
+            st["archive"]["task"] = [
+                {"date": "2026-09-08", "grade": "pass", "code": source}
+            ]
+            state.reset_after_commit(st, meta, path, source, "")
+        assert path.read_text(encoding="utf-8") == source
+    path.write_text("", encoding="utf-8")  # the lost write had in fact landed
+    assert state.load()["archive"]["task"][0]["code"] == source
+    assert path.read_text(encoding="utf-8") == ""
     with closing(sqlite3.connect(settings.state_path)) as db:
         assert db.execute("SELECT count(*) FROM pending_resets").fetchone()[0] == 0
 
@@ -248,3 +280,18 @@ def test_interrupted_import_rolls_back_schema_and_can_retry(root, monkeypatch):
     assert st["focus"] == "core"
     assert st["future_field"] == {"keep": True}
     assert legacy.read_text(encoding="utf-8") == raw
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        '{"open": {"271_t": {"brief": "checkout"}}}',
+        '{"open": {"271_t": {"spec_md": 3}}}',
+        '{"open": {"271_t": {"brief_revision": ["a1b2"]}}}',
+    ],
+)
+def test_a_malformed_manifest_brief_is_refused_like_any_other_field(root, raw):
+    """A stored sitting carries its own question, so its shape is checked like the rest."""
+    (root / "progress.json").write_text(raw, encoding="utf-8")
+    with pytest.raises(state.Unreadable):
+        state.load()

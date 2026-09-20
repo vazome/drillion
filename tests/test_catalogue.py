@@ -7,7 +7,12 @@ from drillion import catalogue
 from drillion.settings import settings
 from tests.fixtures import README, TASK, tasks_root
 
-DIRS = sorted(p for p in settings.tasks_dir.iterdir() if (p / "task.py").exists())
+# every folder holding a learner's file, whatever its kind calls one
+DIRS = sorted(
+    p
+    for p in settings.tasks_dir.iterdir()
+    if any((p / name).exists() for name in catalogue.FILENAMES.values())
+)
 
 
 def test_every_task_folder_is_read():
@@ -135,6 +140,27 @@ def test_the_scan_is_cached_but_an_edited_task_is_re_read():
         shutil.rmtree(tmp)
 
 
+def test_the_cache_notices_a_manifests_own_file_appearing():
+    """`_stamp` must watch every kind's filename, not just task.py, or a manifest's
+    `task.yaml: missing` reason survives the file actually being added."""
+    manifest_readme = README.replace("tier: core\n", "").replace(
+        "difficulty: easy", "kind: manifest\ndifficulty: easy"
+    )
+    tmp, keep = (
+        tasks_root(**{"043_manifest": {"README.md": manifest_readme}}),
+        settings.root,
+    )
+    try:
+        settings.root = tmp
+        assert "043_manifest" not in catalogue.tasks()  # task.yaml missing
+        for name in ("task.yaml", "grade.py", "solution.yaml"):
+            (tmp / "tasks" / "043_manifest" / name).write_text("", encoding="utf-8")
+        assert "043_manifest" in catalogue.tasks()
+    finally:
+        settings.root = keep
+        shutil.rmtree(tmp)
+
+
 def test_no_task_declares_practices():
     """`practices` was authored on a handful of tasks and read by nothing. It is gone, and
     nothing may quietly start shipping it to the browser again."""
@@ -159,6 +185,48 @@ def test_search_text_carries_the_prose_and_not_the_furniture():
     assert "def solve" not in text  # the fence went
     assert "docs.python.org" not in text and "exercism prose" not in text
     assert "# a task" not in text  # the title is matched separately
+
+
+def test_kind_defaults_to_python_and_manifest_needs_no_tier():
+    keep = settings.root
+    manifest_readme = README.replace("tier: core\n", "").replace(
+        "difficulty: easy", "kind: manifest\ndifficulty: easy"
+    )
+    tmp = tasks_root(
+        **{
+            "042_thing": {"README.md": README, "task.py": TASK},
+            "043_manifest": {
+                "README.md": manifest_readme,
+                "task.yaml": "",
+                "grade.py": "",
+                "solution.yaml": "",
+            },
+        }
+    )
+    try:
+        settings.root = tmp
+        found = catalogue.tasks()
+        assert found["042_thing"]["kind"] == "python"
+        assert found["043_manifest"]["kind"] == "manifest"
+        assert "tier" not in found["043_manifest"]
+        assert catalogue.public(found["043_manifest"])["kind"] == "manifest"
+        assert found["043_manifest"]["path"].name == "task.yaml"
+    finally:
+        settings.root = keep
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_an_unknown_kind_is_rejected_by_name():
+    keep = settings.root
+    bad = README.replace("difficulty: easy", "kind: terraform\ndifficulty: easy")
+    tmp = tasks_root(**{"044_bad": {"README.md": bad, "task.py": TASK}})
+    try:
+        settings.root = tmp
+        why = {name: reasons for name, _, reasons in catalogue.scan()}
+        assert any("terraform" in r for r in why["044_bad"])
+    finally:
+        settings.root = keep
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 def test_every_task_ships_searchable_text():

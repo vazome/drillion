@@ -3,13 +3,123 @@
 import graphlib
 import re
 
-from . import sandbox
-from .catalogue import SLUG, scan
+import yaml
+
+from . import kinds, sandbox, tools
+from .catalogue import MANIFEST, PYTHON, SECTION, SLUG, scan
+from .manifest import MAX_SPEC_CHARS
 
 TAG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 DIFFICULTIES = ("easy", "medium", "hard")
 TIERS = ("core", "advanced", "packages")
 REFERENCES = ("prereqs",)  # optional frontmatter lists of task numbers
+# the sections a manifest shows before any sitting has filled a placeholder in
+PLAIN_SECTIONS = ("why", "you get")
+# Templates such as `name: {name}-web` need a line-based fallback.
+SCHEMA_FIELD = re.compile(r"^(apiVersion|kind):[ \t]*(\S+)", re.MULTILINE)
+
+
+def _placeholder_rules(spec_md):
+    """A manifest with no sitting open serves its README as written, so only the sections
+    that carry the requirements may hold a placeholder for one to fill in."""
+    parts = SECTION.split(spec_md)  # [before, head, body, head, body, ...]
+    return [
+        f"README.md: {head.strip()} has a placeholder in it, and that section is "
+        "shown before a sitting fills one in"
+        for head, body in zip(parts[1::2], parts[2::2])
+        if head.strip().lower() in PLAIN_SECTIONS and "{" in body
+    ]
+
+
+def _render_rules(meta):
+    """Do the README and the answer key actually fit a brief this task produces?
+    `_placeholder_rules` asks only about the two sections shown before a sitting opens; a
+    stray brace anywhere else, or a placeholder the grader never fills, reaches the learner
+    as a failed open. A solution.yaml that will not render reaches them later and worse, on
+    the run that should have passed, so both are rendered against the same brief here."""
+    if "dir" not in meta:
+        return []
+    from . import manifest
+
+    brief = manifest.generate_brief(meta, kinds.SELFCHECK_SEED)
+    try:
+        manifest.render(meta.get("spec_md", ""), brief)
+    except manifest.Rejected as err:
+        return [f"README.md: the spec does not render against a brief - {err}"]
+    try:
+        manifest.render_solution(meta, brief)
+    except manifest.Rejected as err:
+        return [f"solution.yaml: does not render against a brief - {err}"]
+    return []
+
+
+def _schema_rules(meta):
+    """Does drillion actually package a schema for the kind this task teaches? kubeconform
+    answers a kind it has no schema for the same way it answers a typo, so a task nobody
+    packaged a schema for tells every learner who gets it right that they got it wrong.
+    Caught here, at contribution time, because at grading time the two are one string."""
+    try:
+        with (meta["dir"] / "solution.yaml").open(encoding="utf-8") as stream:
+            text = stream.read(MAX_SPEC_CHARS + 1)
+    except UnicodeDecodeError:
+        return ["solution.yaml: is not valid UTF-8"]
+    except KeyError, OSError:
+        return []  # a solution.yaml that is missing or unreadable is its own reason
+    if len(text) > MAX_SPEC_CHARS:
+        return [f"solution.yaml: exceeds {MAX_SPEC_CHARS} characters"]
+    if not text:
+        return []
+    try:
+        fields = yaml.safe_load(text)
+    except yaml.YAMLError:
+        fields = {}
+        for key, value in SCHEMA_FIELD.findall(text):
+            fields.setdefault(key, value)
+    if not isinstance(fields, dict):
+        fields = {}
+    kind = fields.get("kind")
+    if not isinstance(kind, str) or not kind:
+        return ["solution.yaml: cannot determine kind"]
+    api = fields.get("apiVersion", "")
+    if not isinstance(api, str):
+        return ["solution.yaml: cannot determine apiVersion"]
+    group_parts = api.split("/")
+    suffix = "-" + group_parts[0].split(".")[0].lower()
+    if len(group_parts) > 1:
+        suffix += "-" + group_parts[1].lower()
+    name = kind.lower() + suffix + ".json"
+    if (tools.SCHEMAS / name).is_file():
+        return []
+    packaged = ", ".join(sorted(p.stem for p in tools.SCHEMAS.glob("*.json")))
+    return [
+        (
+            f"solution.yaml: no packaged schema for {kind} ({api or 'no apiVersion'}); "
+            f"drillion packages {packaged}"
+        )
+    ]
+
+
+def _python_rules(meta):
+    tier = meta.get("tier")
+    if tier is not None and tier not in TIERS:
+        return [f"README.md: tier {tier!r} is not one of {' / '.join(TIERS)}"]
+    return []
+
+
+def _manifest_rules(meta):
+    out = []
+    if meta.get("tier") is not None:
+        out.append("README.md: tier belongs to a python task, not a manifest")
+    return (
+        out
+        + _placeholder_rules(meta.get("spec_md", ""))
+        + _render_rules(meta)
+        + _schema_rules(meta)
+    )
+
+
+# One row per kind, as `catalogue.CHECKS` is: a third kind adds a row rather than a branch.
+KIND_RULES = {PYTHON: _python_rules, MANIFEST: _manifest_rules}
 
 
 def _value_rules(meta):
@@ -22,8 +132,7 @@ def _value_rules(meta):
             f"README.md: difficulty {difficulty!r} is not one of "
             f"{' / '.join(DIFFICULTIES)}"
         )
-    if (tier := meta.get("tier")) is not None and tier not in TIERS:
-        out.append(f"README.md: tier {tier!r} is not one of {' / '.join(TIERS)}")
+    out += KIND_RULES[meta.get("kind", PYTHON)](meta)
     minutes = meta.get("minutes")
     if minutes is not None and (
         isinstance(minutes, bool) or not isinstance(minutes, int) or minutes <= 0
@@ -112,16 +221,33 @@ def problems():
     return out
 
 
-def doctor():
-    """Print what is confining graded code, which interpreter grades it, and every problem
-    under tasks/, one line each,
+def _graders(fetch):
+    """Print where each pinned external grader stands, downloading the ones that are
+    missing or altered when asked to. Information, never a failure: a machine that has not
+    fetched a grader yet has nothing wrong with its tasks, and only an explicit `--fetch`
+    ever reaches the network."""
+    if fetch:
+        for name in tools.PINS:
+            try:
+                if tools.installed(name) is None:
+                    tools.acquire(name)
+            except (tools.Unsupported, tools.Rejected, OSError) as exc:
+                print(f"{name}: {exc}")
+    for name, status in tools.report():
+        print(f"{name}: {status}")
+
+
+def doctor(fetch=False):
+    """Print what is confining graded code, which interpreter grades it, where the pinned
+    graders stand, and every problem under tasks/, one line each,
     and return how many problems there were. Non-zero from the CLI on any, so CI can gate a
-    contribution on it — the sandbox line is information, never a failure."""
+    contribution on it — the sandbox and grader lines are information, never a failure."""
     tier, why = sandbox.status()
     print(f"sandbox: {tier} — {why}")
     print(
         f"python: {sandbox.grading_python()} — every task is graded on this interpreter"
     )
+    _graders(fetch)
     found = problems()
     if found:
         width = max(len(name) for name, _ in found) + 8

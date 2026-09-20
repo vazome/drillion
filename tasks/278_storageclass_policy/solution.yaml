@@ -1,0 +1,19 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {name}
+provisioner: {provisioner}
+reclaimPolicy: {policy}
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {claim}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {name}
+  resources:
+    requests:
+      storage: {capacity}

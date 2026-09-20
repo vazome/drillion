@@ -96,8 +96,10 @@ docker run -d --name drillion --restart unless-stopped -p 127.0.0.1:8765:8765 -v
 ```
 
 For a reproducible rollback, replace `latest` with `ghcr.io/vazome/drillion:<version>` or the
-immutable `ghcr.io/vazome/drillion@sha256:...` reference in that release's notes. Back up from
-**Settings → Back up** before a major upgrade.
+immutable `ghcr.io/vazome/drillion@sha256:...` reference in that release's notes **only when that
+release is compatible with the data already in the volume**. Before a major upgrade, back up from
+**Settings → Back up**. To return to an older, incompatible release, restore that backup into a
+separate volume rather than reusing the upgraded one.
 
 ## Commands
 

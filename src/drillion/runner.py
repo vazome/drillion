@@ -1,6 +1,5 @@
 """Running the tests: task code only ever executes in a pytest subprocess."""
 
-import ast
 import json
 import os
 import re
@@ -9,9 +8,8 @@ import tempfile
 from pathlib import Path
 
 from . import case as case_capture
-from . import sandbox
+from . import kinds, sandbox
 from .catalogue import tasks
-from .region import _solve, cut, splice, stub
 from .settings import settings
 
 _TASK_LINE = re.compile(r"[\w./-]*task\.py:(\d+)")
@@ -74,8 +72,11 @@ def _run_pytest(args, timeout=None, capture_case=None, **env):
         return result
 
 
-def run_tests(path, seed):
-    """Task code only ever runs here, in its own process.
+def run_python(meta, seed):
+    """A python sitting: task code only ever runs here, in its own process.
+
+    Paired with `run_manifest`, which grades the other kind. Neither dispatches: the
+    caller already holds a kind, and `kind.grade` picks the one that fits.
 
     `-l` because the seed makes a different case every sitting: without the failing frame's
     locals the learner can read that `solve` answered wrong and still not know what it was
@@ -90,7 +91,7 @@ def run_tests(path, seed):
         found = Path(box, "case.json")
         try:
             r = _run_pytest(
-                [str(path), "-l", "--verbosity=2", "--timeout=10"],
+                [str(meta["path"]), "-l", "--verbosity=2", "--timeout=10"],
                 timeout=60,
                 capture_case=found,
                 DRILLION_SEED=str(seed),
@@ -104,6 +105,25 @@ def run_tests(path, seed):
             except ValueError, OSError:  # a killed child can leave half a file
                 case = None
     return r.returncode == 0, r.stdout, case
+
+
+def run_manifest(meta, brief):
+    """A manifest sitting: the generated harness, graded like any other test.
+
+    No case comes back. A manifest's question is the brief the sitting was opened with,
+    and the learner already has it in front of them."""
+    from . import manifest
+
+    with tempfile.TemporaryDirectory(dir=settings.root) as box:
+        test = Path(box, "test_manifest.py")
+        test.write_text(manifest.harness(meta, brief), encoding="utf-8")
+        try:
+            r = _run_pytest(
+                [str(test), "-l", "--verbosity=2", "--timeout=45"], timeout=60
+            )
+        except subprocess.TimeoutExpired:
+            return False, "timed out after 60s", None
+    return r.returncode == 0, r.stdout, None
 
 
 def _posix(out):
@@ -193,43 +213,43 @@ def _failed_slugs(out):
     )
 
 
-def _reference_call(body):
-    """solve()'s own signature, wired straight to the reference answer."""
-    fn = _solve(ast.parse(body))
-    a = fn.args
-    args = [p.arg for p in a.posonlyargs + a.args]
-    args += [f"*{a.vararg.arg}"] if a.vararg else []
-    args += [f"{p.arg}={p.arg}" for p in a.kwonlyargs]
-    args += [f"**{a.kwarg.arg}"] if a.kwarg else []
-    stubbed = stub(body)
-    return (
-        stubbed[: stubbed.rindex("raise NotImplementedError")]
-        + f"return _reference({', '.join(args)})"
-    )
-
-
 def selfcheck():
-    """Does the whole set still work? Solve every task with its own _reference.
-    Returns the number of failures."""
+    """Does the whole set still work? Solve every task with its own reference answer.
+
+    Each kind writes what proves its own: a python task splices `_reference` into the
+    region, a manifest renders `solution.yaml` against a brief and grades it. Returns the
+    number of failures.
+
+    A task too broken to produce those files counts as one of the failures rather than a
+    traceback out of the CLI. `doctor` is where a broken folder is explained at length, and
+    one of them must not stop the rest of the catalogue being checked."""
     all_tasks = tasks()
     made = []
+    refused = []
     try:
-        for meta in all_tasks.values():
-            src = meta["path"].read_text(encoding="utf-8")
-            path = meta["dir"] / "_selfcheck.py"  # an explicit path is always collected
-            path.write_text(
-                splice(src, _reference_call(cut(src).body)), encoding="utf-8"
-            )
-            made.append(path)
-        r = _run_pytest([*map(str, made), "--timeout=60"])
+        for slug, meta in all_tasks.items():
+            try:
+                files = kinds.of(meta).selfcheck(meta)
+            # one contributor's folder must not take down a run over all 267 of them
+            except Exception as err:  # noqa: BLE001
+                refused.append((slug, err))
+                continue
+            for name, text in files.items():
+                path = meta["dir"] / name  # an explicit path is always collected
+                path.write_text(text, encoding="utf-8")
+                made.append(path)
+        tests = [str(p) for p in made if p.suffix == ".py"]
+        r = _run_pytest([*tests, "--timeout=60"]) if tests else None
     finally:
         for path in made:
             path.unlink(missing_ok=True)
-    failed = _failed_slugs(r.stdout)
-    if r.returncode and not failed:
+    failed = _failed_slugs(r.stdout) if r else []
+    if r and r.returncode and not failed:
         print(r.stdout[-2000:].strip() or "pytest did not run")
         return 1
+    for slug, err in refused:
+        print("FAILED", slug, "-", err)
     for slug in failed:
         print("FAILED", slug)
-    print(f"{len(all_tasks) - len(failed)}/{len(all_tasks)} ok")
-    return len(failed)
+    print(f"{len(all_tasks) - len(failed) - len(refused)}/{len(all_tasks)} ok")
+    return len(failed) + len(refused)

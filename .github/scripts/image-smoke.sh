@@ -52,7 +52,8 @@ for _ in $(seq 30); do
   esac
   sleep 2
 done
-# counted from the checkout: a number written down here fails the next PR that adds a task
-test "$(curl -fsS http://127.0.0.1:8765/api/health | jq .tasks)" = "$(ls tasks/*/task.py | wc -l | tr -d " ")"
+# Count learner artifacts rather than Python files: both task.py and task.yaml are tasks.
+task_count="$(find tasks -mindepth 2 -maxdepth 2 -type f \( -name task.py -o -name task.yaml \) | wc -l | tr -d ' ')"
+test "$(curl -fsS http://127.0.0.1:8765/api/health | jq .tasks)" = "$task_count"
 curl -fsS -o /dev/null http://127.0.0.1:8765/
 curl -fsS -o /dev/null -X POST http://127.0.0.1:8765/api/task/009_fstrings/open

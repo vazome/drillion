@@ -17,11 +17,20 @@ function Lines({ text, side }) {
   );
 }
 
-/** The case that failed, as the grader saw it: what `solve()` was called with, what it
+/** Labelled diagnostics use the same wrong-value presentation as a failed comparison.
+ *  The case that failed, as the grader saw it: what `solve()` was called with, what it
  *  answered, and what the answer should have been. A fresh seed builds a different case every
  *  sitting, so without the input none of the rest can be reasoned about. A run that raised
  *  has no two sides to compare and shows the input and the line alone. */
-export function FailedCase({ case: found }) {
+export function FailedCase({ case: found, fields }) {
+  if (fields?.length) return (
+    <div className={s.root}>
+      {fields.map(({ label, value }, i) => <div className={s.field} key={i}>
+        <span className={s.label}><code className={s.path}>{label}</code></span>
+        <Lines text={value} side="wrong" />
+      </div>)}
+    </div>
+  );
   if (!found) return null;
   const args = Object.entries(found.args ?? {});
   const compared = found.expected != null && found.actual != null;

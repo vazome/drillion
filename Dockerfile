@@ -66,11 +66,15 @@ RUN set -eu; \
 
 ENV PATH="/app/.venv/bin:$PATH" \
     DRILLION_ROOT=/data \
+    DRILLION_TOOLS_DIR=/app/tools \
     DRILLION_HOST=0.0.0.0 \
     DRILLION_OPEN_BROWSER=0
 
-RUN useradd --create-home --uid 1000 drillion && mkdir -p /data && chown drillion /data
+RUN useradd --create-home --uid 1000 drillion && mkdir -p /data /app/tools && chown drillion /data /app/tools
 USER drillion
+# /data is normally a bind mount, so keep the pinned grader in the image rather than under the
+# mount. `doctor --fetch` verifies the downloaded binary before this layer is accepted.
+RUN drillion doctor --fetch
 
 EXPOSE 8765
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
