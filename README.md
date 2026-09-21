@@ -60,7 +60,8 @@ Core ideas I'm keeping in mind during the development:
 - **Hints unlock and they are not free.** Three per task, escalating from a nudge to the
   same idea worked through on different data. After half an hour with no submission,
   drillion suggests taking one as you cannot brute-force something you are unaware of.
-- **Grading is the real.** Your code is spliced into the task's own pytest file and run.
+- **Grading is real.** A Python answer is spliced into the task's own pytest file and run; a
+  manifest is validated by kubeconform, then checked against the task's own rules.
 - **YOUR progress.** One SQLite file on your disk, stamped with a schema version, and a
   build refuses to rewrite a file a newer one wrote rather than quietly mangling it. Settings
   turns it into a backup you can carry, and can erase the lot if you want to start over.

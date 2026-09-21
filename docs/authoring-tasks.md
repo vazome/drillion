@@ -10,8 +10,8 @@ a difficulty, a track or a tag, and what the folder has to contain.
 
 | tier | what belongs in it | today |
 |---|---|---|
-| `core` | the language and its standard library, and every coder needs it: syntax, data structures, files and text, errors, `itertools`, `pathlib` | 163 |
-| `advanced` | still the standard library, but you can work a long while without it: `asyncio`, concurrency, generators, decorators, closures, `functools`, the object model past `@property` | 39 |
+| `core` | the language and its standard library, and every coder needs it: syntax, data structures, files and text, errors, `itertools`, `pathlib` | 186 |
+| `advanced` | still the standard library, but you can work a long while without it: `asyncio`, concurrency, generators, decorators, closures, `functools`, the object model past `@property` | 65 |
 | `packages` | solving it needs something `pip` installs: `requests`, `responses`, `boto3`, `moto`, `pytest`, `fastapi`, `langchain` | 16 |
 
 Tier answers "can I run this with stock Python?", so `packages` wins whenever a task is both —
@@ -92,8 +92,9 @@ Exercism's `bob` is `conditionals — classify a message into one of five replie
 name survives in the slug and in `source:`. The number is **not** in the frontmatter — it is the
 folder's leading digits, and the API exposes it as `topic`. The **spec** is everything from
 `# title` up to `## Hints`; extra sections (`## Introduction`, `## Instructions`) may go anywhere
-before it. Headings, lists, tables, fenced code, GitHub alerts (`> [!NOTE]`), Mermaid diagrams,
-images and muted looping clips from `assets/` all render. For a task adapted from Exercism the
+before it. Headings, lists, tables, fenced code, GitHub alerts (`> [!NOTE]`) and images from `assets/`
+all render. Mermaid diagrams and video clips do not: no task uses one yet, and
+`web/src/ds/SpecText.jsx` says what to add back when one does. For a task adapted from Exercism the
 README carries **Exercism's Markdown verbatim** — never trimmed to make room for ours — plus
 frontmatter `source:` and a closing attribution line.
 

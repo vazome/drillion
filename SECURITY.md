@@ -3,11 +3,12 @@
 ## Threat model
 
 drillion runs arbitrary Python on your machine, by design, and only on your machine. The
-sharpest exposure is not a learner attacking themselves: `task.py` executes on import, and
+sharpest exposure is not a learner attacking themselves: `task.py` and a manifest's `grade.py` execute on import, and
 the tasks ship inside the Docker image, so a contributed task is code execution on every user's
 machine. That is what the sandbox is for.
 
-- **Graded code runs in a sandboxed pytest subprocess** (`src/drillion/sandbox.py`). What it
+- **Graded code runs in a sandboxed subprocess** (`src/drillion/sandbox.py`): pytest for a Python
+  task, and for a manifest the pinned kubeconform plus the task's `grade.py`. What it
   can reach depends on what your kernel offers; `drillion doctor` prints the tier in force
   and, when it is not the strongest one, why. The image is an additional process boundary, not a
   replacement for this sandbox.
@@ -57,8 +58,8 @@ whole ruleset fail.
 - **TCP** — every bind and connect is refused, on ABI 4 and above. UDP and Unix sockets are
   not covered by Landlock; on ABI 6 and above, abstract Unix sockets and signals are scoped
   to the sandbox.
-- **Subprocesses are contained, not forbidden.** Task 033 grades `subprocess.run` against
-  `echo` and `true`, so `/usr/bin` stays executable. A Landlock domain is inherited by every
+- **Subprocesses are contained, not forbidden.** Task 067 grades `subprocess.run` by
+  starting a child Python, so the interpreter and `/usr` stay executable. A Landlock domain is inherited by every
   child, so what a task spawns is confined by the same ruleset the task is — a spawned `cat`
   cannot read your home directory either.
 
@@ -87,7 +88,7 @@ and the integrity label set to Low, inside a job object.
 - **Memory** is capped by the job, and `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE` kills anything
   the task left running when the run ends.
 - **Subprocesses are contained, not forbidden**, as on Linux: the child inherits the Low
-  token, and a process cap would break both task 033 and a `uv` virtualenv, whose
+  token, and a process cap would break both task 067 and a `uv` virtualenv, whose
   `python.exe` is a trampoline that starts the real interpreter.
 
 **AppContainer would block reads and is deliberately not used.** Access there is the
@@ -106,7 +107,7 @@ on Windows it also rides along with the tier above, for the network it does not 
 refuses writes outside the scratch directory and connections to anything but loopback.
 
 **This is not a security boundary and must not be described as one.** Task code shares the
-interpreter with the hook, and `subprocess` stays open because task 033 grades it, so a
+interpreter with the hook, and `subprocess` stays open because task 067 grades it, so a
 program that means harm walks around it. It is a speed bump against an accident. What
 actually holds at this tier is the scrubbed environment and the redirected `HOME`.
 

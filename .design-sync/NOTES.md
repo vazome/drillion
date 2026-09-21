@@ -30,7 +30,7 @@ The conversion carries these local adaptations forward:
   the native-element rule in `base.css`, matching the export.
 
 Check with `pnpm --dir web build`, `pnpm --dir web lint`, and
-`node --test web/tests/css-modules.test.mjs`. With browser verification approved, also run
+`pnpm --dir web test`. With browser verification approved, also run
 `pnpm --dir web screens` for keyboard, accessibility and task rendering coverage.
 
 ## Earlier sync notes
