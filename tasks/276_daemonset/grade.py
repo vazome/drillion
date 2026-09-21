@@ -40,5 +40,9 @@ def check(doc, b):
     assert len(containers) == 1, (
         f"the pod template has {len(containers)} containers, and the task asks for one"
     )
+    cname = containers[0].get("name")
+    assert cname == b["name"], (
+        f"the container is named {cname!r}, and it should be {b['name']!r}"
+    )
     image = containers[0].get("image")
     assert image == b["image"], f"the container image is {image!r}, not {b['image']!r}"

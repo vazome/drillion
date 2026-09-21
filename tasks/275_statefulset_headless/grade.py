@@ -17,10 +17,18 @@ def brief(r):
 
 
 def check_many(docs, b):
-    [d0, d1] = docs
+    assert len(docs) == 2, (
+        f"the file holds {len(docs)} documents, and the task asks for two: the "
+        "headless Service first, then the StatefulSet"
+    )
+    d0, d1 = docs
     assert d0.get("kind") == "Service", (
         f"the first document is a {d0.get('kind')}, and the headless Service goes first "
         "so it exists by the time the StatefulSet is applied"
+    )
+    name0 = d0.get("metadata", {}).get("name")
+    assert name0 == b["name"], (
+        f"the Service's metadata.name is {name0!r}, and it should be {b['name']!r}"
     )
     spec0 = d0.get("spec", {})
     # Headless is the string `None`; a quoted or unquoted spelling is that string either
@@ -42,6 +50,10 @@ def check_many(docs, b):
 
     assert d1.get("kind") == "StatefulSet", (
         f"the second document is a {d1.get('kind')}, and the task asks for a StatefulSet"
+    )
+    name1 = d1.get("metadata", {}).get("name")
+    assert name1 == b["name"], (
+        f"the StatefulSet's metadata.name is {name1!r}, and it should be {b['name']!r}"
     )
     spec1 = d1.get("spec", {})
     assert spec1.get("serviceName") == b["name"], (

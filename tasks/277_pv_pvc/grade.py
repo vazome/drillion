@@ -20,9 +20,17 @@ def brief(r):
 
 
 def check_many(docs, b):
-    [pv, pvc] = docs
+    assert len(docs) == 2, (
+        f"the file holds {len(docs)} documents, and the task asks for two: the "
+        "PersistentVolume first, then the PersistentVolumeClaim"
+    )
+    pv, pvc = docs
     assert pv.get("kind") == "PersistentVolume", (
         f"the first document is a {pv.get('kind')}, and the volume that holds goes first"
+    )
+    name = pv.get("metadata", {}).get("name")
+    assert name == b["name"], (
+        f"the PV's metadata.name is {name!r}, and it should be {b['name']!r}"
     )
     spec0 = pv.get("spec", {})
     capacity = spec0.get("capacity", {}).get("storage")
@@ -39,6 +47,12 @@ def check_many(docs, b):
     assert spec0.get("storageClassName") == b["storageClass"], (
         f"the PV's spec.storageClassName is {spec0.get('storageClassName')!r}, and it "
         f"should be {b['storageClass']!r}: the shared class is how the claim finds it"
+    )
+
+    path = spec0.get("hostPath", {}).get("path")
+    assert path == "/mnt/data", (
+        f"the PV's spec.hostPath.path is {path!r}, and it should be '/mnt/data': the "
+        "directory on the node that holds the data"
     )
 
     assert pvc.get("kind") == "PersistentVolumeClaim", (

@@ -20,10 +20,18 @@ def brief(r):
 
 
 def check_many(docs, b):
-    [d0, d1] = docs
+    assert len(docs) == 2, (
+        f"the file holds {len(docs)} documents, and the task asks for two: the "
+        "ConfigMap first, then the Pod that reads it"
+    )
+    d0, d1 = docs
     assert d0.get("kind") == "ConfigMap", (
         f"the first document is a {d0.get('kind')}, and the ConfigMap goes first so it "
         "exists by the time the Pod is applied"
+    )
+    name = d0.get("metadata", {}).get("name")
+    assert name == b["name"], (
+        f"the ConfigMap's metadata.name is {name!r}, and it should be {b['name']!r}"
     )
     data = d0.get("data") or {}
     assert data.get("LOG_LEVEL") == b["value"], (
