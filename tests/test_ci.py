@@ -207,7 +207,8 @@ def test_user_docs_describe_docker_as_the_only_distribution():
 
     assert "docker compose up -d" in docs["README.md"]
     assert "docker exec drillion drillion selfcheck" in docs["README.md"]
-    assert "docker stop drillion" in docs["README.md"]
+    assert "docker compose pull && docker compose up -d" in docs["README.md"]
+    assert "docker stop drillion" in docs["docs/configuration.md"]
     assert "docker rm -f drillion" not in docs["README.md"]
     assert (
         "gh attestation verify oci://ghcr.io/vazome/drillion:<version>"
