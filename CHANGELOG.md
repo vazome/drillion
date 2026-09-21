@@ -4,6 +4,39 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.9.0 — 2026-09-21
+
+drillion is now distributed as a Docker image only, and it teaches Kubernetes manifests
+beside Python.
+
+- **One distribution: the GHCR image.** `uv tool install drillion` and PyPI releases end
+  with 0.8.2. The image is multi-platform, with provenance and a per-platform SBOM:
+  `docker run -d --name drillion --restart unless-stopped -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion`.
+  To bring progress over from a `uv tool` install, take **Settings → Back up** there and
+  restore the file in the container.
+- **Eleven Kubernetes tasks, 268–278.** A second task kind, `manifest`: you write a YAML file,
+  kubeconform validates it offline against pinned schemas, and the task's own rules check it
+  against requirements drawn fresh each sitting. The validator is a drillion rebuild of
+  kubeconform 0.8.0 with its Go CVEs patched, verified by checksum.
+- **A track rail on the home screen.** One pill per track with its size and how much of it
+  you have seen; picking one sets the focus for new picks. A Python task naming no track is
+  on the `python` track.
+- **The container is hardened in `compose.yaml`:** read-only, every capability dropped, no new
+  privileges, so graded code on a host without Landlock still cannot touch the installed app.
+  The README now says what the sandbox holds on which kernels instead of promising Landlock
+  unconditionally.
+- **Linux only, the way the image ships.** The macOS `sandbox-exec` and Windows restricted-token
+  sandbox tiers, and the macOS and Windows kubeconform builds, served only a checkout run
+  outside Docker, and no Docker install on any OS ever used them. They are gone, and CI checks
+  Linux alone. Inside the image the tiers are Landlock, then the in-process guard, then the
+  floor.
+- **Grading fixes.** Tasks 275 and 276 require the `app` label their rules name, and 270
+  requires a container image. A YAML `null` reads as a missing field, so the learner gets the
+  normal message instead of being told drillion is broken.
+- **Progress moves to storage layout 2 and backups to format 2**, both automatically. Backups
+  file a manifest beside Python code; 0.9.0 still restores format 1. 0.8.2 cannot read either,
+  so back up before upgrading if you might go back.
+
 ## 0.8.2 — 2026-09-15
 
 An image rebuild. The Python package is unchanged, so an install from PyPI has nothing to do.
