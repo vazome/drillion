@@ -51,9 +51,21 @@ def host():
     return sys.platform, {"x86_64": "amd64", "aarch64": "arm64"}.get(machine, machine)
 
 
+KUBECONFORM_VERSION = "v0.8.0-drillion.3"
 _KUBECONFORM_RELEASE = (
-    "https://github.com/vazome/kubeconform/releases/download/v0.8.0-drillion.3"
+    f"https://github.com/vazome/kubeconform/releases/download/{KUBECONFORM_VERSION}"
 )
+
+
+def _kubeconform(asset, archive_sha256, member, binary_sha256):
+    return Pin(
+        KUBECONFORM_VERSION,
+        f"{_KUBECONFORM_RELEASE}/{asset}",
+        archive_sha256,
+        member,
+        binary_sha256,
+    )
+
 
 PINS: dict[str, dict[tuple[str, str], Pin]] = {
     KUBECONFORM: {
@@ -62,37 +74,32 @@ PINS: dict[str, dict[tuple[str, str], Pin]] = {
         # `archive_sha256` is that file's line; `binary_sha256` is the member inside it,
         # which upstream does not publish and which is what `installed` rechecks on every
         # use. Both are recomputed by hand when the version moves.
-        ("linux", "amd64"): Pin(
-            "v0.8.0-drillion.3",
-            f"{_KUBECONFORM_RELEASE}/kubeconform-linux-amd64.tar.gz",
+        ("linux", "amd64"): _kubeconform(
+            "kubeconform-linux-amd64.tar.gz",
             "ab8eef9c7846a63f01f9df30e53ed01c1aaa9afe1fec30a918bbd44ffea103ab",
             "kubeconform",
             "4b3e14698051fcebf6a04c0438fc40a044e5a0989a3e92f5ff3c52c9d40feba9",
         ),
-        ("linux", "arm64"): Pin(
-            "v0.8.0-drillion.3",
-            f"{_KUBECONFORM_RELEASE}/kubeconform-linux-arm64.tar.gz",
+        ("linux", "arm64"): _kubeconform(
+            "kubeconform-linux-arm64.tar.gz",
             "b98a72aa072620d80370e526a8442aec128d498dd630ca9c043d9ea8b8612482",
             "kubeconform",
             "5db1ce5c7e712468ddd2f8dac883671156586a09cb71fe1cbde6b7225d0ac3ab",
         ),
-        ("darwin", "amd64"): Pin(
-            "v0.8.0-drillion.3",
-            f"{_KUBECONFORM_RELEASE}/kubeconform-darwin-amd64.tar.gz",
+        ("darwin", "amd64"): _kubeconform(
+            "kubeconform-darwin-amd64.tar.gz",
             "3487e750c96b0b6b40a5700d744780653d62b31f3b26562401c5cd45f8f371b0",
             "kubeconform",
             "217d797587fa6527acb1d22caace116651b90d74d661d998ab69bf594ae2cb07",
         ),
-        ("darwin", "arm64"): Pin(
-            "v0.8.0-drillion.3",
-            f"{_KUBECONFORM_RELEASE}/kubeconform-darwin-arm64.tar.gz",
+        ("darwin", "arm64"): _kubeconform(
+            "kubeconform-darwin-arm64.tar.gz",
             "12d12f56ccba69f75b0f42085ebbebaa6a25c0c2936ff39aa2fa552ba4a5dea3",
             "kubeconform",
             "19bd3a2e82bfd717e7a6a9cc54df9bdb9639e01953878d872f92fa602e1fde3e",
         ),
-        ("win32", "amd64"): Pin(
-            "v0.8.0-drillion.3",
-            f"{_KUBECONFORM_RELEASE}/kubeconform-windows-amd64.zip",
+        ("win32", "amd64"): _kubeconform(
+            "kubeconform-windows-amd64.zip",
             "f3870f91f4f60e3f0ff508b62f45f48b43f6d5511b7025a984dac58e9198969a",
             "kubeconform.exe",
             "8025d1fd64783a578961b6d7092a40a083beeb5ae9fb9510f3ee2c9d6f49704e",

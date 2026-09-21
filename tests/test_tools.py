@@ -62,36 +62,14 @@ def test_every_pin_is_filled_in():
             )
 
 
-def test_kubeconform_pins_use_the_patched_fork_release():
-    expected = {
-        ("linux", "amd64"): (
-            "ab8eef9c7846a63f01f9df30e53ed01c1aaa9afe1fec30a918bbd44ffea103ab",
-            "4b3e14698051fcebf6a04c0438fc40a044e5a0989a3e92f5ff3c52c9d40feba9",
-        ),
-        ("linux", "arm64"): (
-            "b98a72aa072620d80370e526a8442aec128d498dd630ca9c043d9ea8b8612482",
-            "5db1ce5c7e712468ddd2f8dac883671156586a09cb71fe1cbde6b7225d0ac3ab",
-        ),
-        ("darwin", "amd64"): (
-            "3487e750c96b0b6b40a5700d744780653d62b31f3b26562401c5cd45f8f371b0",
-            "217d797587fa6527acb1d22caace116651b90d74d661d998ab69bf594ae2cb07",
-        ),
-        ("darwin", "arm64"): (
-            "12d12f56ccba69f75b0f42085ebbebaa6a25c0c2936ff39aa2fa552ba4a5dea3",
-            "19bd3a2e82bfd717e7a6a9cc54df9bdb9639e01953878d872f92fa602e1fde3e",
-        ),
-        ("win32", "amd64"): (
-            "f3870f91f4f60e3f0ff508b62f45f48b43f6d5511b7025a984dac58e9198969a",
-            "8025d1fd64783a578961b6d7092a40a083beeb5ae9fb9510f3ee2c9d6f49704e",
-        ),
-    }
-    for host, (archive, binary) in expected.items():
-        pin = tools.PINS[tools.KUBECONFORM][host]
-        assert pin.version == "v0.8.0-drillion.3"
-        assert pin.url.startswith(
-            "https://github.com/vazome/kubeconform/releases/download/v0.8.0-drillion.3/"
+def test_every_kubeconform_pin_is_the_one_release():
+    """One release, named once: a bump that misses a platform is caught here."""
+    for (os_name, arch), pin in tools.PINS[tools.KUBECONFORM].items():
+        assert pin.version == tools.KUBECONFORM_VERSION
+        asset = pin.url.removeprefix(tools._KUBECONFORM_RELEASE + "/")
+        assert asset.startswith(
+            f"kubeconform-{os_name.replace('win32', 'windows')}-{arch}."
         )
-        assert (pin.archive_sha256, pin.binary_sha256) == (archive, binary)
 
 
 def _archive(member, payload):
