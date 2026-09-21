@@ -51,7 +51,7 @@ jobs:
                 docs/*.md|docs/images/*.png|docs/images/*.jpg|docs/images/*.svg|\
                 .github/ISSUE_TEMPLATE/*|.github/pull_request_template.md|\
                 CONTRIBUTING.md|CHANGELOG.md|AGENTS.md|CLAUDE.md|\
-                CONTEXT.md|DESIGN.md|SECURITY.md) ;;
+                CONTEXT.md|DESIGN.md|SECURITY.md|web/README.md|.design-sync/*.md) ;;
                 *) code=true; break ;;
               esac
             done < "$files"
