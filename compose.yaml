@@ -3,6 +3,14 @@ services:
     image: ghcr.io/vazome/drillion:latest
     container_name: drillion
     restart: unless-stopped
+    # the app writes only to /data and /tmp; everything else stays as the image shipped it
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     ports:
       - "127.0.0.1:8765:8765"
     volumes:

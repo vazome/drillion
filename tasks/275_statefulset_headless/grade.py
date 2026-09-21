@@ -71,6 +71,10 @@ def check_many(docs, b):
         f"spec.selector.matchLabels is {selector} but the pod template is labelled "
         f"{labels}, and the StatefulSet only counts the pods its selector matches"
     )
+    assert labels.get("app") == b["name"], (
+        f"the pod template is labelled app: {labels.get('app')!r}, and it should be "
+        f"app: {b['name']!r}, the label the Service's selector finds its pods by"
+    )
     containers = spec1.get("template", {}).get("spec", {}).get("containers") or []
     assert len(containers) == 1, (
         f"the pod template has {len(containers)} containers, and the task asks for one"

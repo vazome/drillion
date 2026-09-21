@@ -256,6 +256,14 @@ def answer(ok, diagnostics=(), report="", broken=None):
     sys.exit(0)
 
 
+def unset(node):
+    if isinstance(node, dict):
+        return {k: unset(v) for k, v in node.items() if v is not None}
+    if isinstance(node, list):
+        return [unset(v) for v in node]
+    return node
+
+
 def shape(text, many):
     '''What the learner wrote, or the reason it is not yet a manifest. These come before
     the validator because kubeconform has nothing useful to say about any of them. A task
@@ -267,6 +275,8 @@ def shape(text, many):
         docs = list(yaml.safe_load_all(text))
     except yaml.YAMLError as exc:
         answer(False, [(None, "task.yaml is not valid YAML: %s" % exc)])
+    # Kubernetes reads `field: null` as a field left out, so the grader sees it that way too
+    docs = [unset(doc) for doc in docs]
     if many:
         for i, doc in enumerate(docs, 1):
             if not isinstance(doc, dict):

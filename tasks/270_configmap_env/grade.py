@@ -47,6 +47,9 @@ def check_many(docs, b):
     assert len(containers) == 1, (
         f"the pod has {len(containers)} containers, and the task asks for one"
     )
+    assert containers[0].get("image"), (
+        "the container has no image, and a container needs one to run at all"
+    )
     env = containers[0].get("env") or []
     entry = next((e for e in env if e.get("name") == "LOG_LEVEL"), None)
     assert entry is not None, (
