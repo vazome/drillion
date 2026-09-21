@@ -95,6 +95,21 @@ def test_a_manifest_that_misses_the_brief_says_which_requirement(stubbed_kubecon
     assert not passed and "replicas" in headline
 
 
+def test_a_null_field_reads_as_a_missing_field(stubbed_kubeconform):
+    """`metadata: null` is the learner leaving metadata out, and the grader says so rather
+    than tripping over the None and reporting itself broken."""
+    (settings.tasks_dir / SLUG / "grade.py").write_text(
+        'def brief(r):\n    return {"name": "checkout", "replicas": 3}\n\n\n'
+        "def check(doc, b):\n"
+        '    assert doc.get("metadata", {}).get("name") == b["name"], "metadata.name"\n',
+        encoding="utf-8",
+    )
+    passed, headline = _submit(
+        CORRECT.replace("metadata:\n  name: checkout\n", "metadata: null\n")
+    )
+    assert not passed and headline == "metadata.name"
+
+
 @pytest.mark.parametrize(
     "submission, says",
     [

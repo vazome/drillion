@@ -43,6 +43,7 @@ BREAKS = {
         (0, ("data", "LOG_LEVEL"), WRONG),
         (1, ("kind",), "Service"),
         (1, ("spec", "containers"), DOUBLE),
+        (1, ("spec", "containers", 0, "image"), DROP),
         (1, ("spec", "containers", 0, "env", 0, "name"), WRONG),
         (1, ("spec", "containers", 0, "env", 0, "value"), "debug"),
         (
@@ -206,3 +207,18 @@ def test_the_answer_key_passes_and_every_broken_rule_fails(slug):
         for doc, path, value in BREAKS[slug]:
             with pytest.raises(AssertionError):
                 _judge(grade, _broken(docs, doc, path, value), brief)
+
+
+@pytest.mark.parametrize("slug", ["275_statefulset_headless", "276_daemonset"])
+def test_a_controller_relabelled_on_both_sides_still_fails(slug):
+    """Selector and template agreeing with each other is not enough: the rule names the
+    label, and in 275 the Service selects the pods by it."""
+    meta = _manifests()[slug]
+    grade = _grader(meta)
+    brief = grade.brief(random.Random(SEEDS[0]))
+    docs = list(yaml.safe_load_all(manifest.render_solution(meta, brief)))
+    spec = docs[-1]["spec"]
+    spec["selector"]["matchLabels"]["app"] = WRONG
+    spec["template"]["metadata"]["labels"]["app"] = WRONG
+    with pytest.raises(AssertionError):
+        _judge(grade, docs, brief)

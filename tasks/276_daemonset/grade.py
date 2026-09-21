@@ -35,6 +35,10 @@ def check(doc, b):
         f"spec.selector.matchLabels is {selector} but the pod template is labelled "
         f"{labels}, and a DaemonSet only counts the pods its selector matches"
     )
+    assert labels.get("app") == b["name"], (
+        f"the pod template is labelled app: {labels.get('app')!r}, and it should be "
+        f"app: {b['name']!r}"
+    )
 
     containers = spec.get("template", {}).get("spec", {}).get("containers") or []
     assert len(containers) == 1, (
