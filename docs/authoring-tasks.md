@@ -29,9 +29,10 @@ lines you can only write once you have seen the trick is `hard`. Anchor the call
 were graded against: [difficulty-rubric.md](difficulty-rubric.md).
 Today: 42 easy · 185 medium · 51 hard.
 
-**track** — optional, at most one per task: a themed run through the catalogue that cuts across
-tiers, for a sequence meant to be practised in order. No track is defined today. Leave the key
-out unless the task belongs to such a run.
+**track** — one per task: a themed run through the catalogue that cuts across tiers. The home
+screen offers each track as a pill, and picking one sets the **focus**. A Python task that names
+none is on `python`; the Kubernetes manifests say `track: kubernetes`. Name a track only when
+the task belongs to a run other than `python`, and give the run a logo in `web/public/tracks/`.
 
 **tags** — what Python you practise. Lowercase, kebab-case, 1–3 per task, and one rule decides
 every one of them:
@@ -72,7 +73,7 @@ says the two renumberings drillion has had are the last two.
 title: Counter — top N by frequency   # the concept first, then what you build with it
 difficulty: medium                    # easy | medium | hard
 tier: core                            # core | advanced | packages
-track: <run-name>                     # optional, omit it unless the task is part of a run
+track: <run-name>                     # optional, a Python task without one is on `python`
 minutes: 12                           # par time — the grader's input, never shown to the learner
 prereqs: [18]                         # task numbers that gate it; [] when nothing does
 tags: [counter, sorted]               # Python concepts, lowercase kebab-case

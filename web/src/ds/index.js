@@ -28,3 +28,4 @@ export { TaskPath } from "./TaskPath.jsx";
 export { RowFlags } from "./RowFlags.jsx";
 export { RequiresTag } from "./RequiresTag.jsx";
 export { DepLineage } from "./DepLineage.jsx";
+export { TrackRail } from "./TrackRail.jsx";
