@@ -11,8 +11,8 @@ cards on a desk") was not taken.
 
 ## Product in one paragraph
 
-A single-user, local web app for practising Python. A catalogue of 267 short tasks, each
-with a spec, a code editor, and a test that grades the code on fresh random data.
+A single-user, local web app for practising Python. A catalogue of 278 short tasks, 267 in Python and
+11 Kubernetes manifests, each with a spec, a code editor, and a test that grades the code on fresh random data.
 A spaced-repetition scheduler decides what comes back when (7-box ladder: 2/4/8/16/28/60/120 days). Hints
 unlock with time; the solution unlocks after real effort. Sessions are 20–40 minutes a day, on a
 laptop browser, kept up over months — there is no deadline and no countdown, because a habit is
@@ -75,8 +75,9 @@ Data: `GET /api/catalogue` →
 
 Elements: the track rail on top (All tracks plus one pill per track, each with its size and how
 much of it is seen; picking one sets `focus`), Today panel (recent activity, then new picks),
-search, filter chips (tier, tag), status filter, the task list (title · difficulty · the `tier/tag` path · status · a miniature
-ladder showing which box the card is in), a small stats strip (days practised, due today, cards per box).
+search, filter chips (tier, tag), status filter, the task list (title · difficulty · the `tier/tag`
+path · how well it is known · status), a small stats strip (days practised, due today, and how
+many tasks are learning, familiar and solid).
 
 One flat table — no tier bands and no collapsing. The tier is the first segment of every row's
 path, so a band header repeated the word and added a count, and a list that hides two thirds of
@@ -100,7 +101,7 @@ because it is the way back into work already started, not a ration of new materi
 
 Tier and tag render as one filesystem-style path, `core/f-strings`, with the tier segment muted —
 one column, not two. Whatever `focus` a row is filtered by, the UI must be able to show it: a
-filter the screen cannot display is a screen that says "0 of 267" with no way to explain itself.
+filter the screen cannot display is a screen that says "0 of 278" with no way to explain itself.
 
 ### 2. Task (`#/task/:slug`)
 
@@ -167,8 +168,9 @@ Results panel (below or beside the editor), states:
 - idle (never run) · running · **ran** (an ungraded Run that came back green: says so, and says
   no attempt was used) · **failed** (headline lines — the assertion/exception — plus a
   collapsible full pytest output; line numbers refer to the editor) ·
-  **passed**: grade line `QUICK · 4m12s · 1 attempt · box 3 of 7` — elapsed time, never time
-  against par — the ladder visibly stepping, the passing code read-only, a way to go to the
+  **passed**: grade line `QUICK · 4m12s · 1 attempt` — elapsed time, never time
+  against par — and where the task now sits, said in words ("it comes back later than last
+  time") rather than as a box number, the passing code read-only, a way to go to the
   next Today item. A `struggled` pass steps the card *down* a box, so the banner must be able
   to show a fall as well as a climb, and carries `lapses` for the flag at `lapse_limit`.
 
@@ -186,8 +188,7 @@ Data: `GET /api/progress` → `boxes[7]`, `ladder[7]`, `due`, `seen`, `total`, `
 `days{date: passes}` (all history), `per_tag{tag: {seen, total, boxes[7], lapses, due7}}`,
 `log[]` (last 30: `date, slug, grade, attempts, secs, new`).
 
-Elements: the same stats strip, the full-size ladder (7 boxes with counts and next-return
-intervals), the 14-day due-load forecast, the practice heatmap, one strip per topic showing
+Elements: the same stats strip, the 14-day due-load forecast, the practice heatmap, one strip per topic showing
 its spread across the ladder, the recent log. The three figures are specified in
 [`docs/design/progress-visualisations.md`](docs/design/progress-visualisations.md).
 
@@ -207,7 +208,6 @@ control, because the honest answer to "where is my progress" is a path the learn
 
 Five cards, in the order a learner needs them:
 
-- **Your data** — the paths.
 - **Editor** — how the editor is set: font, size, ligatures, key binding (standard, Vim or Emacs), tab size, word
   wrap, relative line numbers, and whether the practice timer is on screen. A binding is
   never a trap: nobody arrives in one by accident, the way out is the same select, and C-g
@@ -216,6 +216,7 @@ Five cards, in the order a learner needs them:
   anyone; hiding the timer changes nothing about the time, which is still counted and still
   grades. These live in this browser rather than in a **backup**, and the card says so, since
   a setting that a restore silently drops is worse than one that was never offered.
+- **Your data** — the paths.
 - **Back up** — one file holding cards, notes, log, archive and the code saved in every task.
 - **Restore** — reading the bundle is its own step: the summary of what it brings and what it
   replaces is shown first, and nothing is touched until that summary is accepted. What it
@@ -245,7 +246,7 @@ learner how long they were supposed to take.
 has no fifth branch, so a filter offering a fifth matches nothing. Anything that genuinely is a
 fifth state, suspend above all, has to reopen this rule on purpose rather than widen it quietly.
 
-Boxes render 1–7 although state stores them 0–6. Hints are "levels". The solution "unlocks".
+Boxes are never shown as numbers: a screen says learning, familiar or solid (`web/src/strength.ts`). Hints are "levels". The solution "unlocks".
 Showing up is counted as days practised.
 
 ## Out of scope

@@ -9,11 +9,13 @@
 | `DRILLION_PORT` | `8765` | port |
 | `DRILLION_OPEN_BROWSER` | `1` | open the browser on start (`0` in Docker) |
 | `DRILLION_SEED` | — | pin the data seed when running a task by hand |
+| `DRILLION_TOOLS_DIR` | `<root>/tools` | where the checksum-pinned graders live (`/app/tools` in Docker) |
 
 ## The root
 
-Everything drillion owns, `tasks/` and `progress.sqlite3`, lives under one root, and nothing it
-owns lives anywhere else.
+Everything drillion owns, `tasks/`, `progress.sqlite3` and the pinned graders in `tools/`, lives
+under one root, and nothing it owns lives anywhere else. The Docker image is the exception: it
+bakes its graders into `/app/tools` at build time, so the volume holds only your tasks and progress.
 
 The Docker image carries a pristine task template. On its first start, Drillion copies that template
 into the mounted `/data` root. Every later start brings Drillion-owned task machinery in line with
@@ -94,7 +96,8 @@ database, and task saves rename temporary files in their task directories.
 ## Security posture
 
 The server binds to loopback, accepts only `127.0.0.1`/`localhost` host headers, rejects bodies
-that declare more than 256 KB, and runs task code only inside a pytest subprocess with a timeout. It is a laptop
+that declare more than 256 KB, and runs task code only in a sandboxed subprocess with a timeout: pytest for a Python task, the
+pinned kubeconform and the task's grader for a manifest. It is a laptop
 tool; do not put it on a public address.
 
 ## Verifying a release

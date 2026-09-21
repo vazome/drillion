@@ -89,7 +89,7 @@ absent) or `manifest`. Every kind shares the `README.md` contract below; what el
 holds depends on the kind.
 
 **`README.md`** — YAML frontmatter (`title`, `difficulty`, `minutes` and `tags` are required
-for every kind, and `tier` for a Python task; `prereqs`, `practices`, `track`, `source` and
+for every kind, and `tier` for a Python task; `prereqs`, `track`, `source` and
 `kind` are optional), then GitHub-flavoured Markdown that opens with exactly these four
 headings, in order:
 
@@ -130,7 +130,7 @@ catalogue dropped.
 
 If the task is adapted from another source (Exercism or elsewhere), say so honestly in a
 `source:` frontmatter field and a closing attribution line, and confirm the licence permits it —
-see [NOTICE](NOTICE) for how the 84 Exercism-derived tasks already do this.
+see [NOTICE](NOTICE) for how the 89 Exercism-derived tasks already do this.
 
 ## Versioning
 

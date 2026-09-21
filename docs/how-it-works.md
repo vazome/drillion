@@ -13,7 +13,8 @@
    read, and a corner notice says so ten seconds in. The left pane renders the task's `README.md` — Why / You get /
    You return / Rules / Read first — and the right pane is the editor with the stub.
 3. **Run** saves your region into the file and runs that file's pytest test with the attempt's
-   seed. Failures come back with the assertion lines mapped to editor line numbers, and
+   seed. A manifest task instead validates your YAML with kubeconform and checks it against the
+   task's rules, naming each field that is wrong. Failures come back with the assertion lines mapped to editor line numbers, and
    whatever your own `print()` wrote is shown above them whether the tests passed or failed.
    A Run grades nothing — it is free and repeatable, however green it comes back. **Submit** is the
    same execution plus the claim that you are done: it costs an attempt, and on green it is
