@@ -2,7 +2,7 @@
  *  all mount without a console error. The one check that has to see every spec in the set. */
 import { expect, test } from "@playwright/test";
 
-test("every task in the catalogue renders", async ({ page }) => {
+test("every task in the catalogue renders", { tag: "@render" }, async ({ page }) => {
   test.slow(); // one navigation per task
   const problems: string[] = [];
   let at = "";

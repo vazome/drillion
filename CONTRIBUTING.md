@@ -5,7 +5,7 @@
 ```bash
 uv sync                                      # dependencies (runtime + dev)
 uv run drillion                              # serve on http://127.0.0.1:8765, opens the browser
-uv run pytest tests -q                       # the app's own tests
+uv run pytest tests -q -n auto               # the app's own tests, one worker per core
 uv run ruff check .                          # lint — CI fails if this fails
 uv run drillion selfcheck                    # solve every task with its reference; must say 278/278
 ```
