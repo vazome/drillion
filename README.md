@@ -76,26 +76,26 @@ does to your machine**, below, is the detail.
 ## Run
 
 Drillion is distributed as a Docker image. Install Docker Engine on Linux or Docker Desktop on
-macOS or Windows, then, in a folder of its own:
+macOS or Windows, then start it:
 
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/vazome/drillion/main/compose.yaml && docker compose up -d
+docker run -d --name drillion --restart unless-stopped -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion
 ```
 
-Open <http://127.0.0.1:8765>. The image never opens a host browser. Your work lives in a named
-volume that outlives the container. [compose.yaml](compose.yaml) also runs the container read-only
-with every capability dropped; `docker run` without Compose is in
-[docs/configuration.md](docs/configuration.md#docker).
+Open <http://127.0.0.1:8765>. The image never opens a host browser. Your work lives in the
+`drillion` volume, which outlives the container. [compose.yaml](compose.yaml) runs the same
+container read-only with every capability dropped: save it anywhere and `docker compose up -d`.
 
-To update, from the same folder:
+To update, pull the new image and replace the container. Removing the container keeps the volume:
 
 ```bash
-docker compose pull && docker compose up -d
+docker pull ghcr.io/vazome/drillion && docker stop drillion && docker rm drillion && docker run -d --name drillion --restart unless-stopped -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion
 ```
 
-Compose names the volume after the folder, so keep using that one.
+With Compose, `docker compose pull && docker compose up -d` from the folder holding
+`compose.yaml`. Compose names its volume after that folder, so it is not the `drillion` volume.
 
-For a reproducible rollback, set `image:` in `compose.yaml` to `ghcr.io/vazome/drillion:<version>`
+For a reproducible rollback, replace `ghcr.io/vazome/drillion` with `ghcr.io/vazome/drillion:<version>`
 or the immutable `ghcr.io/vazome/drillion@sha256:...` reference in that release's notes **only when that
 release is compatible with the data already in the volume**. Before a major upgrade, back up from
 **Settings → Back up**. To return to an older, incompatible release, restore that backup into a
