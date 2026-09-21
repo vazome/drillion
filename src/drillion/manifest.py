@@ -9,6 +9,7 @@ import math
 import os
 import re
 import stat
+import string
 import subprocess
 import tempfile
 from pathlib import Path
@@ -22,6 +23,8 @@ MAX_BRIEF_BYTES = 8192
 MAX_SPEC_CHARS = 65536
 SCALARS = (str, int, float, bool)
 BRIEF_SECONDS = 30
+# the harness exits with this when `check` raises anything but an assert
+GRADER_BROKE = 70
 
 # Runs inside the sandbox, with the grader path, seed, output path and module name as argv.
 # `drillion.guard` first because on the guard tier its audit hook is the only confinement
@@ -149,11 +152,18 @@ def _read_brief(out):
 def render(template, brief):
     """Plain-text substitution for a README. Doubled braces stay literal, as in str.format.
 
-    Every way a placeholder can go wrong is a task-authoring bug, so they all come back as
-    `Rejected`: a missing name, a malformed spec, and the attribute and index traversal that
-    `{name.title}` and `{replicas[0]}` ask for. The length bound is here because a width like
-    `{name:>1000000000}` allocates in the one process that has no `RLIMIT_AS`."""
+    A placeholder is a bare name and nothing else. Every other shape is a task-authoring
+    bug and comes back as `Rejected` before anything is formatted: a conversion, attribute
+    or index traversal like `{name.title}` or `{replicas[0]}`, and above all a format spec,
+    since a width like `{name:>1000000000}` allocates in the one process that has no
+    `RLIMIT_AS`."""
     try:
+        for _, field, spec, conversion in string.Formatter().parse(template):
+            if field is not None and (not field.isidentifier() or spec or conversion):
+                raise Rejected(
+                    f"the spec template has a placeholder {{{field}}} that is "
+                    "not a plain name"
+                )
         filled = template.format(**brief)
     except (LookupError, ValueError, AttributeError, TypeError, MemoryError) as exc:
         raise Rejected(f"the spec template does not match the brief: {exc}") from None
@@ -213,6 +223,7 @@ _HARNESS = '''
 import importlib.util, json, subprocess, sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 BRIEF = json.loads({brief!r})
@@ -288,10 +299,17 @@ def test_manifest():
         capture_output=True, text=True, timeout=30,
     )
     assert out.returncode == 0, _readable(out)
-    if many:
-        grade.check_many(docs, BRIEF)
-    else:
-        grade.check(docs[0], BRIEF)
+    try:
+        if many:
+            grade.check_many(docs, BRIEF)
+        else:
+            grade.check(docs[0], BRIEF)
+    except AssertionError:
+        raise
+    except Exception as exc:
+        # past the schema, anything but an assert is the grader failing to read this
+        # sitting's brief: ours to fix, and it must not cost the learner an attempt
+        pytest.exit(f"{{type(exc).__name__}}: {{exc}}", returncode={broken})
 '''
 
 
@@ -312,6 +330,7 @@ def harness(meta, brief, learner=None):
         schemas=tools.schema_location(),
         module=module_name(meta["dir"].name),
         grader=str(meta["dir"] / "grade.py"),
+        broken=GRADER_BROKE,
     )
 
 

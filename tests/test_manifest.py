@@ -366,7 +366,18 @@ def test_render_fills_placeholders_and_survives_doubled_braces():
 
 @pytest.mark.parametrize(
     "template",
-    ["{missing}", "{name.nope}", "{replicas[0]}", "{name:d}", "{0}", "{name"],
+    [
+        "{missing}",
+        "{name.nope}",
+        "{replicas[0]}",
+        "{name:d}",
+        "{0}",
+        "{name",
+        "{}",
+        "{name!r}",
+        "{name:>1}",
+        "{name:{name}}",
+    ],
 )
 def test_a_template_the_brief_does_not_fit_is_rejected(template):
     """Every placeholder mistake a task author can make is a `Rejected`, never a traceback
@@ -375,10 +386,15 @@ def test_a_template_the_brief_does_not_fit_is_rejected(template):
         manifest.render(template, {"name": "checkout", "replicas": 2})
 
 
-def test_a_template_cannot_allocate_without_bound():
+def test_a_template_cannot_allocate_before_it_is_refused():
+    """The width is refused on sight, so `format` never allocates a terabyte for it."""
+    with pytest.raises(manifest.Rejected, match="plain name"):
+        manifest.render("{name:>1000000000000}", {"name": "x"})
+
+
+def test_a_filled_spec_is_still_bounded():
     with pytest.raises(manifest.Rejected, match="too long"):
-        wide = "{name:>" + str(manifest.MAX_SPEC_CHARS + 1) + "}"
-        manifest.render(wide, {"name": "x"})
+        manifest.render("{name}", {"name": "x" * (manifest.MAX_SPEC_CHARS + 1)})
 
 
 def test_the_grader_revision_moves_when_either_file_behind_a_brief_does(fixture_root):
@@ -598,7 +614,12 @@ def test_a_manifest_pass_returns_its_reference_and_archives_its_revision(
             closed = await api.get(f"/api/task/{SLUG}")
             assert closed.status_code == 200, closed.text
             assert closed.json()["status"] == "done"
-            assert closed.json()["reference"] is None
+            # a refresh after the pass still shows the question it asked and its answer
+            assert closed.json()["reference"] == reply.json()["reference"]
+            assert closed.json()["spec_md"] == o["spec_md"]
+            archived = closed.json()["archive"][-1]
+            assert archived["kubernetes"] == tools.KUBERNETES_VERSION
+            assert "python" not in archived
 
     asyncio.run(drive())
 
@@ -638,18 +659,34 @@ def test_a_solution_that_will_not_render_does_not_cost_the_learner_the_pass(
     asyncio.run(drive())
 
 
-def test_a_grader_upgraded_under_a_live_sitting_is_not_the_learner_s_fault(
+def test_a_grader_upgraded_under_a_live_sitting_still_grades_its_brief(
     stubbed_kubeconform,
 ):
-    """`brief_revision` is stored for this. A contributor upgrading grade.py mid sitting
-    leaves check() reading a brief the learner was never shown, and its KeyError would
-    otherwise be charged to them as a failed attempt."""
+    """A new grader revision is not a new question: the stored brief is still what the
+    learner was shown, so a compatible grader keeps grading it."""
     meta = meta_for()
     o = kinds.of(meta).opening(meta, 1)
-    assert o["brief_revision"] == manifest.grader_revision(meta)
-    _grader('return {"name": "checkout", "replicas": 3, "ports": [80]}')
-    with pytest.raises(manifest.Rejected, match="grader changed"):
-        kinds.of(meta_for()).grade(meta_for(), o)
+    grader = settings.tasks_dir / SLUG / "grade.py"
+    grader.write_text(grader.read_text(encoding="utf-8") + "\n# reworded\n", "utf-8")
+    assert o["brief_revision"] != manifest.grader_revision(meta_for())
+    code = manifest.render_solution(meta_for(), o["brief"])
+    (settings.tasks_dir / SLUG / "task.yaml").write_text(code, encoding="utf-8")
+    passed, out, _ = kinds.of(meta_for()).grade(meta_for(), o)
+    assert passed, out
+
+
+def test_a_grader_that_cannot_read_the_brief_is_not_the_learner_s_fault(
+    stubbed_kubeconform,
+):
+    """An upgrade whose check() no longer reads a stored brief crashes rather than asserts,
+    and that crash is refused as infrastructure instead of charged as a failed attempt."""
+    (settings.tasks_dir / SLUG / "task.yaml").write_text(CORRECT, encoding="utf-8")
+    (settings.tasks_dir / SLUG / "grade.py").write_text(
+        "def brief(r):\n    return {}\n\n\ndef check(doc, b):\n    b['ports']\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(manifest.Rejected, match="KeyError"):
+        runner.run_manifest(meta_for(), BRIEF)
 
 
 def test_a_second_document_can_still_be_saved_while_it_is_being_typed(fixture_root):

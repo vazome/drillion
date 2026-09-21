@@ -123,6 +123,13 @@ def run_manifest(meta, brief):
             )
         except subprocess.TimeoutExpired:
             return False, "timed out after 60s", None
+    if r.returncode == manifest.GRADER_BROKE:
+        why = next((ln for ln in r.stdout.splitlines() if "Exit:" in ln), "")
+        raise manifest.Rejected(
+            "this task's grader could not read this sitting's requirements "
+            f"({why.strip('! ').removeprefix('_pytest.outcomes.Exit: ')}). Your work is "
+            "saved and no attempt was spent; run `drillion doctor`."
+        )
     return r.returncode == 0, r.stdout, None
 
 
@@ -230,7 +237,7 @@ def selfcheck():
         for slug, meta in all_tasks.items():
             try:
                 files = kinds.of(meta).selfcheck(meta)
-            # one contributor's folder must not take down a run over all 267 of them
+            # one contributor's folder must not take down a run over the whole catalogue
             except Exception as err:  # noqa: BLE001
                 refused.append((slug, err))
                 continue
