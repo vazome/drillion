@@ -186,6 +186,8 @@ def _read(folder) -> tuple[TaskMeta | None, list[str]]:
         if meta.get(k) in (None, "", [])
     ]
     out += CHECKS[kind](folder)
+    if kind == PYTHON:
+        meta.setdefault("track", PYTHON)
     spec_md, hints = guidance(md)
     if len(hints) != 3:
         out.append(f"README.md: found {len(hints)} hints, need exactly 3")

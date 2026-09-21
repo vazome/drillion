@@ -36,7 +36,8 @@ How hard a task is to get right the first time: `easy`, `medium`, `hard`. Not ho
 _Avoid_: complexity, hardness; and never `easy` as a **grade**
 
 **Track**:
-An optional themed run through the catalogue that cuts across tiers, at most one per task.
+A themed run through the catalogue that cuts across tiers, one per task. A Python task that
+names none is on the `python` track.
 _Avoid_: course, path, series, curriculum
 
 **Tag**:

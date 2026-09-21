@@ -18,6 +18,8 @@ const FIRST_RUN = "drillion-first-run";
 const HOW_IT_WORKS = "https://github.com/vazome/drillion/blob/main/docs/how-it-works.md";
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+// the tracks with a logo in web/public/tracks/; any other track wears its first letter
+const TRACK_ICONS = new Set(["python", "kubernetes"]);
 const num = (topic: number) => String(topic).padStart(3, "0");
 
 /** Today as a LOCAL YYYY-MM-DD, which parses back to the same UTC midnight `due` does. */
@@ -273,7 +275,8 @@ export function Catalogue() {
   const empty = today.no_new ? noPicks(today.no_new, today, focus, by) : null;
   const tracks = data.tracks.map((name) => {
     const all = data.tasks.filter((e) => e.track === name);
-    return { name, total: all.length, seen: all.filter((e) => e.seen > 0).length };
+    return { name, total: all.length, seen: all.filter((e) => e.seen > 0).length,
+      icon: TRACK_ICONS.has(name) ? `tracks/${name}.svg` : undefined };
   });
   const unseen = focus ? data.tasks.filter((e) => !e.seen && facets(e).includes(focus)).length : 0;
   const act = empty?.act === "focus" ? { label: "Clear focus", run: () => setFocus(null) } : null;

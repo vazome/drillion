@@ -59,7 +59,7 @@ async def _stub_to_pass(api, path):
     assert cat["tasks"][0]["lapses"] == 0  # a card nobody has fought yet
     assert cat["stats"]["lapse_limit"] == scheduler.LAPSE_LIMIT
     assert cat["stats"]["due"] == 0  # the real backlog, not the capped list's length
-    assert cat["tiers"] == ["core", "advanced", "packages"] and cat["tracks"] == []
+    assert cat["tiers"] == ["core", "advanced", "packages"] and cat["tracks"] == ["python"]
     assert cat["tasks"][0]["tier"] == "core" and cat["tasks"][0]["difficulty"] == "easy"
     assert "minutes" not in cat["tasks"][0]  # par time is never the learner's
     assert "finance" in cat["tasks"][0]["text"]  # a word in the Why, not in the title
