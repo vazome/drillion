@@ -129,17 +129,14 @@ def _read_json(out, cap, what):
     """Read back what a child wrote, as the one file object the size check looked at.
 
     The child owns the scratch directory, so it can unlink `out` and leave a symlink or a
-    fifo in its place. The lstat/open/fstat identity check prevents following a replacement;
-    where the platform has them, `O_NOFOLLOW` rejects a symlink at open and `O_NONBLOCK`
-    keeps a fifo from wedging this thread."""
+    fifo in its place. The lstat/open/fstat identity check prevents following a replacement,
+    `O_NOFOLLOW` rejects a symlink at open and `O_NONBLOCK` keeps a fifo from wedging this
+    thread."""
     try:
         before = os.lstat(out)
         if not stat.S_ISREG(before.st_mode):
             raise Rejected(f"{what} wrote something that is not a plain file")
-        flags = (
-            os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
-        )
-        fd = os.open(out, flags)
+        fd = os.open(out, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     except OSError:
         raise Rejected(f"{what} wrote nothing") from None
     with open(fd, encoding="utf-8") as stream:

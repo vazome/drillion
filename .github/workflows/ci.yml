@@ -58,29 +58,15 @@ jobs:
           fi
           echo "code=$code" >> "$GITHUB_OUTPUT"
           if [ "$code" = false ]; then
-            echo "documentation only: skipping the matrix, the client and the image" >> "$GITHUB_STEP_SUMMARY"
+            echo "documentation only: skipping the checks, the client and the image" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-  # the README installs drillion with uv on Windows, macOS and Linux, so all three are
-  # advertised platforms: settings._data_home() picks where progress.json lives
-  # from sys.platform, and only its Linux branch had ever been executed
+  # Linux only: drillion ships as a Linux image, so no other OS runs it
   check:
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    name: check (${{ matrix.os }}, py${{ matrix.python }})
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        # all advertised operating systems on the one Python version drillion supports
-        include:
-          - os: ubuntu-latest
-            python: "3.14"
-          - os: windows-latest
-            python: "3.14"
-          - os: macos-latest
-            python: "3.14"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -88,7 +74,6 @@ jobs:
       - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           enable-cache: true
-          python-version: ${{ matrix.python }} # sets UV_PYTHON, which wins over .python-version
       - run: uv sync --locked
         if: github.event_name != 'schedule'
       # --locked pins every package to the lockfile, so a push or PR run install the exact
@@ -102,13 +87,11 @@ jobs:
       - run: uv run pytest tests -q -n auto # one worker per core; the tests share no server or port
       # A manifest task is graded by a pinned external validator, and `selfcheck` proves
       # every task still passes its own answer key, so the validator has to be here before
-      # it runs. The download is checksum-pinned per platform; an unpinned or altered one
+      # it runs. The download is checksum-pinned; an unpinned or altered one
       # is refused rather than installed.
       - run: uv run drillion doctor --fetch
       - run: uv run drillion selfcheck
 
-  # Linux-only on purpose: this builds the client and checks the sdist, neither of which
-  # is what the install paths above promise per-OS
   web:
     needs: changes
     if: needs.changes.outputs.code == 'true'

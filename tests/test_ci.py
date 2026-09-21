@@ -3,15 +3,11 @@
 import os
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
 import yaml
 
-pytestmark = pytest.mark.skipif(
-    sys.platform == "win32", reason="CI filter runs on Linux"
-)
 WORKFLOW = Path(__file__).parents[1] / ".github/workflows/ci.yml"
 RELEASE_WORKFLOW = Path(__file__).parents[1] / ".github/workflows/release.yml"
 ROOT = Path(__file__).parents[1]

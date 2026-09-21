@@ -23,7 +23,7 @@ classifiers = [
     "Environment :: Web Environment",
     "Framework :: FastAPI",
     "Intended Audience :: Education",
-    "Operating System :: OS Independent",
+    "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3.14",
     "Topic :: Education :: Computer Aided Instruction (CAI)",
 ]
@@ -42,7 +42,6 @@ dependencies = [
     "pyyaml>=6.0.3",
     "requests>=2.34.2",
     "responses>=0.26.2",
-    "tzdata>=2025.2 ; sys_platform == 'win32'",
     "uvicorn[standard]>=0.52.4",
 ]
 

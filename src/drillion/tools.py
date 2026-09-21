@@ -8,11 +8,9 @@ import hashlib
 import json
 import os
 import platform
-import stat
 import sys
 import tarfile
 import tempfile
-import zipfile
 from pathlib import Path
 from typing import NamedTuple
 
@@ -69,8 +67,8 @@ def _kubeconform(asset, archive_sha256, member, binary_sha256):
 
 PINS: dict[str, dict[tuple[str, str], Pin]] = {
     KUBECONFORM: {
-        # Upstream publishes a .tar.gz per platform, a .zip for Windows, and a CHECKSUMS
-        # file covering the archives: https://github.com/yannh/kubeconform/releases.
+        # Only the image's two platforms. Upstream publishes a .tar.gz per platform and a
+        # CHECKSUMS file covering the archives: https://github.com/yannh/kubeconform/releases.
         # `archive_sha256` is that file's line; `binary_sha256` is the member inside it,
         # which upstream does not publish and which is what `installed` rechecks on every
         # use. Both are recomputed by hand when the version moves.
@@ -85,24 +83,6 @@ PINS: dict[str, dict[tuple[str, str], Pin]] = {
             "b98a72aa072620d80370e526a8442aec128d498dd630ca9c043d9ea8b8612482",
             "kubeconform",
             "5db1ce5c7e712468ddd2f8dac883671156586a09cb71fe1cbde6b7225d0ac3ab",
-        ),
-        ("darwin", "amd64"): _kubeconform(
-            "kubeconform-darwin-amd64.tar.gz",
-            "3487e750c96b0b6b40a5700d744780653d62b31f3b26562401c5cd45f8f371b0",
-            "kubeconform",
-            "217d797587fa6527acb1d22caace116651b90d74d661d998ab69bf594ae2cb07",
-        ),
-        ("darwin", "arm64"): _kubeconform(
-            "kubeconform-darwin-arm64.tar.gz",
-            "12d12f56ccba69f75b0f42085ebbebaa6a25c0c2936ff39aa2fa552ba4a5dea3",
-            "kubeconform",
-            "19bd3a2e82bfd717e7a6a9cc54df9bdb9639e01953878d872f92fa602e1fde3e",
-        ),
-        ("win32", "amd64"): _kubeconform(
-            "kubeconform-windows-amd64.zip",
-            "f3870f91f4f60e3f0ff508b62f45f48b43f6d5511b7025a984dac58e9198969a",
-            "kubeconform.exe",
-            "8025d1fd64783a578961b6d7092a40a083beeb5ae9fb9510f3ee2c9d6f49704e",
         ),
     }
 }
@@ -180,19 +160,11 @@ def _extract(archive, member, into):
     """Exactly one named regular file, read out by name rather than unpacked: a member
     called `../../escape` is never found, rather than having to be defended against. A
     directory, a symlink or a hard link where the executable belongs is a rejection."""
-    if archive.name.endswith(".zip"):
-        with zipfile.ZipFile(archive) as zf:
-            info = zf.getinfo(member)  # KeyError if absent
-            mode = info.external_attr >> 16  # unix mode, 0 when the zip carries none
-            if info.is_dir() or (mode and not stat.S_ISREG(mode)):
-                raise Rejected(f"{member} is not a regular file")
-            data = zf.read(member)
-    else:
-        with tarfile.open(archive) as tf:
-            info = tf.getmember(member)  # KeyError if absent
-            if not info.isfile():
-                raise Rejected(f"{member} is not a regular file")
-            data = tf.extractfile(info).read()
+    with tarfile.open(archive) as tf:
+        info = tf.getmember(member)  # KeyError if absent
+        if not info.isfile():
+            raise Rejected(f"{member} is not a regular file")
+        data = tf.extractfile(info).read()
     into.write_bytes(data)
     into.chmod(0o755)
     return into
@@ -212,8 +184,7 @@ def acquire(name):
     target.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=target) as scratch:
         scratch = Path(scratch)
-        suffix = ".zip" if pin.url.endswith(".zip") else ".tar.gz"
-        archive = _download(pin.url, scratch / f"{name}{suffix}")
+        archive = _download(pin.url, scratch / f"{name}.tar.gz")
         if digest(archive) != pin.archive_sha256:
             raise Rejected(f"{pin.url} does not match its pinned archive checksum")
         try:

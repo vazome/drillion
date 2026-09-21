@@ -5,30 +5,27 @@ nothing else. Landlock especially: it is irreversible and inherited by every chi
 is applied in the forked child from `preexec()` and never in the server process, which
 would sandbox the app — and the language server with it — for the rest of its life.
 
-Five tiers, strongest first, with `status()` saying which one is actually in force — read
-back from a child that tried it, never from intent:
+Three tiers, strongest first, with `status()` saying which one is actually in force — read
+back from a child that tried it, never from intent. drillion ships as a Linux image, so
+Landlock is the tier that counts; the other two are what a contributor's checkout on
+another OS, or a host kernel without Landlock, falls back to:
 
-- **landlock** (Linux) — the kernel decides. Reads are confined to the interpreter, the
-  system libraries, `tasks/`, the pinned tools and their schemas, and the scratch
-  directory; writes to the scratch directory; TCP is denied outright.
-- **sandbox-exec** (macOS) — the same shape expressed as an SBPL profile.
-- **restricted-token** (Windows) — `drillion.winsandbox`: a restricted token at Low
-  integrity in a job object. Writes are confined and memory is capped, but reads and the
-  network are not — the weakest of the three kernel tiers, and the only one Windows offers
-  without ACLing the interpreter's whole tree.
+- **landlock** — the kernel decides. Reads are confined to the interpreter, the system
+  libraries, `tasks/`, the pinned tools and their schemas, and the scratch directory;
+  writes to the scratch directory; TCP is denied from ABI 4.
 - **guard** — `drillion.guard`, a PEP 578 audit hook in the graded process. What stands in
-  wherever no kernel tier reaches: an old kernel without Landlock, a container that blocks
-  `prctl`, a Windows machine where the token could not be built. A speed bump, not a
-  boundary.
+  wherever Landlock does not reach: an old kernel, a container that blocks `prctl`, a
+  checkout on macOS. A speed bump, not a boundary.
 - **floor** — what is left when even that fails.
 
-Underneath all five, on every platform, sits the floor itself: an allowlisted environment,
-a `HOME` and `TMPDIR` pointed at the scratch directory, and POSIX resource limits.
+Underneath all three sits the floor itself: an allowlisted environment, a `HOME` and
+`TMPDIR` pointed at the scratch directory, and POSIX resource limits.
 """
 
 import ctypes
 import os
 import platform
+import resource
 import struct
 import subprocess
 import sys
@@ -38,10 +35,7 @@ from pathlib import Path
 
 from .settings import settings
 
-# imported where it is used, not here: on Windows there is no `resource` module at all,
-# and a module-level guard leaves every use site conditionally bound
-
-# ── the floor: every platform ────────────────────────────────────────────────────
+# ── the floor ────────────────────────────────────────────────────
 
 # what a graded test genuinely needs. Everything else the learner's shell exported —
 # AWS_*, GITHUB_TOKEN, SSH_AUTH_SOCK — stops here
@@ -55,14 +49,6 @@ _KEEP = (
     "LC_ALL",
     "LC_CTYPE",
     "TZ",
-    # Windows cannot start a process at all without these
-    "SYSTEMROOT",
-    "SYSTEMDRIVE",
-    "WINDIR",
-    "COMSPEC",
-    "PATHEXT",
-    "NUMBER_OF_PROCESSORS",
-    "PROCESSOR_ARCHITECTURE",
 )
 
 # generous: boto3, moto and langchain-core all load into one graded process
@@ -104,7 +90,6 @@ def environ(scratch, **extra):
 def _limits(cpu):
     """[(resource, (soft, hard))] — the POSIX floor, computed here so the child only calls
     syscalls. `cpu` tracks the caller's wall-clock timeout; without one there is no cap."""
-    import resource
 
     out = [
         (resource.RLIMIT_FSIZE, MAX_FILE),
@@ -120,7 +105,6 @@ def _limits(cpu):
 
 def _clamp(what, value):
     """Never raise a limit, and never ask for more than the hard limit already allows."""
-    import resource
 
     soft, hard = resource.getrlimit(what)
     if hard != resource.RLIM_INFINITY:
@@ -340,89 +324,6 @@ def _landlock_works():
     return os.waitpid(pid, 0)[1] == 0
 
 
-# ── macOS: sandbox-exec ──────────────────────────────────────────────────────────
-
-SANDBOX_EXEC = "/usr/bin/sandbox-exec"
-
-
-def _sbpl(scratch, targets):
-    """An SBPL profile of the same shape as the Landlock ruleset.
-
-    Paths are resolved because the sandbox matches on real paths and `/tmp` is a symlink
-    into `/private` on macOS."""
-
-    from . import tools
-
-    def subpaths(paths):
-        real = {str(Path(p).resolve()) for p in paths if Path(p).exists()}
-        return " ".join(f'(subpath "{p}")' for p in sorted(real))
-
-    readable = subpaths(
-        [
-            "/usr",
-            "/bin",
-            "/sbin",
-            "/System",
-            "/Library",
-            "/private/etc",
-            "/private/var/db",
-            "/dev",
-            Path(sys.executable).resolve().parent.parent,
-            sys.prefix,
-            sys.base_prefix,
-            settings.tasks_dir,
-            tools.tools_dir(),
-            tools.SCHEMAS,
-            *targets,
-            scratch,
-        ]
-    )
-    writable = (
-        subpaths([scratch]) + ' (literal "/dev/null") (literal "/dev/dtracehelper")'
-    )
-    return (
-        "(version 1)\n"
-        "(deny default)\n"
-        "(allow process-fork)\n"
-        "(allow sysctl-read)\n"
-        "(allow mach-lookup)\n"
-        "(allow signal (target self))\n"
-        "(allow file-read-metadata)\n"
-        f"(allow process-exec* {readable})\n"
-        f"(allow file-read* {readable})\n"
-        f"(allow file-write* file-ioctl {writable})\n"
-        "(deny network*)\n"
-    )
-
-
-@cache
-def _sandbox_exec_works():
-    """Run the real profile against a do-nothing interpreter once. `sandbox-exec` is
-    deprecated and its dialect drifts, so this asks rather than assuming."""
-    if sys.platform != "darwin" or not Path(SANDBOX_EXEC).is_file():
-        return False
-    with tempfile.TemporaryDirectory() as scratch:
-        try:
-            done = subprocess.run(
-                [
-                    SANDBOX_EXEC,
-                    "-p",
-                    _sbpl(Path(scratch), ()),
-                    sys.executable,
-                    "-c",
-                    "",
-                ],
-                cwd=scratch,
-                env=environ(scratch),
-                capture_output=True,
-                timeout=30,
-                check=False,
-            )
-        except OSError:
-            return False
-    return done.returncode == 0
-
-
 # ── the in-process floor, wherever no kernel tier reaches ────────────────────────
 
 # The parent hands the child a canary it made outside the scratch directory: "cannot write
@@ -465,33 +366,17 @@ def _guard_works():
 # ── what is actually in force ────────────────────────────────────────────────────
 
 
-def _restricted_token_works():
-    """Windows only, and asked of a child that came up: `winsandbox.works()` reads the
-    integrity SID back out of a process it started."""
-    if sys.platform != "win32":
-        return False
-    from . import winsandbox
-
-    return winsandbox.works()
-
-
 def _no_kernel_tier():
     """Why the kernel is not doing this, in one clause — the half of `status()` that keeps
     a weaker tier from reading as a choice."""
-    if sys.platform == "linux":
-        return (
-            "this kernel has no Landlock"
-            if abi() == 0
-            else f"Landlock ABI {abi()} is reported but the ruleset did not take effect "
-            "(seccomp or a container policy blocking prctl, most likely)"
-        )
-    if sys.platform == "darwin":
-        return (
-            "sandbox-exec is not installed"
-            if not Path(SANDBOX_EXEC).is_file()
-            else "sandbox-exec rejected the profile"
-        )
-    return f"no kernel sandbox exists for {sys.platform} without privileges"
+    if sys.platform != "linux":
+        return f"drillion runs on Linux, in its image; {sys.platform} has no Landlock"
+    return (
+        "this kernel has no Landlock"
+        if abi() == 0
+        else f"Landlock ABI {abi()} is reported but the ruleset did not take effect "
+        "(seccomp or a container policy blocking prctl, most likely)"
+    )
 
 
 @cache
@@ -509,20 +394,6 @@ def status():
             f"writes to scratch only; "
             f"{'TCP denied' if abi() >= 4 else 'no network control below ABI 4'}"
         )
-    if _sandbox_exec_works():
-        return "sandbox-exec", (
-            "SBPL profile: reads confined to the interpreter, system frameworks, tasks/, "
-            "tools/, the packaged schemas and a scratch HOME; writes to scratch only; "
-            "network denied"
-        )
-    if _restricted_token_works():
-        return "restricted-token", (
-            "a restricted token at Low integrity in a job object: writes confined to the "
-            "scratch directory, memory capped, and anything left running killed with the "
-            "job. Reads are NOT restricted — Windows has no unprivileged tier that does, "
-            "and AppContainer would need every path the interpreter reads ACLed for a "
-            "package SID. The audit hook rides along for the network, as a speed bump"
-        )
     if _guard_works():
         return "guard", (
             f"{_no_kernel_tier()} — falling back to a PEP 578 audit hook in the graded "
@@ -538,14 +409,10 @@ def status():
 
 
 def preexec(scratch, targets, cpu):
-    """The callable `subprocess` runs in the child between fork and exec, or None where
-    there is nothing POSIX to do.
+    """The callable `subprocess` runs in the child between fork and exec.
 
     This is the only place Landlock may ever be applied. Applying it in the parent would
     sandbox the server, the language server and every future request, irreversibly."""
-    if sys.platform == "win32":
-        return None
-    import resource
 
     limits = _limits(cpu)
     plan = _plan(scratch, targets) if _landlock_works() else None
@@ -574,10 +441,9 @@ def run(args, scratch, cpu, **env):
     """Grade pytest `args` under the strongest tier this machine has, and hand back what
     `subprocess.run` would have."""
     child = ["-m", "pytest", *args]
-    if status()[0] in ("guard", "restricted-token"):
+    if status()[0] == "guard":
         # `-p` plugins load before pytest imports any task module, and `_PYTEST` already
-        # passes `-p no:cacheprovider`, so this needs no new mechanism. Windows loads it
-        # too: Low integrity denies the writes but says nothing about the network
+        # passes `-p no:cacheprovider`, so this needs no new mechanism
         child += ["-p", "drillion.guard"]
     return _execute(child, scratch, cpu, **env)
 
@@ -589,13 +455,8 @@ def run_script(args, scratch, cpu, **env):
 
 
 def _execute(child, scratch, cpu, **env):
-    """The one place a confined child starts. Windows needs `CreateProcessAsUser` for a
-    restricted token, so it cannot go through `subprocess`."""
+    """The one place a confined child starts."""
     plan = confine(child, scratch, cpu, **env)
-    if status()[0] == "restricted-token":
-        from . import winsandbox
-
-        return winsandbox.run(plan["args"], scratch, timeout=cpu, **env)
     return subprocess.run(
         **plan,
         capture_output=True,
@@ -610,7 +471,6 @@ def confine(child, scratch, cpu, **env):
     """What `subprocess.run` needs to run `python *child` under the strongest tier this
     machine has. `cpu` is the caller's wall-clock timeout, reused as the CPU limit."""
     scratch = Path(scratch)
-    tier, _ = status()
     targets = sorted(
         {
             str(Path(a).resolve().parent)
@@ -618,11 +478,8 @@ def confine(child, scratch, cpu, **env):
             if a.endswith(".py") and Path(a).is_file()
         }
     )
-    cmd = [sys.executable, *child]
-    if tier == "sandbox-exec":
-        cmd = [SANDBOX_EXEC, "-p", _sbpl(scratch, targets), *cmd]
     return {
-        "args": cmd,
+        "args": [sys.executable, *child],
         "env": environ(scratch, **env),
         "cwd": str(scratch),
         "preexec_fn": preexec(scratch, targets, cpu),
