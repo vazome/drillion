@@ -7,7 +7,7 @@ import { remarkAlert } from "remark-github-blockquote-alert";
 // The design system shipped a hand-rolled regex Markdown parser. It mis-renders real task
 // content: plain blockquotes (143/171 READMEs), _emphasis_ (113), ordered lists (17), h4+ (16)
 // and nested lists (5) all fell through to paragraphs. Same visual decisions, real parser.
-// ponytail: mermaid and assets/ video dropped — 0 of 171 tasks use either; add the `img`
+// ponytail: mermaid and assets/ video dropped, since no task uses either; add the `img`
 // override back if a task ever ships one.
 
 const KEYWORDS = /(#[^\n]*)|("[^"]*"|'[^']*')|\b(def|return|for|in|if|else|elif|from|import|lambda|None|True|False|not|and|or|while|class|raise|with|as|try|except|finally|yield|assert|pass|break|continue|global|nonlocal|del|is)\b|\b(\d+(?:\.\d+)?)\b/g;

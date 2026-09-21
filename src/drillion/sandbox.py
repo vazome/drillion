@@ -257,8 +257,9 @@ def _roots(scratch, targets):
         *((t, _READ) for t in targets),
         ("/etc", _READ),
         # /usr/bin and /bin are executable on purpose: task 067 grades `subprocess.run` by
-        # starting a child Python. Anything it starts inherits this sandbox, so it is contained
-        # rather than forbidden — see SECURITY.md.
+        # starting a child Python, and anything a task starts inherits this sandbox, so it is
+        # contained rather than forbidden (SECURITY.md). /bin, /sbin and /lib64 are symlinks
+        # into /usr on a merged-/usr system and real directories on an older one.
         *(
             (p, _EXEC)
             for p in (*interpreter, "/usr", "/lib", "/lib64", "/bin", "/sbin")

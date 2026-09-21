@@ -18,7 +18,7 @@ People use drillion for only one single purpose - to get better at Python. drill
 The architecture of drillion allows to either clone the repo and self-deploy or docker run, so the client become available with ready environment. There is no login or registration. Convenience is important factor to consistent learning. We must make sure that it stays this way. Upgrades should not be a concern, learning progress must be kept regardless of distribution line.
 
 4. UX/UI that corresponds
-UX: the system design must reflect the spaced repetition learning (FSRS). It's not 1 task - 1 topic. Topics must span across multiple tasks, topics must merge to ensure consistent learning of new concepts and preserving previosly learned material. Another example if takes user more than 30 minutes on the task without submission, drillion must pop notify them of taking a hint, you can't bruteforce something you are unaware of.
+UX: the system design must reflect the spaced repetition learning (a fixed Leitner ladder; `docs/adr/0001-leitner-not-fsrs.md` says why not FSRS). It's not 1 task - 1 topic. Topics must span across multiple tasks, topics must merge to ensure consistent learning of new concepts and preserving previosly learned material. Another example if takes user more than 30 minutes on the task without submission, drillion must pop notify them of taking a hint, you can't bruteforce something you are unaware of.
 UI: When new UI component needs to be drawn for the client, you request it from the developer. Then you will be provided with it, so you can integrate it. Drawing UI is not your concern.  
 
 ## A note from the Developer
@@ -42,10 +42,10 @@ Consider this document proper default, there are not a hard rules, it's the valu
 
 The most common defect in this repo is a change that works on the path you tested and is missing everywhere else. Before calling frontend work done, walk this list and say which entries applied:
 
-- **Entry points.** A behavior reachable from the chat view is usually also reachable from Settings, the command palette, and a keybinding. Fixing one is not fixing the feature.
+- **Entry points.** A behavior reachable from one screen is often reachable from another too: the catalogue, a task, its lineage panel, Settings, and a keybinding. Fixing one is not fixing the feature.
 - **Clients.** Web.
 - **Reverse states.** If you added a way in, add the way out and the way to see it. Snooze needs unsnooze. Close needs reopen. A one-way door is a bug.
-- **Connection modes.** Local, remote/relay, and tunnel behave differently. Multi-device and multi-environment cases are real.
+- **Run modes.** `uv run drillion` from a checkout and the Docker image behave differently: the data root, the tools directory and the bind address all differ.
 
 ## Taste
 
@@ -53,8 +53,8 @@ The most common defect in this repo is a change that works on the path you teste
 - We use `uv` both in the environment and during docker image building.
 - Conventional commit titles, plain language: `fix(web): submission no longer causes crashes`.
 - Docs screenshots live in `docs/images/` and are linked by absolute
-  `raw.githubusercontent.com/.../main/...` URL — never a tag, never relative. `README.md` is the
-  PyPI long description too. See `CONTRIBUTING.md`.
+  `raw.githubusercontent.com/.../main/...` URL — never a tag, never relative. See
+  `CONTRIBUTING.md`.
 - Comments describe how a thing is used, and move when the code moves. To be used mostly to describe functions, not to annotate every line of behavior.
 - If a rule here fights the task in front of you, say so loudly and get a human sign-off before breaking it.
 
