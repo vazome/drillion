@@ -59,6 +59,7 @@ The container sets `DRILLION_ROOT=/data`, so mount a named volume there:
 
 ```bash
 docker run -d --name drillion -p 127.0.0.1:8765:8765 -v drillion:/data \
+  --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
   ghcr.io/vazome/drillion:latest
 ```
 
@@ -71,14 +72,21 @@ IMAGE=ghcr.io/vazome/drillion:latest
 docker pull "$IMAGE"
 docker stop drillion
 docker rm drillion
-docker run -d --name drillion -p 127.0.0.1:8765:8765 -v drillion:/data "$IMAGE"
+docker run -d --name drillion -p 127.0.0.1:8765:8765 -v drillion:/data \
+  --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges "$IMAGE"
 ```
 
 `latest` follows the newest stable release. Use a version such as
 `ghcr.io/vazome/drillion:0.8.2` to stay on a named release or the digest recorded in its GitHub
 Release to reproduce an exact image. [compose.yaml](../compose.yaml) is the same run spelled out,
 plus `restart: unless-stopped` so it survives a reboot: save the one file anywhere and
-`docker compose up -d`.
+`docker compose up -d`. Update it with `docker compose pull && docker compose up -d` from the same
+folder: Compose prefixes the volume with that folder's name, so it is not the `drillion` volume the
+commands above use.
+
+`--read-only`, `--tmpfs /tmp`, `--cap-drop ALL` and `no-new-privileges` cost the app nothing, since
+it writes only to `/data` and the scratch directories under `/tmp`. They are the fallback for a host
+where Landlock is missing: graded code then cannot touch the installed app or the pinned tools.
 
 To keep those files in a directory you can open, bind-mount one and hand the container your own
 uid, since it runs as uid 1000 and cannot write a directory Docker made for root:
@@ -87,6 +95,7 @@ uid, since it runs as uid 1000 and cannot write a directory Docker made for root
 mkdir -p drillion-data
 docker run -d --name drillion -p 127.0.0.1:8765:8765 \
   --user "$(id -u):$(id -g)" -v "$PWD/drillion-data:/data" \
+  --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
   ghcr.io/vazome/drillion:latest
 ```
 
