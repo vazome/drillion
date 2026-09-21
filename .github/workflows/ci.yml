@@ -137,6 +137,8 @@ jobs:
         working-directory: web
       - run: pnpm lint
         working-directory: web
+      - run: pnpm test
+        working-directory: web
       - run: pnpm build
         working-directory: web
       # after pnpm install, with node_modules on disk: the only state the sdist exclude list can fail in

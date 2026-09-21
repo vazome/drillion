@@ -73,8 +73,9 @@ Data: `GET /api/catalogue` →
   the problem, not you").
   **No `minutes`**: par time never leaves the server.
 
-Elements: Today panel (recent activity, then new picks, focus selector), search, filter chips (tier, track,
-tag), status filter, the task list (title · difficulty · the `tier/tag` path · status · a miniature
+Elements: the track rail on top (All tracks plus one pill per track, each with its size and how
+much of it is seen; picking one sets `focus`), Today panel (recent activity, then new picks),
+search, filter chips (tier, tag), status filter, the task list (title · difficulty · the `tier/tag` path · status · a miniature
 ladder showing which box the card is in), a small stats strip (days practised, due today, cards per box).
 
 One flat table — no tier bands and no collapsing. The tier is the first segment of every row's
