@@ -4,30 +4,34 @@ import { createServer } from "vite";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-test("manifest feedback preserves field diagnostics and falls back without inventing a verdict", async () => {
+test("manifest failures render the grader's diagnostics as they arrive", async () => {
   const server = await createServer({ root: new URL("../", import.meta.url).pathname, configFile: false, server: { middlewareMode: true, ws: false, watch: null } });
   try {
-    const { manifestFeedback } = await server.ssrLoadModule("/src/manifestFeedback.ts");
-    const feedback = manifestFeedback("E   AssertionError: /spec/replicas: expected integer, but got string\nE   /metadata/name: too long\nE   assert 1 == 0");
-    assert.deepEqual(feedback.fields, [
-      { path: "/spec/replicas", message: "expected integer, but got string" },
-      { path: "/metadata/name", message: "too long" },
-    ]);
-    assert.match(manifestFeedback("E   AssertionError: replicas\nE   assert 3 == 2").message, /spec.replicas/);
-    assert.match(manifestFeedback("E   AssertionError: name").message, /metadata.name/);
-    assert.match(manifestFeedback("E   AssertionError: expected one document, found 2").message, /found 2/);
-    assert.match(manifestFeedback("E   yaml.parser.ParserError: bad YAML").message, /checker problem/);
-    assert.match(manifestFeedback("timed out after 60s").message, /checker problem/);
     const { ManifestFailure } = await server.ssrLoadModule("/src/ManifestWorkspace.tsx");
     const render = (component, props) => renderToStaticMarkup(createElement(component, props));
-    const failure = render(ManifestFailure, { headline: "E   AssertionError: /spec/replicas: expected integer, but got string" });
-    assert.match(failure, /without quotes/);
-    assert.match(failure, /data-state="failed"/);
-    assert.match(failure, /kubeconform/);
-    assert.match(failure, /data-wrong/);
-    assert.match(failure, /\/spec\/replicas/);
-    assert.doesNotMatch(failure, /undefined|Your output|Expected/);
-    assert.doesNotMatch(failure, /AssertionError/);
+
+    // a field the validator named: its path, its message, and the validator credited
+    const field = render(ManifestFailure, { diagnostics: [
+      { path: "/spec/replicas", message: "expected integer, but got string" },
+      { path: "/metadata/name", message: "too long" },
+    ] });
+    assert.match(field, /data-state="failed"/);
+    assert.match(field, /Check these manifest fields/);
+    assert.match(field, /kubeconform/);
+    assert.match(field, /\/spec\/replicas/);
+    assert.match(field, /\/metadata\/name/);
+    assert.match(field, /data-wrong/);
+    assert.match(field, /without quotes/);
+
+    // a requirement check() missed: a sentence about the document, and no validator credit
+    const missed = render(ManifestFailure, { diagnostics: [
+      { path: null, message: "metadata.name is 'web', and it should be 'checkout'" },
+    ] });
+    assert.match(missed, /Your manifest needs another look/);
+    assert.match(missed, /should be &#x27;checkout&#x27;/);
+    assert.doesNotMatch(missed, /kubeconform/);
+    assert.doesNotMatch(missed, /undefined|null|AssertionError/);
+
     const { FailedCase } = await server.ssrLoadModule("/src/ds/FailedCase.jsx");
     const python = render(FailedCase, { case: { args: { n: "2" }, expected: "4", actual: "3", source: "assert solve(n) == 4" } });
     assert.match(python, /Input/);

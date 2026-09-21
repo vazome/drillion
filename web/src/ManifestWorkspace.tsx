@@ -11,7 +11,7 @@ export function ManifestFailure({ diagnostics }: { diagnostics: Diagnostic[] }) 
   return (
     <div>
       <ResultBanner state="failed" headline={fields.length ? "Check these manifest fields" : "Your manifest needs another look"} />
-      {fields.length ? <p className={s.aside}>Paths start at the top of your YAML file.</p> : null}
+      {fields.length ? <p className={s.aside}>kubeconform · Paths start at the top of your YAML file.</p> : null}
       {general.map((d, i) => <p key={i} className={s.aside}>{d.message}</p>)}
       {fields.map((d, i) => <div key={i}>
         <FailedCase fields={[{ label: d.path!, value: d.message }]} />
