@@ -76,37 +76,27 @@ does to your machine**, below, is the detail.
 ## Run
 
 Drillion is distributed as a Docker image. Install Docker Engine on Linux or Docker Desktop on
-macOS or Windows, then start the local service:
+macOS or Windows, then, in a folder of its own:
 
 ```bash
-docker run -d --name drillion --restart unless-stopped -p 127.0.0.1:8765:8765 -v drillion:/data \
-  --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
-  ghcr.io/vazome/drillion:latest
+curl -fsSLO https://raw.githubusercontent.com/vazome/drillion/main/compose.yaml && docker compose up -d
 ```
 
-Open <http://127.0.0.1:8765>. The image never opens a host browser. Its named volume keeps your
-work across container replacement and upgrades. [compose.yaml](compose.yaml) is the same service in
-a file; save it anywhere and run `docker compose up -d`.
+Open <http://127.0.0.1:8765>. The image never opens a host browser. Your work lives in a named
+volume that outlives the container. [compose.yaml](compose.yaml) also runs the container read-only
+with every capability dropped; `docker run` without Compose is in
+[docs/configuration.md](docs/configuration.md#docker).
 
-To update or roll back, choose `latest`, a version, or the immutable digest in the GitHub Release
-notes. Stop the old container cleanly, remove only that container, then start the selected image
-against the same named volume. The `drillion` volume is not removed by `docker rm`.
+To update, from the same folder:
 
 ```bash
-docker pull ghcr.io/vazome/drillion:latest
-docker stop drillion
-docker rm drillion
-docker run -d --name drillion --restart unless-stopped -p 127.0.0.1:8765:8765 -v drillion:/data \
-  --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
-  ghcr.io/vazome/drillion:latest
+docker compose pull && docker compose up -d
 ```
 
-With Compose, run `docker compose pull && docker compose up -d` from the folder holding
-`compose.yaml` instead. Compose names its volume after that folder, so the `docker run` commands
-above would start on a different, empty volume.
+Compose names the volume after the folder, so keep using that one.
 
-For a reproducible rollback, replace `latest` with `ghcr.io/vazome/drillion:<version>` or the
-immutable `ghcr.io/vazome/drillion@sha256:...` reference in that release's notes **only when that
+For a reproducible rollback, set `image:` in `compose.yaml` to `ghcr.io/vazome/drillion:<version>`
+or the immutable `ghcr.io/vazome/drillion@sha256:...` reference in that release's notes **only when that
 release is compatible with the data already in the volume**. Before a major upgrade, back up from
 **Settings → Back up**. To return to an older, incompatible release, restore that backup into a
 separate volume rather than reusing the upgraded one.
@@ -128,7 +118,7 @@ drillion runs Python on your computer: the code you write, and the code that shi
   directory deleted after the run. On Landlock ABI 4 and newer (Linux 6.7) they cannot open a TCP
   connection either. An older kernel, or a container policy that blocks Landlock, leaves only an
   in-process guard that is a speed bump rather than a boundary; `drillion doctor` prints the tier a
-  probe process actually obtained. The commands above also run the container read-only with every
+  probe process actually obtained. `compose.yaml` also runs the container read-only with every
   capability dropped, so even then nothing outside `/data` and `/tmp` can be changed.
 - **Nothing leaves your machine.** No account, no telemetry, no fonts or scripts fetched from
   anyone. The server binds `127.0.0.1`, and refuses a request from a page it did not serve, so
