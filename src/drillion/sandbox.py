@@ -571,32 +571,26 @@ def grading_python():
 
 def run(args, scratch, cpu, **env):
     """Grade pytest `args` under the strongest tier this machine has, and hand back what
-    `subprocess.run` would have. The one entry point the runner calls: Windows needs
-    `CreateProcessAsUser` for a restricted token, so it cannot go through `subprocess`."""
-    plan = confine(args, scratch, cpu, **env)
-    if status()[0] == "restricted-token":
-        from . import winsandbox
-
-        return winsandbox.run(plan["args"], scratch, timeout=cpu, **env)
-    return subprocess.run(
-        **plan,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=False,
-        timeout=cpu,
-    )
+    `subprocess.run` would have."""
+    child = ["-m", "pytest", *args]
+    if status()[0] in ("guard", "restricted-token"):
+        # `-p` plugins load before pytest imports any task module, and `_PYTEST` already
+        # passes `-p no:cacheprovider`, so this needs no new mechanism. Windows loads it
+        # too: Low integrity denies the writes but says nothing about the network
+        child += ["-p", "drillion.guard"]
+    return _execute(child, scratch, cpu, **env)
 
 
 def run_script(args, scratch, cpu, **env):
-    """A bare interpreter under the same tier as a graded run: `confine` without pytest.
+    """A bare interpreter under the same tier as a graded run. The script installs the
+    guard itself, since there is no pytest here to load it as a plugin."""
+    return _execute(args, scratch, cpu, **env)
 
-    Only the `-m pytest` tail is replaced. Everything `confine` puts *ahead* of the
-    interpreter is the confinement itself on macOS, and dropping it would run task code
-    loose."""
-    plan = confine(args, scratch, cpu, **env)
-    wrapper = plan["args"][: plan["args"].index(sys.executable)]
-    plan["args"] = [*wrapper, sys.executable, *args]
+
+def _execute(child, scratch, cpu, **env):
+    """The one place a confined child starts. Windows needs `CreateProcessAsUser` for a
+    restricted token, so it cannot go through `subprocess`."""
+    plan = confine(child, scratch, cpu, **env)
     if status()[0] == "restricted-token":
         from . import winsandbox
 
@@ -611,24 +605,19 @@ def run_script(args, scratch, cpu, **env):
     )
 
 
-def confine(args, scratch, cpu, **env):
-    """What `subprocess.run` needs to grade pytest `args` under the strongest tier this
+def confine(child, scratch, cpu, **env):
+    """What `subprocess.run` needs to run `python *child` under the strongest tier this
     machine has. `cpu` is the caller's wall-clock timeout, reused as the CPU limit."""
     scratch = Path(scratch)
     tier, _ = status()
     targets = sorted(
         {
             str(Path(a).resolve().parent)
-            for a in args
+            for a in child
             if a.endswith(".py") and Path(a).is_file()
         }
     )
-    cmd = [sys.executable, "-m", "pytest", *args]
-    if tier in ("guard", "restricted-token"):
-        # `-p` plugins load before pytest imports any task module, and `_PYTEST` already
-        # passes `-p no:cacheprovider`, so this needs no new mechanism. Windows loads it
-        # too: Low integrity denies the writes but says nothing about the network
-        cmd += ["-p", "drillion.guard"]
+    cmd = [sys.executable, *child]
     if tier == "sandbox-exec":
         cmd = [SANDBOX_EXEC, "-p", _sbpl(scratch, targets), *cmd]
     return {
