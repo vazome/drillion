@@ -31,7 +31,6 @@ from .attempts import (
 from .catalogue import public, tasks
 from .lsp import bridge
 from .region import Invalid, write_region
-from .runner import summarise
 from .scheduler import (
     LADDER,
     LAPSE_LIMIT,
@@ -464,7 +463,7 @@ def run_task(slug: str, edit: Edit):
         _check_etag(kind, src, edit.etag)
         new_src = kind.validate(edit.code, src)
         write_region(kind.path(meta), new_src)
-        passed, out, found = kind.grade(meta, o)
+        passed, detail = kind.grade(meta, o, new_src)
         if edit.submit:
             o["attempts"] += 1
         else:
@@ -474,8 +473,7 @@ def run_task(slug: str, edit: Edit):
             "passed": passed,
             "graded": edit.submit,
             "attempts": o["attempts"],
-            **summarise(out, kind.marker_line(new_src)),
-            "case": found,
+            **detail,
         }
         log.info(
             "%s passed=%s graded=%s attempts=%s",

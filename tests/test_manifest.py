@@ -56,23 +56,24 @@ def stubbed_kubeconform(fixture_root, monkeypatch):
     skipped until then. `installed_kubeconform` is the same tests against the real tool."""
     if os.name == "nt":
         pytest.skip("the stand-in is a shebang script, so it needs a posix exec")
-    # written once, so a test that moves a grading input moves what the harness passes
+    # written once, so a test that moves a grading input moves what the grader passes
     # rather than what the stand-in expects
     path = stub_kubeconform(fixture_root)
     monkeypatch.setattr(tools, "installed", lambda name: path)
 
 
 def _submit(text):
-    """(passed, the first line of the page's headline): the grader's own words.
+    """(passed, the first diagnostic as `path: message`): the grader's own words, as data.
 
-    The first line rather than the whole output, because pytest's assertion introspection
-    prints the whole `CompletedProcess` underneath, stderr included, and a check against
-    the raw output would pass on that repr whatever the grader chose to say."""
+    The diagnostics are what the page is given, so the tests assert on the field and the
+    sentence rather than on whatever a test framework printed around them."""
     (settings.tasks_dir / SLUG / "task.yaml").write_text(text, encoding="utf-8")
-    passed, out, case = runner.run_manifest(catalogue.tasks()[SLUG], BRIEF)
-    assert case is None, "a manifest run has no generated-arguments case"
-    headline = runner.summarise(out, 0)["headline"]
-    return passed, headline[0] if headline else ""
+    passed, diagnostics, _ = runner.run_manifest(catalogue.tasks()[SLUG], BRIEF)
+    if not diagnostics:
+        return passed, ""
+    first = diagnostics[0]
+    said = first["message"]
+    return passed, f"{first['path']}: {said}" if first["path"] else said
 
 
 def test_a_correct_manifest_passes(stubbed_kubeconform):
@@ -156,7 +157,7 @@ def test_a_validator_that_cannot_run_is_not_silently_a_wrong_answer(
 def test_a_missing_tool_is_not_a_wrong_answer(fixture_root, monkeypatch):
     monkeypatch.setattr(tools, "installed", lambda name: None)
     with pytest.raises(manifest.ToolMissing):
-        manifest.harness(catalogue.tasks()[SLUG], BRIEF)
+        manifest.job(catalogue.tasks()[SLUG], BRIEF)
 
 
 def test_a_missing_tool_reaches_the_learner_as_infrastructure(
@@ -186,7 +187,7 @@ def test_a_sitting_with_no_brief_is_refused_rather_than_graded(fixture_root):
     so it is refused with the way out rather than graded against a brief nobody read."""
     meta = catalogue.tasks()[SLUG]
     with pytest.raises(manifest.Rejected, match="abandon"):
-        kinds.of(meta).grade(meta, {"seed": 7})
+        kinds.of(meta).grade(meta, {"seed": 7}, "")
 
 
 @pytest.mark.parametrize("term", ["grader", "version", "pin", "schemas"])
@@ -470,9 +471,15 @@ def test_a_manifest_run_is_graded_by_its_own_kind(fixture_root, monkeypatch):
     learner's YAML as if it were Python, and reports "no tests ran" as a wrong answer."""
     seen = []
 
-    def spy(self, meta, o):
+    def spy(self, meta, o, src):
         seen.append(o["brief"])
-        return True, "1 passed", None
+        return True, {
+            "headline": [],
+            "output": "",
+            "printed": "",
+            "case": None,
+            "diagnostics": [],
+        }
 
     monkeypatch.setattr(kinds._Manifest, "grade", spy, raising=False)
 
@@ -671,8 +678,8 @@ def test_a_grader_upgraded_under_a_live_sitting_still_grades_its_brief(
     assert o["brief_revision"] != manifest.grader_revision(meta_for())
     code = manifest.render_solution(meta_for(), o["brief"])
     (settings.tasks_dir / SLUG / "task.yaml").write_text(code, encoding="utf-8")
-    passed, out, _ = kinds.of(meta_for()).grade(meta_for(), o)
-    assert passed, out
+    passed, detail = kinds.of(meta_for()).grade(meta_for(), o, code)
+    assert passed, detail["headline"]
 
 
 def test_a_grader_that_cannot_read_the_brief_is_not_the_learner_s_fault(
@@ -691,7 +698,7 @@ def test_a_grader_that_cannot_read_the_brief_is_not_the_learner_s_fault(
 
 def test_a_second_document_can_still_be_saved_while_it_is_being_typed(fixture_root):
     """Saving only asks that it parses, and a multi document stream does. Rejecting it here
-    made autosave 400 on every keystroke of a second document, and hid the harness's own
+    made autosave 400 on every keystroke of a second document, and hid the grader's own
     "expected one document" message behind a PyYAML sentence fragment."""
     two = "apiVersion: v1\nkind: Pod\n---\napiVersion: v1\nkind: Service\n"
     assert kinds.of(meta_for()).validate(two, "") == two
