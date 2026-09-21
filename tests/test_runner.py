@@ -1,6 +1,5 @@
 """Runner: pytest output turned into editor coordinates, and the selfcheck splice."""
 
-import os
 import shutil
 
 import pytest
@@ -181,8 +180,6 @@ def test_selfcheck_solves_each_task_with_its_own_reference(
 @pytest.fixture
 def manifest_root(tmp_path, monkeypatch):
     """One manifest task, with the stand-in validator the pins do not supply yet."""
-    if os.name == "nt":
-        pytest.skip("the stand-in is a shebang script, so it needs a posix exec")
     root = tasks_root(**{"271_fixture": fixture_task()})
     monkeypatch.setattr(settings, "root", root)
     monkeypatch.setattr(tools, "installed", lambda name: stub_kubeconform(root))

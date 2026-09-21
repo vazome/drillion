@@ -15,7 +15,7 @@ This is not "raise money", learn python in 30 days, "here is a voucher" platform
 People use drillion for only one single purpose - to get better at Python. drillion aids them, by clearly tagging pracises with respective topics names, people can easly search across topics and tasks. Transparency is key to understanding.
 
 3. Local ready
-The architecture of drillion allows to either clone the repo and self-deploy or docker run, so the client become available with ready environment. There is no login or registration. Convenience is important factor to consistent learning. We must make sure that it stays this way. Upgrades should not be a concern, learning progress must be kept regardless of distribution line.
+drillion is a Docker image: one `docker run` and the client is available with a ready environment. A checkout is the contributors' dev loop, not a way to use drillion. There is no login or registration. Convenience is important factor to consistent learning. We must make sure that it stays this way. Upgrades should not be a concern, learning progress must be kept regardless of distribution line.
 
 4. UX/UI that corresponds
 UX: the system design must reflect the spaced repetition learning (a fixed Leitner ladder; `docs/adr/0001-leitner-not-fsrs.md` says why not FSRS). It's not 1 task - 1 topic. Topics must span across multiple tasks, topics must merge to ensure consistent learning of new concepts and preserving previosly learned material. Another example if takes user more than 30 minutes on the task without submission, drillion must pop notify them of taking a hint, you can't bruteforce something you are unaware of.
@@ -45,7 +45,7 @@ The most common defect in this repo is a change that works on the path you teste
 - **Entry points.** A behavior reachable from one screen is often reachable from another too: the catalogue, a task, its lineage panel, Settings, and a keybinding. Fixing one is not fixing the feature.
 - **Clients.** Web.
 - **Reverse states.** If you added a way in, add the way out and the way to see it. Snooze needs unsnooze. Close needs reopen. A one-way door is a bug.
-- **Run modes.** `uv run drillion` from a checkout and the Docker image behave differently: the data root, the tools directory and the bind address all differ.
+- **Run modes.** The Docker image is the product; `uv run drillion` from a checkout is the dev loop, and the two differ in data root, tools directory and bind address. Verify in the image, since only it is what learners run.
 
 ## Taste
 

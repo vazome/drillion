@@ -3,7 +3,6 @@
 Every module asks `settings` for a path at call time rather than freezing one at import."""
 
 import os
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -17,12 +16,7 @@ WEB_BUILT_IN = PKG / "_web"
 
 def _data_home():
     """Where a program keeps a user's files when it was installed rather than cloned."""
-    if sys.platform == "win32":
-        base = os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local"
-    elif sys.platform == "darwin":
-        base = Path.home() / "Library" / "Application Support"
-    else:
-        base = os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share"
+    base = os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share"
     return Path(base) / "drillion"
 
 

@@ -22,7 +22,7 @@ def test_a_binary_that_does_not_match_its_pin_is_not_installed(tmp_path, monkeyp
 
 def test_a_matching_binary_is_installed(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "root", tmp_path)
-    monkeypatch.setattr(tools, "host", lambda: ("win32", "amd64"))
+    monkeypatch.setattr(tools, "host", lambda: ("linux", "arm64"))
     pin = tools.pin_for("kubeconform")
     binary = tmp_path / "tools" / pin.member
     binary.parent.mkdir(parents=True)
@@ -67,9 +67,7 @@ def test_every_kubeconform_pin_is_the_one_release():
     for (os_name, arch), pin in tools.PINS[tools.KUBECONFORM].items():
         assert pin.version == tools.KUBECONFORM_VERSION
         asset = pin.url.removeprefix(tools._KUBECONFORM_RELEASE + "/")
-        assert asset.startswith(
-            f"kubeconform-{os_name.replace('win32', 'windows')}-{arch}."
-        )
+        assert asset == f"kubeconform-{os_name}-{arch}.tar.gz"
 
 
 def _archive(member, payload):

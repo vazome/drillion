@@ -8,7 +8,6 @@ sandbox removed, because a probe that is simply broken also reads as a pass."""
 
 import ctypes
 import os
-import subprocess
 import sys
 
 import pytest
@@ -16,7 +15,6 @@ import pytest
 from drillion import guard, runner, sandbox
 from drillion.settings import settings
 
-KERNEL_TIERS = ("landlock", "sandbox-exec")
 TIER = sandbox.status()[0]
 
 # a file the parent wrote, so "cannot write outside" can never be satisfied by the target
@@ -130,18 +128,13 @@ def test_a_task_cannot_open_a_socket(tmp_path, monkeypatch):
     assert passed, out
 
 
-@pytest.mark.skipif(
-    TIER not in KERNEL_TIERS, reason="reads are only confined by a kernel tier"
-)
+@pytest.mark.skipif(TIER != "landlock", reason="reads are only confined by Landlock")
 def test_a_task_cannot_read_outside_the_sandbox(tmp_path, monkeypatch):
     passed, out = grade(tmp_path, monkeypatch, READ)
     assert passed, out
 
 
-@pytest.mark.skipif(
-    TIER not in KERNEL_TIERS or sys.platform == "win32",
-    reason="a kernel tier and a POSIX /bin/cat are both needed",
-)
+@pytest.mark.skipif(TIER != "landlock", reason="needs the Landlock tier")
 def test_a_subprocess_inherits_the_sandbox(tmp_path, monkeypatch):
     """Task 033 grades `subprocess.run`, so spawning stays legal. What must not survive is
     the escape: whatever a task starts is confined by the same ruleset it was."""
@@ -163,7 +156,6 @@ def test_grading_survives_a_machine_with_no_kernel_tier(tmp_path, monkeypatch):
     """Degrading has to be invisible to a learner. Forced down to the bare floor, an
     ordinary task still grades."""
     monkeypatch.setattr(sandbox, "_landlock_works", lambda: False)
-    monkeypatch.setattr(sandbox, "_sandbox_exec_works", lambda: False)
     monkeypatch.setattr(sandbox, "_guard_works", lambda: False)
     monkeypatch.setattr(sandbox, "status", lambda: ("floor", "forced by a test"))
     monkeypatch.setattr(settings, "root", tmp_path)
@@ -175,7 +167,7 @@ def test_grading_survives_a_machine_with_no_kernel_tier(tmp_path, monkeypatch):
 
 def test_status_names_the_tier_and_why_a_stronger_one_is_missing():
     tier, why = sandbox.status()
-    assert tier in ("landlock", "sandbox-exec", "restricted-token", "guard", "floor")
+    assert tier in ("landlock", "guard", "floor")
     assert why
     if tier != "landlock" and sys.platform == "linux":
         assert "Landlock" in why
@@ -252,12 +244,6 @@ def test_the_tools_directory_is_executable_and_schemas_are_readable(
     assert roots[os.fsencode(str(tmp_path.resolve()))] == {"read_dir"}
 
 
-def test_the_macos_profile_still_denies_the_network():
-    """Grading is offline. `(deny network*)` is the whole of that denial on macOS, so an
-    exec root added to the profile must not have cost it."""
-    assert "(deny network*)" in sandbox._sbpl("/tmp", [])
-
-
 # the Landlock filesystem rights, ABI 1 to 5, spelled out so that growing the vocabulary is
 # a deliberate edit here and not a side effect of widening a root
 FILESYSTEM_RIGHTS = {
@@ -290,7 +276,6 @@ def test_the_ruleset_only_ever_asks_for_filesystem_rights():
     assert asked <= FILESYSTEM_RIGHTS
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="POSIX resource limits")
 def test_the_resource_limits_never_raise_what_the_machine_already_allows():
     """A cap is a cap: `_limits` may lower a limit and must never hand a learner's process
     more than it had, whatever the numbers in this file say."""
@@ -304,82 +289,3 @@ def test_the_resource_limits_never_raise_what_the_machine_already_allows():
             assert soft <= before_hard
     assert any(what == resource.RLIMIT_CPU for what, _ in sandbox._limits(60))
     assert not any(what == resource.RLIMIT_CPU for what, _ in sandbox._limits(None))
-
-
-# ── the Windows tier ─────────────────────────────────────────────────────────────
-
-windows_only = pytest.mark.skipif(
-    sys.platform != "win32", reason="the restricted token is a Windows tier"
-)
-
-
-@windows_only
-def test_a_low_integrity_child_actually_comes_up_at_low_integrity():
-    """The tier is claimed only when a child has read its own integrity SID back out of its
-    own token — `IsProcessInJob` is no evidence, since WSL and PowerShell already use one."""
-    from drillion import winsandbox
-
-    assert winsandbox.works()
-
-
-@windows_only
-def test_the_windows_child_reports_its_exit_code_and_its_output(tmp_path):
-    """`CreateProcessAsUser` means the wait, the exit code and the decoding are ours rather
-    than `subprocess`'s, so they get their own check."""
-    from drillion import winsandbox
-
-    done = winsandbox.run(
-        [sys.executable, "-c", "import sys; print('hi'); sys.exit(3)"],
-        tmp_path,
-        timeout=60,
-    )
-    assert (done.returncode, done.stdout.strip()) == (3, "hi")
-
-
-@windows_only
-def test_a_windows_child_that_runs_long_is_killed_and_raises(tmp_path):
-    from drillion import winsandbox
-
-    with pytest.raises(subprocess.TimeoutExpired):
-        winsandbox.run(
-            [sys.executable, "-c", "import time; time.sleep(30)"],
-            tmp_path,
-            timeout=2,
-        )
-
-
-@windows_only
-def test_the_windows_child_hands_back_unix_line_endings(tmp_path):
-    """Every other tier goes through `subprocess.run(text=True)`, which translates them, and
-    the code reading this output assumes it: one stray `\r` is enough to stop a `$`-anchored
-    pattern matching, which is how a learner's print() went missing from the results panel."""
-    from drillion import winsandbox
-
-    done = winsandbox.run(
-        [sys.executable, "-c", "print('a'); print('b')"], tmp_path, timeout=60
-    )
-    assert done.stdout == "a\nb\n"
-
-
-def test_run_script_keeps_the_macos_wrapper(tmp_path, monkeypatch):
-    """`confine` confines macOS by *prefixing* the command, and a bare script gets the
-    same prefix as pytest does."""
-    monkeypatch.setattr(settings, "root", tmp_path)
-    monkeypatch.setattr(sandbox, "status", lambda: ("sandbox-exec", "forced by a test"))
-    seen = {}
-
-    def capture(**kwargs):
-        seen.update(kwargs)
-        return subprocess.CompletedProcess(kwargs["args"], 0, "", "")
-
-    monkeypatch.setattr(subprocess, "run", capture)
-    scratch = tmp_path / "scratch"
-    scratch.mkdir()
-    script = tmp_path / "src" / "brief.py"
-    script.parent.mkdir()
-    script.write_text("", encoding="utf-8")
-    sandbox.run_script([str(script), "7"], scratch, 5)
-    assert seen["args"][:2] == [sandbox.SANDBOX_EXEC, "-p"]
-    assert seen["args"][3:] == [sys.executable, str(script), "7"]
-    # the real args reach `confine`, so the script's own directory is a read root
-    assert f'(subpath "{script.parent.resolve()}")' in seen["args"][2]

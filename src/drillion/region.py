@@ -134,9 +134,8 @@ def write_region(path, new_src):
         stream.flush()
         os.fsync(stream.fileno())
     os.replace(tmp, path)
-    if os.name != "nt":
-        directory = os.open(path.parent, os.O_RDONLY)
-        try:
-            os.fsync(directory)
-        finally:
-            os.close(directory)
+    directory = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)

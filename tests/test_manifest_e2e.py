@@ -10,7 +10,6 @@ having and is not the same as agreeing with kubeconform.
 """
 
 import asyncio
-import os
 import shutil
 
 import httpx
@@ -42,8 +41,6 @@ def fixture_root():
 
 @pytest.fixture
 def stub(fixture_root, monkeypatch):
-    if os.name == "nt":
-        pytest.skip("the stand-in is a shebang script, so it needs a posix exec")
     path = stub_kubeconform(fixture_root)
     monkeypatch.setattr(tools, "installed", lambda name: path)
     return fixture_root

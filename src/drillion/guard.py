@@ -1,8 +1,8 @@
 """Doors shut from inside the process, wherever no kernel can shut them from outside.
 
-A PEP 578 audit hook, loaded by `sandbox.run` as `-p drillion.guard` whenever neither
-Landlock nor `sandbox-exec` is in force — Windows, an old Linux kernel, a container that
-blocks `prctl`, all the same case. pytest loads `-p` plugins before it imports any task
+A PEP 578 audit hook, loaded by `sandbox.run` as `-p drillion.guard` whenever Landlock is
+not in force — an old Linux kernel, a container that blocks `prctl`, a checkout on macOS,
+all the same case. pytest loads `-p` plugins before it imports any task
 module, so the hook is in place before task code runs. It refuses writes outside the scratch
 directory and connections to anything but loopback.
 

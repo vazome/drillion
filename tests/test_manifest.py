@@ -5,7 +5,6 @@ import os
 import shutil
 import subprocess
 import sys
-from types import SimpleNamespace
 
 import httpx
 import pytest
@@ -54,8 +53,6 @@ def installed_kubeconform():
 def stubbed_kubeconform(fixture_root, monkeypatch):
     """The stand-in, so the grading path is exercised before the pins land rather than
     skipped until then. `installed_kubeconform` is the same tests against the real tool."""
-    if os.name == "nt":
-        pytest.skip("the stand-in is a shebang script, so it needs a posix exec")
     # written once, so a test that moves a grading input moves what the grader passes
     # rather than what the stand-in expects
     path = stub_kubeconform(fixture_root)
@@ -278,23 +275,6 @@ def test_a_brief_that_is_not_a_flat_mapping_of_finite_scalars_is_rejected(
 def test_a_brief_may_hold_a_bool(fixture_root):
     _grader("return {'ready': True}")
     assert manifest.generate_brief(catalogue.tasks()[SLUG], 7) == {"ready": True}
-
-
-def test_a_brief_can_be_read_when_posix_open_flags_are_unavailable(
-    fixture_root, monkeypatch
-):
-    """Windows has neither flag; a normal brief must still open there."""
-    _grader("return {'name': 'checkout', 'replicas': 3}")
-    windows_os = SimpleNamespace(
-        open=os.open,
-        lstat=os.lstat,
-        fstat=os.fstat,
-        path=os.path,
-        O_RDONLY=os.O_RDONLY,
-    )
-    monkeypatch.setattr(manifest, "os", windows_os)
-
-    assert manifest.generate_brief(catalogue.tasks()[SLUG], 7) == BRIEF
 
 
 def test_a_grader_that_explodes_is_rejected_not_crashed(fixture_root):
