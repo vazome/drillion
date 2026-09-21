@@ -193,21 +193,28 @@ def test_selfcheck_grades_a_manifest_with_its_own_solution(
     manifest_root, monkeypatch, capsys
 ):
     """The other kind's proof, and the reason `selfcheck` had to stop assuming task.py:
-    the answer key is rendered against a brief and put through the real grader.
+    the answer key is rendered against a brief and put through the real grader, with no
+    pytest anywhere near it.
 
-    A green run is checked against what pytest was actually handed, because a kind that
-    produced no check at all would also come back green with nothing run."""
-    handed = []
-    run = runner._run_pytest
+    A green run is checked against what was actually graded, because a kind that produced
+    no check at all would also come back green with nothing run."""
+    graded = []
+    real = runner.run_manifest
     monkeypatch.setattr(
         runner,
-        "_run_pytest",
-        lambda args, **kw: (handed.extend(args), run(args, **kw))[1],
+        "run_manifest",
+        lambda meta, brief, learner=None: (
+            graded.append(learner),
+            real(meta, brief, learner),
+        )[1],
     )
+    pytested = []
+    monkeypatch.setattr(runner, "_run_pytest", lambda args, **kw: pytested.append(args))
 
     assert runner.selfcheck() == 0
     assert "1/1 ok" in capsys.readouterr().out
-    assert str(manifest_root / "_selfcheck.py") in handed
+    assert graded == [manifest_root / "_selfcheck.yaml"]
+    assert pytested == [], "a manifest needs no pytest"
     assert not list(manifest_root.glob("_selfcheck.*"))
 
 
@@ -226,8 +233,8 @@ def test_selfcheck_names_a_manifest_whose_answer_key_stopped_passing(
 def test_selfcheck_names_a_task_it_cannot_even_prepare(
     manifest_root, monkeypatch, capsys
 ):
-    """No validator, no harness. One task that cannot produce its own check is a named
-    failure, not a traceback out of `drillion selfcheck`."""
+    """No validator, no grader. One task that cannot run its own check is a named failure,
+    not a traceback out of `drillion selfcheck`."""
     monkeypatch.setattr(tools, "installed", lambda name: None)
     assert runner.selfcheck() == 1
     out = capsys.readouterr().out

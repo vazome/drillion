@@ -20,11 +20,12 @@ from . import sandbox, tools
 from .settings import settings
 
 MAX_BRIEF_BYTES = 8192
+MAX_RESULT_BYTES = 64 << 10
 MAX_SPEC_CHARS = 65536
 SCALARS = (str, int, float, bool)
 BRIEF_SECONDS = 30
-# the harness exits with this when `check` raises anything but an assert
-GRADER_BROKE = 70
+GRADE_SECONDS = 60
+VALIDATOR_SECONDS = 30
 
 # Runs inside the sandbox, with the grader path, seed, output path and module name as argv.
 # `drillion.guard` first because on the guard tier its audit hook is the only confinement
@@ -121,7 +122,11 @@ def generate_brief(meta, seed):
 
 
 def _read_brief(out):
-    """Read back what the child wrote, as the one file object the size check looked at.
+    return _validated(_read_json(out, MAX_BRIEF_BYTES, "brief()"))
+
+
+def _read_json(out, cap, what):
+    """Read back what a child wrote, as the one file object the size check looked at.
 
     The child owns the scratch directory, so it can unlink `out` and leave a symlink or a
     fifo in its place. The lstat/open/fstat identity check prevents following a replacement;
@@ -130,23 +135,23 @@ def _read_brief(out):
     try:
         before = os.lstat(out)
         if not stat.S_ISREG(before.st_mode):
-            raise Rejected("brief() wrote something that is not a plain file")
+            raise Rejected(f"{what} wrote something that is not a plain file")
         flags = (
             os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
         )
         fd = os.open(out, flags)
     except OSError:
-        raise Rejected("brief() wrote nothing") from None
+        raise Rejected(f"{what} wrote nothing") from None
     with open(fd, encoding="utf-8") as stream:
         info = os.fstat(fd)
         if not stat.S_ISREG(info.st_mode) or not os.path.samestat(before, info):
-            raise Rejected("brief() wrote something that is not a plain file")
-        if info.st_size > MAX_BRIEF_BYTES:
-            raise Rejected("brief() wrote too much")
+            raise Rejected(f"{what} wrote something that is not a plain file")
+        if info.st_size > cap:
+            raise Rejected(f"{what} wrote too much")
         try:
-            return _validated(json.loads(stream.read()))
+            return json.loads(stream.read())
         except ValueError as exc:
-            raise Rejected(f"brief() is not valid JSON: {exc}") from None
+            raise Rejected(f"{what} is not valid JSON: {exc}") from None
 
 
 def render(template, brief):
@@ -216,122 +221,169 @@ def _scalar(value):
     )
 
 
-# Written into a scratch dir and collected by pytest like any other test, so a manifest
-# verdict comes out of the same sandboxed runner as a python one. Every literal brace in
-# the generated code is doubled: the template goes through `str.format`.
-_HARNESS = '''
+# Run by `sandbox.run_script` with two paths: the job to do, and the file to answer in.
+# It is a plain string, never a template: everything it needs arrives as JSON, so a task's
+# own braces are nothing to escape.
+GRADE_SOURCE = """
+try:
+    import drillion.guard
+except (ImportError, OSError):
+    pass
+
 import importlib.util, json, subprocess, sys
 from pathlib import Path
 
-import pytest
 import yaml
 
-BRIEF = json.loads({brief!r})
+job = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+out = Path(sys.argv[2])
 
 
-def _shape(text, many):
-    """What the learner wrote, or the reason it is not yet a manifest. These come before
+def answer(ok, diagnostics=(), report="", broken=None):
+    out.write_text(
+        json.dumps(
+            {
+                "ok": ok,
+                "diagnostics": [
+                    {"path": path, "message": message} for path, message in diagnostics
+                ],
+                "report": report[-4000:],
+                "broken": broken,
+            }
+        ),
+        encoding="utf-8",
+    )
+    sys.exit(0)
+
+
+def shape(text, many):
+    '''What the learner wrote, or the reason it is not yet a manifest. These come before
     the validator because kubeconform has nothing useful to say about any of them. A task
     whose grader defines `check_many` asks for several objects in one file, `---`-separated,
-    and then every document has to be a mapping."""
+    and then every document has to be a mapping.'''
     if not text.strip():
-        raise AssertionError("task.yaml is empty: write the manifest before submitting")
-    docs = list(yaml.safe_load_all(text))
+        answer(False, [(None, "task.yaml is empty: write the manifest before submitting")])
+    try:
+        docs = list(yaml.safe_load_all(text))
+    except yaml.YAMLError as exc:
+        answer(False, [(None, "task.yaml is not valid YAML: %s" % exc)])
     if many:
-        for i, d in enumerate(docs, 1):
-            if not isinstance(d, dict):
-                raise AssertionError(f"document {{i}} is not a mapping")
+        for i, doc in enumerate(docs, 1):
+            if not isinstance(doc, dict):
+                answer(False, [(None, "document %d is not a mapping" % i)])
     elif len(docs) != 1:
-        raise AssertionError(f"expected one document, found {{len(docs)}}")
+        answer(False, [(None, "expected one document, found %d" % len(docs))])
     elif not isinstance(docs[0], dict):
-        raise AssertionError("the document must be a mapping, not a list or a scalar")
+        answer(False, [(None, "the document must be a mapping, not a list or a scalar")])
     return docs
 
 
-def _no_detail(entry):
-    """A rejected resource with no per-field errors: the validator stopped before it could
+def no_detail(entry):
+    '''A rejected resource with no per-field errors: the validator stopped before it could
     compare anything. "could not find schema" is the one of those that is as easily a gap
-    in what drillion packages as a typo, and from here the two are the same string."""
+    in what drillion packages as a typo, and from here the two are the same string.'''
     msg = entry.get("msg", "invalid")
     if "could not find schema" in msg:
         return (
-            f"task.yaml: {{msg}}. Check the spelling of `kind:` and `apiVersion:`; if they "
-            "are right then drillion packages no schema for that kind, which is ours to "
-            "fix and not your mistake"
+            msg + ". Check the spelling of `kind:` and `apiVersion:`; if they are right "
+            "then drillion packages no schema for that kind, which is ours to fix and not "
+            "your mistake"
         )
-    return f"task.yaml: {{msg}}"
+    return msg
 
 
-def _readable(out):
-    """kubeconform's verdict in the learner's words. A run that printed no report at all
-    failed to start rather than failed to validate, so its own output is what is shown.
+def validate():
+    '''kubeconform's verdict as diagnostics. A run that printed no report at all failed to
+    start rather than failed to validate, so its own output is what is shown.
 
     `msg` is boilerplate naming the schema's install path; the field that is actually wrong
-    is in `validationErrors`, so that is what is read when the validator got that far."""
+    is in `validationErrors`, so that is what is read when the validator got that far.'''
     try:
-        report = json.loads(out.stdout)
+        done = subprocess.run(
+            [job["tool"], "-strict", "-kubernetes-version", job["kubernetes"],
+             "-schema-location", job["schemas"], "-output", "json", job["learner"]],
+            capture_output=True, text=True, timeout=job["validator_seconds"],
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        # the validator is drillion's to install and run; a learner cannot cause this
+        answer(False, broken="the validator did not run: %s" % exc)
+    raw = done.stdout + done.stderr
+    if done.returncode == 0:
+        return raw
+    try:
+        report = json.loads(done.stdout)
     except ValueError:
-        return (out.stderr or out.stdout).strip()[-1000:]
-    lines = []
+        answer(False, [(None, (done.stderr or done.stdout).strip()[-1000:])], raw)
+    found = []
     for entry in report.get("resources", []):
         if entry.get("status") in ("statusValid", "statusSkipped"):
             continue
-        found = entry.get("validationErrors") or []
-        lines += [
-            f"{{bad.get('path', 'task.yaml')}}: {{bad.get('msg', 'invalid')}}"
-            for bad in found
-        ]
-        if not found:
-            lines.append(_no_detail(entry))
-    return "\\n".join(lines) or "the manifest is not valid against the schema"
+        errors = entry.get("validationErrors") or []
+        found += [(bad.get("path"), bad.get("msg", "invalid")) for bad in errors]
+        if not errors:
+            found.append((None, no_detail(entry)))
+    answer(False, found or [(None, "the manifest is not valid against the schema")], raw)
 
 
-def test_manifest():
-    text = Path({learner!r}).read_text(encoding="utf-8")
-    spec = importlib.util.spec_from_file_location({module!r}, {grader!r})
-    grade = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(grade)
-    many = hasattr(grade, "check_many")
-    docs = _shape(text, many)
-    out = subprocess.run(
-        [{tool!r}, "-strict", "-kubernetes-version", {kube!r},
-         "-schema-location", {schemas!r}, "-output", "json", {learner!r}],
-        capture_output=True, text=True, timeout=30,
-    )
-    assert out.returncode == 0, _readable(out)
-    try:
-        if many:
-            grade.check_many(docs, BRIEF)
-        else:
-            grade.check(docs[0], BRIEF)
-    except AssertionError:
-        raise
-    except Exception as exc:
-        # past the schema, anything but an assert is the grader failing to read this
-        # sitting's brief: ours to fix, and it must not cost the learner an attempt
-        pytest.exit(f"{{type(exc).__name__}}: {{exc}}", returncode={broken})
-'''
+spec = importlib.util.spec_from_file_location(job["module"], job["grader"])
+grade = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(grade)
+many = hasattr(grade, "check_many")
+docs = shape(Path(job["learner"]).read_text(encoding="utf-8"), many)
+report = validate()
+try:
+    if many:
+        grade.check_many(docs, job["brief"])
+    else:
+        grade.check(docs[0], job["brief"])
+except AssertionError as exc:
+    answer(False, [(None, str(exc))], report)
+except Exception as exc:
+    # past the schema, anything but an assert is the grader failing to read this sitting's
+    # brief: ours to fix, and it must not cost the learner an attempt
+    answer(False, report=report, broken="%s: %s" % (type(exc).__name__, exc))
+answer(True, report=report)
+"""
 
 
-def harness(meta, brief, learner=None):
-    """The generated test for one manifest sitting. Never regenerates the brief: the
-    requirements were written down when the sitting opened, and they are passed in.
+def job(meta, brief, learner=None):
+    """Everything the child needs to grade one sitting, as plain data.
 
     `learner` is the file to grade, and defaults to the learner's own. A self-check grades
     the answer key instead, and passes the path it rendered it to."""
     tool = tools.installed(tools.KUBECONFORM)
     if tool is None:
         raise ToolMissing("kubeconform is not installed: run `drillion doctor --fetch`")
-    return _HARNESS.format(
-        brief=json.dumps(brief),
-        learner=str(learner or meta["path"]),
-        tool=str(tool),
-        kube=tools.KUBERNETES_VERSION,
-        schemas=tools.schema_location(),
-        module=module_name(meta["dir"].name),
-        grader=str(meta["dir"] / "grade.py"),
-        broken=GRADER_BROKE,
-    )
+    return {
+        "learner": str(learner or meta["path"]),
+        "grader": str(meta["dir"] / "grade.py"),
+        "module": module_name(meta["dir"].name),
+        "brief": brief,
+        "tool": str(tool),
+        "kubernetes": tools.KUBERNETES_VERSION,
+        "schemas": tools.schema_location(),
+        "validator_seconds": VALIDATOR_SECONDS,
+    }
+
+
+def read_result(out):
+    """The child's verdict, checked before anything downstream trusts it. A grader that
+    could not read this sitting's brief is infrastructure, never a wrong answer."""
+    result = _read_json(out, MAX_RESULT_BYTES, "the grader")
+    if not isinstance(result, dict) or not isinstance(result.get("ok"), bool):
+        raise Rejected("the grader did not say whether the manifest passed")
+    if result.get("broken"):
+        raise Rejected(
+            f"this task's grader could not read this sitting's requirements "
+            f"({result['broken']}). Your work is saved and no attempt was spent; run "
+            "`drillion doctor`."
+        )
+    diagnostics = [
+        {"path": d.get("path"), "message": str(d.get("message", ""))}
+        for d in result.get("diagnostics", [])
+        if isinstance(d, dict)
+    ]
+    return result["ok"], diagnostics, str(result.get("report", ""))
 
 
 def fingerprint(meta):

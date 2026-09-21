@@ -104,11 +104,15 @@ export interface Case {
   source: string;
   error: string;
 }
+/** One thing the grader found wrong. `path` is where in the manifest, `null` when it is
+ *  about the document as a whole. Python runs send none of these: their detail is `case`. */
+export interface Diagnostic { path: string | null; message: string }
 interface RunBase {
   attempts: number; headline: string[]; output: string; etag: string;
   /** what the learner's own code printed, lifted out of pytest's report; "" when silent */
   printed: string;
   case: Case | null;
+  diagnostics: Diagnostic[];
 }
 /** The grade and everything it decided exist iff `passed && graded`. A plain Run is
  *  `graded: false`: it costs no attempt and moves no card, however green it came back.
