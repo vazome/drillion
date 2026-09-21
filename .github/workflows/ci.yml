@@ -99,7 +99,7 @@ jobs:
         run: uv lock --upgrade && uv sync
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run pytest tests -q
+      - run: uv run pytest tests -q -n auto # one worker per core; the tests share no server or port
       # A manifest task is graded by a pinned external validator, and `selfcheck` proves
       # every task still passes its own answer key, so the validator has to be here before
       # it runs. The download is checksum-pinned per platform; an unpinned or altered one
@@ -178,7 +178,10 @@ jobs:
       matrix:
         include:
           - engines: chromium
-            projects: --project=chromium
+            projects: --project=chromium --grep-invert=@render
+          # every task page, one navigation each: the longest single spec, so it gets a leg
+          - engines: chromium-render
+            projects: --project=chromium --grep=@render
           - engines: firefox-webkit
             projects: --project=firefox --project=webkit
     name: screens (${{ matrix.engines }})
