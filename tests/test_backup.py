@@ -2,6 +2,7 @@
 
 import asyncio
 import io
+import json
 import shutil
 import tempfile
 import zipfile
@@ -94,6 +95,72 @@ def test_a_bundle_restores_a_manifest_artifact(root):
     assert _manifest_body() == saved
 
 
+def test_a_bundle_holding_a_manifest_is_not_format_1(root):
+    """0.8.2 reads format 1 and only its `.py` entries, so a manifest written into format 1
+    would vanish there in silence. Format 2 it refuses outright, which is the point."""
+    _add_manifest(root)
+    with zipfile.ZipFile(io.BytesIO(backup.bundle())) as zf:
+        names = zf.namelist()
+        assert json.loads(zf.read(backup.MANIFEST))["format"] == 2
+    assert f"{backup.REGIONS}{MANIFEST}/task.yaml" in names
+    assert f"{backup.REGIONS}{SLUG}/task.py" in names
+
+
+def test_a_format_1_backup_still_restores(root):
+    """What 0.8.2 wrote: python regions as `regions/<slug>.py`."""
+    mine = "def solve(rows):\n    return 'from 0.8.2'\n"
+    progress = json.dumps({**state.load(), "notes": {SLUG: "old"}})
+    data = _zip(
+        {
+            "manifest.json": '{"format": 1}',
+            "progress.json": progress,
+            f"regions/{SLUG}.py": mine,
+        }
+    )
+    assert backup.restore(data)["brings"]["tasks"] == 1
+    assert _body(SLUG) == mine.strip("\n")
+    assert state.load()["notes"][SLUG] == "old"
+
+
+def test_a_saved_file_no_kind_owns_is_refused_not_dropped(root):
+    data = _zip(
+        {
+            "manifest.json": '{"format": 2}',
+            "progress.json": json.dumps(state.load()),
+            f"regions/{SLUG}/task.toml": "x = 1\n",
+        }
+    )
+    with pytest.raises(backup.Rejected, match="cannot restore"):
+        backup.inspect(data)
+
+
+def test_an_open_manifest_sitting_survives_a_round_trip(root):
+    """The sitting's question travels with the progress, so a restored attempt shows the
+    same requirements and grades against the same brief."""
+    _add_manifest(root)
+    sitting = {
+        "seed": 7,
+        "attempts": 1,
+        "runs": 0,
+        "hints": 0,
+        "new": True,
+        "started": "2026-09-20T10:00:00",
+        "last": "2026-09-20T10:05:00",
+        "active": 300,
+        "solution_shown": False,
+        "brief": {"name": "ledger", "replicas": 3, "image": "redis:7.4"},
+        "spec_md": "One Deployment named `ledger`.",
+        "brief_revision": "abc123",
+    }
+    with state.writing() as st:
+        st["open"][MANIFEST] = dict(sitting)
+    data = backup.bundle()
+    with state.writing() as st:
+        st["open"].clear()
+    backup.restore(data)
+    assert state.load()["open"][MANIFEST] == sitting
+
+
 def test_restoring_keeps_the_data_it_replaces(root):
     with state.writing() as st:
         st["notes"][SLUG] = "before"
@@ -112,7 +179,9 @@ def test_a_task_this_version_does_not_ship_is_reported_not_dropped(root):
     with zipfile.ZipFile(io.BytesIO(data)) as old, zipfile.ZipFile(buf, "w") as new:
         for item in old.infolist():
             new.writestr(item, old.read(item.filename))
-        new.writestr(f"{backup.REGIONS}999_retired.py", "def solve():\n    return 1\n")
+        new.writestr(
+            f"{backup.REGIONS}999_retired/task.py", "def solve():\n    return 1\n"
+        )
     assert backup.inspect(buf.getvalue())["unknown"] == ["999_retired"]
     assert backup.restore(buf.getvalue())["unknown"] == ["999_retired"]
 
@@ -142,7 +211,7 @@ def test_a_region_that_will_not_splice_stops_the_whole_restore(two_roots):
     with zipfile.ZipFile(io.BytesIO(data)) as old, zipfile.ZipFile(buf, "w") as new:
         for item in old.infolist():
             body = old.read(item.filename)
-            if item.filename == f"{backup.REGIONS}{OTHER}.py":
+            if item.filename == f"{backup.REGIONS}{OTHER}/task.py":
                 body = b"def solve(xs: return 1\n"
             new.writestr(item, body)
 
