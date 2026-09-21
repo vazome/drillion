@@ -25,9 +25,9 @@ tiered on the solution, while
 **difficulty** — how hard the task is to get **right the first time**: `easy`, `medium` or
 `hard`. It is not how long the task takes. Thirty minutes of unsurprising typing is `easy`; six
 lines you can only write once you have seen the trick is `hard`. Anchor the call on the task's
-`## Rules` — rules are where the traps live — and grade a new task against the rubric all 267
+`## Rules` — rules are where the traps live — and grade a new task against the rubric the rest
 were graded against: [difficulty-rubric.md](difficulty-rubric.md).
-Today: 38 easy · 180 medium · 49 hard.
+Today: 42 easy · 185 medium · 51 hard.
 
 **track** — optional, at most one per task: a themed run through the catalogue that cuts across
 tiers, for a sequence meant to be practised in order. No track is defined today. Leave the key
@@ -59,8 +59,8 @@ it — and `POST /api/focus` sets it.
 
 One folder per task, `tasks/<NNN>_<name>/`; copy the shape of an existing one.
 
-`<NNN>` is the task's place in the curriculum, `001`–`267` with no gaps, so the next task you add is
-`268`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
+`<NNN>` is the task's place in the curriculum, `001`–`278` with no gaps, so the next task you add is
+`279`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
 always numbers below its own, and `doctor` will not let that stop being true. Append, never insert —
 inserting means rewriting every number after it, and [ADR-0006](adr/0006-the-fundamentals-come-first.md)
 says the two renumberings drillion has had are the last two.
@@ -84,7 +84,8 @@ source: exercism/python practice/two-fer (MIT, adapted)   # optional
 ### Hint 1 … ### Hint 2 … ### Hint 3
 ```
 
-Write the keys in that order. `title`, `difficulty`, `tier`, `minutes` and `tags` are required;
+Write the keys in that order. `title`, `difficulty`, `minutes` and `tags` are required, and so
+is `tier` for a Python task;
 no real task carries all eight keys. The title leads with the concept, never with a puzzle name:
 Exercism's `bob` is `conditionals — classify a message into one of five replies`, and the puzzle
 name survives in the slug and in `source:`. The number is **not** in the frontmatter — it is the
@@ -129,10 +130,34 @@ code (constants, exception classes, a toy app) goes above `solve`, never below. 
 (`_gen`, `_reference`, `test_*`) is never sent to the editor, and an edit that pastes the marker,
 defines `_reference`/`_gen`/`test_*` or names `_reference` is refused.
 
+## Manifest tasks
+
+A task whose frontmatter says `kind: manifest` asks for a Kubernetes manifest instead of Python.
+It takes no `tier`, and its folder holds four files instead of two:
+
+- **`README.md`** — the same frontmatter and sections as any task. `## You return` and `## Rules`
+  may name `{placeholders}` from the brief, filled in when a sitting opens; `## Why` and
+  `## You get` are shown before one opens, so they may not. A literal brace is doubled, and a
+  placeholder is a bare name: no `{name!r}`, `{name:>8}` or `{name.title}`.
+- **`task.yaml`** — the learner's whole file. It ships empty.
+- **`grade.py`** — `brief(r)` returns a flat mapping of names to strings, numbers or booleans,
+  drawn from the `random.Random` it is handed. `check(doc, brief)` asserts on one parsed
+  document; a task that asks for several `---`-separated objects defines `check_many(docs,
+  brief)` instead, and asserts the document count first. Both run only after the pinned
+  kubeconform has accepted the file against the packaged schemas, so they check the task's
+  requirements, not the schema. Each assert message is what the learner reads. Anything but an
+  `AssertionError` is reported as a grader fault and costs the learner nothing.
+- **`solution.yaml`** — the answer key, with each `{placeholder}` a whole YAML value so it keeps
+  its type.
+
+A sitting's brief is stored when it opens, and a grader upgraded later keeps grading the brief
+it stored: a new `grade.py` must still accept every mapping an older `brief()` could return.
+Every rule the README states needs a row in `tests/test_graders.py` that breaks it and fails.
+
 ## When a new task does not show up
 
 A folder the catalogue cannot read is **skipped**, not reported: a half-written task must never
-break the menu for the other 266. That makes a mistake look like a task that simply is not there.
+break the menu for the other 277. That makes a mistake look like a task that simply is not there.
 Run `uv run drillion doctor` — it reports every rule the folder breaks, not just the first:
 
 - a required key missing, empty, or misspelt (`tags: []` counts as missing);
@@ -144,7 +169,7 @@ Run `uv run drillion doctor` — it reports every rule the folder breaks, not ju
 
 `uv run drillion selfcheck` splices `_reference` into every file and runs the tests; it must be
 green on Python 3.14 before a task is trusted. But it only counts tasks the catalogue already
-accepted, so if it still says `267/267` after you added one, `doctor` is where to look.
+accepted, so if it still says `278/278` after you added one, `doctor` is where to look.
 
 ## Retired tags
 
