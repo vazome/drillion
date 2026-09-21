@@ -7,7 +7,7 @@ uv sync                                      # dependencies (runtime + dev)
 uv run drillion                              # serve on http://127.0.0.1:8765, opens the browser
 uv run pytest tests -q                       # the app's own tests
 uv run ruff check .                          # lint — CI fails if this fails
-uv run drillion selfcheck                    # solve every task with its reference; must say 267/267
+uv run drillion selfcheck                    # solve every task with its reference; must say 278/278
 ```
 
 Requirements: Python 3.14 and [uv](https://docs.astral.sh/uv/). The frontend (React + Vite, in
@@ -18,7 +18,7 @@ API still serves and only `/` 404s. To work on the frontend itself:
 pnpm --dir web install                       # once
 pnpm --dir web dev                           # Vite on 5173, proxying /api to the server on 8765
 pnpm --dir web lint                          # lint — CI fails if this fails, same as ruff
-pnpm --dir web screens                       # Playwright: renders all 267 task pages, photographs the rest
+pnpm --dir web screens                       # Playwright: renders all 278 task pages, photographs the rest
 ```
 
 ## Seeing the client without running it
@@ -78,14 +78,19 @@ block a maintainer needs to say yes before you write code.
 ## The task-authoring contract
 
 A task is a folder, `tasks/<NNN>_<name>/`, added by appending — never inserting — the next
-number after the highest one in the catalogue. Copy the shape of an existing task rather than
-starting from scratch. Full detail, including how to choose `tier`, `difficulty`, `track` and
-`tags`, is in [docs/authoring-tasks.md](docs/authoring-tasks.md); here is the contract a
-submission is graded against.
+number after the highest one in the catalogue. Copy the shape of an existing task of the same
+kind rather than starting from scratch. Full detail, including how to choose `tier`,
+`difficulty`, `track` and `tags`, is in [docs/authoring-tasks.md](docs/authoring-tasks.md); here
+is the contract a submission is graded against.
 
-**`README.md`** — YAML frontmatter (`title`, `difficulty`, `tier`, `minutes` and `tags` are
-required; `prereqs`, `practices`, `track`, `source` are optional), then GitHub-flavoured
-Markdown that opens with exactly these four headings, in order:
+A task has a **kind**, set by `kind:` in its frontmatter: `python` (the default when the key is
+absent) or `manifest`. Every kind shares the `README.md` contract below; what else the folder
+holds depends on the kind.
+
+**`README.md`** — YAML frontmatter (`title`, `difficulty`, `minutes` and `tags` are required
+for every kind, and `tier` for a Python task; `prereqs`, `practices`, `track`, `source` and
+`kind` are optional), then GitHub-flavoured Markdown that opens with exactly these four
+headings, in order:
 
 ```markdown
 ## Why
@@ -99,14 +104,23 @@ Markdown that opens with exactly these four headings, in order:
 through on different data. The server never sends a hint the learner has not unlocked, so a
 wrong count breaks the grading, not just the display.
 
-**`task.py`** — the learner's region (given code, then `solve()` as its last statement), a
-machinery marker line, then the machinery: a `_gen` that builds inputs from a seeded
-`random.Random`, a `_reference` implementation, and a `test_solve` that compares the two. The
-app only ever edits the region above the marker; an edit that pastes the marker, or defines or
-names `_reference`/`_gen`/`test_*`, is refused.
+**A Python task: `task.py`** — the learner's region (given code, then `solve()` as its last
+statement), a machinery marker line, then the machinery: a `_gen` that builds inputs from a
+seeded `random.Random`, a `_reference` implementation, and a `test_solve` that compares the two.
+The app only ever edits the region above the marker; an edit that pastes the marker, or defines
+or names `_reference`/`_gen`/`test_*`, is refused.
 
-**Grading a submission**: `uv run drillion selfcheck` splices each task's own `_reference` into
-its stub and runs the test — every task must go green this way before it is trusted, and the
+**A manifest task: `task.yaml`, `grade.py`, `solution.yaml`** — `task.yaml` is the learner's
+whole file and ships empty. `grade.py` defines `brief(r)`, returning a flat mapping of names to
+scalars drawn from `r`, and either `check(doc, brief)` for one document or
+`check_many(docs, brief)` for several, asserting every requirement the README states.
+`solution.yaml` is the answer key with `{name}` placeholders as whole YAML values. The README's
+`## You return` and `## Rules` may use the same `{name}` placeholders; `## Why` and `## You get`
+may not. Every rule the README states needs a row in `tests/test_graders.py` that breaks it.
+
+**Grading a submission**: `uv run drillion selfcheck` proves each task with its own reference:
+a Python task's `_reference` is spliced into its stub, a manifest task's `solution.yaml` is
+rendered against a brief and graded like a learner's file. It runs the test — every task must go green this way before it is trusted, and the
 count it prints (`N/N`) is the thing to watch. A folder the catalogue cannot parse (missing
 frontmatter key, no machinery marker, a hint count that isn't 3) is silently skipped rather than
 reported, so if your new task doesn't show up in the catalogue, run `uv run drillion doctor` — it

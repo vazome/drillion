@@ -145,35 +145,46 @@ def test_release_publishes_only_the_attested_container_image():
     release = yaml.safe_load(RELEASE_WORKFLOW.read_text())
     jobs = release["jobs"]
 
-    assert set(jobs) == {"gate", "image", "image-scan", "notes"}
-    assert jobs["notes"]["needs"] == ["image"]
+    assert set(jobs) == {"gate", "image", "sbom", "image-scan", "notes"}
+    assert jobs["notes"]["needs"] == ["image", "sbom"]
     assert jobs["notes"]["permissions"] == {"contents": "write"}
 
-    metadata = next(step for step in jobs["image"]["steps"] if step.get("id") == "meta")
-    assert metadata["with"]["tags"] == "type=pep440,pattern={{version}}"
-    assert metadata["with"]["flavor"] == "latest=auto"
+    image = {step.get("id"): step for step in jobs["image"]["steps"]}
+    assert image["meta"]["with"]["tags"] == "type=pep440,pattern={{version}}"
+    assert image["meta"]["with"]["flavor"] == "latest=auto"
+    assert jobs["image"]["outputs"]["digest"] == "${{ steps.digest.outputs.value }}"
 
-    attestations = [
-        step
-        for step in jobs["image"]["steps"]
-        if step.get("uses", "").startswith("actions/attest@")
-    ]
-    assert [step["with"]["subject-digest"] for step in attestations] == [
-        "${{ steps.push.outputs.digest }}",
-        "${{ steps.platform-digests.outputs.amd64 }}",
-        "${{ steps.platform-digests.outputs.arm64 }}",
-    ]
-    assert all(step["with"]["push-to-registry"] is True for step in attestations)
-    assert [step["with"].get("sbom-path") for step in attestations] == [
-        None,
-        "sbom-amd64.spdx.json",
-        "sbom-arm64.spdx.json",
-    ]
+    # a published version is never rebuilt: a retry reuses its digest
+    assert image["push"]["if"] == "steps.existing.outputs.digest == ''"
+    assert "imagetools inspect" in image["existing"]["run"]
+
+    def attested(steps):
+        return [s for s in steps if s.get("uses", "").startswith("actions/attest@")]
+
+    [provenance] = attested(jobs["image"]["steps"])
+    assert provenance["with"]["subject-digest"] == "${{ steps.digest.outputs.value }}"
+    assert "sbom-path" not in provenance["with"]
+
+    # every platform the image is built for gets an SBOM of its own filesystem
+    platforms = image["push"]["with"]["platforms"].split(",")
+    arches = jobs["sbom"]["strategy"]["matrix"]["arch"]
+    assert [f"linux/{a}" for a in arches] == platforms
+    [sbom] = attested(jobs["sbom"]["steps"])
+    assert sbom["with"]["subject-digest"] == "${{ steps.platform.outputs.digest }}"
+    assert sbom["with"]["sbom-path"] == "sbom.spdx.json"
+    assert all(
+        s["with"]["push-to-registry"] is True
+        for s in attested(jobs["image"]["steps"] + jobs["sbom"]["steps"])
+    )
 
     release_step = jobs["notes"]["steps"][-1]
     assert release_step["env"]["DIGEST"] == "${{ needs.image.outputs.digest }}"
     notes = release_step["run"]
-    assert "ghcr.io/${GITHUB_REPOSITORY}@${DIGEST}" in notes
+    assert "${image}@${DIGEST}" in notes
+    for platform in platforms:
+        assert platform in notes
+    assert "docker run" in notes and "-v drillion:/data" in notes
+    assert "gh attestation verify oci://${image}@${DIGEST}" in notes
     assert 'gh release create "$GITHUB_REF_NAME"' in notes
     assert "dist/" not in notes
 

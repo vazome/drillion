@@ -16,7 +16,14 @@ from . import __version__, kinds, region, state
 from .catalogue import tasks
 from .settings import settings
 
-FORMAT = 1
+# 2 files each artifact under its task as `regions/<slug>/<filename>`, so the entry names
+# its kind. 0.8.2 reads only format 1 and only `.py` entries in it: a manifest written into
+# format 1 would be dropped by it in silence, and format 2 it refuses outright.
+FORMAT = 2
+READS = {1, 2}
+# format 1 kept `regions/<slug>.py`; `.yaml` is the one release-less build that wrote it
+LEGACY = {".py": "task.py", ".yaml": "task.yaml"}
+ARTIFACTS = {k.filename for k in kinds.KINDS.values()}
 # What the Settings screen makes you type before an erase runs. It is deliberately a
 # sentence rather than "yes": the point is that it cannot be reached by muscle memory.
 PHRASE = "erase progress"
@@ -51,7 +58,7 @@ def bundle():
         zf.writestr(MANIFEST, json.dumps(manifest, indent=2))
         zf.writestr(PROGRESS, progress)
         for slug, (kind, body) in saved.items():
-            zf.writestr(f"{REGIONS}{slug}{Path(kind.filename).suffix}", body)
+            zf.writestr(f"{REGIONS}{slug}/{kind.filename}", body)
     return buf.getvalue()
 
 
@@ -68,10 +75,11 @@ def _open(data):
             raise Rejected("That file is not a drillion backup.") from exc
         if not isinstance(manifest, dict):
             raise Rejected("That file is not a drillion backup.")
-        if manifest.get("format") != FORMAT:
+        version = manifest.get("format")
+        if version not in READS:
             raise Rejected(
-                f"That backup is format {manifest.get('format')!r}; "
-                f"this drillion reads format {FORMAT}."
+                f"That backup is format {version!r}; "
+                f"this drillion reads formats {', '.join(map(str, sorted(READS)))}."
             )
         try:
             progress = json.loads(zf.read(PROGRESS))
@@ -81,19 +89,35 @@ def _open(data):
             raise Rejected("The progress in that backup is damaged.") from exc
         saved = {}
         for name in zf.namelist():
-            suffix = Path(name).suffix
-            if not name.startswith(REGIONS) or suffix not in {".py", ".yaml"}:
+            found = _entry(name, version)
+            if found is None:
                 continue
-            slug = name[len(REGIONS) : -len(suffix)]
+            slug, filename = found
             if slug in saved:
                 raise Rejected(f"That backup saves {slug} more than once.")
-            saved[slug] = suffix, zf.read(name).decode("utf-8")
+            saved[slug] = filename, zf.read(name).decode("utf-8")
     try:
         # the same gate an imported state passes, so a bad shape is refused up front
         progress = state._checked(progress)
     except (state.Unreadable, state.TooNew) as exc:
         raise Rejected(str(exc)) from exc
     return manifest, progress, saved
+
+
+def _entry(name, version):
+    """(slug, filename) for a saved artifact, or None for anything else in the zip. A
+    format 2 entry naming a file no kind owns is refused rather than skipped: it is saved
+    work this version would otherwise lose without a word."""
+    if not name.startswith(REGIONS) or name.endswith("/"):
+        return None
+    rest = name[len(REGIONS) :]
+    if version == 1:
+        suffix = Path(rest).suffix
+        return (rest[: -len(suffix)], LEGACY[suffix]) if suffix in LEGACY else None
+    slug, _, filename = rest.partition("/")
+    if filename not in ARTIFACTS:
+        raise Rejected(f"That backup saves {name}, which this drillion cannot restore.")
+    return slug, filename
 
 
 def _counts(progress):
@@ -123,7 +147,7 @@ def _planned(saved, known):
     the whole restore: a history restored against half the code it was written for is worse
     than a restore the learner can retry."""
     plan, refused = [], []
-    for slug, (suffix, body) in sorted(saved.items()):
+    for slug, (filename, body) in sorted(saved.items()):
         if slug not in known:
             continue
         meta = known[slug]
@@ -131,7 +155,7 @@ def _planned(saved, known):
         path = meta["path"]
         try:
             src = path.read_text(encoding="utf-8")
-            if suffix != Path(kind.filename).suffix:
+            if filename != kind.filename:
                 raise region.Invalid("a different kind of task saved this artifact")
             plan.append((path, kind.validate(body, src), src))
         except (OSError, region.Invalid) as exc:

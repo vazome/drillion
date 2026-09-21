@@ -387,9 +387,9 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                       <span className="tabular" style={{ fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>{a.date}</span>
                       <StatusBadge status={a.grade} />
                     </div>
-                    {a.python ? (
+                    {a.revision ? (
                       <div className="tabular" style={{ fontSize: 12.5, color: "var(--text-faint)", fontFamily: "var(--font-mono)" }}>
-                        Python {a.python} · seed {a.seed} · grader {a.revision}
+                        {a.python ? `Python ${a.python}` : `kubeconform ${a.validator} · Kubernetes ${a.kubernetes}`} · seed {a.seed} · grader {a.revision}
                       </div>
                     ) : null}
                     {a.code ? <pre style={{ margin: "6px 0 0", fontSize: 12.5, whiteSpace: "pre-wrap", color: "var(--text-muted)" }}>{a.code}</pre> : null}

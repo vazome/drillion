@@ -13,8 +13,9 @@ words mean.
 ### The catalogue
 
 **Task**:
-The unit of practice: one folder under `tasks/`, holding one spec, one stub to fill in, and one
-test that grades it. There are 267.
+The unit of practice: one folder under `tasks/`, holding one spec, one file to fill in, and the
+grader that judges it. A Python task keeps the last two in one `task.py`; a manifest task splits
+them into `task.yaml` and `grade.py`. There are 278: 267 Python, 11 manifest.
 _Avoid_: exercise, drill, problem, kata, question
 
 **Slug**:

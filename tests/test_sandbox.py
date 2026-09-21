@@ -92,11 +92,11 @@ def grade(tmp_path, monkeypatch, *body):
     ]  # these tests grade the sandbox, not the case
 
 
-def unconfined(args, scratch, cpu, **env):
+def unconfined(child, scratch, cpu, **env):
     """`_run_pytest` as it was before the sandbox: the parent's whole environment, no
     `preexec_fn`, no profile. The control run every escape test is measured against."""
     return {
-        "args": [sys.executable, "-m", "pytest", *args],
+        "args": [sys.executable, *child],
         "env": {**os.environ, **{k: str(v) for k, v in env.items()}},
         "cwd": str(scratch),
     }
@@ -362,8 +362,8 @@ def test_the_windows_child_hands_back_unix_line_endings(tmp_path):
 
 
 def test_run_script_keeps_the_macos_wrapper(tmp_path, monkeypatch):
-    """`confine` confines macOS by *prefixing* the command, so a bare script has to keep
-    everything ahead of the interpreter and replace only the pytest tail behind it."""
+    """`confine` confines macOS by *prefixing* the command, and a bare script gets the
+    same prefix as pytest does."""
     monkeypatch.setattr(settings, "root", tmp_path)
     monkeypatch.setattr(sandbox, "status", lambda: ("sandbox-exec", "forced by a test"))
     seen = {}

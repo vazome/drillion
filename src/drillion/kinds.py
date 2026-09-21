@@ -89,6 +89,13 @@ class _Python:
     def revision(self, meta, src):
         return region.revision(src)
 
+    def provenance(self, o):
+        """What a pass archives beside its grade: with the seed and the interpreter, the
+        cases can be made again and the verdict reproduced."""
+        from . import sandbox
+
+        return {"seed": o["seed"], "python": sandbox.grading_python()}
+
     def grade(self, meta, o):
         """(passed, pytest output, case). The one place a kind's grader is chosen."""
         from . import runner
@@ -178,7 +185,7 @@ class _Manifest:
         task, which is where it is meant to be caught."""
         from . import manifest
 
-        if o is None:
+        if o is None or "brief" not in o:
             return None
         try:
             return manifest.render_solution(meta, o["brief"])
@@ -197,25 +204,32 @@ class _Manifest:
 
         return manifest.fingerprint(meta)
 
+    def provenance(self, o):
+        """The sitting itself, so a finished one still shows the question it asked and the
+        answer key for it, plus the validator and schema set that judged it."""
+        from . import tools
+
+        return {
+            "seed": o["seed"],
+            **{k: o[k] for k in ("brief", "spec_md", "brief_revision") if k in o},
+            "validator": tools.pin_for(tools.KUBECONFORM).version,
+            "kubernetes": tools.KUBERNETES_VERSION,
+        }
+
     def grade(self, meta, o):
         """(passed, pytest output, None). The brief is the one the sitting was opened
-        with; a sitting from before manifest grading has none, and its spec still holds
-        raw placeholders, so grading it against anything now would grade requirements the
-        learner was never shown. Refused with the way out instead."""
+        with, whatever grader revision is installed now. A sitting from before manifest
+        grading has none, and its spec still holds raw placeholders, so grading it against
+        anything now would grade requirements the learner was never shown. Refused with the
+        way out instead."""
         from . import manifest, runner
 
         if "brief" not in o:
             raise manifest.Rejected(
                 "this sitting opened before manifest grading: abandon it and start again"
             )
-        # `brief_revision` is stored for exactly this: a grader upgraded under a live sitting
-        # checks the brief against code the learner was never shown, and its KeyError would
-        # otherwise reach them as their own failed attempt.
-        if o.get("brief_revision") != manifest.grader_revision(meta):
-            raise manifest.Rejected(
-                "this task's grader changed since this sitting opened: abandon it and "
-                "start again"
-            )
+        # A grader upgraded under a live sitting still grades its stored brief; one that
+        # can no longer read it is `run_manifest`'s Rejected, never the learner's failure.
         return runner.run_manifest(meta, o["brief"])
 
     def selfcheck(self, meta):
