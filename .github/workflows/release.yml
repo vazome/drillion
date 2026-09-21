@@ -6,7 +6,8 @@ on:
   push:
     tags: ["v*"]
   # rerun a half-finished release by dispatching this workflow on the same tag, so moving the tag
-  # is never the retry. Every job below reads the tag from the ref, so both paths are identical.
+  # is never the retry. Every job below reads the tag from the ref, so both paths are identical,
+  # and a version whose image is already out keeps its digest rather than being rebuilt.
   workflow_dispatch:
 
 permissions:
@@ -60,7 +61,7 @@ jobs:
     # create` — is the fix.
     timeout-minutes: 45
     outputs:
-      digest: ${{ steps.push.outputs.digest }}
+      digest: ${{ steps.digest.outputs.value }}
     permissions:
       contents: read
       packages: write
@@ -70,8 +71,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # binfmt handlers for the arm64 half; hosted runners carry none
-      - uses: docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a # v4.3.0
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
@@ -85,7 +84,23 @@ jobs:
           tags: type=pep440,pattern={{version}}
           # Stable releases receive `latest`; pre-releases stay version-addressable only.
           flavor: latest=auto
+      # A version tag is immutable. A retry of a release whose image already went out reuses
+      # that digest instead of rebuilding: the Dockerfile upgrades apt packages live, so a
+      # rebuild would push different bytes under the same version.
+      - id: existing
+        env:
+          REF: ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version }}
+        run: |
+          if manifest="$(docker buildx imagetools inspect "$REF" --format '{{json .Manifest}}' 2>/dev/null)"; then
+            digest="$(jq -er .digest <<<"$manifest")"
+            echo "::notice::$REF is already published as $digest; reusing it"
+            echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          fi
+      # binfmt handlers for the arm64 half; hosted runners carry none
+      - if: steps.existing.outputs.digest == ''
+        uses: docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a # v4.3.0
       - id: push
+        if: steps.existing.outputs.digest == ''
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
@@ -99,52 +114,62 @@ jobs:
           # shows on the package page as a phantom unknown/unknown architecture. The index the
           # two platforms above produce is the genuine kind and lists exactly those two.
           provenance: false
+      - id: digest
+        env:
+          DIGEST: ${{ steps.existing.outputs.digest || steps.push.outputs.digest }}
+        run: echo "value=$DIGEST" >> "$GITHUB_OUTPUT"
       # multi-platform makes this an index digest, which is the right subject: `gh attestation
       # verify oci://…:<tag>` resolves a tag with `remote.Get`, so it asks about the index, not
       # either child. Attesting a child instead would verify for nobody.
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-name: ghcr.io/${{ github.repository }}
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-digest: ${{ steps.digest.outputs.value }}
           push-to-registry: true
-      # Provenance above describes the multi-platform index. An SBOM describes a filesystem, so
-      # resolve each Linux manifest and attest its own inventory rather than claiming the amd64
-      # runner's scan represents arm64 too.
-      - id: platform-digests
+
+  # Provenance above describes the multi-platform index. An SBOM describes a filesystem, so each
+  # Linux manifest is resolved and attested with its own inventory rather than claiming the amd64
+  # runner's scan represents arm64 too.
+  sbom:
+    needs: image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: platform
         env:
           IMAGE: ghcr.io/${{ github.repository }}
-          DIGEST: ${{ steps.push.outputs.digest }}
+          DIGEST: ${{ needs.image.outputs.digest }}
+          ARCH: ${{ matrix.arch }}
         run: |
-          index="$(docker buildx imagetools inspect --raw "${IMAGE}@${DIGEST}")"
-          for arch in amd64 arm64; do
-            digest="$(jq -er --arg arch "$arch" '
-              .manifests[] | select(.platform.os == "linux" and .platform.architecture == $arch) | .digest
-            ' <<<"$index")"
-            echo "${arch}=${digest}" >> "$GITHUB_OUTPUT"
-          done
+          digest="$(docker buildx imagetools inspect --raw "${IMAGE}@${DIGEST}" | jq -er --arg arch "$ARCH" '
+            .manifests[] | select(.platform.os == "linux" and .platform.architecture == $arch) | .digest
+          ')"
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
       - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
-          image-ref: ghcr.io/${{ github.repository }}@${{ steps.platform-digests.outputs.amd64 }}
+          image-ref: ghcr.io/${{ github.repository }}@${{ steps.platform.outputs.digest }}
           format: spdx-json
-          output: sbom-amd64.spdx.json
+          output: sbom.spdx.json
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-name: ghcr.io/${{ github.repository }}
-          subject-digest: ${{ steps.platform-digests.outputs.amd64 }}
-          sbom-path: sbom-amd64.spdx.json
-          push-to-registry: true
-      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          scan-type: image
-          image-ref: ghcr.io/${{ github.repository }}@${{ steps.platform-digests.outputs.arm64 }}
-          format: spdx-json
-          output: sbom-arm64.spdx.json
-      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
-        with:
-          subject-name: ghcr.io/${{ github.repository }}
-          subject-digest: ${{ steps.platform-digests.outputs.arm64 }}
-          sbom-path: sbom-arm64.spdx.json
+          subject-digest: ${{ steps.platform.outputs.digest }}
+          sbom-path: sbom.spdx.json
           push-to-registry: true
 
   # the image is public the moment the job above finishes; record what we shipped, in the release's
@@ -170,7 +195,7 @@ jobs:
   # The release notes are the changelog section plus the immutable image reference. The GHCR image
   # is the only learner-facing artifact; the GitHub Release remains its human-readable record.
   notes:
-    needs: [image]
+    needs: [image, sbom]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -189,10 +214,27 @@ jobs:
             echo "::error::CHANGELOG.md has no '## $version' section"
             exit 1
           fi
+          image="ghcr.io/${GITHUB_REPOSITORY}"
           {
             echo
             echo '## Container image'
             echo
-            echo "\`ghcr.io/${GITHUB_REPOSITORY}@${DIGEST}\`"
+            echo "\`${image}@${DIGEST}\`"
+            echo
+            echo 'Platforms: `linux/amd64`, `linux/arm64`.'
+            echo
+            echo 'Upgrade to this release, or roll back to it, keeping the `drillion` data volume:'
+            echo
+            echo '```bash'
+            echo "docker pull ${image}@${DIGEST}"
+            echo 'docker stop drillion && docker rm drillion'
+            echo "docker run -d --name drillion --restart unless-stopped -p 127.0.0.1:8765:8765 -v drillion:/data ${image}@${DIGEST}"
+            echo '```'
+            echo
+            echo 'Verify its provenance:'
+            echo
+            echo '```bash'
+            echo "gh attestation verify oci://${image}@${DIGEST} --repo ${GITHUB_REPOSITORY}"
+            echo '```'
           } >> notes.md
           gh release create "$GITHUB_REF_NAME" --title "drillion $version" --notes-file notes.md --latest
