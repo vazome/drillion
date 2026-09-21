@@ -28,7 +28,7 @@ after its tests have been run — failed and passed — and the progress page, c
 real client talking to the real API. Download it from the run's summary page and look. It is a
 review aid, not a visual regression test: nothing is compared against a committed baseline, so
 a UI change shows up as a different picture and never as a red build. When a run does fail, a
-`client-traces` artifact comes with it; `pnpm --dir web exec playwright show-trace <zip>` replays
+`client-traces-<engines>` artifact comes with it; `pnpm --dir web exec playwright show-trace <zip>` replays
 it step by step.
 
 To produce the same PNGs locally:
