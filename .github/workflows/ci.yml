@@ -168,9 +168,20 @@ jobs:
           PY
         working-directory: web
 
+  # one leg per engine group, each with its own server: the specs walk one server through one
+  # session, so they cannot share it in parallel, but two servers in two jobs can
   screens:
     needs: changes
     if: needs.changes.outputs.code == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - engines: chromium
+            projects: --project=chromium
+          - engines: firefox-webkit
+            projects: --project=firefox --project=webkit
+    name: screens (${{ matrix.engines }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # this image tag and web/package.json's @playwright/test pin are one version, bumped together
@@ -193,17 +204,20 @@ jobs:
         working-directory: web
       - run: pnpm build
         working-directory: web
-      - run: pnpm screens
+      - run: pnpm screens $PROJECTS # unquoted: one flag per project
         working-directory: web
+        env:
+          PROJECTS: ${{ matrix.projects }}
+      # the captures are chromium's alone
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && matrix.engines == 'chromium' }}
         with:
           name: client-screenshots
           path: web/screenshots/
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
-          name: client-traces
+          name: client-traces-${{ matrix.engines }}
           path: web/test-results/
 
   # builds the image once and is the only place that does. Everything that needs the built
