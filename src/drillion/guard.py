@@ -8,7 +8,7 @@ directory and connections to anything but loopback.
 
 Be clear about what this is: a speed bump against an accident, not a boundary against
 someone who means it. Task code shares the interpreter, and `subprocess` stays open because
-task 033 grades it, so a program that means harm walks straight around this. What actually
+task 067 grades it, so a program that means harm walks straight around this. What actually
 holds at this tier is the scrubbed environment and the redirected `HOME` in
 `sandbox.environ`.
 """

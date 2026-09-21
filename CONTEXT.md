@@ -89,7 +89,8 @@ the card is your relationship to it.
 _Avoid_: entry, record, progress item
 
 **Box**:
-One of seven rungs on the **ladder**. Counted `0`–`6` in stored state and shown as 1–7.
+One of seven rungs on the **ladder**. Counted `0`–`6` in stored state and never shown as a
+number: screens say learning, familiar or solid.
 _Avoid_: level, stage, bucket, bin
 
 **Ladder**:
@@ -159,8 +160,8 @@ What a pass was worth, computed and never self-reported: `quick`, `pass`, `strug
 _Avoid_: score, rating, mark; and never `easy`, which is a **difficulty**
 
 **Gate**:
-The rule that a **hint** or the **solution** must be earned — in **runs** and **active
-seconds** — before it opens.
+The rule that a **hint** or the **solution** must be earned before it opens: a hint in **active
+seconds**, the solution in **submits** and active seconds both.
 _Avoid_: lock, timer, paywall
 
 **Archive**:
@@ -175,7 +176,7 @@ The one thing on the task page drillion did not generate.
 _Avoid_: comment, annotation, journal, memo; and above all "notes" plural on a single task
 
 **Log**:
-The record of passes — one row each, with its date, **grade**, **runs** and time.
+The record of passes — one row each, with its date, **grade**, **submits** and time.
 _Avoid_: journal, feed, timeline
 
 **Recent**:

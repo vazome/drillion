@@ -45,7 +45,7 @@ HANDLE_FLAG_INHERIT = 0x00000001
 WAIT_OBJECT_0 = 0
 
 JOB_EXTENDED_LIMIT_INFORMATION = 9
-# deliberately no JOB_OBJECT_LIMIT_ACTIVE_PROCESS: task 033 grades `subprocess.run`, and
+# deliberately no JOB_OBJECT_LIMIT_ACTIVE_PROCESS: task 067 grades `subprocess.run`, and
 # the Linux and macOS tiers keep spawning legal for that reason. A cap of one would also
 # break a uv virtualenv, whose python.exe is a trampoline that starts the real interpreter.
 JOB_LIMIT_PROCESS_MEMORY = 0x00000100
