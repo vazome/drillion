@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
-import { Band, Button, Card, EmptyState, Input, Kbd, NoticeBanner, RowFlags, Select, SortReset, StatusBadge, TagChip, TaskPath } from "./ds/index.js";
+import { Band, Button, Card, EmptyState, Input, Kbd, NoticeBanner, RowFlags, Select, SortReset, StatusBadge, TagChip, TaskPath, TrackRail } from "./ds/index.js";
 import { api, post, type Catalogue as Payload, type Row } from "./api";
 import { Stats } from "./Stats";
 import { inDays, strength } from "./strength";
@@ -271,10 +271,18 @@ export function Catalogue() {
     if (e.key === "Enter" && !e.nativeEvent.isComposing && sorted.length) location.hash = href(sorted[0]);
   };
   const empty = today.no_new ? noPicks(today.no_new, today, focus, by) : null;
+  const tracks = data.tracks.map((name) => {
+    const all = data.tasks.filter((e) => e.track === name);
+    return { name, total: all.length, seen: all.filter((e) => e.seen > 0).length };
+  });
+  const unseen = focus ? data.tasks.filter((e) => !e.seen && facets(e).includes(focus)).length : 0;
   const act = empty?.act === "focus" ? { label: "Clear focus", run: () => setFocus(null) } : null;
 
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", display: "grid", gap: 18 }}>
+      {tracks.length ? <TrackRail tracks={tracks} active={focus} onPick={setFocus} allTotal={stats.total} allSeen={stats.seen}
+        readout={focus ? <>New picks come from <strong>{focus}</strong>, {unseen} unseen left.</> : "New picks come from every track."}
+        aside={focus ? "Reviews still come from everywhere; the list below is filtered to match." : null} /> : null}
       <Stats boxes={stats.boxes} ladder={stats.ladder} due={stats.due} seen={stats.seen} total={stats.total} practised={stats.practised} outOf={stats.window} progressHref="#/progress" />
 
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -330,8 +338,6 @@ export function Catalogue() {
         <Select value={status} onChange={setStatus} options={STATUSES} placeholder="any status" ariaLabel="Filter by status" style={{ width: 150 }} />
         <div style={{ width: 1, height: 24, background: "var(--border)" }} />
         {data.tiers.map((t) => <TagChip key={t} label={t} active={focus === t} onClick={() => setFocus(focus === t ? null : t)} />)}
-        {data.tracks.length ? <div style={{ width: 1, height: 24, background: "var(--border)" }} /> : null}
-        {data.tracks.map((t) => <TagChip key={t} label={t} active={focus === t} onClick={() => setFocus(focus === t ? null : t)} />)}
         <div style={{ flex: 1 }} />
         <span style={FAINT}>{rows.length} of {stats.total} tasks{activeTags.length > 1 ? " · tags matched with AND" : ""}</span>
         {filtered ? <Button variant="quiet" onClick={clear}>Clear</Button> : null}

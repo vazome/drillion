@@ -98,6 +98,9 @@ The vendored design system in `web/src/ds/` diverges from the Claude Design proj
 - `Run` grades nothing here. The design-system mock runs it against the spec's worked example
   (`Output · your run`, stdout); drillion has no notion of the example as an input, so a Run
   executes the same pytest as a Submit and simply costs no attempt and moves no card.
+- `TrackRail` came from the artifact as-is, converted to the local idiom (sibling
+  `.module.css` import, `track-rail-` prefix dropped). Its pills replace the track chips that
+  used to sit after the tier chips in the filter row, so a track is focused from one place.
 
 Every entry above is a deliberate local divergence. Apply them upstream before any
 `/design-sync`, or the next sync will silently overwrite them.

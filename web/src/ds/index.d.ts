@@ -486,3 +486,29 @@ export interface DepLineageProps {
   style?: Style;
 }
 export declare function DepLineage(props: DepLineageProps): El;
+export interface TrackRailItem {
+  name: string;
+  /** tasks in the track, and how many of them this learner has opened */
+  total: number;
+  seen: number;
+  /** a small image; without one the pill wears `mark`, else the name's first letter */
+  icon?: string;
+  mark?: string;
+}
+export interface TrackRailProps {
+  tracks?: TrackRailItem[];
+  /** the focused track; `null` lights the leading "all" pill */
+  active?: string | null;
+  /** called with a track's name, or `null` for the "all" pill */
+  onPick?: (track: string | null) => void;
+  label?: string;
+  allLabel?: string;
+  allTotal?: number;
+  allSeen?: number;
+  /** the footer line: say that focus gates new picks only */
+  readout?: React.ReactNode;
+  aside?: React.ReactNode;
+  className?: string;
+  style?: Style;
+}
+export declare function TrackRail(props: TrackRailProps): El;
