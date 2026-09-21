@@ -67,11 +67,6 @@ class _Python:
         """True when the region has code above solve() that the learner must keep."""
         return region.has_given(body)
 
-    def marker_line(self, src):
-        """Where the learner's region stops, so pytest's `task.py:12` can be rewritten
-        into the editor's own coordinates."""
-        return region.bounds(src)
-
     def opening(self, meta, seed):
         """Extra state an attempt on this kind carries. A python sitting needs none: its
         cases come from the seed at grading time, not from anything stored."""
@@ -89,22 +84,35 @@ class _Python:
     def revision(self, meta, src):
         return region.revision(src)
 
-    def grade(self, meta, o):
-        """(passed, pytest output, case). The one place a kind's grader is chosen."""
+    def provenance(self, o):
+        """What a pass archives beside its grade: with the seed and the interpreter, the
+        cases can be made again and the verdict reproduced."""
+        from . import sandbox
+
+        return {"seed": o["seed"], "python": sandbox.grading_python()}
+
+    def grade(self, meta, o, src):
+        """(passed, what the Result panel shows). The one place a kind's grader is chosen.
+
+        pytest's own report is the python panel: its `task.py:12` is rewritten into the
+        editor's coordinates, and the frame it failed on becomes the case."""
         from . import runner
 
-        return runner.run_python(meta, o["seed"])
+        passed, out, case = runner.run_python(meta, o["seed"])
+        summary = runner.summarise(out, region.bounds(src))
+        return passed, {**summary, "case": case, "diagnostics": []}
 
     def selfcheck(self, meta):
-        """{filename: text} for the files that prove this task's own reference answer
-        passes, written beside the task and deleted afterwards. `_selfcheck.py` is the one
-        pytest is handed; a kind that needs more may name them alongside it.
+        """({filename: text}, how to judge them). The files are written beside the task and
+        deleted afterwards. A judge of None hands the `.py` files among them to the shared
+        pytest batch: one pytest for the whole catalogue is the difference between seconds
+        and minutes, and only this kind needs pytest at all.
 
         A python task proves itself by answering with `_reference`: the region is spliced
         so that `solve` forwards to it, and the task's own tests judge the result."""
         src = meta["path"].read_text(encoding="utf-8")
         body = _reference_call(region.cut(src).body)
-        return {"_selfcheck.py": region.splice(src, body)}
+        return {"_selfcheck.py": region.splice(src, body)}, None
 
 
 class _Manifest:
@@ -147,10 +155,6 @@ class _Manifest:
         # No code above solve() in a YAML file: nothing precedes what the learner writes.
         return False
 
-    def marker_line(self, src):
-        # No marker, and no .py path in the output to rewrite: the whole file is theirs.
-        return 0
-
     def opening(self, meta, seed):
         """The requirements for this sitting, generated once and then stored on it.
 
@@ -178,7 +182,7 @@ class _Manifest:
         task, which is where it is meant to be caught."""
         from . import manifest
 
-        if o is None:
+        if o is None or "brief" not in o:
             return None
         try:
             return manifest.render_solution(meta, o["brief"])
@@ -197,42 +201,62 @@ class _Manifest:
 
         return manifest.fingerprint(meta)
 
-    def grade(self, meta, o):
-        """(passed, pytest output, None). The brief is the one the sitting was opened
-        with; a sitting from before manifest grading has none, and its spec still holds
-        raw placeholders, so grading it against anything now would grade requirements the
-        learner was never shown. Refused with the way out instead."""
+    def provenance(self, o):
+        """The sitting itself, so a finished one still shows the question it asked and the
+        answer key for it, plus the validator and schema set that judged it."""
+        from . import tools
+
+        return {
+            "seed": o["seed"],
+            **{k: o[k] for k in ("brief", "spec_md", "brief_revision") if k in o},
+            "validator": tools.pin_for(tools.KUBECONFORM).version,
+            "kubernetes": tools.KUBERNETES_VERSION,
+        }
+
+    def grade(self, meta, o, src):
+        """(passed, what the Result panel shows). The brief is the one the sitting was
+        opened with, whatever grader revision is installed now. A sitting from before
+        manifest grading has none, and its spec still holds raw placeholders, so grading it
+        against anything now would grade requirements the learner was never shown. Refused
+        with the way out instead.
+
+        The panel is the diagnostics themselves: a field and what is wrong with it, as the
+        validator and `check()` said it. `headline` is those messages in a line, for the
+        parts of the page that show one whatever the kind."""
         from . import manifest, runner
 
         if "brief" not in o:
             raise manifest.Rejected(
                 "this sitting opened before manifest grading: abandon it and start again"
             )
-        # `brief_revision` is stored for exactly this: a grader upgraded under a live sitting
-        # checks the brief against code the learner was never shown, and its KeyError would
-        # otherwise reach them as their own failed attempt.
-        if o.get("brief_revision") != manifest.grader_revision(meta):
-            raise manifest.Rejected(
-                "this task's grader changed since this sitting opened: abandon it and "
-                "start again"
-            )
-        return runner.run_manifest(meta, o["brief"])
+        # A grader upgraded under a live sitting still grades its stored brief; one that
+        # can no longer read it is `run_manifest`'s Rejected, never the learner's failure.
+        passed, diagnostics, report = runner.run_manifest(meta, o["brief"])
+        return passed, {
+            "headline": [d["message"] for d in diagnostics][:6],
+            "output": report,
+            "printed": "",
+            "case": None,
+            "diagnostics": diagnostics,
+        }
 
     def selfcheck(self, meta):
         """The same proof for the other kind: `solution.yaml` rendered against a real
         brief, then put through the validator and the `check()` that judge a learner's.
 
         `doctor` already asks whether the answer key renders. This asks the question only
-        the grader can answer, which is whether the rendered key actually passes."""
-        from . import manifest
+        the grader can answer, which is whether the rendered key actually passes. It is
+        judged one task at a time, by the same grader a submission meets."""
+        from . import manifest, runner
 
         brief = manifest.generate_brief(meta, SELFCHECK_SEED)
-        return {
-            "_selfcheck.yaml": manifest.render_solution(meta, brief),
-            "_selfcheck.py": manifest.harness(
-                meta, brief, learner=meta["dir"] / "_selfcheck.yaml"
-            ),
-        }
+        key = meta["dir"] / "_selfcheck.yaml"
+
+        def judge():
+            passed, diagnostics, _ = runner.run_manifest(meta, brief, learner=key)
+            return passed, diagnostics[0]["message"] if diagnostics else ""
+
+        return {"_selfcheck.yaml": manifest.render_solution(meta, brief)}, judge
 
 
 KINDS = {PYTHON: _Python(), MANIFEST: _Manifest()}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button, Card, Collapsible, ConflictBanner, DepLineage, EmptyState, FailedCase, NoteField, GraceNotice, NoticeBanner, RequiresTag, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
-import { ApiError, api, post, type Task as TaskData, type RunResult, type Case } from "./api";
+import { ApiError, api, post, type Task as TaskData, type RunResult, type Case, type Diagnostic } from "./api";
 import { depsHref, prefetch } from "./Deps";
 import { inDays, strength } from "./strength";
 import { DiffView, Editor } from "./Editor";
@@ -37,7 +37,7 @@ type Gate = { at: "hints" | "solution" | "editor" | "note"; message: string } | 
 type Result =
   | { state: "idle" | "running" }
   | { state: "ran"; output: string; printed: string }
-  | { state: "failed"; graded: boolean; attempts: number; headline: string; output: string; printed: string; case: Case | null }
+  | { state: "failed"; graded: boolean; attempts: number; headline: string; output: string; printed: string; case: Case | null; diagnostics: Diagnostic[] }
   | { state: "passed"; grade: string; box: number; stepped: boolean; fromBox: number; reason: string; dueIn: number; attempts: number; code: string };
 
 /** The pass banner's one line about where the task now sits: `stepped` is the server's answer
@@ -176,13 +176,13 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       } else if (r.passed) {
         setResult({ state: "ran", output: r.output, printed: r.printed });
       } else {
-        setResult({ state: "failed", graded: r.graded, attempts: r.attempts, headline: r.headline.join("\n") || "The tests did not pass.", output: r.output, printed: r.printed, case: r.case });
+        setResult({ state: "failed", graded: r.graded, attempts: r.attempts, headline: r.headline.join("\n") || "The tests did not pass.", output: r.output, printed: r.printed, case: r.case, diagnostics: r.diagnostics });
         setTask((p) => p && p.attempt ? { ...p, attempt: { ...p.attempt, attempts: r.attempts } } : p);
       }
     } catch (e) {
       const err = e as ApiError, bad = err.status === 400;
       if (absorb(err) && !bad) setResult({ state: "idle" });      // the conflict banner has it now
-      else setResult({ state: "failed", graded: submit, attempts: 0, output: "", printed: "", case: null,
+      else setResult({ state: "failed", graded: submit, attempts: 0, output: "", printed: "", case: null, diagnostics: [],
         headline: bad ? `${err.detail?.error}${err.detail?.line != null ? ` (line ${err.detail.line})` : ""}` : err.message });
     } finally { setInflight(null); }
   };
@@ -387,9 +387,9 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                       <span className="tabular" style={{ fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>{a.date}</span>
                       <StatusBadge status={a.grade} />
                     </div>
-                    {a.python ? (
+                    {a.revision ? (
                       <div className="tabular" style={{ fontSize: 12.5, color: "var(--text-faint)", fontFamily: "var(--font-mono)" }}>
-                        Python {a.python} · seed {a.seed} · grader {a.revision}
+                        {a.python ? `Python ${a.python}` : `kubeconform ${a.validator} · Kubernetes ${a.kubernetes}`} · seed {a.seed} · grader {a.revision}
                       </div>
                     ) : null}
                     {a.code ? <pre style={{ margin: "6px 0 0", fontSize: 12.5, whiteSpace: "pre-wrap", color: "var(--text-muted)" }}>{a.code}</pre> : null}
@@ -466,8 +466,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               * that arrives with its text already in place is never announced */}
             <div role="status">
               <div className="m-rise" key={result.state}>
-                {meta.kind === "manifest" && result.state === "failed" && result.output ? (
-                  <ManifestFailure headline={result.headline} />
+                {meta.kind === "manifest" && result.state === "failed" && result.diagnostics.length ? (
+                  <ManifestFailure diagnostics={result.diagnostics} />
                 ) : result.state === "ran" ? (
                   <div style={{ borderRadius: "var(--radius)", padding: "12px 16px", fontSize: 14, background: "var(--pass-bg)", borderLeft: "3px solid var(--pass)" }}>
                     <span style={{ fontWeight: 600, color: "var(--pass)", letterSpacing: ".04em" }}>✓ TESTS PASS</span>

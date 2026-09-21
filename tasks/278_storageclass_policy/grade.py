@@ -22,10 +22,19 @@ def brief(r):
 
 
 def check_many(docs, b):
-    [sc, pvc] = docs
+    assert len(docs) == 2, (
+        f"the file holds {len(docs)} documents, and the task asks for two: the "
+        "StorageClass first, then the PersistentVolumeClaim"
+    )
+    sc, pvc = docs
     assert sc.get("kind") == "StorageClass", (
         f"the first document is a {sc.get('kind')}, and the class goes first so the "
         "claim naming it is never pointing at nothing"
+    )
+    name = sc.get("metadata", {}).get("name")
+    assert name == b["name"], (
+        f"the StorageClass's metadata.name is {name!r}, and it should be {b['name']!r}: "
+        "it is the name the claim orders by"
     )
     assert sc.get("provisioner") == b["provisioner"], (
         f"the StorageClass's provisioner is {sc.get('provisioner')!r}, and it should be "
@@ -54,6 +63,11 @@ def check_many(docs, b):
         f"the claim's spec.storageClassName is {spec.get('storageClassName')!r}, and it "
         f"should name the class {b['name']!r} from the first document: that name is the "
         "whole order"
+    )
+    modes = spec.get("accessModes") or []
+    assert modes == ["ReadWriteOnce"], (
+        f"the claim's spec.accessModes is {modes}, and it should hold exactly "
+        "'ReadWriteOnce'"
     )
     asked = spec.get("resources", {}).get("requests", {}).get("storage")
     assert asked == b["capacity"], (

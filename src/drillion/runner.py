@@ -107,23 +107,42 @@ def run_python(meta, seed):
     return r.returncode == 0, r.stdout, case
 
 
-def run_manifest(meta, brief):
-    """A manifest sitting: the generated harness, graded like any other test.
+def run_manifest(meta, brief, learner=None):
+    """A manifest sitting: the validator and the task's `check()`, in one sandboxed child.
 
-    No case comes back. A manifest's question is the brief the sitting was opened with,
-    and the learner already has it in front of them."""
+    Returns `(passed, diagnostics, validator report)`. No pytest: a manifest run is one
+    file, one validator call and one `check()`, and a test framework in the middle only
+    turned that verdict into text for something else to parse back.
+
+    Paired with `run_python`, which grades the other kind. Neither dispatches: the caller
+    already holds a kind, and `kind.grade` picks the one that fits."""
     from . import manifest
 
-    with tempfile.TemporaryDirectory(dir=settings.root) as box:
-        test = Path(box, "test_manifest.py")
-        test.write_text(manifest.harness(meta, brief), encoding="utf-8")
+    job = manifest.job(meta, brief, learner)
+    with tempfile.TemporaryDirectory(
+        dir=settings.root, ignore_cleanup_errors=True
+    ) as scratch:
+        scratch = Path(scratch)
+        script = scratch / "_grade.py"
+        script.write_text(manifest.GRADE_SOURCE, encoding="utf-8")
+        job_path = scratch / "job.json"
+        job_path.write_text(json.dumps(job), encoding="utf-8")
+        out = scratch / "result.json"
         try:
-            r = _run_pytest(
-                [str(test), "-l", "--verbosity=2", "--timeout=45"], timeout=60
+            done = sandbox.run_script(
+                [str(script), str(job_path), str(out)],
+                scratch,
+                manifest.GRADE_SECONDS,
             )
         except subprocess.TimeoutExpired:
-            return False, "timed out after 60s", None
-    return r.returncode == 0, r.stdout, None
+            raise manifest.Rejected(
+                f"grading did not finish within {manifest.GRADE_SECONDS}s"
+            ) from None
+        if done.returncode != 0 and not out.exists():
+            raise manifest.Rejected(
+                f"the grader did not run: {done.stderr.strip()[-500:]}"
+            )
+        return manifest.read_result(out)
 
 
 def _posix(out):
@@ -216,21 +235,21 @@ def _failed_slugs(out):
 def selfcheck():
     """Does the whole set still work? Solve every task with its own reference answer.
 
-    Each kind writes what proves its own: a python task splices `_reference` into the
-    region, a manifest renders `solution.yaml` against a brief and grades it. Returns the
-    number of failures.
+    Each kind writes what proves its own and says how it is judged: a python task splices
+    `_reference` into the region and joins one pytest run; a manifest renders
+    `solution.yaml` against a brief and is graded on its own, the way a submission is.
+    Returns the number of failures.
 
-    A task too broken to produce those files counts as one of the failures rather than a
-    traceback out of the CLI. `doctor` is where a broken folder is explained at length, and
-    one of them must not stop the rest of the catalogue being checked."""
+    A task too broken to produce or run those files counts as one of the failures rather
+    than a traceback out of the CLI. `doctor` is where a broken folder is explained at
+    length, and one of them must not stop the rest of the catalogue being checked."""
     all_tasks = tasks()
-    made = []
-    refused = []
+    made, judges, refused, failed = [], [], [], []
     try:
         for slug, meta in all_tasks.items():
             try:
-                files = kinds.of(meta).selfcheck(meta)
-            # one contributor's folder must not take down a run over all 267 of them
+                files, judge = kinds.of(meta).selfcheck(meta)
+            # one contributor's folder must not take down a run over the whole catalogue
             except Exception as err:  # noqa: BLE001
                 refused.append((slug, err))
                 continue
@@ -238,18 +257,26 @@ def selfcheck():
                 path = meta["dir"] / name  # an explicit path is always collected
                 path.write_text(text, encoding="utf-8")
                 made.append(path)
+            if judge is not None:
+                judges.append((slug, judge))
         tests = [str(p) for p in made if p.suffix == ".py"]
         r = _run_pytest([*tests, "--timeout=60"]) if tests else None
+        for slug, judge in judges:
+            try:
+                passed, why = judge()
+            except Exception as err:  # noqa: BLE001
+                refused.append((slug, err))
+                continue
+            if not passed:
+                failed.append((slug, why))
     finally:
         for path in made:
             path.unlink(missing_ok=True)
-    failed = _failed_slugs(r.stdout) if r else []
+    failed += [(slug, "") for slug in (_failed_slugs(r.stdout) if r else [])]
     if r and r.returncode and not failed:
         print(r.stdout[-2000:].strip() or "pytest did not run")
         return 1
-    for slug, err in refused:
-        print("FAILED", slug, "-", err)
-    for slug in failed:
-        print("FAILED", slug)
+    for slug, err in refused + failed:
+        print("FAILED", slug, f"- {err}" if err else "")
     print(f"{len(all_tasks) - len(failed) - len(refused)}/{len(all_tasks)} ok")
     return len(failed) + len(refused)

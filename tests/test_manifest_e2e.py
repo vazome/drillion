@@ -84,6 +84,10 @@ async def _sitting(api):
         )
     ).json()
     assert not wrong["passed"], wrong
+    # what the page draws its Result panel from: fields and sentences, never parsed text
+    assert wrong["diagnostics"], wrong
+    assert all({"path", "message"} == set(d) for d in wrong["diagnostics"]), wrong
+    assert wrong["case"] is None, "a manifest run has no generated-arguments case"
 
     meta = catalogue.tasks()[SLUG]
     brief = state.load()["open"][SLUG]["brief"]

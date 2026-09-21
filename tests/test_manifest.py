@@ -56,23 +56,24 @@ def stubbed_kubeconform(fixture_root, monkeypatch):
     skipped until then. `installed_kubeconform` is the same tests against the real tool."""
     if os.name == "nt":
         pytest.skip("the stand-in is a shebang script, so it needs a posix exec")
-    # written once, so a test that moves a grading input moves what the harness passes
+    # written once, so a test that moves a grading input moves what the grader passes
     # rather than what the stand-in expects
     path = stub_kubeconform(fixture_root)
     monkeypatch.setattr(tools, "installed", lambda name: path)
 
 
 def _submit(text):
-    """(passed, the first line of the page's headline): the grader's own words.
+    """(passed, the first diagnostic as `path: message`): the grader's own words, as data.
 
-    The first line rather than the whole output, because pytest's assertion introspection
-    prints the whole `CompletedProcess` underneath, stderr included, and a check against
-    the raw output would pass on that repr whatever the grader chose to say."""
+    The diagnostics are what the page is given, so the tests assert on the field and the
+    sentence rather than on whatever a test framework printed around them."""
     (settings.tasks_dir / SLUG / "task.yaml").write_text(text, encoding="utf-8")
-    passed, out, case = runner.run_manifest(catalogue.tasks()[SLUG], BRIEF)
-    assert case is None, "a manifest run has no generated-arguments case"
-    headline = runner.summarise(out, 0)["headline"]
-    return passed, headline[0] if headline else ""
+    passed, diagnostics, _ = runner.run_manifest(catalogue.tasks()[SLUG], BRIEF)
+    if not diagnostics:
+        return passed, ""
+    first = diagnostics[0]
+    said = first["message"]
+    return passed, f"{first['path']}: {said}" if first["path"] else said
 
 
 def test_a_correct_manifest_passes(stubbed_kubeconform):
@@ -156,7 +157,7 @@ def test_a_validator_that_cannot_run_is_not_silently_a_wrong_answer(
 def test_a_missing_tool_is_not_a_wrong_answer(fixture_root, monkeypatch):
     monkeypatch.setattr(tools, "installed", lambda name: None)
     with pytest.raises(manifest.ToolMissing):
-        manifest.harness(catalogue.tasks()[SLUG], BRIEF)
+        manifest.job(catalogue.tasks()[SLUG], BRIEF)
 
 
 def test_a_missing_tool_reaches_the_learner_as_infrastructure(
@@ -186,7 +187,7 @@ def test_a_sitting_with_no_brief_is_refused_rather_than_graded(fixture_root):
     so it is refused with the way out rather than graded against a brief nobody read."""
     meta = catalogue.tasks()[SLUG]
     with pytest.raises(manifest.Rejected, match="abandon"):
-        kinds.of(meta).grade(meta, {"seed": 7})
+        kinds.of(meta).grade(meta, {"seed": 7}, "")
 
 
 @pytest.mark.parametrize("term", ["grader", "version", "pin", "schemas"])
@@ -366,7 +367,18 @@ def test_render_fills_placeholders_and_survives_doubled_braces():
 
 @pytest.mark.parametrize(
     "template",
-    ["{missing}", "{name.nope}", "{replicas[0]}", "{name:d}", "{0}", "{name"],
+    [
+        "{missing}",
+        "{name.nope}",
+        "{replicas[0]}",
+        "{name:d}",
+        "{0}",
+        "{name",
+        "{}",
+        "{name!r}",
+        "{name:>1}",
+        "{name:{name}}",
+    ],
 )
 def test_a_template_the_brief_does_not_fit_is_rejected(template):
     """Every placeholder mistake a task author can make is a `Rejected`, never a traceback
@@ -375,10 +387,15 @@ def test_a_template_the_brief_does_not_fit_is_rejected(template):
         manifest.render(template, {"name": "checkout", "replicas": 2})
 
 
-def test_a_template_cannot_allocate_without_bound():
+def test_a_template_cannot_allocate_before_it_is_refused():
+    """The width is refused on sight, so `format` never allocates a terabyte for it."""
+    with pytest.raises(manifest.Rejected, match="plain name"):
+        manifest.render("{name:>1000000000000}", {"name": "x"})
+
+
+def test_a_filled_spec_is_still_bounded():
     with pytest.raises(manifest.Rejected, match="too long"):
-        wide = "{name:>" + str(manifest.MAX_SPEC_CHARS + 1) + "}"
-        manifest.render(wide, {"name": "x"})
+        manifest.render("{name}", {"name": "x" * (manifest.MAX_SPEC_CHARS + 1)})
 
 
 def test_the_grader_revision_moves_when_either_file_behind_a_brief_does(fixture_root):
@@ -454,9 +471,15 @@ def test_a_manifest_run_is_graded_by_its_own_kind(fixture_root, monkeypatch):
     learner's YAML as if it were Python, and reports "no tests ran" as a wrong answer."""
     seen = []
 
-    def spy(self, meta, o):
+    def spy(self, meta, o, src):
         seen.append(o["brief"])
-        return True, "1 passed", None
+        return True, {
+            "headline": [],
+            "output": "",
+            "printed": "",
+            "case": None,
+            "diagnostics": [],
+        }
 
     monkeypatch.setattr(kinds._Manifest, "grade", spy, raising=False)
 
@@ -598,7 +621,12 @@ def test_a_manifest_pass_returns_its_reference_and_archives_its_revision(
             closed = await api.get(f"/api/task/{SLUG}")
             assert closed.status_code == 200, closed.text
             assert closed.json()["status"] == "done"
-            assert closed.json()["reference"] is None
+            # a refresh after the pass still shows the question it asked and its answer
+            assert closed.json()["reference"] == reply.json()["reference"]
+            assert closed.json()["spec_md"] == o["spec_md"]
+            archived = closed.json()["archive"][-1]
+            assert archived["kubernetes"] == tools.KUBERNETES_VERSION
+            assert "python" not in archived
 
     asyncio.run(drive())
 
@@ -638,23 +666,39 @@ def test_a_solution_that_will_not_render_does_not_cost_the_learner_the_pass(
     asyncio.run(drive())
 
 
-def test_a_grader_upgraded_under_a_live_sitting_is_not_the_learner_s_fault(
+def test_a_grader_upgraded_under_a_live_sitting_still_grades_its_brief(
     stubbed_kubeconform,
 ):
-    """`brief_revision` is stored for this. A contributor upgrading grade.py mid sitting
-    leaves check() reading a brief the learner was never shown, and its KeyError would
-    otherwise be charged to them as a failed attempt."""
+    """A new grader revision is not a new question: the stored brief is still what the
+    learner was shown, so a compatible grader keeps grading it."""
     meta = meta_for()
     o = kinds.of(meta).opening(meta, 1)
-    assert o["brief_revision"] == manifest.grader_revision(meta)
-    _grader('return {"name": "checkout", "replicas": 3, "ports": [80]}')
-    with pytest.raises(manifest.Rejected, match="grader changed"):
-        kinds.of(meta_for()).grade(meta_for(), o)
+    grader = settings.tasks_dir / SLUG / "grade.py"
+    grader.write_text(grader.read_text(encoding="utf-8") + "\n# reworded\n", "utf-8")
+    assert o["brief_revision"] != manifest.grader_revision(meta_for())
+    code = manifest.render_solution(meta_for(), o["brief"])
+    (settings.tasks_dir / SLUG / "task.yaml").write_text(code, encoding="utf-8")
+    passed, detail = kinds.of(meta_for()).grade(meta_for(), o, code)
+    assert passed, detail["headline"]
+
+
+def test_a_grader_that_cannot_read_the_brief_is_not_the_learner_s_fault(
+    stubbed_kubeconform,
+):
+    """An upgrade whose check() no longer reads a stored brief crashes rather than asserts,
+    and that crash is refused as infrastructure instead of charged as a failed attempt."""
+    (settings.tasks_dir / SLUG / "task.yaml").write_text(CORRECT, encoding="utf-8")
+    (settings.tasks_dir / SLUG / "grade.py").write_text(
+        "def brief(r):\n    return {}\n\n\ndef check(doc, b):\n    b['ports']\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(manifest.Rejected, match="KeyError"):
+        runner.run_manifest(meta_for(), BRIEF)
 
 
 def test_a_second_document_can_still_be_saved_while_it_is_being_typed(fixture_root):
     """Saving only asks that it parses, and a multi document stream does. Rejecting it here
-    made autosave 400 on every keystroke of a second document, and hid the harness's own
+    made autosave 400 on every keystroke of a second document, and hid the grader's own
     "expected one document" message behind a PyYAML sentence fragment."""
     two = "apiVersion: v1\nkind: Pod\n---\napiVersion: v1\nkind: Service\n"
     assert kinds.of(meta_for()).validate(two, "") == two

@@ -31,7 +31,6 @@ from .attempts import (
 from .catalogue import public, tasks
 from .lsp import bridge
 from .region import Invalid, write_region
-from .runner import summarise
 from .scheduler import (
     LADDER,
     LAPSE_LIMIT,
@@ -245,10 +244,19 @@ def _payload(st, slug, meta, src):
     # one rule, both answers: passing opens them, and while an attempt is open only the
     # deliberate peek does
     reveal = o["solution_shown"] if o else status == "done"
+    # with nothing open, the sitting the page describes is the last one passed
+    sitting = o or next(
+        (
+            a
+            for a in reversed(st["archive"].get(slug, []))
+            if a.get("grade") != "abandoned"
+        ),
+        None,
+    )
     return {
         "slug": slug,
         "meta": public(meta),
-        "spec_md": kind.spec(meta, o),
+        "spec_md": kind.spec(meta, sitting),
         "code": body,
         "etag": kind.etag(src),
         "has_given": kind.has_given(body),
@@ -260,7 +268,7 @@ def _payload(st, slug, meta, src):
         **_deps(st, tasks(), meta),
         "ladder": LADDER,
         "note": st["notes"].get(slug, ""),
-        "reference": kind.reference(meta, o) if reveal else None,
+        "reference": kind.reference(meta, sitting) if reveal else None,
         **att,
         "archive": [
             {
@@ -268,7 +276,11 @@ def _payload(st, slug, meta, src):
                 "grade": a["grade"],
                 "code": a["code"] if reveal else None,
                 # absent on a pass archived before a run said what produced it
-                **{k: a[k] for k in ("python", "seed", "revision") if k in a},
+                **{
+                    k: a[k]
+                    for k in ("python", "validator", "kubernetes", "seed", "revision")
+                    if k in a
+                },
             }
             for a in st["archive"].get(slug, [])
         ],
@@ -451,7 +463,7 @@ def run_task(slug: str, edit: Edit):
         _check_etag(kind, src, edit.etag)
         new_src = kind.validate(edit.code, src)
         write_region(kind.path(meta), new_src)
-        passed, out, found = kind.grade(meta, o)
+        passed, detail = kind.grade(meta, o, new_src)
         if edit.submit:
             o["attempts"] += 1
         else:
@@ -461,8 +473,7 @@ def run_task(slug: str, edit: Edit):
             "passed": passed,
             "graded": edit.submit,
             "attempts": o["attempts"],
-            **summarise(out, kind.marker_line(new_src)),
-            "case": found,
+            **detail,
         }
         log.info(
             "%s passed=%s graded=%s attempts=%s",
