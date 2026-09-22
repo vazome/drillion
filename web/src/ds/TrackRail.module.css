@@ -1,7 +1,7 @@
 .root{display:flex;flex-direction:column;gap:9px;padding:14px 18px;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow-card)}
 .pills{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .label{font-size:var(--fs-label);font-weight:600;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--text-muted);white-space:nowrap}
-.pill{display:flex;align-items:center;gap:9px;padding:7px 14px 6px 10px;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius);cursor:pointer;font-family:var(--font-sans);text-align:left;transition:transform var(--dur-press) var(--ease-out),background var(--dur-press) var(--ease-out),border-color var(--dur-press) var(--ease-out)}
+.pill{flex:1 1 auto;display:flex;align-items:center;gap:9px;padding:7px 14px 6px 10px;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius);cursor:pointer;font-family:var(--font-sans);text-align:left;transition:transform var(--dur-press) var(--ease-out),background var(--dur-press) var(--ease-out),border-color var(--dur-press) var(--ease-out)}
 .pill:active{transform:translateY(1px)}
 @media (hover:hover){.pill:hover:not([data-on]){background:var(--surface-2)}}
 .pill[data-on]{background:var(--accent-tint);border-color:var(--accent-line)}
@@ -10,12 +10,12 @@
 /* a supplied mark carries its own colour: no chip behind it, and never recoloured */
 .icon[data-image]{background:transparent;border-color:transparent;object-fit:contain}
 .pill[data-on] .icon[data-image]{background:transparent;border-color:transparent}
-.body{display:flex;flex-direction:column;gap:5px}
+.body{flex:1;display:flex;flex-direction:column;gap:5px}
 .head{display:flex;align-items:baseline;gap:8px}
 .name{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap}
 .pill[data-on] .name{font-weight:600;color:var(--accent)}
 .count{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);font-variant-numeric:tabular-nums}
-.meter{width:74px;height:3px;border-radius:2px;background:var(--surface-2);overflow:hidden;align-self:center}
+.meter{flex:1;min-width:74px;height:3px;border-radius:2px;background:var(--surface-2);overflow:hidden;align-self:center}
 .fill{display:block;height:3px;background:var(--border-strong)}
 .pill[data-on] .fill{background:var(--accent)}
 .seen{font-size:11.5px;color:var(--text-faint);white-space:nowrap}
