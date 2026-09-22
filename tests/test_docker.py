@@ -38,9 +38,10 @@ BREAKS = {
             "COPY . .\nRUN pip install --no-cache-dir -r requirements.txt",
         ),
         ("--no-cache-dir ", ""),
-        ("0.0.0.0:", "127.0.0.1:"),
+        ('"0.0.0.0"', '"127.0.0.1"'),
+        ('"--port", "{port}"', '"--port", "8001"'),
         ("COPY app.py .\n", ""),
-        ("-r requirements.txt", "flask gunicorn"),
+        ("-r requirements.txt", "fastapi uvicorn"),
     ],
     "291_dockerfile_non_root": [
         (" -l app", " app"),
@@ -94,10 +95,14 @@ BREAKS = {
     "297_dockerfile_multistage_python": [
         ('ENV PATH="/opt/venv/bin:$PATH"\nWORKDIR /build', "WORKDIR /build"),
         ("/opt/venv /opt/venv", "/opt/venv /venv"),
-        ("WORKDIR /app", "RUN pip install --no-cache-dir flask==3.1.2\nWORKDIR /app"),
+        (
+            "WORKDIR /app",
+            "RUN pip install --no-cache-dir fastapi==0.141.1\nWORKDIR /app",
+        ),
         (" AS build", " AS build\nFROM python:3.11-slim"),
         ('/opt/venv\nENV PATH="/opt/venv/bin:$PATH"', "/opt/venv"),
         ("FROM python:{python}-slim\n", "FROM python:3.11-slim\n"),
+        ('"--host", "0.0.0.0"', '"--host", "127.0.0.1"'),
     ],
     "298_dockerfile_static_site": [
         ("npm ci", "npm install"),

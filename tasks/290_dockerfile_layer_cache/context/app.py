@@ -1,10 +1,10 @@
-"""An order service. gunicorn serves `app`; nothing here starts a server itself."""
+"""An order service. uvicorn serves `app`; nothing here starts a server itself."""
 
-from flask import Flask, jsonify
+from fastapi import FastAPI
 
-app = Flask(__name__)
+app = FastAPI()
 
 
 @app.get("/orders")
 def orders():
-    return jsonify([{"id": 1, "status": "shipped"}])
+    return [{"id": 1, "status": "shipped"}]

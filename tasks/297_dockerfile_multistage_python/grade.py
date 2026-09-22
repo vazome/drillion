@@ -26,6 +26,16 @@ def _path(stage, before=None):
     return value
 
 
+def _opt(run, name):
+    """The value given to `name` in an exec-form CMD, as `--name value` or `--name=value`."""
+    for i, w in enumerate(run):
+        if w == name and i + 1 < len(run):
+            return run[i + 1]
+        if w.startswith(name + "="):
+            return w[len(name) + 1 :]
+    return None
+
+
 def check(stages, b):
     assert len(stages) == 2, f"two stages, one to build and one to run: this file has {len(stages)}"
     build, final = stages
@@ -68,10 +78,10 @@ def check(stages, b):
     assert len(cmd) == 1 and cmd[0]["exec"], "one CMD, in exec form"
     run = cmd[0]["exec"]
     assert f"{venv}/bin" in _path(final) or run[0].startswith(f"{venv}/bin/"), (
-        f"ENV PATH resets with the stage: put {venv}/bin on PATH again, so the CMD finds gunicorn"
+        f"ENV PATH resets with the stage: put {venv}/bin on PATH again, so the CMD finds uvicorn"
     )
-    assert run[0].endswith("gunicorn") and run[-1] == "app:app", "CMD starts gunicorn serving `app:app`"
-    bind = f"0.0.0.0:{b['port']}"
-    assert bind in run or f"--bind={bind}" in run, f"pass `--bind {bind}` to gunicorn"
+    assert run[0].endswith("uvicorn") and "app:app" in run, "CMD starts uvicorn serving `app:app`"
+    assert _opt(run, "--host") == "0.0.0.0", "pass `--host 0.0.0.0` to uvicorn"
+    assert _opt(run, "--port") == str(b["port"]), f"pass `--port {b['port']}` to uvicorn"
     exposed = [w for s in _all(final, "EXPOSE") for w in s["words"]]
     assert exposed in ([str(b["port"])], [f"{b['port']}/tcp"]), f"EXPOSE {b['port']}"

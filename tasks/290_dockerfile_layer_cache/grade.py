@@ -17,6 +17,16 @@ def _copies(stage, name):
     return [c for c in _all(stage, "COPY") if name in c["words"][:-1] or "." in c["words"][:-1]]
 
 
+def _opt(run, name):
+    """The value given to `name` in an exec-form CMD, as `--name value` or `--name=value`."""
+    for i, w in enumerate(run):
+        if w == name and i + 1 < len(run):
+            return run[i + 1]
+        if w.startswith(name + "="):
+            return w[len(name) + 1 :]
+    return None
+
+
 def check(stages, b):
     assert len(stages) == 1, f"one FROM, one stage: this file has {len(stages)}"
     stage = stages[0]
@@ -45,16 +55,18 @@ def check(stages, b):
     )
     exposed = [w for s in _all(stage, "EXPOSE") for w in s["words"]]
     assert exposed in ([str(b["port"])], [f"{b['port']}/tcp"]), (
-        f"EXPOSE the one port gunicorn binds, {b['port']}; this file exposes {exposed or 'none'}"
+        f"EXPOSE the one port uvicorn listens on, {b['port']}; this file exposes {exposed or 'none'}"
     )
     cmd = _all(stage, "CMD")
     assert len(cmd) == 1 and cmd[0]["exec"], "one CMD, in exec form"
     run = cmd[0]["exec"]
-    assert run[0] == "gunicorn" and run[-1] == "app:app", (
-        "CMD starts gunicorn and names the app last, as `app:app`: the module, then the Flask object"
+    assert run[0] == "uvicorn" and "app:app" in run, (
+        "CMD starts uvicorn and names the app as `app:app`: the module, then the FastAPI object"
     )
-    bind = f"0.0.0.0:{b['port']}"
-    assert bind in run or f"--bind={bind}" in run or f"-b={bind}" in run, (
-        f"gunicorn binds 127.0.0.1:8000 unless told otherwise, which nothing outside the "
-        f"container can reach: pass `--bind {bind}`"
+    assert _opt(run, "--host") == "0.0.0.0", (
+        "uvicorn listens on 127.0.0.1 unless told otherwise, which nothing outside the "
+        "container can reach: pass `--host 0.0.0.0`"
+    )
+    assert _opt(run, "--port") == str(b["port"]), (
+        f"uvicorn listens on port 8000 unless told otherwise: pass `--port {b['port']}`"
     )

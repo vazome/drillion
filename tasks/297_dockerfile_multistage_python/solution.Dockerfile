@@ -11,4 +11,4 @@ ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /app
 COPY app.py .
 EXPOSE {port}
-CMD ["gunicorn", "--bind", "0.0.0.0:{port}", "app:app"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "{port}"]
