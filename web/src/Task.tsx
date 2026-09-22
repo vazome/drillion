@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Button, Card, Collapsible, ConflictBanner, DepLineage, EmptyState, FailedCase, NoteField, GraceNotice, NoticeBanner, RequiresTag, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
+import { Button, Card, Icon, Collapsible, ConflictBanner, DepLineage, EmptyState, FailedCase, NoteField, GraceNotice, NoticeBanner, RequiresTag, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
 import { ApiError, api, post, type Task as TaskData, type RunResult, type Case, type Diagnostic } from "./api";
 import { depsHref, prefetch } from "./Deps";
 import { inDays, strength } from "./strength";
@@ -49,8 +49,8 @@ export function stepLine(grade: string, box: number, fromBox: number, stepped: b
   return `${grade} leaves it where it is`;
 }
 
-/** The header chips: `requires ✓019 ▲040`. Titles are dropped past two — the row is
- *  already crowded, and a number-only tag still links. */
+/** The header chips: `requires 019 040`, each passed one checkmarked. Titles are dropped
+ *  past two — the row is already crowded, and a number-only tag still links. */
 function RequiresChips({ requires }: { requires: TaskData["requires"] }) {
   if (!requires.length) return null;
   const withTitles = requires.length <= 2 && requires.every((r) => r.title.length < 30);
@@ -290,8 +290,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
         {meta.track ? <TagChip label={meta.track} small /> : null}
         {task.unlocks.length ? (
           <button type="button" ref={unlocksBtn} onClick={() => setLineage(true)} aria-expanded={lineage}
-            style={{ background: "transparent", border: "none", padding: 0, font: "inherit", fontSize: 12.5, color: "var(--accent)", cursor: "pointer" }}>
-            unlocks {task.unlocks.length} →
+            style={{ background: "transparent", border: "none", padding: 0, font: "inherit", fontSize: 12.5, color: "var(--accent)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+            unlocks {task.unlocks.length}<Icon name="ArrowRight" size={14} />
           </button>
         ) : null}
         <TaskPath tier={meta.tier} track={meta.track} tags={meta.tags} />
@@ -339,7 +339,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               ))}
               {hintsLeft ? (
                 <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                  <Button variant="secondary" onClick={hint} disabled={busy}>Show hint {hints.shown.length + 1}</Button>
+                  <Button variant="secondary" onClick={hint} disabled={busy}><Icon name="Idea" />Show hint {hints.shown.length + 1}</Button>
                   <span style={ASIDE}>{hintReady ? "ready" : `unlocks in ${secs(nextHintIn!)}`}</span>
                 </div>
               ) : (
@@ -365,7 +365,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                 </div>
               ) : (
                 <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                  <Button variant="secondary" onClick={solution} disabled={busy}>{gateState.unlocked ? "Show solution" : "Unlock solution"}</Button>
+                  <Button variant="secondary" onClick={solution} disabled={busy}>{gateState.unlocked ? <><Icon name="Unlocked" />Show solution</> : <><Icon name="Locked" />Unlock solution</>}</Button>
                   <span style={ASIDE}>taking it means this pass won’t promote</span>
                 </div>
               )}
@@ -429,10 +429,10 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             {/* Run executes and grades nothing; Submit is the committing act, so it is the
               * one primary in the row and the only one that costs an attempt */}
             <Button variant="secondary" kbdHint="Ctrl/⌘+Enter" onClick={run} disabled={!!inflight || passed}>
-              {inflight === "run" ? "Running…" : "Run"}
+              <Icon name="Play" />{inflight === "run" ? "Running…" : "Run"}
             </Button>
             <Button kbdHint="Ctrl/⌘+⇧+Enter" onClick={submit} disabled={!!inflight || passed}>
-              {inflight === "submit" ? "Submitting…" : "Submit"}
+              <Icon name="Send" />{inflight === "submit" ? "Submitting…" : "Submit"}
             </Button>
             {/* hidden by preference only: the clock behind it keeps running, and the grade
               * is the same one either way */}
@@ -446,11 +446,11 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               * push the editor down under the cursor */}
             <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textAlign: "right", whiteSpace: "nowrap" }}>
               {dirty || syntax ? (
-                <span style={{ fontSize: 12.5, color: syntax ? "var(--warn)" : "var(--text-faint)" }}
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: syntax ? "var(--warn)" : "var(--text-faint)" }}
                   title={syntax ? syntax.message : undefined}>
                   {/* the editor's squiggle carries the reason; this row only has width for
                     * the fact, and truncating a sentence mid-word reads as a bug */}
-                  ● {syntax
+                  {syntax ? <Icon name="WarningAlt" size={14} /> : <Icon name="CircleFill" size={8} />}{syntax
                     ? `syntax error${syntax.line != null ? ` on line ${syntax.line}` : ""}, not saved`
                     : "unsaved"}
                 </span>
@@ -470,7 +470,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                   <ManifestFailure diagnostics={result.diagnostics} />
                 ) : result.state === "ran" ? (
                   <div style={{ borderRadius: "var(--radius)", padding: "12px 16px", fontSize: 14, background: "var(--pass-bg)", borderLeft: "3px solid var(--pass)" }}>
-                    <span style={{ fontWeight: 600, color: "var(--pass)", letterSpacing: ".04em" }}>✓ TESTS PASS</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 600, color: "var(--pass)", letterSpacing: ".04em" }}><Icon name="CheckmarkOutline" />TESTS PASS</span>
                     <span style={{ marginLeft: 10, fontSize: 13, color: "var(--text-muted)" }}>
                       nothing graded and no attempt used — Submit when you want it to count
                     </span>
@@ -514,7 +514,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                 <div style={{ flex: 1 }} />
                 <Button variant="quiet" onClick={() => { location.hash = "#/"; }}>Back to Today</Button>
                 {nextSlug ? (
-                  <Button variant="secondary" onClick={() => { location.hash = `#/task/${encodeURIComponent(nextSlug)}`; }}>Next in Today →</Button>
+                  <Button variant="secondary" onClick={() => { location.hash = `#/task/${encodeURIComponent(nextSlug)}`; }}>Next in Today<Icon name="ArrowRight" /></Button>
                 ) : null}
               </div>
             ) : null}

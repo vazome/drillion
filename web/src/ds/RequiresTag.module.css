@@ -3,5 +3,5 @@
 .root[data-state="blocked"]{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
 .root[data-interactive]{cursor:pointer}
 @media (hover:hover){.root[data-interactive]:hover{border-color:var(--accent-line);text-decoration:none;color:var(--text-muted)}.root[data-state="passed"]:hover{color:var(--pass)}.root[data-state="blocked"]:hover{color:var(--warn)}}
-.mark{font-size:11px;line-height:1}
+.mark{display:inline-flex}
 .num{font-family:var(--font-mono);font-size:11.5px;font-variant-numeric:tabular-nums;color:inherit}

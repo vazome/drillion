@@ -1,11 +1,12 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { Button, EmptyState, Input, NoticeBanner, Select, Toggle } from "./ds/index.js";
+import { Button, EmptyState, Icon, Input, NoticeBanner, Select, Toggle } from "./ds/index.js";
 import { api, type Paths, type Bundle, type Erased, type Restored } from "./api";
 import { DEFAULTS, FONTS, setPrefs, usePrefs } from "./prefs";
+import type { IconName } from "./ds/index.js";
 import s from "./Settings.module.css";
 
 /** A path plus the one thing anyone wants to do with it. */
-function Location({ label, path }: { label: string; path: string }) {
+function Location({ label, icon, path }: { label: string; icon: IconName; path: string }) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard?.writeText(path).then(() => {
@@ -14,9 +15,9 @@ function Location({ label, path }: { label: string; path: string }) {
     }, () => {});
   };
   return (
-    <Row label={label}>
+    <Row label={<span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Icon name={icon} />{label}</span>}>
       <code className={s.path}>{path}</code>
-      <Button variant="quiet" onClick={copy}>{copied ? "Copied" : "Copy"}</Button>
+      <Button variant="quiet" onClick={copy}><Icon name="Copy" />{copied ? "Copied" : "Copy"}</Button>
     </Row>
   );
 }
@@ -59,7 +60,7 @@ function DangerZone() {
         </div>
         {open ? null : (
           <Button variant="secondary" className={s.dangerButton} onClick={() => setOpen(true)}>
-            Erase all progress
+            <Icon name="TrashCan" />Erase all progress
           </Button>
         )}
       </div>
@@ -90,9 +91,9 @@ function DangerZone() {
           <div>Erased. {done.cleared} task files went back to their stub.</div>
           {done.failed.length ? <NoticeBanner message={`The code could not be cleared for: ${done.failed.join(", ")}`} /> : null}
           <div className={s.kept}>
-            What you had is at <code>{done.kept}</code>.
+            <Icon name="Archive" style={{ marginRight: 6 }} />What you had is at <code>{done.kept}</code>.
           </div>
-          <div><Button onClick={() => { location.hash = "#/"; location.reload(); }}>Back to the catalogue</Button></div>
+          <div><Button onClick={() => { location.hash = "#/"; location.reload(); }}><Icon name="ArrowLeft" />Back to the catalogue</Button></div>
         </div>
       ) : null}
     </div>
@@ -100,7 +101,7 @@ function DangerZone() {
 }
 
 /** One preference: what it is called, the control, and a line saying what it buys you. */
-function Row({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
+function Row({ label, hint, children }: { label: ReactNode; hint?: ReactNode; children: ReactNode }) {
   const id = useId();
   return (
     <div className={s.row} role="group" aria-labelledby={id}>
@@ -175,7 +176,7 @@ function EditorSettings() {
       </div>
       {untouched ? null : (
         <div className={s.defaults}>
-          <Button variant="quiet" onClick={() => setPrefs(DEFAULTS)}>Put these back to their defaults</Button>
+          <Button variant="quiet" onClick={() => setPrefs(DEFAULTS)}><Icon name="Reset" />Put these back to their defaults</Button>
         </div>
       )}
     </Section>
@@ -233,24 +234,27 @@ export function Settings() {
       <Section title="Your data" note="Everything drillion knows about your practice lives on this machine, in these places.">
         {pathError ? <EmptyState message={`Could not load settings: ${pathError}`} /> : paths ? (
           <>
-            <Location label="Data folder" path={paths.root} />
-            <Location label="Progress" path={paths.progress} />
-            <Location label="Tasks" path={paths.tasks} />
+            <Location label="Data folder" icon="Folder" path={paths.root} />
+            <Location label="Progress" icon="DataBase" path={paths.progress} />
+            <Location label="Tasks" icon="Folder" path={paths.tasks} />
           </>
         ) : <EmptyState message="Loading…" align="left" />}
       </Section>
 
       <Section title="Back up" note="One file holding your schedule, your history and the code you have written. Keep it anywhere. Restoring it on another machine, or after a reinstall, picks up where you left off.">
-        <a href="/api/backup" download data-variant="primary" className={s.download}>Download a backup</a>
+        <a href="/api/backup" download data-variant="primary" className={s.download}><Icon name="Download" />Download a backup</a>
       </Section>
 
       <Section title="Restore" note="Restoring replaces your current progress and the code saved in every task. It happens completely or not at all, and what it replaces is written to a backup of its own first, so you can undo it.">
-        <input
-          ref={picker} type="file" accept=".zip,application/zip" disabled={busy}
-          aria-label="Choose a backup file to restore"
-          onChange={(e) => choose(e.target.files?.[0] ?? null)}
-          className={s.picker}
-        />
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <Icon name="Upload" style={{ color: "var(--text-muted)" }} />
+          <input
+            ref={picker} type="file" accept=".zip,application/zip" disabled={busy}
+            aria-label="Choose a backup file to restore"
+            onChange={(e) => choose(e.target.files?.[0] ?? null)}
+            className={s.picker}
+          />
+        </span>
         {error ? <NoticeBanner message={error} className={s.error} /> : null}
         {preview ? (
           <div className={s.result}>
@@ -273,11 +277,11 @@ export function Settings() {
         ) : null}
         {done ? (
           <div className={s.result}>
-            <div>Restored {counts(done.brings)}.</div>
+            <div><Icon name="CheckmarkOutline" style={{ marginRight: 6 }} />Restored {counts(done.brings)}.</div>
             <div className={s.kept}>
-              What you had before is at <code>{done.kept}</code>.
+              <Icon name="Archive" style={{ marginRight: 6 }} />What you had before is at <code>{done.kept}</code>.
             </div>
-            <div><Button onClick={() => { location.hash = "#/"; location.reload(); }}>Back to the catalogue</Button></div>
+            <div><Button onClick={() => { location.hash = "#/"; location.reload(); }}><Icon name="ArrowLeft" />Back to the catalogue</Button></div>
           </div>
         ) : null}
       </Section>

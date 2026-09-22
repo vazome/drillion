@@ -2,7 +2,7 @@
 .head:active:not(:disabled){transform:translateY(1px)}
 @media (hover:hover){.head:hover:not(:disabled){background:var(--surface-2)}}
 .head:disabled{color:var(--text-faint);cursor:default}
-.caret{display:inline-block;width:9px;font-size:11px;line-height:1;color:var(--text-muted);transition:transform var(--dur-fast) var(--ease-out)}
+.caret{display:inline-flex;width:14px;height:14px;flex:none;color:var(--text-muted);transition:transform var(--dur-fast) var(--ease-out)}
 .caret[data-open]{transform:rotate(90deg)}
 .head:disabled .caret{color:var(--text-faint)}
 .title{flex:1}

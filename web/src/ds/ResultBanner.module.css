@@ -3,9 +3,11 @@
 .root[data-state="running"]{background:var(--surface-2);color:var(--text-muted)}
 .root[data-state="failed"]{background:var(--fail-bg);border-left:3px solid var(--fail);color:var(--text)}
 .root[data-state="passed"]{background:var(--pass-bg);border-left:3px solid var(--pass);color:var(--text)}
-.headline{font-family:var(--font-mono);font-size:13.5px;white-space:pre-wrap;color:var(--fail);font-weight:600}
+.headline{display:flex;align-items:flex-start;gap:8px;font-family:var(--font-mono);font-size:13.5px;white-space:pre-wrap;color:var(--fail);font-weight:600}
 .details{margin-top:8px}
 .summary{cursor:pointer;font-size:13px;color:var(--text-muted)}
 .output{margin:8px 0 0;font-family:var(--font-mono);font-size:12.5px;line-height:1.55;white-space:pre-wrap;color:var(--text-muted)}
-.grade{font-weight:600;color:var(--pass);letter-spacing:.04em}
+.grade{display:inline-flex;align-items:center;gap:8px;font-weight:600;color:var(--pass);letter-spacing:.04em}
 .backIn{margin-left:10px;font-size:13px;color:var(--text-muted)}
+.headline>svg{margin-top:1px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

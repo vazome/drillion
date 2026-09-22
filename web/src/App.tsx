@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Dialog, Toggle } from "./ds/index.js";
+import { Dialog, Icon, Toggle } from "./ds/index.js";
 import { api, type Health } from "./api";
 import { Catalogue } from "./Catalogue";
 import { Task } from "./Task";
@@ -83,10 +83,10 @@ function Header({ route, dark, setDark, total, version, python, onSettings }: {
       {link("#/progress", "Progress")}
       {/* a dialog, not a route: a preference is wanted while looking at the code it changes,
         * and coming back from a screen of its own is a second navigation */}
-      <button type="button" onClick={onSettings} style={{ font: "inherit", fontSize: 14, color: "var(--text-muted)", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-        Settings
+      <button type="button" onClick={onSettings} style={{ font: "inherit", fontSize: 14, color: "var(--text-muted)", background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+        <Icon name="Settings" />Settings
       </button>
-      <Toggle checked={dark} onChange={setDark} label={dark ? "Dark" : "Light"} />
+      <Toggle checked={dark} onChange={setDark} label={<span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Icon name={dark ? "Asleep" : "Sun"} />{dark ? "Dark" : "Light"}</span>} />
     </header>
   );
 }

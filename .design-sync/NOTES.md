@@ -1,5 +1,18 @@
 # design-sync notes
 
+## Carbon icons — 2026-09-22
+
+Source: the design system at 0.9.0 (`04a3cba`). `Icon`, `icons.js` and the Carbon licence came
+in as a patch: 32 IBM Carbon icons copied from `@carbon/icons` 11.88 (Apache 2.0), with no
+new dependency. The text glyph list is retired. Collapsible, Select, SortReset, Table,
+Timer, ResultBanner, RequiresTag, GraceNotice, StuckNudge, DepLineage, ConflictBanner and
+NoticeBanner now draw an `Icon` where they drew ▸ ▾ ↺ ▲ ▼ ⏸ ✓ ✗ × or →, and the screens
+follow. An icon always sits beside a word and is `aria-hidden`; Dismiss is the one
+icon-only control. Only prose keeps a glyph (`·` separators, "struggled 4×").
+
+One local change: `Toggle`'s `label` is typed `ReactNode` instead of `string`, so the
+header's theme switch can lead its word with Sun or Asleep.
+
 ## CSS Modules sync — 2026-09-10
 
 Source: the supplied `drillion design system.zip` export. Components remain vendored.

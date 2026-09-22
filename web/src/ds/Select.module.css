@@ -3,5 +3,5 @@
 .root[data-mono]{font-family:var(--font-mono)}
 @media (hover:hover){.root:hover:not(:disabled){background:var(--surface-2)}}
 .root:disabled{background:var(--surface-2);color:var(--text-faint);cursor:default}
-.caret{position:absolute;right:11px;font-size:10px;line-height:1;color:var(--text-muted);pointer-events:none}
+.caret{position:absolute;right:10px;display:inline-flex;color:var(--text-muted);pointer-events:none}
 .root:disabled ~ .caret{color:var(--text-faint)}

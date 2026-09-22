@@ -29,3 +29,5 @@ export { RowFlags } from "./RowFlags.jsx";
 export { RequiresTag } from "./RequiresTag.jsx";
 export { DepLineage } from "./DepLineage.jsx";
 export { TrackRail } from "./TrackRail.jsx";
+export { Icon } from "./Icon.jsx";
+export { ICONS, ICON_NAMES } from "./icons.js";
