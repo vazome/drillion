@@ -15,10 +15,6 @@ def brief(r):
     return {"python": r.choice(PYTHONS), "port": r.choice([8000, 8080, 9000])}
 
 
-def _all(stage, cmd):
-    return [s for s in stage["steps"] if s["cmd"] == cmd]
-
-
 def _options(mount):
     return dict(part.partition("=")[::2] for part in str(mount).split(",") if part)
 
@@ -50,7 +46,7 @@ def check(stages, b):
                 f"line {step['line']}: a copied credential is in a layer for good, even "
                 "if a later RUN deletes it"
             )
-    installs = [s for s in _all(stage, "RUN") if "pip" in s["words"] and "install" in s["words"]]
+    installs = [s for s in stage.all("RUN") if "pip" in s["words"] and "install" in s["words"]]
     assert len(installs) == 1, "install the requirements with one `RUN pip install`"
     install = installs[0]
     assert "-r" in install["words"] and "requirements.txt" in install["words"], (
@@ -72,14 +68,14 @@ def check(stages, b):
         f"line {install['line']}: expose the secret as the environment variable "
         "PIP_INDEX_URL, which pip reads, with `env=PIP_INDEX_URL`"
     )
-    copies = _all(stage, "COPY")
+    copies = stage.all("COPY")
     reqs = [c for c in copies if c["words"][:1] == ["requirements.txt"]]
     assert reqs and reqs[0]["line"] < install["line"], (
         "copy requirements.txt on its own before the install, as in 290"
     )
-    exposed = [w for s in _all(stage, "EXPOSE") for w in s["words"]]
+    exposed = [w for s in stage.all("EXPOSE") for w in s["words"]]
     assert exposed in ([str(b["port"])], [f"{b['port']}/tcp"]), f"EXPOSE {b['port']}"
-    cmd = _all(stage, "CMD")
+    cmd = stage.all("CMD")
     assert len(cmd) == 1 and cmd[0]["exec"], "one CMD, in exec form"
     run = cmd[0]["exec"]
     assert run[0] == "uvicorn" and "app:app" in run, "CMD starts uvicorn serving `app:app`"

@@ -15,16 +15,12 @@ def brief(r):
     }
 
 
-def _all(stage, cmd):
-    return [s for s in stage["steps"] if s["cmd"] == cmd]
-
-
 def check(stages, b):
     assert len(stages) == 1, f"one FROM, one stage: this file has {len(stages)}"
     stage, uid = stages[0], str(b["uid"])
     base = f"python:{b['python']}-slim"
     assert stage["base"] == base, f"the image is built FROM {stage['base']!r}, and it should be {base!r}"
-    made = [s for s in _all(stage, "RUN") if {"useradd", "adduser"} & set(s["words"])]
+    made = [s for s in stage.all("RUN") if {"useradd", "adduser"} & set(s["words"])]
     assert made, "create the user with `useradd` in a RUN, so the UID has a name in /etc/passwd"
     assert uid in made[0]["words"] or f"--uid={uid}" in made[0]["words"], (
         f"line {made[0]['line']}: the user is created without UID {uid}"
@@ -34,7 +30,7 @@ def check(stages, b):
             f"line {made[0]['line']}: useradd without -l writes a lastlog record for every "
             f"UID below {uid}"
         )
-    users = _all(stage, "USER")
+    users = stage.all("USER")
     assert users, f"switch to the user with `USER {uid}`"
     last = users[-1]
     assert last["words"] and last["words"][0].split(":")[0] == uid, (
@@ -42,24 +38,24 @@ def check(stages, b):
         "only prove a numeric user is not root, so `runAsNonRoot` refuses a name"
     )
     assert last["line"] > made[0]["line"], "USER comes after the RUN that creates the user"
-    copies = _all(stage, "COPY")
+    copies = stage.all("COPY")
     assert copies, "copy app.py into the image"
     for c in copies:
         assert str(c["flags"].get("chown", "")).split(":")[0] == uid, (
             f"line {c['line']}: COPY without `--chown={uid}:{uid}` leaves the files owned "
             "by root"
         )
-    runs_after = [s for s in _all(stage, "RUN") if s["line"] > last["line"]]
+    runs_after = [s for s in stage.all("RUN") if s["line"] > last["line"]]
     assert not runs_after, (
         f"line {runs_after[0]['line']} runs after USER, as the app's user: do the root work first"
         if runs_after else ""
     )
     assert b["port"] >= 1024
-    env = {w.split("=", 1)[0]: w.split("=", 1)[1] for s in _all(stage, "ENV") for w in s["words"] if "=" in w}
+    env = {w.split("=", 1)[0]: w.split("=", 1)[1] for s in stage.all("ENV") for w in s["words"] if "=" in w}
     assert env.get("PORT") == str(b["port"]), f"set ENV PORT={b['port']}"
-    exposed = [w for s in _all(stage, "EXPOSE") for w in s["words"]]
+    exposed = [w for s in stage.all("EXPOSE") for w in s["words"]]
     assert exposed in ([str(b["port"])], [f"{b['port']}/tcp"]), f"EXPOSE {b['port']}, the port in PORT"
-    cmd = _all(stage, "CMD")
+    cmd = stage.all("CMD")
     assert len(cmd) == 1 and cmd[0]["exec"] and cmd[0]["exec"][-1].endswith("app.py"), (
         "one CMD, in exec form, running app.py with python"
     )

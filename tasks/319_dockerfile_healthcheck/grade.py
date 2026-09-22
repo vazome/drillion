@@ -18,10 +18,6 @@ def brief(r):
     }
 
 
-def _all(stage, cmd):
-    return [s for s in stage["steps"] if s["cmd"] == cmd]
-
-
 def _opt(run, name):
     """The value given to `name` in an exec-form CMD, as `--name value` or `--name=value`."""
     for i, w in enumerate(run):
@@ -42,12 +38,12 @@ def check(stages, b):
     stage = stages[0]
     base = f"python:{b['python']}-slim"
     assert stage["base"] == base, f"line {stage['line']}: FROM {base}"
-    for step in _all(stage, "RUN"):
+    for step in stage.all("RUN"):
         assert not any(f in step["words"] for f in FETCHERS), (
             f"line {step['line']}: installing curl or wget for a health check adds a tool "
             "the app never uses: Python can fetch a URL on its own"
         )
-    checks = _all(stage, "HEALTHCHECK")
+    checks = stage.all("HEALTHCHECK")
     assert len(checks) == 1, f"one HEALTHCHECK, and this file has {len(checks)}"
     hc = checks[0]
     interval = _seconds(hc["flags"].get("interval"))
@@ -82,9 +78,9 @@ def check(stages, b):
         f"answers on port {b['port']} at '/health'"
     )
 
-    exposed = [w for s in _all(stage, "EXPOSE") for w in s["words"]]
+    exposed = [w for s in stage.all("EXPOSE") for w in s["words"]]
     assert exposed in ([str(b["port"])], [f"{b['port']}/tcp"]), f"EXPOSE {b['port']}"
-    cmd = _all(stage, "CMD")
+    cmd = stage.all("CMD")
     assert len(cmd) == 1 and cmd[0]["exec"], "one CMD, in exec form"
     run = cmd[0]["exec"]
     assert run[0] == "uvicorn" and "app:app" in run, "CMD starts uvicorn serving `app:app`"

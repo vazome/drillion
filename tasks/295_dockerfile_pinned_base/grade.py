@@ -17,13 +17,9 @@ def brief(r):
     }
 
 
-def _all(stage, cmd):
-    return [s for s in stage["steps"] if s["cmd"] == cmd]
-
-
 def _labels(stage):
     out = {}
-    for step in _all(stage, "LABEL"):
+    for step in stage.all("LABEL"):
         for w in step["words"]:
             key, _, value = w.partition("=")
             out[key.strip("\"'")] = (value.strip("\"'"), step["line"])
@@ -47,15 +43,15 @@ def check(stages, b):
     assert labels.get(SOURCE, (None,))[0] == b["repo"], (
         f"LABEL {SOURCE} should be {b['repo']}: it is how a registry links the image to its code"
     )
-    args = [w.partition("=")[0] for s in _all(stage, "ARG") for w in s["words"]]
+    args = [w.partition("=")[0] for s in stage.all("ARG") for w in s["words"]]
     assert "REVISION" in args, "the commit is only known when the build runs: declare `ARG REVISION`"
     value, line = labels.get(REVISION, (None, 0))
     assert value in ("${REVISION}", "$REVISION"), (
         f"LABEL {REVISION} should be the build argument, `${{REVISION}}`, and not a fixed value"
     )
-    arg_line = min(s["line"] for s in _all(stage, "ARG") if "REVISION" in s["args"])
+    arg_line = min(s["line"] for s in stage.all("ARG") if "REVISION" in s["args"])
     assert arg_line < line, f"line {line} reads REVISION before line {arg_line} declares it"
-    cmd = _all(stage, "CMD")
+    cmd = stage.all("CMD")
     assert len(cmd) == 1 and cmd[0]["exec"] and cmd[0]["exec"][-1].endswith("app.py"), (
         "one CMD, in exec form, running app.py with python"
     )
