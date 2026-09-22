@@ -469,6 +469,17 @@ def grade_helm(grade):
             Path(given[1]).write_text(json.dumps(r["values"]), encoding="utf-8")
         kube = ["--kube-version", job["kubernetes"]]
         done = helm("template", r["release"], str(chart), *kube, *given)
+        # a render the task wants refused passes only when Helm stops, saying why
+        refuses = r.get("refuses")
+        if refuses is not None:
+            said = done.stderr + done.stdout
+            if not done.returncode:
+                answer(False, [(None, where + "these values rendered, and the chart "
+                                "should refuse them with a message saying %r" % refuses)])
+            if refuses not in said:
+                answer(False, [helm_said(where, "Helm refused these values, but its message "
+                                         "does not say %r: %s" % (refuses, said))], said)
+            continue
         if done.returncode:
             answer(False, [helm_said(where, done.stderr or done.stdout)], done.stderr)
         CURRENT["rendered"] = done.stdout
