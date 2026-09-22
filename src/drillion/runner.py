@@ -107,9 +107,10 @@ def run_python(meta, seed):
     return r.returncode == 0, r.stdout, case
 
 
-def run_manifest(meta, brief, learner=None, helm=None):
+def run_manifest(meta, brief, learner=None, helm=None, docker=None):
     """A manifest sitting: the validator and the task's `check()`, in one sandboxed child.
-    A Helm sitting is the same child with `helm` set: it renders the chart first.
+    A Helm sitting is the same child with `helm` set: it renders the chart first. A
+    Dockerfile sitting sets `docker`, and hadolint stands in for the validator.
 
     Returns `(passed, diagnostics, validator report, what Helm rendered)`. No pytest: a manifest run is one
     file, one validator call and one `check()`, and a test framework in the middle only
@@ -119,7 +120,7 @@ def run_manifest(meta, brief, learner=None, helm=None):
     already holds a kind, and `kind.grade` picks the one that fits."""
     from . import manifest
 
-    job = manifest.job(meta, brief, learner, helm)
+    job = manifest.job(meta, brief, learner, helm, docker)
     with tempfile.TemporaryDirectory(
         dir=settings.root, ignore_cleanup_errors=True
     ) as scratch:

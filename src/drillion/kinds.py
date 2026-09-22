@@ -11,7 +11,7 @@ import logging
 import yaml
 
 from . import region
-from .catalogue import HELM, MANIFEST, PYTHON
+from .catalogue import DOCKER, HELM, MANIFEST, PYTHON, solution
 from .region import Invalid, _solve
 
 __all__ = ["Invalid", "of"]
@@ -124,6 +124,7 @@ class _Manifest:
     name = MANIFEST
     filename = "task.yaml"
     language = "yaml"
+    suffix = ".yaml"
 
     def path(self, meta):
         return meta["dir"] / self.filename
@@ -240,7 +241,7 @@ class _Manifest:
         # A grader upgraded under a live sitting still grades its stored brief; one that
         # can no longer read it is `run_manifest`'s Rejected, never the learner's failure.
         passed, diagnostics, report, rendered = runner.run_manifest(
-            meta, o["brief"], helm=self.helm(meta)
+            meta, o["brief"], **self.extra(meta)
         )
         return passed, {
             "headline": [d["message"] for d in diagnostics][:6],
@@ -254,9 +255,22 @@ class _Manifest:
     def helm(self, meta):
         """What a Helm grader adds to the job; a manifest renders nothing first."""
 
+    def extra(self, meta):
+        """What this kind adds to the grading job, as `run_manifest`'s keywords."""
+        return {"helm": self.helm(meta)}
+
     def chart(self, meta):
-        """The read-only files the page shows beside the learner's; a manifest has none."""
-        return []
+        """The read-only files the page shows beside the learner's: a Helm chart, or a
+        Dockerfile's build context. A manifest has none."""
+        from . import manifest
+
+        return [
+            {
+                "path": p,
+                "text": (manifest.shipped(meta) / p).read_text(encoding="utf-8"),
+            }
+            for p in manifest.chart_files(meta)
+        ]
 
     def selfcheck(self, meta):
         """The same proof for the other kind: `solution.yaml` rendered against a real
@@ -268,15 +282,15 @@ class _Manifest:
         from . import manifest, runner
 
         brief = manifest.generate_brief(meta, SELFCHECK_SEED)
-        key = meta["dir"] / "_selfcheck.yaml"
+        key = meta["dir"] / f"_selfcheck{self.suffix}"
 
         def judge():
             passed, diagnostics, *_ = runner.run_manifest(
-                meta, brief, learner=key, helm=self.helm(meta)
+                meta, brief, learner=key, **self.extra(meta)
             )
             return passed, diagnostics[0]["message"] if diagnostics else ""
 
-        return {"_selfcheck.yaml": self.answer_key(meta, brief)}, judge
+        return {key.name: self.answer_key(meta, brief)}, judge
 
 
 class _Helm(_Manifest):
@@ -315,17 +329,48 @@ class _Helm(_Manifest):
 
         return manifest.helm_job(meta)
 
-    def chart(self, meta):
+
+class _Docker(_Manifest):
+    """A build context with its Dockerfile missing: the learner's `Dockerfile` is that
+    file. Everything else is the manifest kind's, with hadolint standing in for the
+    validator and nothing built: see `grade_docker` in `manifest.GRADE_SOURCE`."""
+
+    name = DOCKER
+    filename = "Dockerfile"
+    language = "dockerfile"
+    suffix = ".Dockerfile"
+
+    def validate(self, edited, src):
+        """Nothing to parse on save: hadolint says it better, on the run."""
+        return edited
+
+    def answer_key(self, meta, brief):
+        """`solution.Dockerfile` with its placeholders filled in, as a README's are."""
         from . import manifest
 
-        chart = meta["dir"] / "chart"
-        return [
-            {"path": p, "text": (chart / p).read_text(encoding="utf-8")}
-            for p in manifest.chart_files(meta)
-        ]
+        return manifest.render(solution(meta).read_text(encoding="utf-8"), brief)
+
+    def revision(self, meta, src):
+        from . import manifest
+
+        return manifest.docker_fingerprint(meta)
+
+    def provenance(self, o):
+        from . import tools
+
+        return {
+            "seed": o["seed"],
+            **{k: o[k] for k in ("brief", "spec_md", "brief_revision") if k in o},
+            "hadolint": tools.pin_for(tools.HADOLINT).version,
+        }
+
+    def extra(self, meta):
+        from . import manifest
+
+        return {"docker": manifest.docker_job(meta)}
 
 
-KINDS = {PYTHON: _Python(), MANIFEST: _Manifest(), HELM: _Helm()}
+KINDS = {PYTHON: _Python(), MANIFEST: _Manifest(), HELM: _Helm(), DOCKER: _Docker()}
 
 
 def of(meta):

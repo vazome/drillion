@@ -374,3 +374,37 @@ def test_a_helm_task_without_its_chart_is_skipped():
     assert _reasons(**{"044_helm": files}) == {
         "044_helm": ["chart/Chart.yaml: missing"]
     }
+
+
+def _docker(edits="Dockerfile", **context):
+    readme = README.replace("tier: core\n", "").replace(
+        "difficulty: easy", f"kind: docker\nedits: {edits}\ndifficulty: easy"
+    )
+    return {
+        "README.md": readme,
+        "Dockerfile": "",
+        "grade.py": _GRADER,
+        "solution.Dockerfile": "FROM scratch\n",
+        "context/app.py": "",
+        **{f"context/{path}": text for path, text in context.items()},
+    }
+
+
+def test_a_dockerfile_task_is_a_build_context_with_its_dockerfile_missing():
+    assert _reasons(**{"045_docker": _docker()}) == {}
+    assert _reasons(**{"045_docker": _docker(Dockerfile="FROM x\n")}) == {
+        "045_docker": [
+            "context/Dockerfile: must not exist, the learner's file is the one"
+        ]
+    }
+    assert _reasons(**{"045_docker": _docker(".dockerignore")}) == {
+        "045_docker": ["README.md: edits '.dockerignore' is not Dockerfile"]
+    }
+
+
+def test_a_dockerfile_task_without_its_context_or_key_is_skipped():
+    files = _docker()
+    del files["context/app.py"], files["solution.Dockerfile"]
+    assert _reasons(**{"045_docker": files}) == {
+        "045_docker": ["solution.Dockerfile: missing", "context/: missing"]
+    }

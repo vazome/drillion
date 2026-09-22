@@ -17,6 +17,7 @@ from pathlib import Path
 import yaml
 
 from . import sandbox, tools
+from .catalogue import DOCKER, solution
 from .settings import settings
 
 MAX_BRIEF_BYTES = 8192
@@ -77,28 +78,38 @@ def _validated(raw):
 def grader_revision(meta):
     """Which generator produced a stored brief, so a later run can say whether an upgrade
     has moved the question underneath it. Every file it takes to make one is hashed, each
-    by its own digest so nothing shifts between them: `grade.py`, the answer key, and for a
-    Helm task every file of the chart, named, since a chart edit changes the question too."""
+    by its own digest so nothing shifts between them: `grade.py`, the answer key, and every
+    file the task ships around the learner's, named, since editing one changes the question
+    too."""
     digest = hashlib.sha256()
-    for name in ("grade.py", "solution.yaml"):
-        digest.update(hashlib.sha256((meta["dir"] / name).read_bytes()).digest())
+    for path in (meta["dir"] / "grade.py", solution(meta)):
+        digest.update(hashlib.sha256(path.read_bytes()).digest())
     for path in chart_files(meta):
         digest.update(hashlib.sha256(path.encode()).digest())
-        digest.update(
-            hashlib.sha256((meta["dir"] / "chart" / path).read_bytes()).digest()
-        )
+        digest.update(hashlib.sha256((shipped(meta) / path).read_bytes()).digest())
     return digest.hexdigest()[:12]
 
 
+def shipped(meta):
+    """The folder a task ships around the learner's file: a Helm chart, or the build
+    context a Dockerfile is written for."""
+    return meta["dir"] / ("context" if meta.get("kind") == DOCKER else "chart")
+
+
 def chart_files(meta):
-    """Every file of a Helm task's chart, as the chart names it; [] for a task with none.
+    """Every file `shipped` holds, by its path inside it; [] for a task with none.
     `Chart.yaml` and the values come first, then the rest in path order, which is the order
     the learner's tabs show them in."""
-    chart = meta["dir"] / "chart"
+    chart = shipped(meta)
     if not chart.is_dir():
         return []
     first = {"Chart.yaml": 0, "values.yaml": 1, "values.schema.json": 2}
-    paths = [p.relative_to(chart).as_posix() for p in chart.rglob("*") if p.is_file()]
+    # the image compiles every shipped .py, so a context's app.py gains a __pycache__
+    paths = [
+        p.relative_to(chart).as_posix()
+        for p in chart.rglob("*")
+        if p.is_file() and "__pycache__" not in p.parts
+    ]
     return sorted(paths, key=lambda p: (first.get(p, len(first)), p))
 
 
@@ -203,7 +214,7 @@ def render_solution(meta, brief, parse=True):
 
     `parse=False` is for an answer key that is a Helm template: it is not YAML until Helm
     renders it, so it is only checked for placeholders, and a template has none."""
-    template = (meta["dir"] / "solution.yaml").read_text(encoding="utf-8")
+    template = solution(meta).read_text(encoding="utf-8")
     out = []
     for number, line in enumerate(template.split("\n"), 1):
         match = _WHOLE_SCALAR.match(line)
@@ -488,9 +499,151 @@ def grade_helm(grade):
     answer(True, report=report)
 
 
+HEREDOC = re.compile(r"<<(-?)([\\"']?)(\\w+)\\2")
+
+
+def dockerfile_steps(text):
+    '''The Dockerfile as the builder reads it: one entry per instruction, its continuation
+    lines joined and the comments among them dropped, a heredoc's body kept with it.'''
+    lines, out, i = text.split("\\n"), [], 0
+    while i < len(lines):
+        start, line = i + 1, lines[i]
+        i += 1
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        while line.rstrip().endswith("\\\\") and i < len(lines):
+            line = line.rstrip()[:-1]
+            while i < len(lines) and lines[i].lstrip().startswith("#"):
+                i += 1
+            if i < len(lines):
+                line += lines[i]
+                i += 1
+        for dash, _, end in HEREDOC.findall(line):
+            while i < len(lines):
+                body = lines[i]
+                i += 1
+                if (body.lstrip("\\t") if dash else body) == end:
+                    break
+                line += "\\n" + body
+        cmd, _, rest = line.strip().partition(" ")
+        rest, flags = rest.strip(), {}
+        while rest.startswith("--"):
+            flag, _, rest = rest.partition(" ")
+            name, _, value = flag[2:].partition("=")
+            flags[name] = value or True
+            rest = rest.strip()
+        try:
+            form = json.loads(rest) if rest.startswith("[") else None
+        except ValueError:
+            form = None
+        if not (isinstance(form, list) and all(isinstance(w, str) for w in form)):
+            form = None
+        out.append({
+            "cmd": cmd.upper(), "args": rest, "flags": flags, "exec": form,
+            "words": form if form is not None else rest.split(), "line": start,
+        })
+    return out
+
+
+def dockerfile_stages(steps):
+    '''The build stages, each FROM and the steps under it. The ARGs above the first FROM
+    belong to no stage, so every stage carries them as `globals`.'''
+    out, globals_ = [], []
+    for step in steps:
+        if step["cmd"] == "FROM":
+            w = step["words"]
+            out.append({
+                "base": w[0] if w else "",
+                "name": w[2] if len(w) > 2 and w[1].lower() == "as" else None,
+                "line": step["line"],
+                "globals": globals_,
+                "steps": [],
+            })
+        elif out:
+            out[-1]["steps"].append(step)
+        else:
+            globals_.append(step)
+    return out
+
+
+def context_misses(stages, context):
+    '''Every COPY or ADD source that is not in the build context: the one way a Dockerfile
+    fails to build that can be seen without building it.'''
+    held = sorted(p.relative_to(context).as_posix() for p in context.rglob("*") if p.is_file())
+    found = []
+    for stage in stages:
+        for step in stage["steps"]:
+            if step["cmd"] not in ("COPY", "ADD") or "from" in step["flags"]:
+                continue
+            if "<<" in step["args"]:
+                continue
+            for src in step["words"][:-1]:
+                pattern = src.strip("/").removeprefix("./")
+                if "://" in src or pattern in ("", "."):
+                    continue
+                if ".." in Path(pattern).parts or not list(context.glob(pattern)):
+                    found.append((
+                        None,
+                        "line %d: %s copies `%s`, and the build context has no such file. "
+                        "It holds %s" % (
+                            step["line"], step["cmd"], src,
+                            ", ".join("`%s`" % h for h in held),
+                        ),
+                        "Dockerfile",
+                        step["line"],
+                    ))
+    return found
+
+
+def grade_docker(grade):
+    '''A Dockerfile sitting: hadolint first, then every COPY source against the build
+    context, then the task's `check()` over the parsed stages. Nothing is built.'''
+    d, brief = job["docker"], job["brief"]
+    text = Path(job["learner"]).read_text(encoding="utf-8")
+    if not text.strip():
+        answer(False, [(None, "Dockerfile is empty: write it before submitting", "Dockerfile")])
+    Path("Dockerfile").write_text(text, encoding="utf-8")
+    Path("hadolint.yaml").write_text(json.dumps(d["config"]), encoding="utf-8")
+    try:
+        done = subprocess.run(
+            [d["tool"], "--no-color", "--disable-ignore-pragma", "-c", "hadolint.yaml",
+             "-f", "json", "Dockerfile"],
+            capture_output=True, text=True, timeout=job["validator_seconds"],
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        answer(False, broken="hadolint did not run: %s" % exc)
+    try:
+        found = json.loads(done.stdout)
+    except ValueError:
+        answer(False, broken="hadolint did not run: %s" % done.stderr.strip()[-500:])
+    report = "\\n".join(
+        "Dockerfile:%d %s %s: %s" % (f["line"], f["code"], f["level"], f["message"])
+        for f in found
+    )
+    failing = [f for f in found if f["level"] in ("error", "warning")]
+    if failing:
+        answer(False, [
+            (None, "line %d: %s (%s)" % (f["line"], f["message"], f["code"]), "Dockerfile", f["line"])
+            for f in failing
+        ], report)
+    stages = dockerfile_stages(dockerfile_steps(text))
+    missing = context_misses(stages, Path(d["context"]))
+    if missing:
+        answer(False, missing, report)
+    try:
+        grade.check(stages, brief)
+    except AssertionError as exc:
+        answer(False, [(None, str(exc))], report)
+    except Exception as exc:
+        answer(False, report=report, broken="%s: %s" % (type(exc).__name__, exc))
+    answer(True, report=report)
+
+
 spec = importlib.util.spec_from_file_location(job["module"], job["grader"])
 grade = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(grade)
+if job.get("docker"):
+    grade_docker(grade)
 if job.get("helm"):
     grade_helm(grade)
 many = hasattr(grade, "check_many")
@@ -527,22 +680,42 @@ def helm_job(meta):
     }
 
 
-def job(meta, brief, learner=None, helm=None):
+# drillion's own hadolint config: errors and warnings fail, info is advice. Pinning every
+# apt or apk package version is switched off, since a pinned Debian version leaves the
+# mirror and few teams follow it. Part of a Dockerfile verdict's fingerprint.
+HADOLINT_CONFIG = {"failure-threshold": "warning", "ignored": ["DL3008", "DL3018"]}
+
+
+def docker_job(meta):
+    """What the child needs to lint a Dockerfile and check it against its build context."""
+    tool = tools.installed(tools.HADOLINT)
+    if tool is None:
+        raise ToolMissing("hadolint is not installed: run `drillion doctor --fetch`")
+    return {
+        "tool": str(tool),
+        "context": str(shipped(meta)),
+        "config": HADOLINT_CONFIG,
+    }
+
+
+def job(meta, brief, learner=None, helm=None, docker=None):
     """Everything the child needs to grade one sitting, as plain data.
 
     `learner` is the file to grade, and defaults to the learner's own. A self-check grades
     the answer key instead, and passes the path it rendered it to. `helm` is `helm_job`'s
-    answer for a Helm task, and absent for a manifest."""
+    answer for a Helm task and `docker` is `docker_job`'s for a Dockerfile task; a manifest
+    has neither. A Dockerfile needs no kubeconform, so it is not asked for one."""
     tool = tools.installed(tools.KUBECONFORM)
-    if tool is None:
+    if tool is None and docker is None:
         raise ToolMissing("kubeconform is not installed: run `drillion doctor --fetch`")
     return {
         "helm": helm,
+        "docker": docker,
         "learner": str(learner or meta["path"]),
         "grader": str(meta["dir"] / "grade.py"),
         "module": module_name(meta["dir"].name),
         "brief": brief,
-        "tool": str(tool),
+        "tool": str(tool) if tool else None,
         "kubernetes": tools.KUBERNETES_VERSION,
         "schemas": tools.schema_location(),
         "validator_seconds": VALIDATOR_SECONDS,
@@ -577,6 +750,21 @@ def read_result(out):
         str(result.get("report", "")),
         str(result.get("rendered") or ""),
     )
+
+
+def docker_fingerprint(meta):
+    """What decided a Dockerfile verdict: the grader, hadolint and drillion's config for it."""
+    pin = tools.pin_for(tools.HADOLINT)
+    h = hashlib.sha256()
+    for part in (
+        grader_revision(meta),
+        pin.version,
+        pin.binary_sha256,
+        json.dumps(HADOLINT_CONFIG, sort_keys=True),
+    ):
+        h.update(part.encode())
+        h.update(b"\0")
+    return "d1:" + h.hexdigest()[:12]
 
 
 def fingerprint(meta, helm=False):

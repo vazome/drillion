@@ -6,7 +6,7 @@ import re
 import yaml
 
 from . import kinds, sandbox, tools
-from .catalogue import HELM, MANIFEST, PYTHON, SECTION, SLUG, scan
+from .catalogue import DOCKER, HELM, MANIFEST, PYTHON, SECTION, SLUG, scan, solution
 from .manifest import MAX_SPEC_CHARS
 
 TAG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -37,8 +37,8 @@ def _render_rules(meta):
     stray brace anywhere else, or a placeholder the grader never fills, reaches the learner
     as a failed open. A solution.yaml that will not render reaches them later and worse, on
     the run that should have passed, so both are rendered against the same brief here."""
-    if "dir" not in meta:
-        return []
+    if "dir" not in meta or not solution(meta).is_file():
+        return []  # a missing answer key is already its own reason
     from . import manifest
 
     brief = manifest.generate_brief(meta, kinds.SELFCHECK_SEED)
@@ -49,7 +49,7 @@ def _render_rules(meta):
     try:
         kinds.of(meta).answer_key(meta, brief)
     except manifest.Rejected as err:
-        return [f"solution.yaml: does not render against a brief - {err}"]
+        return [f"{solution(meta).name}: does not render against a brief - {err}"]
     return []
 
 
@@ -140,8 +140,27 @@ def _helm_rules(meta):
     return out + _placeholder_rules(meta.get("spec_md", "")) + _render_rules(meta)
 
 
-# One row per kind, as `catalogue.CHECKS` is: a third kind adds a row rather than a branch.
-KIND_RULES = {PYTHON: _python_rules, MANIFEST: _manifest_rules, HELM: _helm_rules}
+def _docker_rules(meta):
+    """A Dockerfile task's hole is the Dockerfile, and nothing in the build context may
+    already sit where the learner's goes. Whether the answer key lints clean and passes is
+    `selfcheck`'s question, since only hadolint can answer it."""
+    out = []
+    if meta.get("tier") is not None:
+        out.append("README.md: tier belongs to a python task, not a Dockerfile task")
+    if meta.get("edits") not in (None, "Dockerfile"):
+        out.append(f"README.md: edits {meta['edits']!r} is not Dockerfile")
+    elif "dir" in meta and (meta["dir"] / "context" / "Dockerfile").exists():
+        out.append("context/Dockerfile: must not exist, the learner's file is the one")
+    return out + _placeholder_rules(meta.get("spec_md", "")) + _render_rules(meta)
+
+
+# One row per kind, as `catalogue.CHECKS` is: a new kind adds a row rather than a branch.
+KIND_RULES = {
+    PYTHON: _python_rules,
+    MANIFEST: _manifest_rules,
+    HELM: _helm_rules,
+    DOCKER: _docker_rules,
+}
 
 
 def _value_rules(meta):

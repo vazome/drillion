@@ -284,6 +284,7 @@ def _payload(st, slug, meta, src):
                         "validator",
                         "kubernetes",
                         "helm",
+                        "hadolint",
                         "seed",
                         "revision",
                     )
