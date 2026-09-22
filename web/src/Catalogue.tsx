@@ -19,7 +19,7 @@ const HOW_IT_WORKS = "https://github.com/vazome/drillion/blob/main/docs/how-it-w
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 // the tracks with a logo in web/public/tracks/; any other track wears its first letter
-const TRACK_ICONS = new Set(["python", "kubernetes"]);
+const TRACK_ICONS = new Set(["python", "kubernetes", "helm", "docker"]);
 const num = (topic: number) => String(topic).padStart(3, "0");
 
 /** Today as a LOCAL YYYY-MM-DD, which parses back to the same UTC midnight `due` does. */

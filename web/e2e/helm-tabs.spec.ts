@@ -69,3 +69,12 @@ test("the chart strip never moves the editor and is one tab stop", async ({ page
   await expect(tabs.getByRole("tab", { name: /the last run reported a problem here/ })).toHaveCount(1);
   expect(await strip(), "after a run marked a tab").toBe(height);
 });
+
+/** A Dockerfile task shows its build context the same way, in its own words. */
+test("a Dockerfile task's build context opens read-only beside the Dockerfile", async ({ page }) => {
+  await page.goto("/#/task/298_dockerfile_static_site");
+  const tabs = page.getByRole("tablist", { name: "Build context files" });
+  await expect(tabs.getByRole("tab", { name: /^Dockerfile, yours/ })).toHaveAttribute("aria-selected", "true");
+  await tabs.getByRole("tab", { name: /^package\.json, part of the build context, read-only/ }).click();
+  await expect(page.getByRole("tabpanel").locator("pre")).toContainText('"build": "node build.mjs"');
+});

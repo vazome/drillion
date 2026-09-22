@@ -397,7 +397,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                     </div>
                     {a.revision ? (
                       <div className="tabular" style={{ fontSize: 12.5, color: "var(--text-faint)", fontFamily: "var(--font-mono)" }}>
-                        {a.python ? `Python ${a.python}` : `kubeconform ${a.validator} · Kubernetes ${a.kubernetes}`} · seed {a.seed} · grader {a.revision}
+                        {a.python ? `Python ${a.python}` : a.hadolint ? `hadolint ${a.hadolint}` : `kubeconform ${a.validator} · Kubernetes ${a.kubernetes}`} · seed {a.seed} · grader {a.revision}
                       </div>
                     ) : null}
                     {a.code ? <pre style={{ margin: "6px 0 0", fontSize: 12.5, whiteSpace: "pre-wrap", color: "var(--text-muted)" }}>{a.code}</pre> : null}
@@ -469,7 +469,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
 
           {chart && meta.edits ? (
             // keyed by task: a new task opens on the learner's own file
-            <ChartFiles key={slug} edits={meta.edits} chart={task.chart} height={editorHeight}
+            <ChartFiles key={slug} edits={meta.edits} chart={task.chart} height={editorHeight} context={meta.kind === "docker"}
               diagnostics={result.state === "failed" ? result.diagnostics : []}>
               {editor}
             </ChartFiles>
@@ -481,7 +481,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             <div role="status">
               <div className="m-rise" key={result.state}>
                 {meta.kind !== "python" && result.state === "failed" && result.diagnostics.length ? (
-                  <ManifestFailure diagnostics={result.diagnostics} helm={meta.kind === "helm"} />
+                  <ManifestFailure diagnostics={result.diagnostics} kind={meta.kind} />
                 ) : result.state === "ran" ? (
                   <div style={{ borderRadius: "var(--radius)", padding: "12px 16px", fontSize: 14, background: "var(--pass-bg)", borderLeft: "3px solid var(--pass)" }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 600, color: "var(--pass)", letterSpacing: ".04em" }}><Icon name="CheckmarkOutline" />TESTS PASS</span>
@@ -516,7 +516,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             ) : null}
 
             {(result.state === "failed" || result.state === "ran") && result.output ? (
-              <Collapsible label={meta.kind === "python" ? "Full output" : "Validator details"} meta={`${meta.kind === "python" ? "pytest" : "raw report"} · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
+              <Collapsible label={meta.kind === "python" ? "Full output" : "Validator details"} meta={`${meta.kind === "python" ? "pytest" : meta.kind === "docker" ? "hadolint" : "raw report"} · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
                 {result.output}
               </Collapsible>
             ) : null}

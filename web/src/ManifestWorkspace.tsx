@@ -1,18 +1,21 @@
 import { useId, useState, type ReactNode } from "react";
 import { FailedCase, FileTabs, ResultBanner } from "./ds/index.js";
-import type { ChartFile, Diagnostic } from "./api";
+import type { ChartFile, Diagnostic, Meta } from "./api";
 import s from "./ManifestWorkspace.module.css";
 
 /** What the grader said, field by field. The server sends diagnostics, so nothing here
  *  reads a sentence back into data: `path` is where in the YAML, `message` is what is
  *  wrong with it, and a diagnostic with no path is about the document as a whole. On a Helm
  *  task the paths are into what Helm rendered, not into the file the learner wrote. */
-export function ManifestFailure({ diagnostics, helm = false }: { diagnostics: Diagnostic[]; helm?: boolean }) {
+const LOOK: Partial<Record<Meta["kind"], string>> = { helm: "Your chart needs another look", docker: "Your Dockerfile needs another look" };
+
+export function ManifestFailure({ diagnostics, kind }: { diagnostics: Diagnostic[]; kind: Meta["kind"] }) {
   const fields = diagnostics.filter((d) => d.path);
   const general = diagnostics.filter((d) => !d.path);
+  const helm = kind === "helm";
   return (
     <div>
-      <ResultBanner state="failed" headline={fields.length ? "Check these manifest fields" : helm ? "Your chart needs another look" : "Your manifest needs another look"} />
+      <ResultBanner state="failed" headline={fields.length ? "Check these manifest fields" : LOOK[kind] ?? "Your manifest needs another look"} />
       {fields.length ? <p className={s.aside}>kubeconform · Paths start at the top of {helm ? "the rendered manifest, under Rendered below" : "your YAML file"}.</p> : null}
       {general.map((d, i) => <p key={i} className={s.aside + " " + s.said}>{d.message}</p>)}
       {fields.map((d, i) => <div key={i}>
@@ -24,11 +27,12 @@ export function ManifestFailure({ diagnostics, helm = false }: { diagnostics: Di
   );
 }
 
-/** A Helm task's chart around the editor: the learner's file first, the rest read-only.
+/** A Helm task's chart, or a Dockerfile's build context, around the editor: the learner's
+ *  file first, the rest read-only.
  *  A chart file is laid over the editor rather than swapped in, so the editor keeps its
  *  cursor, undo and layout, and it is `inert` meanwhile so focus cannot reach under. */
-export function ChartFiles({ edits, chart, diagnostics, height, children }: {
-  edits: string; chart: ChartFile[]; diagnostics: Diagnostic[]; height: string; children: ReactNode;
+export function ChartFiles({ edits, chart, diagnostics, height, context = false, children }: {
+  edits: string; chart: ChartFile[]; diagnostics: Diagnostic[]; height: string; context?: boolean; children: ReactNode;
 }) {
   const [open, setOpen] = useState(edits);
   const panel = useId();
@@ -40,7 +44,8 @@ export function ChartFiles({ edits, chart, diagnostics, height, children }: {
   const shown = chart.find((f) => f.path === open);
   return (
     <div className={s.chart}>
-      <FileTabs files={files} active={open} onSelect={setOpen} panelId={panel} />
+      <FileTabs files={files} active={open} onSelect={setOpen} panelId={panel}
+        {...(context ? { label: "Build context files", partOf: "the build context" } : {})} />
       <div id={panel} role="tabpanel" aria-label={open} className={s.panel}>
         <div inert={!!shown}>{children}</div>
         {shown ? <pre tabIndex={0} className={s.chartFile} style={{ height }}>{shown.text}</pre> : null}
