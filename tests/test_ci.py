@@ -112,7 +112,8 @@ def test_smoke_reaches_volume_check_and_propagates_failures(tmp_path, failure):
     # the script checks the served count against the checkout, so the fake has to agree
     task_dir = WORKFLOW.parents[2] / "tasks"
     served = sum(
-        len(list(task_dir.glob(pattern))) for pattern in ("*/task.py", "*/task.yaml")
+        len(list(task_dir.glob(pattern)))
+        for pattern in ("*/task.py", "*/task.yaml", "*/Dockerfile")
     )
     curl = tmp_path / "curl"
     curl.write_text(
