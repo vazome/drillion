@@ -42,19 +42,21 @@ ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
 # no src/ reaches this stage: the project comes from the wheel above, not the lock
 COPY pyproject.toml uv.lock README.md ./
+# basedpyright runs its language server with `node`; the npm bundled beside that node is never
+# invoked, and its own dependencies are most of the image's CVE count. Removing it in the same
+# RUN that installs it keeps it out of the image rather than merely out of the final layer's
+# view: a later RUN's rm only hides files an earlier layer already shipped, it does not shrink
+# anything. The `test` fails the build if the layout moves, so this can never quietly delete
+# nothing.
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-dev --no-install-project
-COPY --from=wheel /wheel/*.whl /tmp/
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install --python /app/.venv/bin/python --no-deps /tmp/*.whl && rm /tmp/*.whl
-
-# basedpyright runs its language server with `node`; the npm bundled beside that node is
-# never invoked, and its own dependencies are most of the image's CVE count. The `test`
-# fails the build if the layout moves, so this can never quietly delete nothing.
-RUN set -eu; \
+    set -eu; \
+    uv sync --locked --no-dev --no-install-project; \
     node_dir="$(echo /app/.venv/lib/python3.*/site-packages/nodejs_wheel)"; \
     test -x "$node_dir/bin/node"; \
     rm -rf "$node_dir/lib/node_modules/npm" "$node_dir/bin/npm" "$node_dir/bin/npx"
+COPY --from=wheel /wheel/*.whl /tmp/
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv pip install --python /app/.venv/bin/python --no-deps /tmp/*.whl && rm /tmp/*.whl
 
 # the app runs out of /app/.venv, which uv fills without ever calling the interpreter's own
 # pip. That pip is never invoked, and the versions its vendor.txt pins are the rest of the
@@ -74,7 +76,16 @@ RUN useradd --create-home --uid 1000 drillion && mkdir -p /data /app/tools && ch
 USER drillion
 # /data is normally a bind mount, so keep the pinned grader in the image rather than under the
 # mount. `doctor --fetch` verifies the downloaded binary before this layer is accepted.
-RUN drillion doctor --fetch
+#
+# `doctor` also walks the whole task catalogue, which only the installed package (this stage's
+# wheel, tasks included) can do, so this RUN cannot move earlier or shrink to just tools.py: a
+# src/ or tasks/ change reruns it every time regardless. What a cache mount avoids is the
+# network part of that rerun -- `tools.installed` finds a pin's binary already sitting in the
+# cache and verifies its checksum instead of downloading it again, so only an actual pin change
+# in tools.py reaches the network.
+RUN --mount=type=cache,id=drillion-tools,target=/home/drillion/.cache/drillion-tools,uid=1000 \
+    DRILLION_TOOLS_DIR=/home/drillion/.cache/drillion-tools drillion doctor --fetch && \
+    cp -a /home/drillion/.cache/drillion-tools/. /app/tools/
 
 EXPOSE 8765
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \

@@ -61,7 +61,8 @@ Core ideas I'm keeping in mind during the development:
   same idea worked through on different data. After half an hour with no submission,
   drillion suggests taking one as you cannot brute-force something you are unaware of.
 - **Grading is real.** A Python answer is spliced into the task's own pytest file and run; a
-  manifest is validated by kubeconform, then checked against the task's own rules.
+  manifest is validated by kubeconform, a Helm chart by `helm template` and `helm lint --strict`,
+  and a Dockerfile by hadolint, then each is checked against the task's own rules.
 - **YOUR progress.** One SQLite file on your disk, stamped with a schema version, and a
   build refuses to rewrite a file a newer one wrote rather than quietly mangling it. Settings
   turns it into a backup you can carry, and can erase the lot if you want to start over.
@@ -79,7 +80,9 @@ Drillion is distributed as a Docker image. Install Docker Engine on Linux or Doc
 macOS or Windows, then start it:
 
 ```bash
-docker run -d --name drillion --restart unless-stopped -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion
+docker run -d --name drillion --restart unless-stopped -p 127.0.0.1:8765:8765 -v drillion:/data \
+  --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
+  ghcr.io/vazome/drillion
 ```
 
 Open <http://127.0.0.1:8765>. The image never opens a host browser. Your work lives in the
@@ -89,7 +92,10 @@ container read-only with every capability dropped: save it anywhere and `docker 
 To update, pull the new image and replace the container. Removing the container keeps the volume:
 
 ```bash
-docker pull ghcr.io/vazome/drillion && docker stop drillion && docker rm drillion && docker run -d --name drillion --restart unless-stopped -p 127.0.0.1:8765:8765 -v drillion:/data ghcr.io/vazome/drillion
+docker pull ghcr.io/vazome/drillion && docker stop drillion && docker rm drillion
+docker run -d --name drillion --restart unless-stopped -p 127.0.0.1:8765:8765 -v drillion:/data \
+  --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
+  ghcr.io/vazome/drillion
 ```
 
 With Compose, `docker compose pull && docker compose up -d` from the folder holding

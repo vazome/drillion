@@ -13,18 +13,21 @@
    read, and a corner notice says so ten seconds in. The left pane renders the task's `README.md` — Why / You get /
    You return / Rules / Read first — and the right pane is the editor with the stub.
 3. **Run** saves your region into the file and runs that file's pytest test with the attempt's
-   seed. A manifest task instead validates your YAML with kubeconform and checks it against the
-   task's rules, naming each field that is wrong. Failures come back with the assertion lines mapped to editor line numbers, and
+   seed. A manifest task instead validates your YAML with kubeconform, a Helm task renders it
+   with `helm template` and lints it with `helm lint --strict`, and a Dockerfile task lints it
+   with hadolint; each is then checked against the task's own rules, naming each field that is
+   wrong. Failures come back with the assertion lines mapped to editor line numbers, and
    whatever your own `print()` wrote is shown above them whether the tests passed or failed.
    A Run grades nothing — it is free and repeatable, however green it comes back. **Submit** is the
    same execution plus the claim that you are done: it costs an attempt, and on green it is
    what grades the pass and sets when the task comes back.
 4. **Hints** are three levels deep. The first is there from the start; the second opens at two
-   minutes of active time and the third at three. Half an hour of reading with nothing run and
-   no hint taken, and the page offers one unprompted — the gate opens silently, which is no use
-   to someone who is not looking at the panel, and you cannot brute-force something nobody has
-   told you about. The **solution** opens after 3 submitted attempts and 10 active minutes,
-   and taking it means the pass cannot push the task further out.
+   minutes of active time and the third at three. Half an hour of active time with nothing
+   submitted and no hint taken, and the page offers one unprompted. A Run alone does not clear
+   the timer; only a graded Submit does. The gate opens silently, which is no use to someone who
+   is not looking at the panel, and you cannot brute-force something nobody has told you about.
+   The **solution** opens after 3 submitted attempts and 10 active minutes, and taking it means
+   the pass cannot push the task further out.
 5. **Pass** → computed grade → the task's next sighting moves in or out → your code is archived
    into `progress.sqlite3` → the file is reset to the stub, so the next review starts blank. The
    archive keeps what produced that grade beside the code: the seed the cases came from, the
