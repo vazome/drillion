@@ -22,8 +22,11 @@
    colour, it takes no width, so marking a tab moves nothing */
 .tab[data-marked] .name{text-decoration:underline wavy var(--warn) 1px;text-underline-offset:5px;text-decoration-skip-ink:none}
 .yours{padding:2px 7px;border:1px solid var(--accent-line);border-radius:var(--radius-pill);background:var(--surface);font-family:var(--font-sans);font-size:11px;font-weight:var(--fw-semibold);line-height:1.2;letter-spacing:.02em;color:var(--accent)}
-/* one label for the whole locked group rather than a word on every tab */
-.group{flex:none;margin:0 4px 0 8px;padding-left:12px;border-left:1px solid var(--border);font-family:var(--font-sans);font-size:var(--fs-label);font-weight:var(--fw-semibold);line-height:18px;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--text-muted);white-space:nowrap}
+/* read-only is said on each locked tab, as a quiet word after its name — Collapsible's faint
+   meta, not a label of its own in the row, which read as one more thing to click */
+.ro{display:inline-flex;align-items:center;gap:3px;font-family:var(--font-sans);font-size:11.5px;letter-spacing:.02em;color:var(--text-faint)}
+/* text-faint on accent-tint is 4.3:1 in dark — one step up on the selected tab */
+.tab[data-on] .ro{color:var(--text-muted)}
 .notes{display:grid;padding:6px 12px 7px;border-top:1px solid var(--border);background:var(--surface-2)}
 .note{grid-area:1/1;margin:0;visibility:hidden;font-family:var(--font-sans);font-size:12.5px;line-height:1.45;color:var(--text-muted)}
 .note[data-on]{visibility:visible}

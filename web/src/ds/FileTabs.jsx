@@ -1,4 +1,5 @@
 import React from "react";
+import { Icon } from "./Icon.jsx";
 import s from "./FileTabs.module.css";
 
 /** "templates/deployment.yaml" → ["templates/", "deployment.yaml"]: the directory is drawn
@@ -10,31 +11,32 @@ const split = (path) => {
 
 /** The state goes into the name, not only the look: a screen reader hears which file is the
  *  learner's, that the rest are locked, and where the last run found a problem. */
-const nameOf = (f) =>
-  f.path + (f.readOnly ? ", part of the chart, read-only" : ", yours, editable") +
+const nameOf = (f, partOf) =>
+  f.path + (f.readOnly ? ", part of " + partOf + ", read-only" : ", yours, editable") +
   (f.marked ? ", the last run reported a problem here" : "");
 
 /** The line under the strip. Every variant is rendered into the same grid cell and only the
  *  active one is visible, so the row is always as tall as its longest variant: picking a tab,
  *  or a run marking one, never changes the strip's height and never moves the editor. */
-function noteOf(f, mine, marked) {
+function noteOf(f, mine, marked, partOf) {
   if (!f.readOnly) return { base: "yours — the only file you edit.", flag: marked ? "The last run reported a problem here." : null };
   return marked
-    ? { base: "part of the chart, read-only.", flag: "The last run reported a problem here; the fix goes in " + mine + "." }
-    : { base: "part of the chart, read-only — you write " + mine + ".", flag: null };
+    ? { base: "part of " + partOf + ", read-only.", flag: "The last run reported a problem here; the fix goes in " + mine + "." }
+    : { base: "part of " + partOf + ", read-only — you write " + mine + ".", flag: null };
 }
 
-/** The files of one task's chart above the editor: the learner's one file first, the rest
- *  read-only. A strip that switches what the editor shows and nothing else — no tree, no
+/** The files of one task above the editor — a Helm chart, a Docker build context: the
+ *  learner's one file first, the rest read-only. Each locked tab says so itself, in a quiet
+ *  word after its name, so "read-only" is a property of the tab and never a thing in the row
+ *  to click. A strip that switches what the editor shows and nothing else — no tree, no
  *  closing, adding, renaming or reordering, no file-type icons. Selecting is automatic:
  *  arrow keys move and open in one step, because opening a file costs nothing. */
-export function FileTabs({ files = [], active, onSelect, label = "Chart files", panelId, className, style }) {
+export function FileTabs({ files = [], active, onSelect, label = "Chart files", partOf = "the chart", panelId, className, style }) {
   const base = React.useId();
   const list = React.useRef(null);
   const tabs = React.useRef([]);
   const at = Math.max(0, files.findIndex((f) => f.path === active));
   const mine = (files.find((f) => !f.readOnly) || {}).path || "";
-  const firstLocked = files.findIndex((f) => f.readOnly);
 
   // keep the active tab in view by scrolling the strip itself — scrollIntoView could also
   // scroll the page, and the strip is the only thing allowed to move
@@ -70,11 +72,10 @@ export function FileTabs({ files = [], active, onSelect, label = "Chart files", 
           const on = i === at;
           return (
             <React.Fragment key={f.path}>
-              {i === firstLocked ? <span aria-hidden="true" className={s.group}>Read-only</span> : null}
               <button type="button" role="tab" id={base + "-tab-" + i}
                 ref={(el) => { tabs.current[i] = el; }}
                 aria-selected={on} aria-controls={panelId} tabIndex={on ? 0 : -1}
-                aria-label={nameOf(f)}
+                aria-label={nameOf(f, partOf)}
                 data-on={on ? "" : undefined} data-mine={f.readOnly ? undefined : ""} data-marked={f.marked ? "" : undefined}
                 onClick={onSelect && !on ? () => onSelect(f.path) : undefined}
                 className={s.tab}>
@@ -82,7 +83,7 @@ export function FileTabs({ files = [], active, onSelect, label = "Chart files", 
                   {dir ? <span className={s.dir}>{dir}</span> : null}
                   <span className={s.name}>{name}</span>
                 </span>
-                {f.readOnly ? null : <span className={s.yours}>yours</span>}
+                {f.readOnly ? <span className={s.ro}><Icon name="Locked" size={12} />read-only</span> : <span className={s.yours}>yours</span>}
               </button>
             </React.Fragment>
           );
@@ -90,7 +91,7 @@ export function FileTabs({ files = [], active, onSelect, label = "Chart files", 
       </div>
       <div aria-hidden="true" className={s.notes}>
         {files.flatMap((f, i) => [false, true].map((marked) => {
-          const n = noteOf(f, mine, marked);
+          const n = noteOf(f, mine, marked, partOf);
           return (
             <p key={f.path + (marked ? "+" : "")} className={s.note}
               data-on={i === at && !!f.marked === marked ? "" : undefined}>

@@ -526,7 +526,8 @@ export interface IconProps {
 }
 export declare function Icon(props: IconProps): El | null;
 export declare const ICON_NAMES: IconName[];
-/** One file of a task's chart. Exactly one has `readOnly: false`, the learner's, and it
+
+/** One file of a task's chart. Exactly one has `readOnly: false` — the learner's — and it
  *  comes first; the rest are read and never written. */
 export interface FileTabsFile {
   /** as the chart has it: "values.yaml", "templates/deployment.yaml" */
@@ -535,8 +536,9 @@ export interface FileTabsFile {
   /** the last run reported a problem in this file */
   marked?: boolean;
 }
-/** The files of a Helm task above the editor: switches what the editor shows and nothing
- *  else. 2 to 6 files; past the strip's width it scrolls inside itself. */
+/** The files of a task above the editor (a Helm chart, a Docker build context): switches what the editor shows and nothing
+ *  else. No tree, no add/close/rename/reorder, no file-type icons. 2–6 files; past the
+ *  strip's width it scrolls inside itself. */
 export interface FileTabsProps {
   files?: FileTabsFile[];
   /** the path the editor is showing */
@@ -544,6 +546,9 @@ export interface FileTabsProps {
   onSelect?: (path: string) => void;
   /** the tablist's accessible name */
   label?: string;
+  /** what the read-only files belong to, said in the note and in each locked tab's name:
+   *  "the chart" (default) for Helm, "the build context" for a Dockerfile task */
+  partOf?: string;
   /** id of the element wrapping the editor, which carries role="tabpanel" */
   panelId?: string;
   className?: string;
