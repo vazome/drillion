@@ -10,7 +10,8 @@ import { expect, type Page, test } from "@playwright/test";
 test.use({ reducedMotion: "reduce" });
 
 const SLUG = "009_fstrings";
-const SCREENS = ["/#/", `/#/task/${SLUG}`, "/#/progress"];
+// a Helm task: the chart's file tabs sit over the editor, and they are ours to audit
+const SCREENS = ["/#/", `/#/task/${SLUG}`, "/#/task/280_helm_values_nodeport", "/#/progress"];
 
 /** The screen is up and has its data: an audit of a half-rendered page proves nothing. */
 async function settled(page: Page, route: string) {
@@ -52,6 +53,8 @@ async function tabTo(page: Page, want: string, max = 60) {
 }
 
 test("every screen passes an axe audit", async ({ page }) => {
+  // four screens in two themes, each audited whole: Firefox needs most of a minute alone
+  test.setTimeout(120_000);
   // Both themes: the palettes are separate sets of values, so passing in one proves nothing
   // about the other. The theme is read out of storage when the app boots, so it is set there
   // and the page reloaded; the class assertion keeps the dark pass from going quietly vacuous.
