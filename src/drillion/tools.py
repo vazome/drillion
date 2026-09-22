@@ -11,7 +11,7 @@ import platform
 import sys
 import tarfile
 import tempfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import NamedTuple
 
 import requests
@@ -19,6 +19,7 @@ import requests
 from .settings import PKG, settings
 
 KUBECONFORM = "kubeconform"
+HELM = "helm"
 TIMEOUT = (10, 60)  # connect, read
 MAX_ARCHIVE = 64 << 20
 
@@ -41,6 +42,11 @@ class Pin(NamedTuple):
     archive_sha256: str
     member: str  # the one file inside the archive that is the executable
     binary_sha256: str
+
+    @property
+    def filename(self):
+        """What it is installed as: the member's own name, whatever folder it sat in."""
+        return PurePosixPath(self.member).name
 
 
 def host():
@@ -88,6 +94,35 @@ PINS: dict[str, dict[tuple[str, str], Pin]] = {
 }
 
 
+HELM_VERSION = "v4.3.0"
+
+
+def _helm(arch, archive_sha256, binary_sha256):
+    return Pin(
+        HELM_VERSION,
+        f"https://get.helm.sh/helm-{HELM_VERSION}-linux-{arch}.tar.gz",
+        archive_sha256,
+        f"linux-{arch}/helm",
+        binary_sha256,
+    )
+
+
+# Upstream publishes `<archive>.sha256sum` beside each archive; `binary_sha256` is ours,
+# recomputed by hand when the version moves, as for kubeconform.
+PINS[HELM] = {
+    ("linux", "amd64"): _helm(
+        "amd64",
+        "86584a54def73570558f66f5111cc53dfed56689637ae32c1201205d494f54fb",
+        "57ce7fc4ea77b28ee6fa91ae071abcade74d3f524e80c9decff5877a5ac8eda4",
+    ),
+    ("linux", "arm64"): _helm(
+        "arm64",
+        "31c5794dd55c66a51e6b7d2e2ac7a114ae8b1de41ff1d9ba51748ac973b06a08",
+        "5bbdb28c8ca3f71daab33996a72392ce3135439a040ee63aed406888f82f2228",
+    ),
+}
+
+
 def pin_for(name):
     try:
         return PINS[name][host()]
@@ -132,7 +167,7 @@ def schema_location():
 def installed(name):
     """The verified binary, or None. Never returns a path it has not just checked."""
     pin = pin_for(name)
-    path = tools_dir() / pin.member
+    path = tools_dir() / pin.filename
     if not path.is_file() or digest(path) != pin.binary_sha256:
         return None
     return path
@@ -188,13 +223,13 @@ def acquire(name):
         if digest(archive) != pin.archive_sha256:
             raise Rejected(f"{pin.url} does not match its pinned archive checksum")
         try:
-            binary = _extract(archive, pin.member, scratch / pin.member)
+            binary = _extract(archive, pin.member, scratch / pin.filename)
         except KeyError:
             raise Rejected(f"{pin.url} has no member {pin.member!r}") from None
         if digest(binary) != pin.binary_sha256:
             raise Rejected(f"{pin.member} does not match its pinned checksum")
-        os.replace(binary, target / pin.member)
-    return target / pin.member
+        os.replace(binary, target / pin.filename)
+    return target / pin.filename
 
 
 def report():

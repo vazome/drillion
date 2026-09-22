@@ -122,6 +122,39 @@ def test_acquire_verifies_the_archive_then_the_binary(tmp_path, monkeypatch):
     assert path.read_bytes() == payload and tools.installed("kubeconform") == path
 
 
+def test_every_helm_pin_is_the_one_release():
+    for (os_name, arch), pin in tools.PINS[tools.HELM].items():
+        assert pin.version == tools.HELM_VERSION
+        assert pin.url == (
+            f"https://get.helm.sh/helm-{tools.HELM_VERSION}-{os_name}-{arch}.tar.gz"
+        )
+        assert pin.member == f"{os_name}-{arch}/helm" and pin.filename == "helm"
+
+
+@responses.activate
+def test_a_member_inside_a_folder_is_installed_by_its_own_name(tmp_path, monkeypatch):
+    """Helm's archive holds `linux-amd64/helm`: the tool lands at `tools/helm`, not in a
+    folder the scratch directory never had, and `installed` looks for it there."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    payload = b"pretend helm"
+    blob = _archive("linux-amd64/helm", payload)
+    monkeypatch.setitem(
+        tools.PINS["kubeconform"],
+        tools.host(),
+        tools.Pin(
+            "4.3.0",
+            "https://example.invalid/h.tar.gz",
+            hashlib.sha256(blob).hexdigest(),
+            "linux-amd64/helm",
+            hashlib.sha256(payload).hexdigest(),
+        ),
+    )
+    responses.add(responses.GET, "https://example.invalid/h.tar.gz", body=blob)
+    path = tools.acquire("kubeconform")
+    assert path == tmp_path / "tools" / "helm"
+    assert tools.installed("kubeconform") == path
+
+
 @responses.activate
 def test_a_tampered_archive_is_rejected_and_the_old_tool_survives(
     tmp_path, monkeypatch
@@ -218,7 +251,8 @@ def test_report_names_the_command_that_fixes_a_missing_tool(tmp_path, monkeypatc
         ),
     )
     assert tools.report() == [
-        ("kubeconform", "missing or altered: run `drillion doctor --fetch`")
+        ("kubeconform", "missing or altered: run `drillion doctor --fetch`"),
+        ("helm", "missing or altered: run `drillion doctor --fetch`"),
     ]
 
 
