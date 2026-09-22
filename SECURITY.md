@@ -54,7 +54,7 @@ whole ruleset fail.
   the files under it, `progress.sqlite3` included, are not readable. The one subtree under it
   that is readable is `tools/`, which holds the checksum-pinned graders and is also
   executable: a manifest task is graded by running kubeconform, and a Helm task by running Helm
-  and then kubeconform.
+  and then kubeconform, and a Dockerfile task by running hadolint. No Dockerfile is ever built.
 - **Writes** are confined to the scratch directory.
 - **TCP** — every bind and connect is refused, on ABI 4 and above. UDP and Unix sockets are
   not covered by Landlock; on ABI 6 and above, abstract Unix sockets and signals are scoped
