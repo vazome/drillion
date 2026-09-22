@@ -1,4 +1,5 @@
 import React from "react";
+import { Icon } from "./Icon.jsx";
 import css from "./DepLineage.module.css";
 import { StatusBadge } from "./StatusBadge.jsx";
 import { TagChip } from "./TagChip.jsx";
@@ -90,7 +91,7 @@ export function DepLineage({ task, requires = [], unlocks = [], hrefOf, onPrefet
       {graphHref || onClose ? (
         <div className={css.toolbar}>
           <span className={css.spacer}></span>
-          {graphHref ? <a href={graphHref} className={css.graphLink}>whole graph →</a> : null}
+          {graphHref ? <a href={graphHref} className={css.graphLink}>whole graph<Icon name="ArrowRight" size={14} /></a> : null}
           {onClose ? <button type="button" onClick={onClose} aria-label="Close lineage" className={css.closeBtn}>Close</button> : null}
         </div>
       ) : null}
@@ -162,7 +163,7 @@ export function DepLineage({ task, requires = [], unlocks = [], hrefOf, onPrefet
           <span className={css.pathLabel}>shortest way in</span>
           {shortestPath.map((p, i) => (
             <React.Fragment key={p.topic}>
-              {i ? <span aria-hidden="true" className={css.pathArrow}>→</span> : null}
+              {i ? <span aria-hidden="true" className={css.pathArrow}><Icon name="ArrowRight" size={12} /></span> : null}
               <code className={css.pathNum + " tabular"}>{numL(p.topic)}</code>
             </React.Fragment>
           ))}

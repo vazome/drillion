@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Button, Card, DepLineage, EmptyState } from "./ds/index.js";
+import { Button, Card, Icon, DepLineage, EmptyState } from "./ds/index.js";
 import { api, type Task as TaskData } from "./api";
 import { strength } from "./strength";
 
 export const taskHref = (slug: string) => `#/task/${encodeURIComponent(slug)}`;
 /** Every prereq link goes to that task's own lineage, not to the task: you follow these to
- *  walk the graph, and `Open NNN →` is how you leave it for the editor. */
+ *  walk the graph, and `Open NNN` is how you leave it for the editor. */
 export const depsHref = (slug: string) => `${taskHref(slug)}/deps`;
 
 /** Payloads already fetched, so walking the graph swaps a board rather than reloading a
@@ -49,10 +49,10 @@ export function Deps({ slug }: { slug: string }) {
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gap: 16 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        <a href="#/" style={{ fontSize: 13, whiteSpace: "nowrap" }}>← Catalogue</a>
+        <a href="#/" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, whiteSpace: "nowrap" }}><Icon name="ArrowLeft" />Catalogue</a>
         <div style={{ flex: 1 }} />
         <Button variant="secondary" onClick={() => { location.hash = taskHref(task.slug); }}>
-          Open {String(topic).padStart(3, "0")} →
+          Open {String(topic).padStart(3, "0")}<Icon name="ArrowRight" />
         </Button>
       </div>
       <Card label={`Lineage · ${task.slug}`}>

@@ -1,4 +1,5 @@
 import React from "react";
+import { Icon } from "./Icon.jsx";
 import s from "./Select.module.css";
 export function Select({ value, onChange, options = [], placeholder, disabled = false, mono = false, ariaLabel, className, style }) {
   const opts = options.map((o) => (typeof o === "string" ? { value: o, label: o } : o));
@@ -10,7 +11,7 @@ export function Select({ value, onChange, options = [], placeholder, disabled = 
         {placeholder ? <option value="">{placeholder}</option> : null}
         {opts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
-      <span aria-hidden="true" className={s.caret}>▾</span>
+      <span aria-hidden="true" className={s.caret}><Icon name="ChevronDown" size={14} /></span>
     </span>
   );
 }

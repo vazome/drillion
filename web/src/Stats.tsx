@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Card } from "./ds/index.js";
+import { Card, Icon } from "./ds/index.js";
 import { tally } from "./strength";
 import s from "./Stats.module.css";
 
@@ -31,7 +31,7 @@ export function Stats({ boxes, ladder, due, seen, total, practised, outOf, progr
           </div>
         ))}
         <div className={s.spacer} />
-        {progressHref ? <a href={progressHref} className={s.more}>Your progress →</a> : null}
+        {progressHref ? <a href={progressHref} className={s.more}>Your progress<Icon name="ArrowRight" /></a> : null}
       </div>
     </Card>
   );

@@ -1,4 +1,5 @@
 import React from "react";
+import { Icon } from "./Icon.jsx";
 import s from "./Collapsible.module.css";
 export function Collapsible({ label, meta, open, defaultOpen = false, onToggle, disabled = false, mono = true, children, className, style }) {
   const [inner, setInner] = React.useState(defaultOpen);
@@ -7,7 +8,7 @@ export function Collapsible({ label, meta, open, defaultOpen = false, onToggle, 
   return (
     <div className={className} style={style}>
       <button type="button" aria-expanded={isOpen} disabled={disabled} onClick={toggle} className={s.head}>
-        <span aria-hidden="true" className={s.caret} data-open={isOpen ? "" : undefined}>▸</span>
+        <span aria-hidden="true" className={s.caret} data-open={isOpen ? "" : undefined}><Icon name="ChevronRight" size={14} /></span>
         <span className={s.title}>{label}</span>
         {meta ? <span className={s.meta}>{meta}</span> : null}
       </button>

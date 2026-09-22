@@ -1,13 +1,14 @@
 import React from "react";
+import { Icon } from "./Icon.jsx";
 import css from "./RequiresTag.module.css";
-const MARK = { passed: "✓", blocked: "▲", neutral: "" };
+const MARK = { passed: "Checkmark", blocked: "Pending", neutral: "" };
 const numR = (n) => String(n).padStart(3, "0");
 export function RequiresTag({ topic, title, state = "neutral", href, onClick, onPointerEnter, className, style }) {
   const interactive = !!(href || onClick);
   const why = state === "passed" ? "passed — you have this one" : state === "blocked" ? "not passed yet — this is what is blocking" : "";
   const body = (
     <React.Fragment>
-      {MARK[state] ? <span aria-hidden="true" className={css.mark}>{MARK[state]}</span> : null}
+      {MARK[state] ? <span aria-hidden="true" className={css.mark}><Icon name={MARK[state]} size={12} /></span> : null}
       <span className={css.num + " tabular"}>{numR(topic)}</span>
       {title ? <span>{title}</span> : null}
     </React.Fragment>

@@ -1,4 +1,5 @@
 import React from "react";
+import { Icon } from "./Icon.jsx";
 import s from "./GraceNotice.module.css";
 /* GraceNotice — the corner notice that explains why the clock still reads 00:00. Up from the
    moment a fresh attempt opens, and gone on its own when the reading grace runs out.
@@ -9,7 +10,7 @@ export function GraceNotice({ seconds = 60, onDismiss, className, style }) {
     <div className={[s.root, "m-rise", className].filter(Boolean).join(" ")} role="status" style={style}>
       <div className={s.head}>
         <span className={s.eyebrow}>Reading time</span>
-        <button type="button" onClick={onDismiss} aria-label="Dismiss" className={s.dismiss + " m-press"}>×</button>
+        <button type="button" onClick={onDismiss} aria-label="Dismiss" className={s.dismiss + " m-press"}><Icon name="Close" size={16} /></button>
       </div>
       <p className={s.body}>
         The clock starts in <span className={s.count + " tabular"}>{seconds}</span> {seconds === 1 ? "second" : "seconds"}. Read the whole spec before you write anything — it costs you nothing.

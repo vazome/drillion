@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
-import { Band, Button, Card, EmptyState, Input, Kbd, NoticeBanner, RowFlags, Select, SortReset, StatusBadge, TagChip, TaskPath, TrackRail } from "./ds/index.js";
+import { Band, Button, Card, EmptyState, Icon, Input, Kbd, NoticeBanner, RowFlags, Select, SortReset, StatusBadge, TagChip, TaskPath, TrackRail } from "./ds/index.js";
 import { api, post, type Catalogue as Payload, type Row } from "./api";
 import { Stats } from "./Stats";
 import { inDays, strength } from "./strength";
@@ -160,14 +160,14 @@ function SortHead({ label, col, align, sort, onSort, style }: {
   const [hover, hoverProps] = useHover();
   const active = sort.key === col;
   const next: Sort = { key: col, dir: active && sort.dir === "asc" ? "desc" : "asc" };
-  const arrow = active ? (sort.dir === "asc" ? "▲" : "▼") : (hover ? "▲" : "");
+  const arrow = active && sort.dir === "desc" ? "ArrowDown" : active || hover ? "ArrowUp" : null;
   const way = (d: string) => (d === "asc" ? "ascending" : "descending");
   return (
     <button type="button" onClick={() => onSort(next)} {...hoverProps}
       aria-label={active ? `${label}, sorted ${way(sort.dir)}. Sort ${way(next.dir)}` : `Sort by ${label} ${way(next.dir)}`}
       style={{ ...style, display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, whiteSpace: "nowrap", justifyContent: align === "right" ? "flex-end" : "flex-start", height: 32, padding: 0, background: "transparent", border: "none", font: "inherit", letterSpacing: "inherit", textTransform: "inherit", color: active || hover ? "var(--text)" : "var(--text-muted)", cursor: "pointer" }}>
       <span>{label}</span>
-      <span aria-hidden="true" style={{ fontSize: 8, lineHeight: 1, width: 7, color: active ? "var(--accent)" : "var(--text-faint)" }}>{arrow}</span>
+      <span aria-hidden="true" style={{ display: "inline-flex", width: 12, height: 12, color: active ? "var(--accent)" : "var(--text-faint)" }}>{arrow ? <Icon name={arrow} size={12} /> : null}</span>
     </button>
   );
 }
@@ -335,7 +335,10 @@ export function Catalogue() {
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6, flexWrap: "wrap" }}>
         <span ref={searchBox} onKeyDown={onSearchKey} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-          <Input value={q} onChange={setQ} placeholder="search tasks and specs…" ariaLabel="Search tasks by title, number or what the spec says — Enter opens the first match" style={{ width: 260 }} />
+          <span style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+            <Icon name="Search" style={{ position: "absolute", left: 10, color: "var(--text-faint)", pointerEvents: "none" }} />
+            <Input value={q} onChange={setQ} placeholder="search tasks and specs…" ariaLabel="Search tasks by title, number or what the spec says — Enter opens the first match" style={{ width: 260, paddingLeft: 32 }} />
+          </span>
           <Kbd>/</Kbd>
         </span>
         <Select value={status} onChange={setStatus} options={STATUSES} placeholder="any status" ariaLabel="Filter by status" style={{ width: 150 }} />

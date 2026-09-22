@@ -1,4 +1,5 @@
 import React from "react";
+import { Icon } from "./Icon.jsx";
 import s from "./StuckNudge.module.css";
 /* StuckNudge — arrives once a task has been open a long while. Advises a hint first and
    the material second. Never blocks the editor; dismissible for good. */
@@ -10,7 +11,7 @@ export function StuckNudge({ minutes = 30, hintsShown = 0, hintsTotal = 3, hintR
     <div className={[s.root, "m-rise", className].filter(Boolean).join(" ")} role="status" data-placement={placement} style={style}>
       <div className={s.head}>
         <span className={s.eyebrow}>{minutes} minutes on this task</span>
-        <button type="button" onClick={onDismiss} aria-label="Dismiss" className={s.dismiss + " m-press"}>×</button>
+        <button type="button" onClick={onDismiss} aria-label="Dismiss" className={s.dismiss + " m-press"}><Icon name="Close" size={16} /></button>
       </div>
       <p className={s.lead}>
         Take a hint. It opens the next step, not the answer, and the pass still counts.

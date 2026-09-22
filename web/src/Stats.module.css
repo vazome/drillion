@@ -16,4 +16,4 @@
 .known .num { font-size: 15px; }
 .known .label { font-size: 11px; }
 .spacer { flex: 1; }
-.more { font-size: 13px; align-self: flex-end; white-space: nowrap; }
+.more { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; align-self: flex-end; white-space: nowrap; }

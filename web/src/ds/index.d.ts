@@ -100,8 +100,8 @@ export declare function Select(props: SelectProps): El;
 export interface ToggleProps {
   checked?: boolean;
   onChange?: (checked: boolean) => void;
-  /** visible text beside the switch — name the state you get, e.g. "Dark" */
-  label?: string;
+  /** visible text beside the switch — name the state you get, e.g. "Dark"; an Icon may lead it */
+  label?: React.ReactNode;
   disabled?: boolean;
   ariaLabel?: string;
   className?: string;
@@ -512,3 +512,17 @@ export interface TrackRailProps {
   style?: Style;
 }
 export declare function TrackRail(props: TrackRailProps): El;
+
+/** The 32 names of drillion's fixed icon list (IBM Carbon). */
+export type IconName = "ChevronRight" | "ChevronDown" | "ArrowUp" | "ArrowDown" | "Reset" | "Pause" | "CheckmarkOutline" | "CloseOutline" | "Checkmark" | "Pending" | "Close" | "ArrowRight" | "CircleFill" | "Locked" | "Unlocked" | "WarningAlt" | "Information" | "Idea" | "Play" | "Send" | "Search" | "Settings" | "Sun" | "Asleep" | "Folder" | "DataBase" | "Copy" | "Download" | "Upload" | "Archive" | "TrashCan" | "ArrowLeft";
+/** One icon from the fixed list, beside a word. Hidden from assistive tech; coloured by
+ *  the text around it (currentColor). */
+export interface IconProps {
+  name: IconName;
+  /** px: 16 beside 13–15px text (default), 14 beside 12px labels, 12 in the smallest marks */
+  size?: number;
+  className?: string;
+  style?: Style;
+}
+export declare function Icon(props: IconProps): El | null;
+export declare const ICON_NAMES: IconName[];

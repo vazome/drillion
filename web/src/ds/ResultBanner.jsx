@@ -1,4 +1,5 @@
 import React from "react";
+import { Icon } from "./Icon.jsx";
 import s from "./ResultBanner.module.css";
 export function ResultBanner({ state = "idle", headline, output, gradeLine, backIn, className, style }) {
   const cx = (extra) => [s.root, extra, className].filter(Boolean).join(" ");
@@ -6,7 +7,7 @@ export function ResultBanner({ state = "idle", headline, output, gradeLine, back
   if (state === "running") return <div data-state="running" className={cx()} style={style} aria-live="polite">Running…</div>;
   if (state === "failed") return (
     <div data-state="failed" className={cx()} style={style} aria-live="polite">
-      <div className={s.headline}>✗ {headline}</div>
+      <div className={s.headline}><Icon name="CloseOutline" size={16} /><span><span className={s.sr}>Failed: </span>{headline}</span></div>
       {output ? (
         <details className={s.details}>
           <summary className={s.summary}>Show full output</summary>
@@ -17,7 +18,7 @@ export function ResultBanner({ state = "idle", headline, output, gradeLine, back
   );
   return (
     <div data-state="passed" className={cx()} style={style} aria-live="polite">
-      <span className={s.grade}>✓ PASSED{gradeLine ? " · " + gradeLine : ""}</span>
+      <span className={s.grade}><Icon name="CheckmarkOutline" size={16} />{"PASSED" + (gradeLine ? " · " + gradeLine : "")}</span>
       {backIn ? <span className={s.backIn}>back in {backIn}</span> : null}
     </div>
   );

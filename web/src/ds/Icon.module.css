@@ -1,0 +1,2 @@
+/* inline with text by default; inside a flex row the row's gap spaces it */
+.root{flex:none;display:inline-block;vertical-align:-.125em}

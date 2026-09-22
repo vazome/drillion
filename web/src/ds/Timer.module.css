@@ -1,4 +1,6 @@
-.root{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:15px;color:var(--text-muted)}
+.root{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:15px;color:var(--text-muted)}
 .root[data-over="par"]{color:var(--warn)}
 .root[data-over="double"]{color:var(--fail)}
 .par{opacity:.65}
+/* the pause icon is hidden from assistive tech, so the state is said in words it can read */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

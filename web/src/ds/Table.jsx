@@ -1,4 +1,5 @@
 import React from "react";
+import { Icon } from "./Icon.jsx";
 import s from "./Table.module.css";
 export function Table({ columns = [], rows = [], sortKey, sortDir = "asc", onSort, onRowClick, emptyMessage, className, style }) {
   const cellAttrs = (col) => ({ "data-align": col.align || undefined, "data-mono": col.mono ? "" : undefined, "data-numeric": col.numeric ? "" : undefined });
@@ -16,7 +17,7 @@ export function Table({ columns = [], rows = [], sortKey, sortDir = "asc", onSor
                 {sortable ? (
                   <button type="button" className={s.sortBtn} onClick={() => onSort(col.key, nextDir)} aria-label={"Sort by " + col.label + " " + (nextDir === "asc" ? "ascending" : "descending")}>
                     <span>{col.label}</span>
-                    <span aria-hidden="true" className={s.arrow} data-active={active ? "" : undefined}>{active ? (sortDir === "asc" ? "▲" : "▼") : ""}</span>
+                    <span aria-hidden="true" className={s.arrow} data-active={active ? "" : undefined}>{active ? <Icon name={sortDir === "asc" ? "ArrowUp" : "ArrowDown"} size={12} /> : null}</span>
                   </button>
                 ) : col.label}
               </th>
