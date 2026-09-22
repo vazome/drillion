@@ -1,7 +1,7 @@
 # Helm in drillion: levels 1 and 2
 
 Date: 2026-09-22
-Status: concept; not built
+Status: built, with ten tasks (279 to 288); level 3 not started
 Research: [2026-09-21-helm-support.md](../../research/2026-09-21-helm-support.md)
 
 ## Why
@@ -95,9 +95,11 @@ First tasks:
 
 | # | Chart renders | Brief asks for | Prereqs |
 |---|---|---|---|
-| 279 | Deployment + ClusterIP Service | replicas, image tag, service port | 268, 272 |
+| 279 | Deployment + ClusterIP Service | replicas, the image split into repository and tag, service port | 268, 272 |
 | 280 | the same chart, NodePort optional | `service.type: NodePort` and a fixed `nodePort` | 273, 279 |
 | 281 | Deployment with `resources` passed through `toYaml` | requests and limits as nested values | 279 |
+| 282 | a worker chart with no schema and a default on every value | replicas, tag and `env` as strings; a typo renders the default | 270, 279 |
+| 283 | Deployment, and a PVC behind `persistence.enabled` | the switch as a real boolean, size and storage class | 277, 279 |
 
 ## Level 2: turn a manifest into a template
 
@@ -118,12 +120,14 @@ First tasks:
 
 | # | Learner templates | Drills | Prereqs |
 |---|---|---|---|
-| 282 | `templates/deployment.yaml` | `.Values`, `.Release.Name`, labels that agree | 268, 279 |
-| 283 | `templates/deployment.yaml` | `toYaml .Values.resources \| nindent 12`, `with` | 281, 282 |
-| 284 | `templates/service.yaml` | `if .Values.service.enabled`, `default`, `quote` | 272, 282 |
+| 284 | `templates/deployment.yaml` | `.Values`, `.Release.Name`, labels that agree | 268, 279 |
+| 285 | `templates/configmap.yaml` | `range` over a map, `quote` on every value | 270, 284 |
+| 286 | `templates/deployment.yaml` | `toYaml .Values.resources \| nindent 12`, `with` | 281, 284 |
+| 287 | `templates/service.yaml` | `if .Values.service.enabled`, `default` | 272, 284 |
+| 288 | `templates/secret.yaml` | pipelines: `b64enc` then `quote` | 271, 284 |
 
-283 exists because `indent` against `nindent` is the mistake the validation table showed only
-kubeconform catches. 284 is the one where an empty render is correct for one of its renders.
+286 exists because `indent` against `nindent` is the mistake the validation table showed only
+kubeconform catches. 287 is the one where an empty render is correct for one of its renders.
 
 ## The `grade.py` contract
 
@@ -139,12 +143,14 @@ def renders(b):               # optional; level 2 always defines it
         {"release": "other", "values": {"replicas": b["replicas"] + 1, "image": "httpd:2.4"}},
     ]
 
-def check(docs, b, values):   # once per render, after Helm, lint and kubeconform accepted it
+def check(docs, b, render):   # once per render, after Helm, lint and kubeconform accepted it
+    # render = {"release": ..., "values": ...}: the values Helm used, the chart's own
+    # values.yaml with the render's merged over it
     ...
 ```
 
 - With `renders` absent (level 1), there is one render: release `brief["release"]`, and
-  `values` is the learner's file as parsed.
+  its values are the learner's file as parsed.
 - `docs` is every rendered document, in Helm's order. An empty render reaches `check()` as
   `[]`. The pipeline does not refuse it, because 284 expects one. The authoring guide says
   to assert on the document count first, in the learner's words.
@@ -227,8 +233,8 @@ and `meta.edits`. `grade.py` and `solution.yaml` are never in it.
 - Tests: `tests/test_graders.py` rows per README rule, as for manifests; a hardcoded template
   failing the second render is the row every level 2 task needs.
 
-**Schemas:** the six tasks above render only Deployment and Service, which are already
-packaged, so growing the schema set is not a blocker for these levels. It becomes one for
+**Schemas:** the ten tasks above render only Deployments, Services, ConfigMaps, Secrets and
+PersistentVolumeClaims, which are already packaged, so growing the schema set is not a blocker for these levels. It becomes one for
 Ingress, HPA and friends.
 
 **Sandbox:** Landlock already lets the child execute from `tools_dir()` and write to scratch.
@@ -236,13 +242,11 @@ The image runs read-only with a `/tmp` tmpfs, and Helm needs neither, as the pro
 showed with a read-only `HOME`. It still needs one run inside the image before merge,
 per AGENTS.md.
 
-## Build order
+## Built
 
-1. Helm pin and the `_Helm` kind with grading, behind one level 1 task (279) and its grader
-   tests. No UI beyond the kind checks and the Rendered block; chart files show as code blocks.
-2. Level 2 via `renders`, with 282 and its hardcoding test.
-3. Wire `FileTabs` (already vendored) in place of the code blocks.
-4. The remaining tasks (280, 281, 283, 284).
+The Helm pin, the `_Helm` kind and its grading, `FileTabs` over the editor with the Rendered
+block, and all ten tasks, each with a row per rule in `tests/test_helm.py`. The decisions are
+recorded in [ADR 0010](../../adr/0010-a-helm-task-is-a-chart-with-one-hole.md).
 
 ## Open questions
 

@@ -14,8 +14,8 @@ TL;DR: self-hosted Python practice with a UI that stays out of your way. No stre
 no leaderboard nonsense, no badges and no engagement bait. Made by a neurodivergent
 engineer. It is simple, and it runs your code in a sandbox.
 
-Longer: drillion is a local web app with 278 short tasks, 267 in Python and 11 Kubernetes
-manifests, each tagged with the
+Longer: drillion is a local web app with 288 short tasks, 267 in Python, 11 Kubernetes
+manifests and 10 Helm charts, each tagged with the
 concept it drills so you can go straight at whatever you're worst at. No login, no
 account, no server except the one on your laptop. Tasks are folders of Markdown, Python and
 YAML. Your progress is a single SQLite file you can copy, back up and carry.
@@ -68,7 +68,7 @@ Core ideas I'm keeping in mind during the development:
 - **It is free, and it stays free.** No tier, no voucher, no account, no telemetry,
   open-source.
 
-One consequence worth stating plainly: every task ships executable Python, a manifest task's in
+One consequence worth stating plainly: every task ships executable Python, a manifest or Helm task's in
 its `grade.py`, and it runs on import. Shipping tasks as code is what makes the sandbox necessary, so graded code
 is confined by the kernel and you do not have to take my word for it. **What running it
 does to your machine**, below, is the detail.
@@ -111,7 +111,7 @@ docker exec drillion drillion doctor     # report why a task folder would be ski
 ## What running it does to your machine
 
 drillion runs Python on your computer: the code you write, and the code that ships inside the
-278 tasks. So it is worth saying plainly what that costs you.
+288 tasks. So it is worth saying plainly what that costs you.
 
 - **Your submissions are confined by the Linux kernel, where it allows.** The image runs them with
   Landlock: they read only the interpreter, system libraries and tasks, and write only to a scratch
@@ -152,7 +152,7 @@ against, and [AGENTS.md](AGENTS.md) for how the project decides things. Bugs and
 
 ## License
 
-MIT. See [LICENSE](LICENSE). 89 of the 278 tasks adapt a problem from Exercism's Python track
+MIT. See [LICENSE](LICENSE). 89 of the 288 tasks adapt a problem from Exercism's Python track
 (also MIT), 13 adapt reference code from Fluent Python's examples and six from
 TheAlgorithms/Python (both MIT), and one restates a problem from MBPP (CC-BY-4.0); each
 names its origin in a `source:` field and an

@@ -27,11 +27,12 @@ tiered on the solution, while
 lines you can only write once you have seen the trick is `hard`. Anchor the call on the task's
 `## Rules` — rules are where the traps live — and grade a new task against the rubric the rest
 were graded against: [difficulty-rubric.md](difficulty-rubric.md).
-Today: 42 easy · 185 medium · 51 hard.
+Today: 44 easy · 192 medium · 52 hard.
 
 **track** — one per task: a themed run through the catalogue that cuts across tiers. The home
 screen offers each track as a pill, and picking one sets the **focus**. A Python task that names
-none is on `python`; the Kubernetes manifests say `track: kubernetes`. Name a track only when
+none is on `python`; the Kubernetes manifests say `track: kubernetes`, and the Helm charts
+`track: helm`. Name a track only when
 the task belongs to a run other than `python`, and give the run a logo in `web/public/tracks/`.
 
 **tags** — what Python you practise. Lowercase, kebab-case, 1–3 per task, and one rule decides
@@ -60,7 +61,7 @@ it — and `POST /api/focus` sets it.
 
 One folder per task, `tasks/<NNN>_<name>/`; copy the shape of an existing one.
 
-`<NNN>` is the task's place in the curriculum, `001`–`278` with no gaps, so the next task you add is
+`<NNN>` is the task's place in the curriculum, `001`–`288` with no gaps, so the next task you add is
 `279`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
 always numbers below its own, and `doctor` will not let that stop being true. Append, never insert —
 inserting means rewriting every number after it, and [ADR-0006](adr/0006-the-fundamentals-come-first.md)
@@ -156,10 +157,37 @@ A sitting's brief is stored when it opens, and a grader upgraded later keeps gra
 it stored: a new `grade.py` must still accept every mapping an older `brief()` could return.
 Every rule the README states needs a row in `tests/test_graders.py` that breaks it and fails.
 
+## Helm tasks
+
+A task whose frontmatter says `kind: helm` is a chart with one file missing, and the learner
+writes that file. `edits` names it: `values.yaml` to practise installing a chart, or one
+`templates/<name>.yaml` to practise writing one. Everything a manifest task has, it has too, plus
+the chart:
+
+- **`chart/`**: `Chart.yaml` and every other file of the chart, shown read-only in tabs beside
+  the learner's. `chart/<edits>` must not exist: the learner's `task.yaml` goes there when the
+  chart is rendered. A values task can ship a `values.schema.json`, and Helm then refuses a
+  misspelt key or a wrong type before anything renders.
+- **`grade.py`**: `brief(r)` as for a manifest, and `check(docs, brief, render)`, which runs
+  once per render on every document Helm produced (an empty render reaches it as `[]`).
+  `render` is `{"release": ..., "values": ...}`, the values being what Helm used: the chart's
+  own `values.yaml` with the render's merged over it. A template task also defines
+  `renders(brief)`, a list of those two keys, with a different release and different values
+  each time, so a template that types in what it should read fails the render that uses
+  another. A values task renders once, as `brief["release"]`.
+- **`solution.yaml`**: for a values task, the answer key with `{placeholders}`, as for a
+  manifest. For a template task, the template itself, served as written: no placeholders,
+  since the whole point is that it works for any values.
+
+Each render goes through `helm template`, then `helm lint --strict`, then kubeconform, then
+`check()`, and stops at the first that fails. Name the Kubernetes task for the same object in
+`prereqs`, and give the task `track: helm`. Every rule the README states needs a row in
+`tests/test_helm.py` that breaks it and fails, through the real pipeline.
+
 ## When a new task does not show up
 
 A folder the catalogue cannot read is **skipped**, not reported: a half-written task must never
-break the menu for the other 277. That makes a mistake look like a task that simply is not there.
+break the menu for the other 287. That makes a mistake look like a task that simply is not there.
 Run `uv run drillion doctor` — it reports every rule the folder breaks, not just the first:
 
 - a required key missing, empty, or misspelt (`tags: []` counts as missing);
@@ -171,7 +199,7 @@ Run `uv run drillion doctor` — it reports every rule the folder breaks, not ju
 
 `uv run drillion selfcheck` splices `_reference` into every file and runs the tests; it must be
 green on Python 3.14 before a task is trusted. But it only counts tasks the catalogue already
-accepted, so if it still says `278/278` after you added one, `doctor` is where to look.
+accepted, so if it still says `288/288` after you added one, `doctor` is where to look.
 
 ## Retired tags
 
