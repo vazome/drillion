@@ -255,6 +255,7 @@ export function Catalogue() {
   };
   const here = new Set(rows.flatMap((e) => e.tags).concat(activeTags));
   const tagsHere = data.tags.filter((t) => here.has(t));
+  const tiersHere = rows.some((e) => e.tier) || data.tiers.includes(focus ?? "");
   // `today.review` is capped, so its length is not the backlog — say both numbers out loud
   const dueLine = !today.due_total ? "nothing due"
     : review.length < today.due_total ? `showing ${review.length} of ${today.due_total} due`
@@ -342,8 +343,13 @@ export function Catalogue() {
           <Kbd>/</Kbd>
         </span>
         <Select value={status} onChange={setStatus} options={STATUSES} placeholder="any status" ariaLabel="Filter by status" style={{ width: 150 }} />
-        <div style={{ width: 1, height: 24, background: "var(--border)" }} />
-        {data.tiers.map((t) => <TagChip key={t} label={t} active={focus === t} onClick={() => setFocus(focus === t ? null : t)} />)}
+        {/* a tier is Python depth, so its chips go when nothing listed is Python; a tier that
+          * is the focus stays, since its chip is the way back out */}
+        {tiersHere ? <>
+          <div style={{ width: 1, height: 24, background: "var(--border)" }} />
+          <span style={FAINT}>python</span>
+          {data.tiers.map((t) => <TagChip key={t} label={t} active={focus === t} onClick={() => setFocus(focus === t ? null : t)} />)}
+        </> : null}
         <div style={{ flex: 1 }} />
         <span style={FAINT}>{rows.length} of {stats.total} tasks{activeTags.length > 1 ? " · tags matched with AND" : ""}</span>
         {filtered ? <Button variant="quiet" onClick={clear}>Clear</Button> : null}
