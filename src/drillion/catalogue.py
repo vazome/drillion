@@ -14,12 +14,23 @@ from .settings import settings
 
 PYTHON = "python"
 MANIFEST = "manifest"
-KINDS = (PYTHON, MANIFEST)
+HELM = "helm"
+KINDS = (PYTHON, MANIFEST, HELM)
 # what every task needs, then what each kind adds. `tier` is Python depth and a manifest
 # reaches nowhere into the language, so it is not asked of one.
 REQUIRED = ("title", "difficulty", "minutes", "tags")
-REQUIRED_BY_KIND = {PYTHON: ("tier",), MANIFEST: ()}
-BROWSER = ("topic", "title", "difficulty", "tier", "track", "tags", "source", "kind")
+REQUIRED_BY_KIND = {PYTHON: ("tier",), MANIFEST: (), HELM: ("edits",)}
+BROWSER = (
+    "topic",
+    "title",
+    "difficulty",
+    "tier",
+    "track",
+    "tags",
+    "source",
+    "kind",
+    "edits",
+)
 # `minutes` is deliberately absent: par time is grade_of()'s input, not the learner's to see.
 HINT = re.compile(r"^### Hint \d+[ \t]*$", re.MULTILINE)
 # the only sections `search_text` keeps: the rest is links and imported prose that
@@ -61,6 +72,7 @@ class TaskMeta(_Built, total=False):
     source: str
     track: str
     kind: str
+    edits: str
 
 
 Scan = list[tuple[str, TaskMeta | None, list[str]]]
@@ -145,9 +157,17 @@ def _check_manifest(folder):
     ]
 
 
-CHECKS = {PYTHON: _check_python, MANIFEST: _check_manifest}
+def _check_helm(folder):
+    """A Helm task is a manifest task plus the chart the learner's file completes."""
+    out = _check_manifest(folder)
+    if not (folder / "chart" / "Chart.yaml").is_file():
+        out.append("chart/Chart.yaml: missing")
+    return out
+
+
+CHECKS = {PYTHON: _check_python, MANIFEST: _check_manifest, HELM: _check_helm}
 # the learner's own file per kind — what a browser tab opens and `path` points at
-FILENAMES = {PYTHON: "task.py", MANIFEST: "task.yaml"}
+FILENAMES = {PYTHON: "task.py", MANIFEST: "task.yaml", HELM: "task.yaml"}
 
 
 def _read(folder) -> tuple[TaskMeta | None, list[str]]:

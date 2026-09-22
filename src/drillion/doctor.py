@@ -6,7 +6,7 @@ import re
 import yaml
 
 from . import kinds, sandbox, tools
-from .catalogue import MANIFEST, PYTHON, SECTION, SLUG, scan
+from .catalogue import HELM, MANIFEST, PYTHON, SECTION, SLUG, scan
 from .manifest import MAX_SPEC_CHARS
 
 TAG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -47,7 +47,7 @@ def _render_rules(meta):
     except manifest.Rejected as err:
         return [f"README.md: the spec does not render against a brief - {err}"]
     try:
-        manifest.render_solution(meta, brief)
+        kinds.of(meta).answer_key(meta, brief)
     except manifest.Rejected as err:
         return [f"solution.yaml: does not render against a brief - {err}"]
     return []
@@ -118,8 +118,30 @@ def _manifest_rules(meta):
     )
 
 
+# what a Helm task's learner may fill in: the values, or one template
+EDITS = re.compile(r"^(values\.yaml|templates/[a-z0-9-]+\.(yaml|tpl))$")
+
+
+def _helm_rules(meta):
+    """A Helm task is a chart with exactly one hole, and `edits` names it. A file already
+    at that path would be silently replaced by the learner's, so it must not exist. Which
+    kinds the chart renders is not asked here: `selfcheck` renders the answer key through
+    kubeconform, which is where a kind with no packaged schema shows up."""
+    out = []
+    if meta.get("tier") is not None:
+        out.append("README.md: tier belongs to a python task, not a Helm task")
+    edits = meta.get("edits")
+    if edits is not None and not (isinstance(edits, str) and EDITS.match(edits)):
+        out.append(
+            f"README.md: edits {edits!r} is neither values.yaml nor templates/<name>.yaml"
+        )
+    elif edits and "dir" in meta and (meta["dir"] / "chart" / edits).exists():
+        out.append(f"chart/{edits}: must not exist, the learner's file goes there")
+    return out + _placeholder_rules(meta.get("spec_md", "")) + _render_rules(meta)
+
+
 # One row per kind, as `catalogue.CHECKS` is: a third kind adds a row rather than a branch.
-KIND_RULES = {PYTHON: _python_rules, MANIFEST: _manifest_rules}
+KIND_RULES = {PYTHON: _python_rules, MANIFEST: _manifest_rules, HELM: _helm_rules}
 
 
 def _value_rules(meta):
