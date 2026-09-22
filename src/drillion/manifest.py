@@ -18,7 +18,6 @@ import yaml
 
 from . import sandbox, tools
 from .catalogue import DOCKER, solution
-from .settings import settings
 
 MAX_BRIEF_BYTES = 8192
 MAX_RESULT_BYTES = 64 << 10
@@ -125,7 +124,7 @@ def generate_brief(meta, seed):
     of returning from `brief()`. What comes back is validated either way."""
     grader = meta["dir"] / "grade.py"
     with tempfile.TemporaryDirectory(
-        dir=settings.root, ignore_cleanup_errors=True
+        dir=sandbox.scratch_root(), ignore_cleanup_errors=True
     ) as scratch:
         scratch = Path(scratch)
         script = scratch / "_brief.py"

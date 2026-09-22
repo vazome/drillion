@@ -9,6 +9,7 @@ sandbox removed, because a probe that is simply broken also reads as a pass."""
 import ctypes
 import os
 import sys
+import time
 
 import pytest
 
@@ -289,3 +290,21 @@ def test_the_resource_limits_never_raise_what_the_machine_already_allows():
             assert soft <= before_hard
     assert any(what == resource.RLIMIT_CPU for what, _ in sandbox._limits(60))
     assert not any(what == resource.RLIMIT_CPU for what, _ in sandbox._limits(None))
+
+
+def test_scratch_lives_in_one_folder_and_a_killed_runs_leftovers_are_cleared(
+    tmp_path, monkeypatch
+):
+    """A process killed mid-grade never runs its own cleanup: its scratch folder must land
+    out of the learner's way, and be cleared once it is too old to belong to a live run."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    home = sandbox.scratch_root()
+    assert home == tmp_path / ".scratch"
+    stale, fresh = home / "tmpkilled", home / "tmplive"
+    stale.mkdir()
+    fresh.mkdir()
+    old = time.time() - sandbox.STALE_SECONDS - 60
+    os.utime(stale, (old, old))
+    sandbox.scratch_root()
+    assert not stale.exists() and fresh.exists()
+    assert [p.name for p in tmp_path.iterdir()] == [".scratch"]

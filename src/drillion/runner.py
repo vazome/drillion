@@ -41,7 +41,7 @@ def _run_pytest(args, timeout=None, capture_case=None, **env):
     and the only place it may write, and `tasks/` on PYTHONPATH so `from _lib import rng`
     works from any root. `sandbox.run` decides everything else about the child."""
     with tempfile.TemporaryDirectory(
-        dir=settings.root, ignore_cleanup_errors=True
+        dir=sandbox.scratch_root(), ignore_cleanup_errors=True
     ) as scratch:
         # an empty config, pinned: from a checkout pytest would otherwise walk up, adopt
         # the repo's pyproject.toml and grade a learner against our own settings — its
@@ -87,7 +87,7 @@ def run_python(meta, seed):
     `--verbosity=2` rather than `-vv`, which would only cancel out the `-q` above: at the
     default pytest elides the values it is comparing and tells the learner to pass flags
     they have no way to pass."""
-    with tempfile.TemporaryDirectory(dir=settings.root) as box:
+    with tempfile.TemporaryDirectory(dir=sandbox.scratch_root()) as box:
         found = Path(box, "case.json")
         try:
             r = _run_pytest(
@@ -122,7 +122,7 @@ def run_manifest(meta, brief, learner=None, helm=None, docker=None):
 
     job = manifest.job(meta, brief, learner, helm, docker)
     with tempfile.TemporaryDirectory(
-        dir=settings.root, ignore_cleanup_errors=True
+        dir=sandbox.scratch_root(), ignore_cleanup_errors=True
     ) as scratch:
         scratch = Path(scratch)
         script = scratch / "_grade.py"
