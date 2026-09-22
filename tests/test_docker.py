@@ -112,6 +112,88 @@ BREAKS = {
         ("nginx-unprivileged", "nginx"),
         ("COPY . .\nRUN npm run build", "RUN npm run build\nCOPY . ."),
     ],
+    "319_dockerfile_healthcheck": [
+        ("--interval={interval}s", "--interval=99s"),
+        ("--timeout=3s ", ""),
+        ("--timeout=3s", "--timeout=60s"),
+        (
+            (
+                '["python", "-c", "import urllib.request; '
+                "urllib.request.urlopen('http://localhost:{port}/health', timeout=2)\"]"
+            ),
+            '["curl", "-f", "http://localhost:{port}/health"]',
+        ),
+        (
+            (
+                'CMD ["python", "-c", "import urllib.request; '
+                "urllib.request.urlopen('http://localhost:{port}/health', timeout=2)\"]"
+            ),
+            "CMD python -c 'import urllib.request'",
+        ),
+        ("localhost:{port}/health", "localhost:{port}/orders"),
+        ("localhost:{port}/health", "localhost:1/health"),
+        ("HEALTHCHECK", "RUN apt-get update && apt-get install -y curl\nHEALTHCHECK"),
+        ('"--port", "{port}"]', '"--port", "1"]'),
+    ],
+    "320_dockerfile_pipefail": [
+        ('SHELL ["/bin/bash", "-o", "pipefail", "-c"]\n', ""),
+        ('"-o", "pipefail", ', ""),
+        ('["/bin/bash", ', '["/bin/sh", '),
+        ("curl -fsSL", "curl -sSL"),
+        ("helm-v{helm}", "helm-v3.0.0"),
+        ("-C /usr/local/bin", "-C /opt"),
+        (" linux-amd64/helm\n", "\n"),
+        ("ca-certificates curl", "ca-certificates wget"),
+        ('ENTRYPOINT ["deploy.sh"]', "ENTRYPOINT deploy.sh"),
+        (
+            "SHELL",
+            "RUN curl -fsSL https://example.com/x.tar.gz | tar -xz\nSHELL",
+        ),
+    ],
+    "321_dockerfile_cache_mount": [
+        (f"--mount=type=cache,target=/root/.cache/pip {BS}\n    ", ""),
+        ("target=/root/.cache/pip", "target=/tmp/pip"),
+        ("type=cache", "type=tmpfs"),
+        ("pip install -r", "pip install --no-cache-dir -r"),
+        ("COPY requirements.txt .\n", ""),
+        ("COPY app.py .\n", ""),
+        ('"--host", "0.0.0.0"', '"--host", "127.0.0.1"'),
+    ],
+    "322_dockerfile_secret_mount": [
+        (f"--mount=type=secret,id=pip_index_url,env=PIP_INDEX_URL {BS}\n    ", ""),
+        ("id=pip_index_url", "id=token"),
+        ("env=PIP_INDEX_URL", "target=/root/.netrc"),
+        ("WORKDIR /app", "ARG PIP_INDEX_URL\nWORKDIR /app"),
+        (
+            "WORKDIR /app",
+            "ENV PIP_INDEX_URL=https://pypi.acme.internal/simple\nWORKDIR /app",
+        ),
+        ("COPY requirements.txt .", "COPY requirements.txt pip.conf ./"),
+        (
+            "pip install --no-cache-dir -r",
+            "PIP_INDEX_URL=$TOKEN pip install --no-cache-dir -r",
+        ),
+        ("COPY requirements.txt .\n", ""),
+        ('"--port", "{port}"]', '"--port", "1"]'),
+    ],
+    "323_dockerfile_multistage_java": [
+        ("maven:3.9-eclipse-temurin-{java}", "maven:3.9-eclipse-temurin-11"),
+        ("eclipse-temurin:{java}-jre", "eclipse-temurin:{java}-jdk"),
+        ("eclipse-temurin:{java}-jre", "maven:3.9-eclipse-temurin-{java}"),
+        ("RUN mvn -B dependency:go-offline\n", ""),
+        (
+            "COPY pom.xml .\nRUN mvn -B dependency:go-offline\nCOPY src ./src",
+            "COPY pom.xml .\nCOPY src ./src\nRUN mvn -B dependency:go-offline",
+        ),
+        ("COPY src ./src", "COPY . ."),
+        ("mvn -B package", "mvn package"),
+        (" AS build", ""),
+        ("WORKDIR /app\n", "WORKDIR /app\nCOPY pom.xml .\n"),
+        ("orders-1.0.0.jar app.jar", "orders-1.0.0.jar /opt/app.jar"),
+        ('"app.jar"]', '"orders.jar"]'),
+        ("ENV PORT={port}", "ENV PORT=1"),
+        ("EXPOSE {port}", "EXPOSE 80"),
+    ],
 }
 SEEDS = (0, 1, 2)
 
