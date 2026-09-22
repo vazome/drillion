@@ -37,7 +37,7 @@ def check(docs, b, render):
         f"{b['storage_class']!r}: the template reads .Values.persistence.storageClass "
         "and falls back to standard"
     )
-    deployment = [d for d in docs if d.get("kind") == "Deployment"][0]
+    deployment = next(d for d in docs if d.get("kind") == "Deployment")
     pod = deployment["spec"]["template"]["spec"]
     assert pod["containers"][0]["image"] == b["image"], (
         f"the image rendered as {pod['containers'][0]['image']!r}, not {b['image']!r}"
