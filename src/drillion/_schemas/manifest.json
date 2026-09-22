@@ -1,5 +1,5 @@
 {
     "kubernetes_version": "1.34.11",
     "source": "https://github.com/yannh/kubernetes-json-schema",
-    "digest": "e72ef911c0a32cbaf2983e0f35bcbf0287aaf3d07e25a6942c4bac8b607ebcbe"
+    "digest": "3620ca1354adf32f0945afcb6544c7799d14b937a7ec9ed2a36a1431d4ce4ddc"
 }

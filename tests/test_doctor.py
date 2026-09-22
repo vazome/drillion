@@ -366,6 +366,7 @@ def test_a_helm_task_edits_values_or_one_template():
         ]
     }
     assert _reasons(**{"044_helm": _helm("templates/deployment.yaml")}) == {}
+    assert _reasons(**{"044_helm": _helm("templates/_helpers.tpl")}) == {}
 
 
 def test_a_helm_task_without_its_chart_is_skipped():

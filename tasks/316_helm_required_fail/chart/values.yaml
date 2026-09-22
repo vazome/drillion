@@ -1,0 +1,11 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/acme/orders
+  # a version, always: the chart refuses latest
+  tag: "1.8.0"
+
+database:
+  # where the orders live; there is no sensible default, so the chart refuses to
+  # install until one is given
+  url: ""

@@ -1,0 +1,15 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {name}
+spec:
+  completions: {completions}
+  backoffLimit: {retries}
+  ttlSecondsAfterFinished: {ttl}
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: {name}
+          image: {image}
+          command: ["python", "run.py"]

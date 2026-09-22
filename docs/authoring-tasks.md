@@ -61,8 +61,8 @@ it — and `POST /api/focus` sets it.
 
 One folder per task, `tasks/<NNN>_<name>/`; copy the shape of an existing one.
 
-`<NNN>` is the task's place in the curriculum, `001`–`305` with no gaps, so the next task you add is
-`306`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
+`<NNN>` is the task's place in the curriculum, `001`–`318` with no gaps, so the next task you add is
+`319`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
 always numbers below its own, and `doctor` will not let that stop being true. Append, never insert —
 inserting means rewriting every number after it, and [ADR-0006](adr/0006-the-fundamentals-come-first.md)
 says the two renumberings drillion has had are the last two.
@@ -161,7 +161,7 @@ Every rule the README states needs a row in `tests/test_graders.py` that breaks 
 
 A task whose frontmatter says `kind: helm` is a chart with one file missing, and the learner
 writes that file. `edits` names it: `values.yaml` to practise installing a chart, or one
-`templates/<name>.yaml` to practise writing one. Everything a manifest task has, it has too, plus
+`templates/<name>.yaml` (or a `templates/_<name>.tpl` of helpers) to practise writing one. Everything a manifest task has, it has too, plus
 the chart:
 
 - **`chart/`**: `Chart.yaml` and every other file of the chart, shown read-only in tabs beside
@@ -174,7 +174,9 @@ the chart:
   own `values.yaml` with the render's merged over it. A template task also defines
   `renders(brief)`, a list of those two keys, with a different release and different values
   each time, so a template that types in what it should read fails the render that uses
-  another. A values task renders once, as `brief["release"]`.
+  another. A values task renders once, as `brief["release"]`. A render with a third key,
+  `refuses`, is one the chart must stop: it passes only when Helm fails and its message
+  contains that text, and `check()` never sees it.
 - **`solution.yaml`**: for a values task, the answer key with `{placeholders}`, as for a
   manifest. For a template task, the template itself, served as written: no placeholders,
   since the whole point is that it works for any values.
@@ -223,7 +225,7 @@ Run `uv run drillion doctor` — it reports every rule the folder breaks, not ju
 
 `uv run drillion selfcheck` splices `_reference` into every file and runs the tests; it must be
 green on Python 3.14 before a task is trusted. But it only counts tasks the catalogue already
-accepted, so if it still says `305/305` after you added one, `doctor` is where to look.
+accepted, so if it still says `318/318` after you added one, `doctor` is where to look.
 
 ## Retired tags
 

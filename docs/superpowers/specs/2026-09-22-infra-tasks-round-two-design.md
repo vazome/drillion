@@ -47,15 +47,17 @@ it, so old archives keep theirs and nothing else moves.
 
 ## 3. Helm like real charts
 
-`values.schema.json` is shipped by the chart and read-only; the learner writes `values.yaml`
-against it, so no new editable file type is needed.
+`EDITS` allows a leading underscore, so a task can hand the learner `_helpers.tpl`. A render
+in `renders()` may carry `refuses`: it passes only when Helm stops with that text, which is
+how 316 grades `required` and `fail`. 279 already teaches `values.yaml` against a shipped
+`values.schema.json`, so 317 teaches the checksum annotation instead.
 
 | # | Task | Level |
 |---|---|---|
 | 314 | `_helpers.tpl`: define a fullname and labels | medium |
 | 315 | include the helpers with `nindent` in a Deployment | medium |
 | 316 | `required` and `fail` | medium |
-| 317 | `values.yaml` against a chart's `values.schema.json` | easy |
+| 317 | a checksum annotation, so a config change rolls the pods | medium |
 | 318 | `range` over a list making several resources | hard |
 
 ## 4. Docker hardening
