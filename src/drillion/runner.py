@@ -8,16 +8,11 @@ import tempfile
 from pathlib import Path
 
 from . import case as case_capture
-from . import kinds, sandbox
+from . import kinds, manifest, sandbox
 from .catalogue import tasks
 from .settings import settings
 
 _TASK_LINE = re.compile(r"[\w./-]*task\.py:(\d+)")
-# pytest renders paths with the platform separator, so on Windows every path it prints
-# arrives with backslashes. Normalising the .py paths once, on the way in, keeps both the
-# panel and the slug parsing platform-blind — and leaves a learner's own backslashes
-# (a regex, an escape in a failed assertion) alone, which a blanket replace would not
-_PY_PATH = re.compile(r"[\w.\\/-]*\.py")
 # every task.py is called task.py, so pytest must name modules by path, not basename
 # `--color=no` because FORCE_COLOR or PY_COLORS in the environment turns colour on
 # regardless of the tty, and the escapes land in the learner's output panel
@@ -36,10 +31,12 @@ _PYTEST = [
 ]
 
 
-def _run_pytest(args, timeout=None, capture_case=None, **env):
+def _run_pytest(args, timeout=None, capture_case=False, **env):
     """pytest in a subprocess, sandboxed: cwd a scratch dir that is also the child's `HOME`
     and the only place it may write, and `tasks/` on PYTHONPATH so `from _lib import rng`
-    works from any root. `sandbox.run` decides everything else about the child."""
+    works from any root. `sandbox.run` decides everything else about the child.
+
+    Returns `(result, case)`; `case` is None unless `capture_case` asked for it."""
     with tempfile.TemporaryDirectory(
         dir=sandbox.scratch_root(), ignore_cleanup_errors=True
     ) as scratch:
@@ -49,14 +46,14 @@ def _run_pytest(args, timeout=None, capture_case=None, **env):
         # `root` or pytest reports failures with no filename in them.
         ini = Path(scratch, "pytest.ini")
         ini.write_text("[pytest]\n", encoding="utf-8")
-        if capture_case is not None:
+        written = Path(scratch, "case.json")
+        if capture_case:
             Path(scratch, f"{case_capture.NAME}.py").write_text(
                 case_capture.PLUGIN, encoding="utf-8"
             )
             args = ["-p", case_capture.NAME, *args]
-            # into the scratch dir, which is the only place the child may write; the parent
-            # is not confined and lifts it out below, before the directory goes away
-            written = Path(scratch, "case.json")
+            # into the scratch dir, the only place the child may write; read back below,
+            # before the directory goes away
             env["DRILLION_CASE"] = str(written)
             env["PYTHONPATH"] = f"{settings.tasks_dir}{os.pathsep}{scratch}"
         result = sandbox.run(
@@ -67,9 +64,15 @@ def _run_pytest(args, timeout=None, capture_case=None, **env):
             timeout,
             **{"PYTHONPATH": str(settings.tasks_dir), **env},
         )
-        if capture_case is not None and written.exists():
-            capture_case.write_bytes(written.read_bytes())
-        return result
+        case = None
+        if capture_case and written.exists():
+            try:
+                case = case_capture.trim(
+                    json.loads(written.read_text(encoding="utf-8"))
+                )
+            except ValueError, OSError:  # a killed child can leave half a file
+                case = None
+        return result, case
 
 
 def run_python(meta, seed):
@@ -87,23 +90,15 @@ def run_python(meta, seed):
     `--verbosity=2` rather than `-vv`, which would only cancel out the `-q` above: at the
     default pytest elides the values it is comparing and tells the learner to pass flags
     they have no way to pass."""
-    with tempfile.TemporaryDirectory(dir=sandbox.scratch_root()) as box:
-        found = Path(box, "case.json")
-        try:
-            r = _run_pytest(
-                [str(meta["path"]), "-l", "--verbosity=2", "--timeout=10"],
-                timeout=60,
-                capture_case=found,
-                DRILLION_SEED=str(seed),
-            )
-        except subprocess.TimeoutExpired:
-            return False, "timed out after 60s — an endless loop, most likely", None
-        case = None
-        if found.exists():
-            try:
-                case = case_capture.trim(json.loads(found.read_text(encoding="utf-8")))
-            except ValueError, OSError:  # a killed child can leave half a file
-                case = None
+    try:
+        r, case = _run_pytest(
+            [str(meta["path"]), "-l", "--verbosity=2", "--timeout=10"],
+            timeout=60,
+            capture_case=True,
+            DRILLION_SEED=str(seed),
+        )
+    except subprocess.TimeoutExpired:
+        return False, "timed out after 60s — an endless loop, most likely", None
     return r.returncode == 0, r.stdout, case
 
 
@@ -118,8 +113,6 @@ def run_manifest(meta, brief, learner=None, helm=None, docker=None):
 
     Paired with `run_python`, which grades the other kind. Neither dispatches: the caller
     already holds a kind, and `kind.grade` picks the one that fits."""
-    from . import manifest
-
     job = manifest.job(meta, brief, learner, helm, docker)
     with tempfile.TemporaryDirectory(
         dir=sandbox.scratch_root(), ignore_cleanup_errors=True
@@ -145,11 +138,6 @@ def run_manifest(meta, brief, learner=None, helm=None, docker=None):
                 f"the grader did not run: {done.stderr.strip()[-500:]}"
             )
         return manifest.read_result(out)
-
-
-def _posix(out):
-    """Every .py path in pytest's output with "/" separators, whatever printed it."""
-    return _PY_PATH.sub(lambda m: m.group(0).replace("\\", "/"), out)
 
 
 # the banner pytest puts above each test's captured stream, and the rules that end a block
@@ -204,7 +192,6 @@ def _headline(lines):
 
 def summarise(out, marker_line):
     """pytest output for the browser: the assertion lines, in editor coordinates."""
-    out = _posix(out)
 
     def editor_line(m):
         n = int(m.group(1))
@@ -223,12 +210,12 @@ def summarise(out, marker_line):
 def _failed_slugs(out):
     """The task folders named by pytest's `FAILED`/`ERROR` summary lines.
 
-    Splitting on whitespace drops the `FAILED ` prefix, which the old `/`-only split
-    used to eat by accident and kept on Windows."""
+    A line reads `FAILED <path>::<test> - <reason>`: the path is the second word, and its
+    parent folder is the slug."""
     return sorted(
         {
             Path(ln.split(maxsplit=1)[1].split("::")[0]).parent.name
-            for ln in _posix(out).split("\n")
+            for ln in out.split("\n")
             if ln.startswith(("FAILED", "ERROR")) and "_selfcheck.py" in ln
         }
     )
@@ -262,7 +249,7 @@ def selfcheck():
             if judge is not None:
                 judges.append((slug, judge))
         tests = [str(p) for p in made if p.suffix == ".py"]
-        r = _run_pytest([*tests, "--timeout=60"]) if tests else None
+        r = _run_pytest([*tests, "--timeout=60"])[0] if tests else None
         for slug, judge in judges:
             try:
                 passed, why = judge()

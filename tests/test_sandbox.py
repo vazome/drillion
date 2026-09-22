@@ -68,7 +68,6 @@ ENVIRONMENT = """
 ESCAPED = """
     assert CANARY.read_text() == "written by the parent"
     CANARY.write_text("owned")
-    # the interpreter rather than /bin/echo: this control runs on Windows too
     done = subprocess.run(
         [sys.executable, "-c", "print('spawned')"], capture_output=True, text=True
     )
@@ -106,8 +105,8 @@ def test_the_probe_escapes_when_the_sandbox_is_taken_away(tmp_path, monkeypatch)
     that the sandbox works."""
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "hunter2")
     monkeypatch.setattr(sandbox, "confine", unconfined)
-    # `run` reads the tier to decide whether the child needs CreateProcessAsUser; forced to
-    # the floor it takes the plain `subprocess.run` path, which is what "before" means here
+    # `run` reads the tier to decide whether the child loads the guard; forced to the
+    # floor it loads nothing, which is what "before" means here
     monkeypatch.setattr(sandbox, "status", lambda: ("floor", "forced by a test"))
     passed, out = grade(tmp_path, monkeypatch, ESCAPED)
     assert passed, out

@@ -188,7 +188,7 @@ def serve():
 
 
 def main(argv=None):
-    # everything we print is UTF-8; a redirected stdout is locale-encoded on Windows
+    # everything we print is UTF-8; a redirected stdout is otherwise locale-encoded
     for stream in (sys.stdout, sys.stderr):
         if isinstance(stream, io.TextIOWrapper):
             stream.reconfigure(encoding="utf-8")
@@ -219,8 +219,8 @@ def main(argv=None):
     seed()
     if not settings.tasks_dir.is_dir():
         raise SystemExit(
-            f"no tasks/ under {settings.root} — run drillion from the repo, "
-            f"or point DRILLION_ROOT at the directory that holds it"
+            f"no tasks/ under {settings.root}, and this build ships none to seed it "
+            "from: point DRILLION_ROOT at a directory that holds tasks/"
         )
     if args.command == "doctor":
         from .doctor import doctor

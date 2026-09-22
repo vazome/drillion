@@ -18,11 +18,8 @@ GRADES = {"struggled": -1, "pass": +1, "quick": +2}
 
 
 def due_today(st, all_tasks):
-    return [
-        s
-        for s in all_tasks
-        if card(st, s)["seen"] > 0 and card(st, s)["due"] <= today()
-    ]
+    now = today()
+    return [s for s in all_tasks if (c := card(st, s))["seen"] > 0 and c["due"] <= now]
 
 
 def _facets(meta):

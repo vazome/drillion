@@ -10,7 +10,6 @@ import sqlite3
 import threading
 from contextlib import closing, contextmanager
 from datetime import date, datetime
-from pathlib import PureWindowsPath
 
 from . import kinds, region
 from .settings import settings
@@ -225,13 +224,7 @@ def _initialise(db):
 def _task_path(slug, kind_name):
     """The learner's file for this task. A pending reset is the one place a stored string
     becomes a path, so the slug and the kind name are both checked before it is built."""
-    if (
-        not slug
-        or slug in (".", "..")
-        or "/" in slug
-        or "\\" in slug
-        or PureWindowsPath(slug).drive
-    ):
+    if not slug or slug in (".", "..") or "/" in slug or "\\" in slug:
         raise Unreadable("Invalid task slug in a pending reset.")
     kind = kinds.KINDS.get(kind_name)
     if kind is None:
@@ -283,21 +276,32 @@ def _recover(db):
         db.execute("DELETE FROM pending_resets WHERE slug = ?", (slug,))
 
 
+def _pending(db):
+    return db.execute("SELECT 1 FROM pending_resets LIMIT 1").fetchone() is not None
+
+
 @contextmanager
-def _transaction():
+def _transaction(write=True):
+    """A read takes a shared lock, unless the file still needs migrating or a reset
+    finishing: those write, so that read takes the write lock too. Both checks can only
+    go stale towards "nothing to do", since each write finishes its own resets."""
     try:
         with closing(
             sqlite3.connect(settings.state_path, timeout=90, isolation_level=None)
         ) as db:
             # Rollback journal + EXTRA also sync the directory on journal removal.
             db.execute("PRAGMA synchronous = EXTRA")
-            db.execute("BEGIN IMMEDIATE")
+            if not write:
+                version = db.execute("PRAGMA user_version").fetchone()[0]
+                write = version < DB_SCHEMA or _pending(db)
+            db.execute("BEGIN IMMEDIATE" if write else "BEGIN")
             try:
-                _initialise(db)
-                _recover(db)
+                _initialise(db)  # a PRAGMA once migrated; still refuses a newer file
+                if write:
+                    _recover(db)
                 yield db
                 db.commit()
-                if db.execute("SELECT 1 FROM pending_resets LIMIT 1").fetchone():
+                if _pending(db):
                     db.execute("BEGIN IMMEDIATE")
                     _recover(db)
                     db.commit()
@@ -359,7 +363,8 @@ def writing():
 
 @contextmanager
 def reading():
-    """A consistent copy; shared locking also protects autosaves to task files."""
+    """A consistent copy, under a shared SQLite lock. `_LOCK` still orders it against
+    every write in this process, which also protects autosaves to task files."""
     with _LOCK:
         if (
             not settings.state_path.exists()
@@ -367,7 +372,7 @@ def reading():
         ):
             yield _defaults()
             return
-        with _transaction() as db:
+        with _transaction(write=False) as db:
             st, _ = _read(db)
             yield st
 

@@ -11,6 +11,7 @@ import platform
 import sys
 import tarfile
 import tempfile
+from functools import cache
 from pathlib import Path, PurePosixPath
 from typing import NamedTuple
 
@@ -177,10 +178,7 @@ def schema_digest():
     digest by concatenating to the same bytes."""
     h = hashlib.sha256()
     for path in sorted(SCHEMAS.rglob("*.json")):
-        # Git may check a text schema out as CRLF on Windows. The validator accepts either
-        # spelling, so the verdict identity must not depend on the checkout platform.
-        content = path.read_bytes().replace(b"\r\n", b"\n")
-        for field in (path.name.encode(), content):
+        for field in (path.name.encode(), path.read_bytes()):
             h.update(b"%d:" % len(field))
             h.update(field)
     return h.hexdigest()
@@ -192,13 +190,22 @@ def schema_location():
     return str(SCHEMAS / "{{.ResourceKind}}{{.KindSuffix}}.json")
 
 
+@cache
+def _digest_of(path, size, mtime_ns, ctime_ns):
+    """`digest` for one version of a file, so repeat grades skip hashing a whole binary.
+    Any rewrite, touch or replace moves `ctime_ns`, which keys a fresh hash."""
+    return digest(path)
+
+
 def installed(name):
-    """The verified binary, or None. Never returns a path it has not just checked."""
+    """The verified binary, or None. A file is hashed again whenever it changes on disk."""
     pin = pin_for(name)
     path = tools_dir() / pin.filename
-    if not path.is_file() or digest(path) != pin.binary_sha256:
+    if not path.is_file():
         return None
-    return path
+    st = path.stat()
+    found = _digest_of(path, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
+    return path if found == pin.binary_sha256 else None
 
 
 def _download(url, into):
