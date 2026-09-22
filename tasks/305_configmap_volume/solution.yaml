@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {config}
+data:
+  app.conf: |
+    level = info
+    workers = 4
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {pod}
+spec:
+  containers:
+    - name: {pod}
+      image: {image}
+      volumeMounts:
+        - name: config
+          mountPath: {dir}
+  volumes:
+    - name: config
+      configMap:
+        name: {config}

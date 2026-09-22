@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {name}
+spec:
+  replicas: {replicas}
+  minReadySeconds: {wait}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {surge}
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: {name}
+  template:
+    metadata:
+      labels:
+        app: {name}
+    spec:
+      containers:
+        - name: {name}
+          image: {image}
+          readinessProbe:
+            tcpSocket:
+              port: 8080

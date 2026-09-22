@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {name}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: {name}
+  template:
+    metadata:
+      labels:
+        app: {name}
+    spec:
+      containers:
+        - name: {name}
+          image: {image}
+          ports:
+            - containerPort: {port}
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: {port}
+            periodSeconds: 10
+            failureThreshold: {tries}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {port}
+            periodSeconds: 10
+            failureThreshold: 3
