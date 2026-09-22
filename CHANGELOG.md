@@ -4,6 +4,42 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.9.5 — 2026-09-22
+
+Helm and Dockerfile tracks, a second round of Kubernetes tasks, and a faster server.
+
+- **Fifteen Helm tasks, 279–288 and 314–318.** A third task kind: you fill one file of a chart,
+  `values.yaml` or a template, and drillion renders it with `helm template`, lints it with
+  `helm lint --strict`, and checks every render against the brief. Later tasks cover named
+  templates in `_helpers.tpl`, `required` and `fail`, a checksum annotation and `range`.
+  Helm 4.3.0 is pinned by checksum beside kubeconform.
+- **Fifteen Dockerfile tasks, 289–298 and 319–323.** A fourth task kind: you write a
+  Dockerfile against a build context shown in tabs over the editor, hadolint lints it, and the
+  task's rules check the parsed stages. From a first image through layer caching, non-root
+  users and multi-stage builds to HEALTHCHECK, `pipefail`, BuildKit cache and secret mounts,
+  and a JVM build. hadolint 2.15.1 is pinned by checksum.
+- **Fifteen more Kubernetes tasks, 299–313:** probes, a startup probe, requests and limits,
+  a hardened pod, rollout strategy, an init container, a ConfigMap mounted as files, Ingress
+  with and without TLS, a HorizontalPodAutoscaler, a Job, a CronJob, a NetworkPolicy, RBAC and
+  a PodDisruptionBudget. Schemas for the nine new objects ship with the image, so verdicts
+  graded from here on carry a new `m1:` or `h1:` fingerprint.
+- **Tags a learner can search by.** Every infra tag now belongs to at least two tasks and no
+  task carries more than three, the rule Python tasks already kept. A task no longer repeats its
+  track as a tag, since focus and the catalogue filter match the track itself. A focus set on
+  a tag that is gone offers no new picks until you pick another.
+- **The 30-minute hint nudge ignores a Run.** Half an hour on a task with nothing submitted and
+  no hint taken now offers a hint even if you kept pressing Run; submitting or taking a hint
+  answers it.
+- **Grading no longer blocks the rest of the app.** A run held the progress lock for the whole
+  grade, so autosave and the catalogue could wait up to a minute behind a Helm or pytest run.
+  The grade now runs between two short locked sections, and reads no longer take a write lock.
+- **Web fixes.** A passed task's lineage shows its new status without a reload, the task screen
+  no longer re-renders its spec every second, the diff view updates in place, the catalogue
+  loads without waiting for the editor, and **Settings → Put these back to their defaults**
+  leaves the pane width alone.
+- **Carbon icons** beside the words on carets, sort arrows, pass and fail marks, dismiss
+  buttons and link arrows.
+
 ## 0.9.0 — 2026-09-21
 
 drillion is now distributed as a Docker image only, and it teaches Kubernetes manifests
