@@ -61,7 +61,7 @@ The volume is declared once, on the pod, and mounted by name in each container, 
 ```yaml
   volumes:
     - name: content
-      emptyDir: {{}}
+      emptyDir: {}
 ```
 
 ```yaml
