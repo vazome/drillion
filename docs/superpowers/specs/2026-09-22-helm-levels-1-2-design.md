@@ -188,7 +188,7 @@ What the learner sees on a Helm task, top to bottom where it differs from a mani
   (`values.yaml`). Then one tab per chart file, read-only and visibly locked, in a fixed order:
   `Chart.yaml`, `values.yaml` (level 2), `values.schema.json`, then `templates/` sorted. The
   task fixes the tabs; nothing is added or closed. **This component is requested from the
-  developer** (AGENTS.md: drawing UI is not the agent's concern). Until it lands, the chart
+  developer** (AGENTS.md: drawing UI is not the agent's concern); the brief is [helm-chart-tabs.md](../../design/helm-chart-tabs.md). Until it lands, the chart
   files show as collapsed code blocks under the spec, which already exist.
 - **Monaco mode** is YAML for every tab. Go template syntax has no standalone Monaco mode
   and gets YAML highlighting. That is acceptable for 2 levels, and worth revisiting only if
