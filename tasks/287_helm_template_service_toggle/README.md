@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [272, 284]
 track: helm
-tags: [helm, templates, service, conditionals]
+tags: [templates, service, toggles]
 kind: helm
 edits: templates/service.yaml
 ---

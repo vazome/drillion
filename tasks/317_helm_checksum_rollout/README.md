@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 20
 prereqs: [315, 305]
 track: helm
-tags: [helm, templates, configmap, rollout, annotations]
+tags: [templates, configmap, rollout]
 kind: helm
 edits: templates/deployment.yaml
 ---

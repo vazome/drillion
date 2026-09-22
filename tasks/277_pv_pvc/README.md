@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 20
 prereqs: [269]
 track: kubernetes
-tags: [kubernetes, persistentvolume, persistentvolumeclaim, storage]
+tags: [storage, persistentvolumeclaim]
 kind: manifest
 ---
 # a PV holds and a PVC asks, and 1Gi is not 1G

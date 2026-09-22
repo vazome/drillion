@@ -4,7 +4,7 @@ difficulty: easy
 minutes: 15
 prereqs: [269]
 track: kubernetes
-tags: [kubernetes, configmap, multi-document]
+tags: [configmap, env, multi-document]
 kind: manifest
 ---
 # two documents, one file: a ConfigMap and the Pod that reads it

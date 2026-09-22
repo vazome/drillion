@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [309]
 track: kubernetes
-tags: [kubernetes, cronjob, job, batch, cron]
+tags: [workloads, job]
 kind: manifest
 ---
 # a CronJob that never runs twice at once, in the time zone you mean

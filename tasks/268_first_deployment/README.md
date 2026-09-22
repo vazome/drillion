@@ -3,7 +3,7 @@ title: your first Deployment, and the two labels that have to agree
 difficulty: easy
 minutes: 12
 track: kubernetes
-tags: [kubernetes, deployment, labels]
+tags: [deployment, labels]
 kind: manifest
 ---
 # your first Deployment, and the two labels that have to agree

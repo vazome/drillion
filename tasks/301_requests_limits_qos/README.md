@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [268]
 track: kubernetes
-tags: [kubernetes, deployment, resources, qos]
+tags: [deployment, resources]
 kind: manifest
 ---
 # requests and limits, and the pods Kubernetes evicts last

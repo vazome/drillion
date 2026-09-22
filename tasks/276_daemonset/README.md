@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 18
 prereqs: [268]
 track: kubernetes
-tags: [kubernetes, daemonset]
+tags: [workloads]
 kind: manifest
 ---
 # a DaemonSet has no replicas: one per node, and that is the whole point

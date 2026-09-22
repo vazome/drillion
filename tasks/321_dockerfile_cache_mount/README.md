@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 12
 prereqs: [290]
 track: docker
-tags: [docker, dockerfile, buildkit, cache, pip]
+tags: [buildkit, layer-cache, pip]
 kind: docker
 edits: Dockerfile
 ---

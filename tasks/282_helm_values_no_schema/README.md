@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [270, 279]
 track: helm
-tags: [helm, values, env, defaults]
+tags: [values, env, validation]
 kind: helm
 edits: values.yaml
 ---

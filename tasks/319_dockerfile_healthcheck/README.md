@@ -4,7 +4,7 @@ difficulty: easy
 minutes: 12
 prereqs: [290]
 track: docker
-tags: [docker, dockerfile, healthcheck]
+tags: [probes]
 kind: docker
 edits: Dockerfile
 ---

@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [270]
 track: kubernetes
-tags: [kubernetes, configmap, volumes, multi-document]
+tags: [configmap, volumes, multi-document]
 kind: manifest
 ---
 # a ConfigMap mounted as files, for apps that read a config file

@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 12
 prereqs: [271, 284]
 track: helm
-tags: [helm, templates, secret, pipelines]
+tags: [templates, secret, base64]
 kind: helm
 edits: templates/secret.yaml
 ---

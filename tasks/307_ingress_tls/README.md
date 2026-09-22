@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [306, 271]
 track: kubernetes
-tags: [kubernetes, ingress, tls, secret, networking]
+tags: [ingress, networking, secret]
 kind: manifest
 ---
 # HTTPS at the Ingress, with the certificate in a Secret

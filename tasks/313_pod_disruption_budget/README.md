@@ -4,7 +4,7 @@ difficulty: easy
 minutes: 10
 prereqs: [268]
 track: kubernetes
-tags: [kubernetes, poddisruptionbudget, availability, labels]
+tags: [availability, labels]
 kind: manifest
 ---
 # a PodDisruptionBudget keeps enough pods up while nodes are drained

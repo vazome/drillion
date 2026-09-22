@@ -4,7 +4,7 @@ difficulty: hard
 minutes: 20
 prereqs: [269]
 track: kubernetes
-tags: [kubernetes, rbac, serviceaccount, security, multi-document]
+tags: [security, multi-document]
 kind: manifest
 ---
 # least privilege: a ServiceAccount that can read one thing

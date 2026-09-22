@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 14
 prereqs: [277, 279]
 track: helm
-tags: [helm, values, persistentvolumeclaim, booleans]
+tags: [values, persistentvolumeclaim, toggles]
 kind: helm
 edits: values.yaml
 ---

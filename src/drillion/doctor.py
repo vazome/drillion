@@ -5,11 +5,11 @@ import re
 
 import yaml
 
-from . import kinds, sandbox, tools
+from . import kinds, manifest, sandbox, tools
 from .catalogue import DOCKER, HELM, MANIFEST, PYTHON, SECTION, SLUG, scan, solution
-from .manifest import MAX_SPEC_CHARS
 
 TAG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+MAX_TAGS = 3
 DIFFICULTIES = ("easy", "medium", "hard")
 TIERS = ("core", "advanced", "packages")
 REFERENCES = ("prereqs",)  # optional frontmatter lists of task numbers
@@ -39,8 +39,6 @@ def _render_rules(meta):
     the run that should have passed, so both are rendered against the same brief here."""
     if "dir" not in meta or not solution(meta).is_file():
         return []  # a missing answer key is already its own reason
-    from . import manifest
-
     brief = manifest.generate_brief(meta, kinds.SELFCHECK_SEED)
     try:
         manifest.render(meta.get("spec_md", ""), brief)
@@ -60,13 +58,13 @@ def _schema_rules(meta):
     Caught here, at contribution time, because at grading time the two are one string."""
     try:
         with (meta["dir"] / "solution.yaml").open(encoding="utf-8") as stream:
-            text = stream.read(MAX_SPEC_CHARS + 1)
+            text = stream.read(manifest.MAX_SPEC_CHARS + 1)
     except UnicodeDecodeError:
         return ["solution.yaml: is not valid UTF-8"]
     except KeyError, OSError:
         return []  # a solution.yaml that is missing or unreadable is its own reason
-    if len(text) > MAX_SPEC_CHARS:
-        return [f"solution.yaml: exceeds {MAX_SPEC_CHARS} characters"]
+    if len(text) > manifest.MAX_SPEC_CHARS:
+        return [f"solution.yaml: exceeds {manifest.MAX_SPEC_CHARS} characters"]
     if not text:
         return []
     try:
@@ -106,12 +104,16 @@ def _python_rules(meta):
     return []
 
 
+def _no_tier(meta, what):
+    """Only a python task has a tier; `what` names the kind that does not."""
+    if meta.get("tier") is None:
+        return []
+    return [f"README.md: tier belongs to a python task, not {what}"]
+
+
 def _manifest_rules(meta):
-    out = []
-    if meta.get("tier") is not None:
-        out.append("README.md: tier belongs to a python task, not a manifest")
     return (
-        out
+        _no_tier(meta, "a manifest")
         + _placeholder_rules(meta.get("spec_md", ""))
         + _render_rules(meta)
         + _schema_rules(meta)
@@ -127,9 +129,7 @@ def _helm_rules(meta):
     at that path would be silently replaced by the learner's, so it must not exist. Which
     kinds the chart renders is not asked here: `selfcheck` renders the answer key through
     kubeconform, which is where a kind with no packaged schema shows up."""
-    out = []
-    if meta.get("tier") is not None:
-        out.append("README.md: tier belongs to a python task, not a Helm task")
+    out = _no_tier(meta, "a Helm task")
     edits = meta.get("edits")
     if edits is not None and not (isinstance(edits, str) and EDITS.match(edits)):
         out.append(
@@ -144,9 +144,7 @@ def _docker_rules(meta):
     """A Dockerfile task's hole is the Dockerfile, and nothing in the build context may
     already sit where the learner's goes. Whether the answer key lints clean and passes is
     `selfcheck`'s question, since only hadolint can answer it."""
-    out = []
-    if meta.get("tier") is not None:
-        out.append("README.md: tier belongs to a python task, not a Dockerfile task")
+    out = _no_tier(meta, "a Dockerfile task")
     if meta.get("edits") not in (None, "Dockerfile"):
         out.append(f"README.md: edits {meta['edits']!r} is not Dockerfile")
     elif "dir" in meta and (meta["dir"] / "context" / "Dockerfile").exists():
@@ -183,6 +181,8 @@ def _value_rules(meta):
     if tags is not None and not isinstance(tags, list):
         out.append("README.md: tags must be a list")
     elif tags:
+        if len(tags) > MAX_TAGS:
+            out.append(f"README.md: {len(tags)} tags, at most {MAX_TAGS} per task")
         out += [
             f"README.md: tag {t!r} is not lowercase kebab-case"
             for t in tags
@@ -206,7 +206,8 @@ def _refs(meta, key):
 
 def _set_problems(metas):
     """The rules no folder can check alone: task numbers are unique, every reference
-    names a real task, nothing gates itself, and no chain of prereqs closes into a loop.
+    names a real task, nothing gates itself, no chain of prereqs closes into a loop, and
+    every tag is shared by a second task, since a tag is a topic to search across tasks.
     Only the first cycle is named; the next run finds the next one."""
     out, topics = [], {}
     for name in metas:
@@ -221,7 +222,13 @@ def _set_problems(metas):
                 )
             else:
                 topics[topic] = name
+    tagged = {}
     for name, meta in metas.items():
+        tags = meta.get("tags")
+        tags = tags if isinstance(tags, list) else []
+        # a malformed tag is already reported by `_value_rules`
+        for t in {t for t in tags if isinstance(t, str) and TAG.match(t)}:
+            tagged.setdefault(t, []).append(name)
         mine = SLUG.match(name)
         for key in REFERENCES:
             for n in _refs(meta, key):
@@ -232,6 +239,11 @@ def _set_problems(metas):
                 elif key == "prereqs" and mine and n > int(mine.group(1)):
                     # the number is the curriculum position, so what gates a task precedes it
                     out.append((name, f"prereqs names task {n}, which comes later"))
+    out += [
+        (names[0], f"tag {t!r} is on no other task; a tag needs at least two")
+        for t, names in sorted(tagged.items())
+        if len(names) == 1
+    ]
     graph = {
         t: [n for n in _refs(metas[name], "prereqs") if n in topics]
         for t, name in topics.items()

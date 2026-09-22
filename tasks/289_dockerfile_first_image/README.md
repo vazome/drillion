@@ -3,7 +3,7 @@ title: your first Dockerfile
 difficulty: easy
 minutes: 10
 track: docker
-tags: [docker, dockerfile, workdir, cmd]
+tags: [cmd]
 kind: docker
 edits: Dockerfile
 ---

@@ -4,7 +4,7 @@ difficulty: hard
 minutes: 20
 prereqs: [281, 284]
 track: helm
-tags: [helm, templates, toyaml, indentation]
+tags: [templates, toyaml, indentation]
 kind: helm
 edits: templates/deployment.yaml
 ---

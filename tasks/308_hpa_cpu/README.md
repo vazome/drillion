@@ -4,7 +4,7 @@ difficulty: hard
 minutes: 20
 prereqs: [301]
 track: kubernetes
-tags: [kubernetes, hpa, autoscaling, deployment, resources, multi-document]
+tags: [availability, resources, multi-document]
 kind: manifest
 ---
 # a HorizontalPodAutoscaler, and the requests it measures against

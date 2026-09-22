@@ -4,7 +4,7 @@ difficulty: easy
 minutes: 12
 prereqs: [269]
 track: kubernetes
-tags: [kubernetes, job, batch]
+tags: [workloads, job]
 kind: manifest
 ---
 # a Job runs to the end, retries a few times, and cleans up after

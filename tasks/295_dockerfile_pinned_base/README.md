@@ -4,7 +4,7 @@ difficulty: easy
 minutes: 12
 prereqs: [292]
 track: docker
-tags: [docker, dockerfile, supply-chain, labels]
+tags: [security, labels]
 kind: docker
 edits: Dockerfile
 ---
