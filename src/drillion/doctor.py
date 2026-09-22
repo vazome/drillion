@@ -119,7 +119,7 @@ def _manifest_rules(meta):
 
 
 # what a Helm task's learner may fill in: the values, or one template
-EDITS = re.compile(r"^(values\.yaml|templates/[a-z0-9-]+\.(yaml|tpl))$")
+EDITS = re.compile(r"^(values\.yaml|templates/_?[a-z0-9-]+\.(yaml|tpl))$")
 
 
 def _helm_rules(meta):

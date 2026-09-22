@@ -7,7 +7,7 @@ uv sync                                      # dependencies (runtime + dev)
 uv run drillion                              # serve on http://127.0.0.1:8765, opens the browser
 uv run pytest tests -q -n auto               # the app's own tests, one worker per core
 uv run ruff check .                          # lint — CI fails if this fails
-uv run drillion selfcheck                    # solve every task with its reference; must say 313/313
+uv run drillion selfcheck                    # solve every task with its reference; must say 318/318
 ```
 
 This is the contributor loop. drillion ships as a Linux Docker image, and only Linux is tested,
@@ -23,7 +23,7 @@ pnpm --dir web install                       # once
 pnpm --dir web dev                           # Vite on 5173, proxying /api to the server on 8765
 pnpm --dir web lint                          # lint — CI fails if this fails, same as ruff
 pnpm --dir web test                          # the component contracts in web/tests/
-pnpm --dir web screens                       # Playwright: renders all 313 task pages, photographs the rest
+pnpm --dir web screens                       # Playwright: renders all 318 task pages, photographs the rest
 ```
 
 ## Seeing the client without running it

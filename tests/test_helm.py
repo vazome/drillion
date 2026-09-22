@@ -115,6 +115,61 @@ TEMPLATES = {
         ("\ndata:", "\nstringData:"),
         ("  name: {{ .Release.Name }}-auth", "  name: auth"),
     ],
+    "314_helm_helpers_define": [
+        ("{{ .Release.Name }}-{{ .Chart.Name }}", "{{ .Release.Name }}"),
+        (
+            "app.kubernetes.io/instance: {{ .Release.Name }}",
+            "app.kubernetes.io/instance: web",
+        ),
+        ("{{ .Release.Service }}", "Tiller"),
+        ('{{ include "web.selectorLabels" . }}\n', ""),
+    ],
+    "315_helm_include_nindent": [
+        ('{{ include "api.fullname" . }}', "{{ .Release.Name }}"),
+        (
+            'include "api.labels" . | nindent 4',
+            'include "api.selectorLabels" . | nindent 4',
+        ),
+        (
+            'include "api.selectorLabels" . | nindent 6',
+            'include "api.labels" . | nindent 6',
+        ),
+        ("nindent 8", "nindent 6"),
+        ("{{ .Values.replicaCount }}", "2"),
+        ("{{ .Values.port }}", "8080"),
+    ],
+    "316_helm_required_fail": [
+        (
+            'required "database.url is required" .Values.database.url',
+            ".Values.database.url",
+        ),
+        ('"database.url is required"', '"a database is needed"'),
+        ('"image.tag must be a pinned version, not latest"', '"no latest"'),
+        ('eq .Values.image.tag "latest"', 'eq .Values.image.tag "stable"'),
+        ("{{ .Values.image.tag }}", "1.8.0"),
+    ],
+    "317_helm_checksum_rollout": [
+        (
+            '{{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}',
+            '{{ .Files.Get "templates/configmap.yaml" | sha256sum }}',
+        ),
+        ("      annotations:\n        checksum", "      labels2:\n        checksum"),
+        (
+            "                name: {{ .Release.Name }}-config",
+            "                name: config",
+        ),
+        (
+            "app: {{ .Release.Name }}\n      annotations",
+            "app: worker\n      annotations",
+        ),
+    ],
+    "318_helm_range_resources": [
+        ("{{ $.Release.Name }}-{{ .name }}", "{{ .Release.Name }}-{{ .name }}"),
+        ("{{ $.Release.Name }}-{{ .name }}", "{{ $.Release.Name }}"),
+        ("    app: {{ $.Release.Name }}", "    app: gateway"),
+        ("targetPort: {{ .port }}", "targetPort: 8080"),
+        ("---\n", ""),
+    ],
 }
 SEEDS = (0, 1)
 

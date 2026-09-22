@@ -1,0 +1,8 @@
+image:
+  repository: ghcr.io/acme/worker
+  tag: "4.2.0"
+
+# copied into the ConfigMap, and from there into the container's environment
+config:
+  logLevel: info
+  concurrency: 4

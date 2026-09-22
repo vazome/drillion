@@ -1,0 +1,5 @@
+apiVersion: v2
+name: web
+description: A web server whose names and labels come from its helpers
+type: application
+version: 1.4.0
