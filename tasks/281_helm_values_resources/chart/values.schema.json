@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["image", "resources"],
+  "properties": {
+    "image": {"type": "string"},
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requests": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {"cpu": {"type": "string"}, "memory": {"type": "string"}}
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {"cpu": {"type": "string"}, "memory": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

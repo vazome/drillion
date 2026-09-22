@@ -200,9 +200,9 @@ def test_selfcheck_grades_a_manifest_with_its_own_solution(
     monkeypatch.setattr(
         runner,
         "run_manifest",
-        lambda meta, brief, learner=None: (
+        lambda meta, brief, learner=None, helm=None: (
             graded.append(learner),
-            real(meta, brief, learner),
+            real(meta, brief, learner, helm),
         )[1],
     )
     pytested = []

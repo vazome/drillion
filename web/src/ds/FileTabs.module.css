@@ -1,0 +1,35 @@
+/* Sits on the editor's top edge: the strip keeps its top corners and drops its bottom edge,
+   the editor squares its top corners, and the two read as one frame. */
+.root{display:flex;flex-direction:column;min-width:0;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0}
+/* one row that never wraps: past its width it scrolls inside itself, never the page.
+   The padding is room for the 4px focus ring, which overflow would otherwise clip. */
+.list{position:relative;display:flex;align-items:center;gap:2px;padding:6px 8px 5px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:thin}
+.tab{position:relative;flex:none;display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 10px;background:transparent;border:none;border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:var(--fs-small);line-height:1;white-space:nowrap;cursor:pointer;transition:background-color var(--dur-press) var(--ease-out),transform var(--dur-press) var(--ease-out)}
+.tab:active{transform:translateY(1px)}
+@media (hover:hover){.tab:hover:not([data-on]){background:var(--surface-2)}}
+/* selected: tint, accent name, and a 2px accent bar on the strip's bottom edge — the bar is
+   the part that clears 3:1, so the state never rests on the tint alone */
+.tab[data-on]{background:var(--accent-tint);cursor:default}
+.tab[data-on]::after{content:"";position:absolute;left:6px;right:6px;bottom:-5px;height:2px;border-radius:1px;background:var(--accent)}
+.path{display:inline-flex;align-items:baseline}
+.dir{color:var(--text-faint)}
+.name{color:var(--text-muted)}
+.tab[data-mine] .name{color:var(--text);font-weight:var(--fw-medium)}
+.tab[data-on] .name{color:var(--accent)}
+/* text-faint on accent-tint is 4.3:1 in dark — one step up on the selected tab */
+.tab[data-on] .dir{color:var(--text-muted)}
+/* marked: the editor's own squiggle under the name, in warn, not fail. A shape as well as a
+   colour, it takes no width, so marking a tab moves nothing */
+.tab[data-marked] .name{text-decoration:underline wavy var(--warn) 1px;text-underline-offset:5px;text-decoration-skip-ink:none}
+.yours{padding:2px 7px;border:1px solid var(--accent-line);border-radius:var(--radius-pill);background:var(--surface);font-family:var(--font-sans);font-size:11px;font-weight:var(--fw-semibold);line-height:1.2;letter-spacing:.02em;color:var(--accent)}
+/* read-only is said on each locked tab, as a quiet word after its name — Collapsible's faint
+   meta, not a label of its own in the row, which read as one more thing to click */
+.ro{display:inline-flex;align-items:center;gap:3px;font-family:var(--font-sans);font-size:11.5px;letter-spacing:.02em;color:var(--text-faint)}
+/* text-faint on accent-tint is 4.3:1 in dark — one step up on the selected tab */
+.tab[data-on] .ro{color:var(--text-muted)}
+.notes{display:grid;padding:6px 12px 7px;border-top:1px solid var(--border);background:var(--surface-2)}
+.note{grid-area:1/1;margin:0;visibility:hidden;font-family:var(--font-sans);font-size:12.5px;line-height:1.45;color:var(--text-muted)}
+.note[data-on]{visibility:visible}
+.file{font-family:var(--font-mono);font-size:12px;color:var(--text)}
+.flag{color:var(--warn)}
+@media (prefers-reduced-motion:reduce){.tab{transition:none}.tab:active{transform:none}}

@@ -11,7 +11,7 @@ import logging
 import yaml
 
 from . import region
-from .catalogue import MANIFEST, PYTHON
+from .catalogue import HELM, MANIFEST, PYTHON
 from .region import Invalid, _solve
 
 __all__ = ["Invalid", "of"]
@@ -75,6 +75,9 @@ class _Python:
     def spec(self, meta, o):
         """The guidance this sitting shows. A python task's is the README as written."""
         return meta["spec_md"]
+
+    def chart(self, meta):
+        return []
 
     def reference(self, meta, o):
         from . import attempts
@@ -185,13 +188,18 @@ class _Manifest:
         if o is None or "brief" not in o:
             return None
         try:
-            return manifest.render_solution(meta, o["brief"])
+            return self.answer_key(meta, o["brief"])
         except manifest.Rejected:
             log.exception(
                 "%s: the solution does not render; run `drillion doctor`",
                 meta["dir"].name,
             )
             return None
+
+    def answer_key(self, meta, brief):
+        from . import manifest
+
+        return manifest.render_solution(meta, brief)
 
     def revision(self, meta, src):
         """What judged this pass, not merely what asked the question: the validator and the
@@ -231,14 +239,24 @@ class _Manifest:
             )
         # A grader upgraded under a live sitting still grades its stored brief; one that
         # can no longer read it is `run_manifest`'s Rejected, never the learner's failure.
-        passed, diagnostics, report = runner.run_manifest(meta, o["brief"])
+        passed, diagnostics, report, rendered = runner.run_manifest(
+            meta, o["brief"], helm=self.helm(meta)
+        )
         return passed, {
             "headline": [d["message"] for d in diagnostics][:6],
             "output": report,
             "printed": "",
             "case": None,
             "diagnostics": diagnostics,
+            "rendered": rendered,
         }
+
+    def helm(self, meta):
+        """What a Helm grader adds to the job; a manifest renders nothing first."""
+
+    def chart(self, meta):
+        """The read-only files the page shows beside the learner's; a manifest has none."""
+        return []
 
     def selfcheck(self, meta):
         """The same proof for the other kind: `solution.yaml` rendered against a real
@@ -253,13 +271,61 @@ class _Manifest:
         key = meta["dir"] / "_selfcheck.yaml"
 
         def judge():
-            passed, diagnostics, _ = runner.run_manifest(meta, brief, learner=key)
+            passed, diagnostics, *_ = runner.run_manifest(
+                meta, brief, learner=key, helm=self.helm(meta)
+            )
             return passed, diagnostics[0]["message"] if diagnostics else ""
 
-        return {"_selfcheck.yaml": manifest.render_solution(meta, brief)}, judge
+        return {"_selfcheck.yaml": self.answer_key(meta, brief)}, judge
 
 
-KINDS = {PYTHON: _Python(), MANIFEST: _Manifest()}
+class _Helm(_Manifest):
+    """A chart with one file missing: the learner's `task.yaml` is that file, at the chart
+    path `edits` names. Everything else is the manifest kind's, with Helm in front of the
+    validator: see `manifest.GRADE_SOURCE`."""
+
+    name = HELM
+
+    def validate(self, edited, src):
+        """Nothing to parse on save: a template is not YAML until Helm renders it, and a
+        values file's mistakes read better in Helm's words, on the run."""
+        return edited
+
+    def answer_key(self, meta, brief):
+        """A values file is YAML with placeholders, as a manifest's key is. A template is
+        the answer for any values, so it is served as written."""
+        from . import manifest
+
+        return manifest.render_solution(
+            meta, brief, parse=meta["edits"] == "values.yaml"
+        )
+
+    def revision(self, meta, src):
+        from . import manifest
+
+        return manifest.fingerprint(meta, helm=True)
+
+    def provenance(self, o):
+        from . import tools
+
+        return {**super().provenance(o), "helm": tools.pin_for(tools.HELM).version}
+
+    def helm(self, meta):
+        from . import manifest
+
+        return manifest.helm_job(meta)
+
+    def chart(self, meta):
+        from . import manifest
+
+        chart = meta["dir"] / "chart"
+        return [
+            {"path": p, "text": (chart / p).read_text(encoding="utf-8")}
+            for p in manifest.chart_files(meta)
+        ]
+
+
+KINDS = {PYTHON: _Python(), MANIFEST: _Manifest(), HELM: _Helm()}
 
 
 def of(meta):

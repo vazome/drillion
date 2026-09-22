@@ -84,12 +84,12 @@ jobs:
         run: uv lock --upgrade && uv sync
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run pytest tests -q -n auto # one worker per core; the tests share no server or port
-      # A manifest task is graded by a pinned external validator, and `selfcheck` proves
-      # every task still passes its own answer key, so the validator has to be here before
-      # it runs. The download is checksum-pinned; an unpinned or altered one
-      # is refused rather than installed.
+      # Manifest and Helm tasks are graded by pinned external tools, and both the grader
+      # tests and `selfcheck` run them for real, so they have to be here before either.
+      # The download is checksum-pinned; an unpinned or altered one is refused rather
+      # than installed.
       - run: uv run drillion doctor --fetch
+      - run: uv run pytest tests -q -n auto # one worker per core; the tests share no server or port
       - run: uv run drillion selfcheck
 
   web:

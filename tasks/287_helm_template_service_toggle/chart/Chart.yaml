@@ -1,0 +1,5 @@
+apiVersion: v2
+name: web
+description: A web server whose Service can be switched off, or given a type
+type: application
+version: 0.3.0

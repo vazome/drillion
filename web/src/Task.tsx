@@ -4,7 +4,7 @@ import { ApiError, api, post, type Task as TaskData, type RunResult, type Case, 
 import { depsHref, prefetch } from "./Deps";
 import { inDays, strength } from "./strength";
 import { DiffView, Editor } from "./Editor";
-import { ManifestFailure } from "./ManifestWorkspace";
+import { ChartFiles, ManifestFailure } from "./ManifestWorkspace";
 import { useDraft } from "./useDraft";
 import { usePrefs } from "./prefs";
 import { TaskPanes } from "./TaskPanes";
@@ -36,8 +36,8 @@ type Gate = { at: "hints" | "solution" | "editor" | "note"; message: string } | 
  *  `passed` is a graded pass, and only it ends the attempt. */
 type Result =
   | { state: "idle" | "running" }
-  | { state: "ran"; output: string; printed: string }
-  | { state: "failed"; graded: boolean; attempts: number; headline: string; output: string; printed: string; case: Case | null; diagnostics: Diagnostic[] }
+  | { state: "ran"; output: string; printed: string; rendered: string }
+  | { state: "failed"; graded: boolean; attempts: number; headline: string; output: string; printed: string; case: Case | null; diagnostics: Diagnostic[]; rendered: string }
   | { state: "passed"; grade: string; box: number; stepped: boolean; fromBox: number; reason: string; dueIn: number; attempts: number; code: string };
 
 /** The pass banner's one line about where the task now sits: `stepped` is the server's answer
@@ -174,15 +174,15 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
         setTask((p) => p && ({ ...p, reference: r.reference, lapses: r.lapses }));
         setNextSlug(r.next);
       } else if (r.passed) {
-        setResult({ state: "ran", output: r.output, printed: r.printed });
+        setResult({ state: "ran", output: r.output, printed: r.printed, rendered: r.rendered ?? "" });
       } else {
-        setResult({ state: "failed", graded: r.graded, attempts: r.attempts, headline: r.headline.join("\n") || "The tests did not pass.", output: r.output, printed: r.printed, case: r.case, diagnostics: r.diagnostics });
+        setResult({ state: "failed", graded: r.graded, attempts: r.attempts, headline: r.headline.join("\n") || "The tests did not pass.", output: r.output, printed: r.printed, case: r.case, diagnostics: r.diagnostics, rendered: r.rendered ?? "" });
         setTask((p) => p && p.attempt ? { ...p, attempt: { ...p.attempt, attempts: r.attempts } } : p);
       }
     } catch (e) {
       const err = e as ApiError, bad = err.status === 400;
       if (absorb(err) && !bad) setResult({ state: "idle" });      // the conflict banner has it now
-      else setResult({ state: "failed", graded: submit, attempts: 0, output: "", printed: "", case: null, diagnostics: [],
+      else setResult({ state: "failed", graded: submit, attempts: 0, output: "", printed: "", case: null, diagnostics: [], rendered: "",
         headline: bad ? `${err.detail?.error}${err.detail?.line != null ? ` (line ${err.detail.line})` : ""}` : err.message });
     } finally { setInflight(null); }
   };
@@ -277,6 +277,14 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const resultNo = !ungraded && "attempts" in result ? result.attempts : 0;   // the attempt this result came from
   const fell = passed && result.stepped && result.box < result.fromBox;
 
+  const chart = !!meta.edits && task.chart.length > 0;
+  const editorHeight = meta.kind !== "python" ? "clamp(280px, 42vh, 560px)" : narrow ? "60vh" : "calc(100vh - 364px)";
+  /** A Helm run that named a line in the learner's own file marks it, as a syntax error does. */
+  const named = result.state === "failed" ? result.diagnostics.find((d) => d.file === meta.edits && d.line) : undefined;
+  const problem = syntax ?? (named ? { message: named.message, line: named.line! } : null);
+  const editor = <Editor kind={meta.kind} value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} problem={problem} height={editorHeight} flush={chart} />;
+  const rendered = result.state === "failed" || result.state === "ran" ? result.rendered : "";
+
   return (
     <div style={{ maxWidth: 1500, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
@@ -361,7 +369,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                         : "The reference answer, for comparison with what you wrote. It closes again when this task comes back."}</div>}
                   {mine
                     ? <DiffView kind={meta.kind} mine={mine} reference={reference} dark={dark} maxHeight="46vh" prefs={prefs} />
-                    : <SpecText text={"```" + (meta.kind === "manifest" ? "yaml" : "python") + "\n" + reference + "\n```"} slug={slug} />}
+                    : <SpecText text={"```" + (meta.kind === "python" ? "python" : "yaml") + "\n" + reference + "\n```"} slug={slug} />}
                 </div>
               ) : (
                 <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
@@ -459,15 +467,21 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
             {hasAttempt && !passed ? <Button variant="quiet" onClick={abandon} style={{ fontSize: 13 }}>Abandon</Button> : null}
           </div>
 
-          <Editor kind={meta.kind} value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} problem={syntax} height={meta.kind === "manifest" ? "clamp(280px, 42vh, 560px)" : narrow ? "60vh" : "calc(100vh - 364px)"} />
+          {chart && meta.edits ? (
+            // keyed by task: a new task opens on the learner's own file
+            <ChartFiles key={slug} edits={meta.edits} chart={task.chart} height={editorHeight}
+              diagnostics={result.state === "failed" ? result.diagnostics : []}>
+              {editor}
+            </ChartFiles>
+          ) : editor}
 
           <Card label={ungraded ? "Output · your run" : resultNo ? `Result · attempt ${resultNo}` : "Result"} padding={16}>
             {/* the region stays mounted and only the banner inside it is keyed: a live region
               * that arrives with its text already in place is never announced */}
             <div role="status">
               <div className="m-rise" key={result.state}>
-                {meta.kind === "manifest" && result.state === "failed" && result.diagnostics.length ? (
-                  <ManifestFailure diagnostics={result.diagnostics} />
+                {meta.kind !== "python" && result.state === "failed" && result.diagnostics.length ? (
+                  <ManifestFailure diagnostics={result.diagnostics} helm={meta.kind === "helm"} />
                 ) : result.state === "ran" ? (
                   <div style={{ borderRadius: "var(--radius)", padding: "12px 16px", fontSize: 14, background: "var(--pass-bg)", borderLeft: "3px solid var(--pass)" }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 600, color: "var(--pass)", letterSpacing: ".04em" }}><Icon name="CheckmarkOutline" />TESTS PASS</span>
@@ -494,8 +508,15 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               </Collapsible>
             ) : null}
 
+            {/* what Helm made of the chart: the thing to read before anything else, so it opens on a Run */}
+            {rendered ? (
+              <Collapsible label="Rendered" meta={`helm template · ${plural(rendered.trimEnd().split("\n").length, "line")}`} defaultOpen={ungraded} style={{ marginTop: 8 }}>
+                {rendered}
+              </Collapsible>
+            ) : null}
+
             {(result.state === "failed" || result.state === "ran") && result.output ? (
-              <Collapsible label={meta.kind === "manifest" ? "Validator details" : "Full output"} meta={`${meta.kind === "manifest" ? "raw report" : "pytest"} · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
+              <Collapsible label={meta.kind === "python" ? "Full output" : "Validator details"} meta={`${meta.kind === "python" ? "pytest" : "raw report"} · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
                 {result.output}
               </Collapsible>
             ) : null}

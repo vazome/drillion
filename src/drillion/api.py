@@ -258,6 +258,7 @@ def _payload(st, slug, meta, src):
         "meta": public(meta),
         "spec_md": kind.spec(meta, sitting),
         "code": body,
+        "chart": kind.chart(meta),
         "etag": kind.etag(src),
         "has_given": kind.has_given(body),
         "status": status,
@@ -278,7 +279,14 @@ def _payload(st, slug, meta, src):
                 # absent on a pass archived before a run said what produced it
                 **{
                     k: a[k]
-                    for k in ("python", "validator", "kubernetes", "seed", "revision")
+                    for k in (
+                        "python",
+                        "validator",
+                        "kubernetes",
+                        "helm",
+                        "seed",
+                        "revision",
+                    )
                     if k in a
                 },
             }

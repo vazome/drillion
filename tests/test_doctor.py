@@ -331,3 +331,46 @@ def test_every_kind_has_its_own_rule_row():
     assert set(doctor.KIND_RULES) == set(kinds.KINDS)
     with pytest.raises(KeyError):
         doctor.KIND_RULES["compose"]
+
+
+def _helm(edits, **chart):
+    readme = README.replace("tier: core\n", "").replace(
+        "difficulty: easy", f"kind: helm\nedits: {edits}\ndifficulty: easy"
+    )
+    return {
+        "README.md": readme,
+        "task.yaml": "",
+        "grade.py": _GRADER,
+        "solution.yaml": "",
+        "chart/Chart.yaml": "apiVersion: v2\nname: web\nversion: 0.1.0\n",
+        **{f"chart/{path}": text for path, text in chart.items()},
+    }
+
+
+def test_a_helm_task_is_a_chart_with_one_hole():
+    assert _reasons(**{"044_helm": _helm("values.yaml")}) == {}
+    assert _reasons(
+        **{"044_helm": _helm("values.yaml", **{"values.yaml": "a: 1\n"})}
+    ) == {
+        "044_helm": ["chart/values.yaml: must not exist, the learner's file goes there"]
+    }
+
+
+def test_a_helm_task_edits_values_or_one_template():
+    assert _reasons(**{"044_helm": _helm("Chart.yaml")}) == {
+        "044_helm": [
+            (
+                "README.md: edits 'Chart.yaml' is neither values.yaml nor "
+                "templates/<name>.yaml"
+            )
+        ]
+    }
+    assert _reasons(**{"044_helm": _helm("templates/deployment.yaml")}) == {}
+
+
+def test_a_helm_task_without_its_chart_is_skipped():
+    files = _helm("values.yaml")
+    del files["chart/Chart.yaml"]
+    assert _reasons(**{"044_helm": files}) == {
+        "044_helm": ["chart/Chart.yaml: missing"]
+    }

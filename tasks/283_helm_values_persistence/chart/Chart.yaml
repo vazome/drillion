@@ -1,0 +1,5 @@
+apiVersion: v2
+name: notes
+description: A small notes app that can keep its data on a volume
+type: application
+version: 0.3.0

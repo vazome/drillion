@@ -76,12 +76,30 @@ def _validated(raw):
 
 def grader_revision(meta):
     """Which generator produced a stored brief, so a later run can say whether an upgrade
-    has moved the question underneath it. Both files it takes to make one are hashed, each
-    by its own digest so nothing shifts between them."""
+    has moved the question underneath it. Every file it takes to make one is hashed, each
+    by its own digest so nothing shifts between them: `grade.py`, the answer key, and for a
+    Helm task every file of the chart, named, since a chart edit changes the question too."""
     digest = hashlib.sha256()
     for name in ("grade.py", "solution.yaml"):
         digest.update(hashlib.sha256((meta["dir"] / name).read_bytes()).digest())
+    for path in chart_files(meta):
+        digest.update(hashlib.sha256(path.encode()).digest())
+        digest.update(
+            hashlib.sha256((meta["dir"] / "chart" / path).read_bytes()).digest()
+        )
     return digest.hexdigest()[:12]
+
+
+def chart_files(meta):
+    """Every file of a Helm task's chart, as the chart names it; [] for a task with none.
+    `Chart.yaml` and the values come first, then the rest in path order, which is the order
+    the learner's tabs show them in."""
+    chart = meta["dir"] / "chart"
+    if not chart.is_dir():
+        return []
+    first = {"Chart.yaml": 0, "values.yaml": 1, "values.schema.json": 2}
+    paths = [p.relative_to(chart).as_posix() for p in chart.rglob("*") if p.is_file()]
+    return sorted(paths, key=lambda p: (first.get(p, len(first)), p))
 
 
 def module_name(slug):
@@ -180,8 +198,11 @@ _WHOLE_SCALAR = re.compile(
 _ANY_PLACEHOLDER = re.compile(r"(?<!\{)\{(\w+)\}")
 
 
-def render_solution(meta, brief):
-    """Render this sitting's reference with each placeholder as a typed YAML scalar."""
+def render_solution(meta, brief, parse=True):
+    """Render this sitting's reference with each placeholder as a typed YAML scalar.
+
+    `parse=False` is for an answer key that is a Helm template: it is not YAML until Helm
+    renders it, so it is only checked for placeholders, and a template has none."""
     template = (meta["dir"] / "solution.yaml").read_text(encoding="utf-8")
     out = []
     for number, line in enumerate(template.split("\n"), 1):
@@ -201,6 +222,8 @@ def render_solution(meta, brief):
         else:
             out.append(line)
     rendered = "\n".join(out)
+    if not parse:
+        return rendered
     try:
         # an answer key may hold several objects, `---`-separated, so validate them all
         list(yaml.safe_load_all(rendered))
@@ -227,13 +250,15 @@ try:
 except (ImportError, OSError):
     pass
 
-import importlib.util, json, subprocess, sys
+import importlib.util, json, re, shutil, subprocess, sys
 from pathlib import Path
 
 import yaml
 
 job = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 out = Path(sys.argv[2])
+# what Helm rendered for the run being judged, so every answer can show it
+CURRENT = {"rendered": ""}
 
 
 def answer(ok, diagnostics=(), report="", broken=None):
@@ -242,9 +267,16 @@ def answer(ok, diagnostics=(), report="", broken=None):
             {
                 "ok": ok,
                 "diagnostics": [
-                    {"path": path, "message": message} for path, message in diagnostics
+                    {
+                        "path": d[0],
+                        "message": d[1],
+                        "file": d[2] if len(d) > 2 else None,
+                        "line": d[3] if len(d) > 3 else None,
+                    }
+                    for d in diagnostics
                 ],
                 "report": report[-4000:],
+                "rendered": CURRENT["rendered"][-16000:],
                 "broken": broken,
             }
         ),
@@ -299,7 +331,7 @@ def no_detail(entry):
     return msg
 
 
-def validate():
+def validate(learner, where=""):
     '''kubeconform's verdict as diagnostics. A run that printed no report at all failed to
     start rather than failed to validate, so its own output is what is shown.
 
@@ -308,7 +340,7 @@ def validate():
     try:
         done = subprocess.run(
             [job["tool"], "-strict", "-kubernetes-version", job["kubernetes"],
-             "-schema-location", job["schemas"], "-output", "json", job["learner"]],
+             "-schema-location", job["schemas"], "-output", "json", learner],
             capture_output=True, text=True, timeout=job["validator_seconds"],
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
@@ -326,18 +358,144 @@ def validate():
         if entry.get("status") in ("statusValid", "statusSkipped"):
             continue
         errors = entry.get("validationErrors") or []
-        found += [(bad.get("path"), bad.get("msg", "invalid")) for bad in errors]
+        found += [(bad.get("path"), where + bad.get("msg", "invalid")) for bad in errors]
         if not errors:
-            found.append((None, no_detail(entry)))
+            found.append((None, where + no_detail(entry)))
     answer(False, found or [(None, "the manifest is not valid against the schema")], raw)
+
+
+def helm(*args):
+    try:
+        return subprocess.run(
+            [job["helm"]["tool"], *args], capture_output=True, text=True,
+            timeout=job["validator_seconds"],
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        answer(False, broken="helm did not run: %s" % exc)
+
+
+def helm_said(where, text):
+    '''One of Helm's messages as a diagnostic: its `Error: ` and --debug advice dropped,
+    the chart's name taken off each path so `web/templates/x.yaml:4` reads as the file the
+    learner sees, and the file it names kept so the page can point at that tab.'''
+    h = job["helm"]
+    kept = [
+        ln for ln in text.splitlines()
+        if ln.strip() and ln.strip() != h["name"] + ":"
+        and not ln.startswith(("Use --debug flag", "level="))
+    ]
+    message = "\\n".join(kept).strip().removeprefix("Error: ")
+    message = message.replace(h["name"] + "/", "")
+    named = [f for f in sorted(h["files"], key=len, reverse=True) if f in message]
+    if not named and "specifications of the schema" in message:
+        named = ["values.yaml"]  # the schema judges values, whichever file set them
+    if not named:
+        return (None, where + message)
+    # `templates/x.yaml:17`, or a YAML parser's `line 4` about the learner's own values
+    found = re.search(re.escape(named[0]) + r":(\\d+)", message)
+    if found is None and named[0] == h["edits"] == "values.yaml":
+        found = re.search(r"\\bline (\\d+)", message)
+    return (None, where + message, named[0], int(found.group(1)) if found else None)
+
+
+def lint_said(text):
+    '''`helm lint` has no JSON: its ERROR and WARNING entries, each with the lines that
+    continue it. INFO (`icon is recommended`) is advice about the chart, never a verdict.'''
+    found, entry = [], None
+    for ln in text.splitlines():
+        if ln.startswith(("[ERROR] ", "[WARNING] ")):
+            entry = [ln.split("] ", 1)[1]]
+            found.append(entry)
+        elif ln.startswith(("[INFO]", "==>", "level=", "Error: ")) or not ln.strip():
+            entry = None
+        elif entry is not None and "chart(s) linted" not in ln:
+            entry.append(ln.strip())
+    return [" ".join(e) for e in found]
+
+
+def merged(defaults, given):
+    '''The values Helm renders with: `given` over the chart's own, maps merged key by key
+    and a null deleting the default, as `helm template -f` does it.'''
+    out = dict(defaults)
+    for key, value in given.items():
+        if value is None:
+            out.pop(key, None)
+        elif isinstance(value, dict) and isinstance(out.get(key), dict):
+            out[key] = merged(out[key], value)
+        else:
+            out[key] = value
+    return out
+
+
+def grade_helm(grade):
+    '''A Helm sitting: the chart with the learner's file in its hole, rendered once per
+    `renders(brief)` entry and judged whole each time. A template that only works for one
+    set of values fails the render that uses the other.'''
+    h, brief = job["helm"], job["brief"]
+    text = Path(job["learner"]).read_text(encoding="utf-8")
+    if not text.strip():
+        answer(False, [(None, "%s is empty: write it before submitting" % h["edits"], h["edits"])])
+    chart = Path("chart")
+    shutil.copytree(h["chart"], chart)
+    target = chart / h["edits"]
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(text, encoding="utf-8")
+    renders = (
+        grade.renders(brief) if hasattr(grade, "renders")
+        else [{"release": brief.get("release", "demo"), "values": None}]
+    )
+    report, shown = "", None
+    for i, r in enumerate(renders):
+        where = ""
+        if len(renders) > 1:
+            given = json.dumps(r["values"], sort_keys=True)
+            given = given if len(given) <= 160 else given[:157] + "..."
+            where = "render %d of %d (release `%s`, values %s): " % (
+                i + 1, len(renders), r["release"], given
+            )
+        given = []
+        if r["values"] is not None:
+            given = ["-f", "values-%d.json" % i]
+            Path(given[1]).write_text(json.dumps(r["values"]), encoding="utf-8")
+        kube = ["--kube-version", job["kubernetes"]]
+        done = helm("template", r["release"], str(chart), *kube, *given)
+        if done.returncode:
+            answer(False, [helm_said(where, done.stderr or done.stdout)], done.stderr)
+        CURRENT["rendered"] = done.stdout
+        linted = helm("lint", str(chart), "--strict", *kube, *given)
+        if linted.returncode:
+            raw = linted.stdout + linted.stderr
+            said = lint_said(raw) or [raw.strip()]
+            answer(False, [helm_said(where, m) for m in said], raw)
+        rendered = Path("rendered-%d.yaml" % i)
+        rendered.write_text(done.stdout, encoding="utf-8")
+        docs = [d for d in yaml.safe_load_all(done.stdout) if d is not None]
+        if docs:
+            report = validate(str(rendered), where)
+        # read only now: Helm has accepted the file, so a broken one never gets this far
+        own = chart / "values.yaml"
+        defaults = yaml.safe_load(own.read_text(encoding="utf-8")) if own.is_file() else {}
+        defaults = defaults or {}
+        values = defaults if r["values"] is None else merged(defaults, r["values"])
+        try:
+            grade.check(docs, brief, {"release": r["release"], "values": values})
+        except AssertionError as exc:
+            answer(False, [(None, where + str(exc))], report)
+        except Exception as exc:
+            answer(False, report=report, broken="%s: %s" % (type(exc).__name__, exc))
+        shown = shown if shown is not None else done.stdout
+    CURRENT["rendered"] = shown or ""
+    answer(True, report=report)
 
 
 spec = importlib.util.spec_from_file_location(job["module"], job["grader"])
 grade = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(grade)
+if job.get("helm"):
+    grade_helm(grade)
 many = hasattr(grade, "check_many")
 docs = shape(Path(job["learner"]).read_text(encoding="utf-8"), many)
-report = validate()
+report = validate(job["learner"])
 try:
     if many:
         grade.check_many(docs, job["brief"])
@@ -353,15 +511,33 @@ answer(True, report=report)
 """
 
 
-def job(meta, brief, learner=None):
+def helm_job(meta):
+    """What the child needs to put a Helm task's chart together and render it."""
+    tool = tools.installed(tools.HELM)
+    if tool is None:
+        raise ToolMissing("helm is not installed: run `drillion doctor --fetch`")
+    chart = meta["dir"] / "chart"
+    name = yaml.safe_load((chart / "Chart.yaml").read_text(encoding="utf-8"))["name"]
+    return {
+        "tool": str(tool),
+        "chart": str(chart),
+        "name": name,
+        "edits": meta["edits"],
+        "files": [meta["edits"], *chart_files(meta)],
+    }
+
+
+def job(meta, brief, learner=None, helm=None):
     """Everything the child needs to grade one sitting, as plain data.
 
     `learner` is the file to grade, and defaults to the learner's own. A self-check grades
-    the answer key instead, and passes the path it rendered it to."""
+    the answer key instead, and passes the path it rendered it to. `helm` is `helm_job`'s
+    answer for a Helm task, and absent for a manifest."""
     tool = tools.installed(tools.KUBECONFORM)
     if tool is None:
         raise ToolMissing("kubeconform is not installed: run `drillion doctor --fetch`")
     return {
+        "helm": helm,
         "learner": str(learner or meta["path"]),
         "grader": str(meta["dir"] / "grade.py"),
         "module": module_name(meta["dir"].name),
@@ -386,27 +562,42 @@ def read_result(out):
             "`drillion doctor`."
         )
     diagnostics = [
-        {"path": d.get("path"), "message": str(d.get("message", ""))}
+        {
+            "path": d.get("path"),
+            "message": str(d.get("message", "")),
+            **({"file": str(d["file"])} if d.get("file") else {}),
+            **({"line": d["line"]} if isinstance(d.get("line"), int) else {}),
+        }
         for d in result.get("diagnostics", [])
         if isinstance(d, dict)
     ]
-    return result["ok"], diagnostics, str(result.get("report", ""))
+    return (
+        result["ok"],
+        diagnostics,
+        str(result.get("report", "")),
+        str(result.get("rendered") or ""),
+    )
 
 
-def fingerprint(meta):
+def fingerprint(meta, helm=False):
     """What decided this verdict: the grader, the validator and the schemas alike.
 
     The etag says what the learner wrote. This says what judged it, which is why the
-    validator version and the schema digest are in here and not only `grade.py`."""
+    validator version and the schema digest are in here and not only `grade.py`. A Helm
+    verdict is Helm's too, under its own prefix so no manifest fingerprint moves."""
     pin = tools.pin_for(tools.KUBECONFORM)
-    h = hashlib.sha256()
-    for part in (
+    parts = [
         grader_revision(meta),
         pin.version,
         pin.binary_sha256,
         tools.KUBERNETES_VERSION,
         tools.schema_digest(),
-    ):
+    ]
+    if helm:
+        chart = tools.pin_for(tools.HELM)
+        parts += [chart.version, chart.binary_sha256]
+    h = hashlib.sha256()
+    for part in parts:
         h.update(part.encode())
         h.update(b"\0")
-    return "m1:" + h.hexdigest()[:12]
+    return ("h1:" if helm else "m1:") + h.hexdigest()[:12]

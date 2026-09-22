@@ -1,0 +1,6 @@
+replicaCount: {replicas}
+image:
+  repository: {repository}
+  tag: {tag}
+service:
+  port: {port}

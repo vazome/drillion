@@ -1,0 +1,5 @@
+apiVersion: v2
+name: api
+description: An API server whose requests and limits are the installer's to set
+type: application
+version: 0.1.0

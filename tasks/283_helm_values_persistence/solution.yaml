@@ -1,0 +1,5 @@
+image: {image}
+persistence:
+  enabled: true
+  size: {size}
+  storageClass: {storage_class}

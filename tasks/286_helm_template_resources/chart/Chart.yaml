@@ -1,0 +1,5 @@
+apiVersion: v2
+name: api
+description: An API server whose resources and placement come from values
+type: application
+version: 0.2.0

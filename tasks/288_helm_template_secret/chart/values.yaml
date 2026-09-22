@@ -1,0 +1,4 @@
+# set these at install time, never in a committed values file
+auth:
+  username: app
+  password: change-me

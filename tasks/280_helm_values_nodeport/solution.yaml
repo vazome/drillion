@@ -1,0 +1,8 @@
+replicaCount: {replicas}
+image:
+  repository: {repository}
+  tag: {tag}
+service:
+  type: NodePort
+  port: {port}
+  nodePort: {node_port}

@@ -15,7 +15,8 @@ words mean.
 **Task**:
 The unit of practice: one folder under `tasks/`, holding one spec, one file to fill in, and the
 grader that judges it. A Python task keeps the last two in one `task.py`; a manifest task splits
-them into `task.yaml` and `grade.py`. There are 278: 267 Python, 11 manifest.
+them into `task.yaml` and `grade.py`; a Helm task does the same beside the **chart** its
+`task.yaml` completes. There are 288: 267 Python, 11 manifest, 10 Helm.
 _Avoid_: exercise, drill, problem, kata, question
 
 **Slug**:
@@ -55,6 +56,22 @@ _Avoid_: origin, author, credit
 **Spec**:
 The guidance a task shows you: Why / You get / You return / Rules.
 _Avoid_: description, prompt, statement, brief
+
+**Chart**:
+The files a Helm task ships under `chart/`: everything a real chart has, but for the one file
+the learner writes. Shown read-only beside the editor, and graded exactly as shipped.
+_Avoid_: package, bundle, template set
+
+**Edits**:
+The chart path a Helm task's `task.yaml` stands in for: `values.yaml`, or one template. Fixed per
+task by its frontmatter, and the label on the learner's own tab.
+_Avoid_: slot, target, learner file
+
+**Render**:
+What `helm template` made of the chart with the learner's file in place, for one release and one
+set of values. A template task is graded on more than one, and the page shows the render it
+judged.
+_Avoid_: output, preview, build
 
 **Region**:
 The part of a task file that is yours to write. Everything below the **machinery marker**

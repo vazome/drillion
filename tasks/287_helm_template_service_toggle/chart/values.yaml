@@ -1,0 +1,6 @@
+service:
+  # set to false when something else, a mesh or an ingress controller, routes to the pods
+  enabled: true
+  # leave unset for ClusterIP
+  type: ""
+  port: 80

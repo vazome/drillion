@@ -42,6 +42,7 @@ def tasks_root(**folders):
         (tmp / "tasks" / name).mkdir(parents=True)
         for fname, text in files.items():
             path = tmp / "tasks" / name / fname
+            path.parent.mkdir(parents=True, exist_ok=True)  # chart/templates/…
             if isinstance(text, bytes):
                 path.write_bytes(text)
             else:

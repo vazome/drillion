@@ -65,7 +65,7 @@ def _submit(text):
     The diagnostics are what the page is given, so the tests assert on the field and the
     sentence rather than on whatever a test framework printed around them."""
     (settings.tasks_dir / SLUG / "task.yaml").write_text(text, encoding="utf-8")
-    passed, diagnostics, _ = runner.run_manifest(catalogue.tasks()[SLUG], BRIEF)
+    passed, diagnostics, *_ = runner.run_manifest(catalogue.tasks()[SLUG], BRIEF)
     if not diagnostics:
         return passed, ""
     first = diagnostics[0]

@@ -8,7 +8,9 @@ export type Grade = "quick" | "pass" | "struggled" | "abandoned";
 export interface Meta {
   topic: number; title: string;
   difficulty: "easy" | "medium" | "hard"; tier?: "core" | "advanced" | "packages"; track?: string;
-  kind: "python" | "manifest";
+  kind: "python" | "manifest" | "helm";
+  /** a Helm task's one hole: the chart path the learner's file stands in for */
+  edits?: string;
   tags: string[]; source?: string;
 }
 /** A catalogue row: the task's facts plus this learner's card. */
@@ -61,6 +63,8 @@ export interface DepRef { slug: string; topic: number; title: string; tags: stri
 export interface Task {
   slug: string; meta: Meta;
   spec_md: string; code: string; etag: string; has_given: boolean;
+  /** a Helm task's other files, read-only, in the order its tabs show them; [] otherwise */
+  chart: ChartFile[];
   status: Status;
   /** passes on this card, ever — the lineage screen's `seen N×` line */
   seen: number;
@@ -89,7 +93,7 @@ export interface Task {
    *  the grade, and are absent on a pass archived before a run recorded it. */
   archive: {
     date: string; grade: Grade; code: string | null;
-    python?: string; validator?: string; kubernetes?: string; seed?: number; revision?: string;
+    python?: string; validator?: string; kubernetes?: string; helm?: string; seed?: number; revision?: string;
   }[];
   /** The learner's one note on the task, `""` when there is none — `PUT /api/task/{slug}/note`. */
   note: string;
@@ -106,13 +110,20 @@ export interface Case {
 }
 /** One thing the grader found wrong. `path` is where in the manifest, `null` when it is
  *  about the document as a whole. Python runs send none of these: their detail is `case`. */
-export interface Diagnostic { path: string | null; message: string }
+export interface Diagnostic {
+  path: string | null; message: string;
+  /** on a Helm task, the chart file Helm named, and the line in it when it gave one */
+  file?: string; line?: number;
+}
+export interface ChartFile { path: string; text: string }
 interface RunBase {
   attempts: number; headline: string[]; output: string; etag: string;
   /** what the learner's own code printed, lifted out of pytest's report; "" when silent */
   printed: string;
   case: Case | null;
   diagnostics: Diagnostic[];
+  /** what Helm rendered for the run being judged; absent or "" on any other kind */
+  rendered?: string;
 }
 /** The grade and everything it decided exist iff `passed && graded`. A plain Run is
  *  `graded: false`: it costs no attempt and moves no card, however green it came back.

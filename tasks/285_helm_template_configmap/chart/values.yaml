@@ -1,0 +1,5 @@
+# every entry becomes one key of the ConfigMap, spelled as it is here
+config:
+  LOG_LEVEL: info
+  MAX_CONNECTIONS: 100
+  FEATURE_SEARCH: true
