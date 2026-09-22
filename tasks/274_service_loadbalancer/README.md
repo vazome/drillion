@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [273]
 track: kubernetes
-tags: [kubernetes, service, loadbalancer]
+tags: [service, networking]
 kind: manifest
 ---
 # LoadBalancer: the cloud's IP in front of the same three ports

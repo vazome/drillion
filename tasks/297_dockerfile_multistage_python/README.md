@@ -4,7 +4,7 @@ difficulty: hard
 minutes: 20
 prereqs: [290, 296]
 track: docker
-tags: [docker, dockerfile, multi-stage, python, venv]
+tags: [multi-stage, pip, image-size]
 kind: docker
 edits: Dockerfile
 ---

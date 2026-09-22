@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [270, 284]
 track: helm
-tags: [helm, templates, configmap, range]
+tags: [templates, configmap, range]
 kind: helm
 edits: templates/configmap.yaml
 ---

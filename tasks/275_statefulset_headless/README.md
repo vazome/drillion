@@ -4,7 +4,7 @@ difficulty: hard
 minutes: 25
 prereqs: [268, 272]
 track: kubernetes
-tags: [kubernetes, statefulset, service, headless]
+tags: [workloads, service]
 kind: manifest
 ---
 # a StatefulSet is nothing without its headless Service

@@ -13,10 +13,6 @@ def brief(r):
     return {"helm": r.choice(HELMS)}
 
 
-def _all(stage, cmd):
-    return [s for s in stage["steps"] if s["cmd"] == cmd]
-
-
 def _fails_loudly(words):
     """curl's -f, alone, in a cluster like -fsSL, or spelt --fail."""
     return any(
@@ -29,7 +25,7 @@ def check(stages, b):
     assert len(stages) == 1, f"one stage is enough here: this file has {len(stages)}"
     stage = stages[0]
     assert stage["base"] == BASE, f"line {stage['line']}: FROM {BASE}"
-    shells = _all(stage, "SHELL")
+    shells = stage.all("SHELL")
     assert shells, "set SHELL before the piped RUN, so a failed download fails the build"
     shell = shells[0]["exec"] or []
     assert shell[:1] == ["/bin/bash"] and shell[-1:] == ["-c"], (
@@ -39,7 +35,7 @@ def check(stages, b):
     assert any(a == "-o" and c == "pipefail" for a, c in pairwise(shell)), (
         f"line {shells[0]['line']}: pass `-o pipefail` to the shell"
     )
-    piped = [s for s in _all(stage, "RUN") if "|" in s["words"]]
+    piped = [s for s in stage.all("RUN") if "|" in s["words"]]
     assert len(piped) == 1, "one RUN pipes the download into tar"
     run = piped[0]
     assert shells[0]["line"] < run["line"], (
@@ -58,15 +54,15 @@ def check(stages, b):
     assert "/usr/local/bin" in unpack and "linux-amd64/helm" in unpack, (
         f"line {run['line']}: extract linux-amd64/helm into /usr/local/bin, and nothing else"
     )
-    installs = [s for s in _all(stage, "RUN") if "install" in s["words"] and "curl" in s["words"]]
+    installs = [s for s in stage.all("RUN") if "install" in s["words"] and "curl" in s["words"]]
     assert installs and installs[0]["line"] < run["line"], (
         "install curl with apt-get, in a RUN before the one that uses it"
     )
-    copies = [c for c in _all(stage, "COPY") if c["words"] and c["words"][0] == "deploy.sh"]
+    copies = [c for c in stage.all("COPY") if c["words"] and c["words"][0] == "deploy.sh"]
     assert copies and copies[0]["words"][-1] == "/usr/local/bin/deploy.sh", (
         "COPY deploy.sh /usr/local/bin/deploy.sh"
     )
-    entry = _all(stage, "ENTRYPOINT")
+    entry = stage.all("ENTRYPOINT")
     assert len(entry) == 1 and entry[0]["exec"] == ["deploy.sh"], (
         'one ENTRYPOINT, in exec form: ["deploy.sh"]'
     )

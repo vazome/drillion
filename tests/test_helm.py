@@ -194,7 +194,7 @@ def _grade(meta, brief, text):
     path.write_text(text, encoding="utf-8")
     try:
         passed, diagnostics, *_ = runner.run_manifest(
-            meta, brief, learner=path, helm=kinds.of(meta).helm(meta)
+            meta, brief, learner=path, **kinds.of(meta).extra(meta)
         )
     finally:
         path.unlink()

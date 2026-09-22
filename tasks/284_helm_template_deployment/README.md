@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [268, 279]
 track: helm
-tags: [helm, templates, deployment, labels]
+tags: [templates, deployment, labels]
 kind: helm
 edits: templates/deployment.yaml
 ---

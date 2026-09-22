@@ -27,7 +27,7 @@ tiered on the solution, while
 lines you can only write once you have seen the trick is `hard`. Anchor the call on the task's
 `## Rules` — rules are where the traps live — and grade a new task against the rubric the rest
 were graded against: [difficulty-rubric.md](difficulty-rubric.md).
-Today: 48 easy · 196 medium · 54 hard.
+Today: 51 easy · 210 medium · 62 hard.
 
 **track** — one per task: a themed run through the catalogue that cuts across tiers. The home
 screen offers each track as a pill, and picking one sets the **focus**. A Python task that names
@@ -35,22 +35,25 @@ none is on `python`; the Kubernetes manifests say `track: kubernetes`, the Helm 
 `track: helm`, and the Dockerfiles `track: docker`. Name a track only when
 the task belongs to a run other than `python`, and give the run a logo in `web/public/tracks/`.
 
-**tags** — what Python you practise. Lowercase, kebab-case, 1–3 per task, and one rule decides
+**tags** — what you practise. Lowercase, kebab-case, 1–3 per task, and one rule decides
 every one of them:
 
-> A tag names a **Python concept you can practise** — never the task's identity, never its story.
+> A tag names a **concept you can practise** — never the task's identity, never its story.
 
 `recursion`, `dict-get`, `context-managers` and `bitwise` are tags: each names something you
 could sit down and get better at, and something a *future* task could also be tagged with.
 `flatten-array`, `phone-screens` and `take-home-task-2` are not. They name one task and could
-never name another.
+never name another. The same holds on the infra tracks: `probes`, `multi-stage` and
+`layer-cache` are tags, `statefulset` and `distroless` are not. A task never repeats its
+track as a tag, since focus and the catalogue already match the track.
 
 Every tag has at least two tasks, and a new tag should arrive with two contrasting contexts.
-Contrasting means the same Python idea solves a different kind of problem, not one task retold
+Contrasting means the same idea solves a different kind of problem, not one task retold
 with new nouns. Pair related concepts when one honest task needs both; do not add a tag merely
 because its syntax appears incidentally. Reach for an existing tag before minting a synonym —
 `sets` not `set`, `strings` not `str-stuff` — and when nothing fits, name the concept, not the
-task. `GET /api/catalogue` returns the whole vocabulary under `tags`.
+task. `GET /api/catalogue` returns the whole vocabulary under `tags`. `drillion doctor` refuses
+a task with more than three tags and a tag no second task carries.
 
 **focus** in `progress.sqlite3` is a single string, and the scheduler matches it against a task's
 tier, track and tags alike (`scheduler.py:_facets`): `advanced` and `recursion` are both
@@ -200,7 +203,8 @@ the chart:
   Dockerfile parsed into build stages, each `{"base", "name", "line", "globals", "steps"}`;
   a step is `{"cmd", "args", "flags", "exec", "words", "line"}`, `exec` being the JSON array
   of an exec-form instruction and `None` for shell form, and `globals` the `ARG`s above the
-  first `FROM`. Name the line in a message when one line is at fault.
+  first `FROM`. `stage.all("RUN")` lists a stage's steps of one instruction. Name the line in
+  a message when one line is at fault.
 - **`solution.Dockerfile`**: the answer key, filled with `str.format`, so a brace Docker needs,
   `${NAME}`, is written `${{NAME}}`. Why and You get cannot hold a brace at all: write
   `$NAME` there.

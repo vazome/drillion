@@ -79,7 +79,6 @@ def open_attempt(st, slug, meta):
     st["open"][slug] = {
         "seed": seed,
         "attempts": 0,
-        "runs": 0,
         "hints": 0,
         "new": card(st, slug)["seen"] == 0,
         "started": now.isoformat(),
@@ -113,16 +112,12 @@ def grade_reason(o, par, grade):
 
 
 def nudge_due(o):
-    """Half an hour of active reading with nothing run and no hint taken: offer one.
+    """Half an hour of active work with nothing submitted and no hint taken: offer one.
 
-    Taking a hint or running the tests answers it, so the nudge clears itself — an ungraded
-    Run counts, which is why `runs` is tracked at all."""
+    A graded submission or a taken hint clears it. An ungraded Run does not: running the
+    tests over and over is the brute force the nudge is there to interrupt."""
     return (
-        bool(o)
-        and not o["attempts"]
-        and not o.get("runs")
-        and not o["hints"]
-        and o["active"] >= NUDGE_SECS
+        bool(o) and not o["attempts"] and not o["hints"] and o["active"] >= NUDGE_SECS
     )
 
 
@@ -175,14 +170,18 @@ def abandon(st, slug, kind, disk_src):
     return emptied
 
 
+def _hint_wait(o, level):
+    """Active seconds until hint `level + 1` opens. The first hint is free."""
+    return max(0, HINT_GAP * (level + 1) - o["active"]) if level else 0
+
+
 def next_hint(st, slug, hints):
     """Hints cost active time — clicking through them teaches nothing."""
     o = st["open"][slug]
     level = o["hints"]
     if level >= len(hints):
         raise Gated(0)  # exhausted: the solution is the next step
-    wait = HINT_GAP * (level + 1) - o["active"]
-    if level and wait > 0:
+    if wait := _hint_wait(o, level):
         raise Gated(int(wait))
     o["hints"] += 1
     return level + 1, hints[level]
@@ -226,7 +225,7 @@ def attempt_view(o, hints):
     shown = o["hints"] if o else 0
     next_in = None
     if o and shown < len(hints):
-        next_in = max(0, HINT_GAP * (shown + 1) - o["active"]) if shown else 0
+        next_in = _hint_wait(o, shown)
     return {
         "attempt": {
             **{k: o[k] for k in ("attempts", "active", "seed", "solution_shown")},

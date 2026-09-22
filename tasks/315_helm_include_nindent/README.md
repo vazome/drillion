@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [314]
 track: helm
-tags: [helm, templates, named-templates, indentation, deployment]
+tags: [templates, named-templates, indentation]
 kind: helm
 edits: templates/deployment.yaml
 ---

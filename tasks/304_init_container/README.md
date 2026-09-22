@@ -4,7 +4,7 @@ difficulty: hard
 minutes: 20
 prereqs: [269]
 track: kubernetes
-tags: [kubernetes, pod, init-containers, volumes, emptydir]
+tags: [pod, volumes]
 kind: manifest
 ---
 # an init container prepares what the app finds when it starts

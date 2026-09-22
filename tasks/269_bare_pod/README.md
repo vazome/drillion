@@ -4,7 +4,7 @@ difficulty: easy
 minutes: 10
 prereqs: [268]
 track: kubernetes
-tags: [kubernetes, pod, containers]
+tags: [pod]
 kind: manifest
 ---
 # one Pod, no controller: the smallest object that runs anything

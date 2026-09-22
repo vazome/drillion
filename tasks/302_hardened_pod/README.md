@@ -4,7 +4,7 @@ difficulty: hard
 minutes: 20
 prereqs: [269]
 track: kubernetes
-tags: [kubernetes, pod, security-context, pod-security]
+tags: [pod, security, non-root]
 kind: manifest
 ---
 # a hardened pod that passes the restricted security standard

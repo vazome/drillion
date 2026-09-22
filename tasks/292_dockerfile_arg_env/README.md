@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [289]
 track: docker
-tags: [docker, dockerfile, arg, env]
+tags: [env]
 kind: docker
 edits: Dockerfile
 ---

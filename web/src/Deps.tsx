@@ -2,25 +2,31 @@ import { useEffect, useState } from "react";
 import { Button, Card, Icon, DepLineage, EmptyState } from "./ds/index.js";
 import { api, type Task as TaskData } from "./api";
 import { strength } from "./strength";
+import { topicNo } from "./format";
 
 export const taskHref = (slug: string) => `#/task/${encodeURIComponent(slug)}`;
 /** Every prereq link goes to that task's own lineage, not to the task: you follow these to
  *  walk the graph, and `Open NNN` is how you leave it for the editor. */
 export const depsHref = (slug: string) => `${taskHref(slug)}/deps`;
 
-/** Payloads already fetched, so walking the graph swaps a board rather than reloading a
- *  screen. Task payloads are read-only here and cheap; a session-lived map is the whole
- *  cache, and a `progress.sqlite3` write anywhere else in the app never reaches this screen. */
-const seen = new Map<string, TaskData>();
+/** Payloads fetched a moment ago, so walking the graph swaps a board rather than reloading a
+ *  screen. A hit only lives as long as a hover takes to become a click: a pass, an abandon or
+ *  a reset elsewhere changes these payloads, and a longer-lived copy would show the old one. */
+const FRESH_MS = 10_000;
+const seen = new Map<string, { task: TaskData; at: number }>();
 const inflight = new Map<string, Promise<TaskData>>();
+const fresh = (slug: string) => {
+  const hit = seen.get(slug);
+  return hit && Date.now() - hit.at < FRESH_MS ? hit.task : undefined;
+};
 
 /** Fetch a lineage before it is asked for — a node calls this on hover and on focus, which
  *  is most of the way through the click. */
 export function prefetch(slug: string): Promise<TaskData> {
-  const hit = seen.get(slug) ?? inflight.get(slug);
+  const hit = fresh(slug) ?? inflight.get(slug);
   if (hit) return Promise.resolve(hit);
   const p = api<TaskData>(`/task/${encodeURIComponent(slug)}`)
-    .then((task) => { seen.set(slug, task); return task; })
+    .then((task) => { seen.set(slug, { task, at: Date.now() }); return task; })
     .finally(() => inflight.delete(slug));
   inflight.set(slug, p);
   return p;
@@ -31,7 +37,7 @@ export function prefetch(slug: string): Promise<TaskData> {
  *  panel over the task screen is the other end — see `Task.tsx`. */
 export function Deps({ slug }: { slug: string }) {
   // straight out of the cache when a hover already paid for it: no loading state, no flash
-  const [task, setTask] = useState<TaskData | null>(() => seen.get(slug) ?? null);
+  const [task, setTask] = useState<TaskData | null>(() => fresh(slug) ?? null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -52,7 +58,7 @@ export function Deps({ slug }: { slug: string }) {
         <a href="#/" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, whiteSpace: "nowrap" }}><Icon name="ArrowLeft" />Catalogue</a>
         <div style={{ flex: 1 }} />
         <Button variant="secondary" onClick={() => { location.hash = taskHref(task.slug); }}>
-          Open {String(topic).padStart(3, "0")}<Icon name="ArrowRight" />
+          Open {topicNo(topic)}<Icon name="ArrowRight" />
         </Button>
       </div>
       <Card label={`Lineage · ${task.slug}`}>

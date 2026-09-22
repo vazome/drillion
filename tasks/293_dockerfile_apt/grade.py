@@ -11,10 +11,6 @@ def brief(r):
     return {"python": r.choice(PYTHONS)}
 
 
-def _all(stage, cmd):
-    return [s for s in stage["steps"] if s["cmd"] == cmd]
-
-
 def _at(words, *wanted):
     """The index of the first of `wanted` in words, or None."""
     return next((i for i, w in enumerate(words) if w in wanted), None)
@@ -25,7 +21,7 @@ def check(stages, b):
     stage = stages[0]
     base = f"python:{b['python']}-slim"
     assert stage["base"] == base, f"the image is built FROM {stage['base']!r}, and it should be {base!r}"
-    apt = [s for s in _all(stage, "RUN") if "apt-get" in s["words"]]
+    apt = [s for s in stage.all("RUN") if "apt-get" in s["words"]]
     assert apt, "install the packages with apt-get in a RUN"
     assert len(apt) == 1, (
         f"lines {', '.join(str(s['line']) for s in apt)} each run apt-get: an update in its own "
@@ -56,11 +52,11 @@ def check(stages, b):
         f"line {run['line']}: remove /var/lib/apt/lists/* at the end of the same RUN; in a later "
         "RUN the lists are already baked into a layer"
     )
-    copies = _all(stage, "COPY")
+    copies = stage.all("COPY")
     assert copies and all(c["line"] > run["line"] for c in copies), (
         "copy backup.py after the install, so an edit to it does not repeat the install"
     )
-    cmd = _all(stage, "CMD")
+    cmd = stage.all("CMD")
     assert len(cmd) == 1 and cmd[0]["exec"] and cmd[0]["exec"][-1].endswith("backup.py"), (
         "one CMD, in exec form, running backup.py with python"
     )

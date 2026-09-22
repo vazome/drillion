@@ -4,7 +4,7 @@ difficulty: hard
 minutes: 20
 prereqs: [285, 287]
 track: helm
-tags: [helm, templates, range, scope, service]
+tags: [templates, range, service]
 kind: helm
 edits: templates/services.yaml
 ---

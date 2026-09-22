@@ -104,6 +104,8 @@ exclude = ["tasks/**", "*.md"]
 # scheduling runs on local wall-clock dates on purpose; a tz-aware fix shifts every due date
 "src/drillion/*" = ["DTZ"]
 "tasks/*/task.py" = ["E402", "F841"]
+# the grader turns any failure of a task's check into a `broken` verdict, never an attempt
+"src/drillion/grading.py" = ["BLE001"]
 
 [tool.pytest.ini_options]
 python_files = ["task.py", "test_*.py"]

@@ -20,13 +20,18 @@ class Invalid(Exception):
         self.msg, self.line = msg, line
 
 
-def _solve(tree):
-    """The learner's function: the last top-level def named solve."""
-    fns = [
+def _solves(tree):
+    """Every top-level def named solve, in file order."""
+    return [
         n
         for n in tree.body
         if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == "solve"
     ]
+
+
+def _solve(tree):
+    """The learner's function: the last top-level def named solve."""
+    fns = _solves(tree)
     if not fns:
         raise Invalid("the region must define solve()")
     return fns[-1]
@@ -99,12 +104,7 @@ def validate(edited, disk_src):
         tree = ast.parse(edited)
     except SyntaxError as err:
         raise Invalid(err.msg, err.lineno) from None
-    solves = [
-        n
-        for n in tree.body
-        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == "solve"
-    ]
-    if len(solves) != 1:
+    if len(_solves(tree)) != 1:
         raise Invalid("the region must define solve() exactly once")
     for node in tree.body:
         for name in [getattr(node, "name", "")] + [

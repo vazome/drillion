@@ -11,12 +11,8 @@ def brief(r):
     return {"node": r.choice(NODES), "nginx": r.choice(NGINX)}
 
 
-def _all(stage, cmd):
-    return [s for s in stage["steps"] if s["cmd"] == cmd]
-
-
 def _npm(stage, *words):
-    return [s for s in _all(stage, "RUN") if "npm" in s["words"] and all(w in s["words"] for w in words)]
+    return [s for s in stage.all("RUN") if "npm" in s["words"] and all(w in s["words"] for w in words)]
 
 
 def check(stages, b):
@@ -33,7 +29,7 @@ def check(stages, b):
     ci = _npm(build, "ci")
     assert len(ci) == 1, "install the dependencies with one `RUN npm ci`"
     ci = ci[0]
-    copies = _all(build, "COPY")
+    copies = build.all("COPY")
     manifests = [c for c in copies if c["line"] < ci["line"]]
     assert manifests and sorted(manifests[0]["words"][:-1]) == ["package-lock.json", "package.json"], (
         "copy package.json and package-lock.json on their own before `npm ci`, so the install "
@@ -52,9 +48,9 @@ def check(stages, b):
     assert final["base"] == served, (
         f"the serving stage is FROM {final['base']!r}, and it should be {served!r}"
     )
-    assert not _all(final, "RUN"), "the serving stage runs nothing: the site is already built"
-    over = [c for c in _all(final, "COPY") if c["flags"].get("from") == build["name"]]
-    assert len(over) == 1 and len(_all(final, "COPY")) == 1, (
+    assert not final.all("RUN"), "the serving stage runs nothing: the site is already built"
+    over = [c for c in final.all("COPY") if c["flags"].get("from") == build["name"]]
+    assert len(over) == 1 and len(final.all("COPY")) == 1, (
         f"the serving stage copies one thing, `--from={build['name']}`: the built site"
     )
     src, dest = over[0]["words"][0].rstrip("/"), over[0]["words"][-1].rstrip("/")
@@ -64,7 +60,7 @@ def check(stages, b):
     assert dest == "/usr/share/nginx/html", (
         f"line {over[0]['line']}: nginx serves /usr/share/nginx/html, not {dest}"
     )
-    exposed = [w for s in _all(final, "EXPOSE") for w in s["words"]]
+    exposed = [w for s in final.all("EXPOSE") for w in s["words"]]
     assert exposed in (["8080"], ["8080/tcp"]), (
         "EXPOSE 8080: the unprivileged nginx listens there, since port 80 needs root"
     )

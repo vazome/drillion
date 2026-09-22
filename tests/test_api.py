@@ -778,7 +778,6 @@ async def _run_is_free_and_submit_is_the_one_that_counts(api, _path):
     run = (await api.post(f"/api/task/{SLUG}/run", json=body)).json()
     assert run["passed"] is False and run["graded"] is False
     assert run["attempts"] == 0  # a Run is free, however it came back
-    assert state.load()["open"][SLUG]["runs"] == 1
 
     body["code"] = task["code"].replace(
         "    raise NotImplementedError", f"    {PASSING}"

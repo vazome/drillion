@@ -4,7 +4,7 @@ difficulty: hard
 minutes: 20
 prereqs: [277]
 track: kubernetes
-tags: [kubernetes, storageclass, persistentvolumeclaim, reclaim-policy]
+tags: [storage, persistentvolumeclaim]
 kind: manifest
 ---
 # a StorageClass decides who provisions and what happens when you walk away

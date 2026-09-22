@@ -13,7 +13,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from drillion import catalogue, kinds, manifest, runner, state, tools
+from drillion import catalogue, grading, kinds, manifest, runner, state, tools
 from drillion.api import app
 from drillion.settings import settings
 
@@ -312,13 +312,8 @@ def test_an_empty_file_is_refused_in_the_files_own_name():
 
 
 def _parse(text):
-    """The child's parser, run here on its own: it is plain Python inside GRADE_SOURCE."""
-    source = manifest.GRADE_SOURCE
-    start = source.index("HEREDOC = ")
-    end = source.index("def context_misses")
-    scope = {}
-    exec("import json, re\n" + source[start:end], scope)  # noqa: S102 - our own source
-    return scope["dockerfile_stages"](scope["dockerfile_steps"](text))
+    """The child's parser, run here on its own."""
+    return grading.dockerfile_stages(grading.dockerfile_steps(text))
 
 
 def test_the_parser_reads_a_dockerfile_as_the_builder_does():
@@ -350,6 +345,7 @@ def test_the_parser_reads_a_dockerfile_as_the_builder_does():
     assert heredoc["line"] == 8 and "echo FROM nothing" in heredoc["args"]
     assert cmd["exec"] == ["/app", "--flag"] and cmd["line"] == 11
     assert stages[1]["steps"][0]["exec"] is None
+    assert stages[0].all("RUN") == [run, heredoc] and stages[1].all("RUN") == []
 
 
 def test_a_sitting_through_the_api_shows_the_context(monkeypatch):

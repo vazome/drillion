@@ -14,10 +14,6 @@ def brief(r):
     return {"go": r.choice(GOS), "name": r.choice(NAMES)}
 
 
-def _all(stage, cmd):
-    return [s for s in stage["steps"] if s["cmd"] == cmd]
-
-
 def _output(run):
     words = run["words"]
     for i, w in enumerate(words):
@@ -35,10 +31,10 @@ def check(stages, b):
         f"the build stage is FROM {build['base']!r}, and it should be 'golang:{b['go']}'"
     )
     assert build["name"], "name the build stage, `FROM golang:... AS build`, so the next one can copy from it"
-    runs = [s for s in _all(build, "RUN") if "go" in s["words"] and "build" in s["words"]]
+    runs = [s for s in build.all("RUN") if "go" in s["words"] and "build" in s["words"]]
     assert len(runs) == 1, "build the binary with one `RUN go build` in the build stage"
     run = runs[0]
-    env = " ".join(s["args"] for s in _all(build, "ENV"))
+    env = " ".join(s["args"] for s in build.all("ENV"))
     assert "CGO_ENABLED=0" in run["words"] or "CGO_ENABLED=0" in env, (
         f"line {run['line']}: without CGO_ENABLED=0 the binary links against the build "
         "image's libc, which a static runtime image does not have"
@@ -52,10 +48,10 @@ def check(stages, b):
         f"the runtime stage is FROM {final['base']!r}: a static Go binary needs nothing under "
         "it, so `gcr.io/distroless/static-debian12:nonroot` or `scratch`"
     )
-    assert not _all(final, "RUN"), (
+    assert not final.all("RUN"), (
         "the runtime stage has no shell to RUN anything with: do that work in the build stage"
     )
-    copies = _all(final, "COPY")
+    copies = final.all("COPY")
     assert len(copies) == 1, "the runtime stage copies one thing, the binary"
     copy = copies[0]
     assert copy["flags"].get("from") == build["name"], (
@@ -66,11 +62,11 @@ def check(stages, b):
     )
     dest = copy["words"][-1]
     path = posixpath.join(dest, b["name"]) if dest.endswith("/") else dest
-    entry = _all(final, "ENTRYPOINT")
+    entry = final.all("ENTRYPOINT")
     assert len(entry) == 1 and entry[0]["exec"] == [path], (
         f"ENTRYPOINT should run the binary where line {copy['line']} put it: [\"{path}\"]"
     )
-    users = _all(final, "USER")
+    users = final.all("USER")
     numeric = users and users[-1]["words"][0].split(":")[0] not in ("0", "root")
     assert final["base"].endswith(":nonroot") or numeric, (
         "run as a user that is not root: the distroless `:nonroot` tag, or `USER 65532` on scratch"

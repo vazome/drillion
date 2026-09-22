@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Button, Card, Icon, Collapsible, ConflictBanner, DepLineage, EmptyState, FailedCase, NoteField, GraceNotice, NoticeBanner, RequiresTag, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
 import { ApiError, api, post, type Task as TaskData, type RunResult, type Case, type Diagnostic } from "./api";
-import { depsHref, prefetch } from "./Deps";
+import { depsHref, prefetch, taskHref } from "./Deps";
+import { plural, secs, topicNo } from "./format";
 import { inDays, strength } from "./strength";
 import { DiffView, Editor } from "./Editor";
 import { ChartFiles, ManifestFailure } from "./ManifestWorkspace";
@@ -26,8 +27,12 @@ const watchNarrow = (onChange: () => void) => {
   return () => q.removeEventListener("change", onChange);
 };
 const isNarrow = () => matchMedia(NARROW).matches;
-const secs = (n: number) => n >= 60 ? `${Math.floor(n / 60)}m${String(n % 60).padStart(2, "0")}s` : `${n}s`;
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const HINT_TEXT = { fontSize: 14 };
+/** The page re-renders every second while the clock runs; Markdown is only re-parsed when
+ *  its text changes. */
+const Spec = memo(SpecText);
+/** A reference shown with nothing of the learner's to diff against, highlighted as its file. */
+const FENCE: Record<TaskData["meta"]["kind"], string> = { python: "python", docker: "dockerfile", manifest: "yaml", helm: "yaml" };
 
 /** A refused action, shown beside the control that asked for it. */
 type Gate = { at: "hints" | "solution" | "editor" | "note"; message: string } | null;
@@ -168,7 +173,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       await ensureOpen();
       const r = await post<RunResult>(`${url}/run`, { ...current(), submit });
       landed(r.etag, r.passed && r.graded ? r.code : undefined);
-      setNudge(false);                     // a run answers the nudge, whichever way it went
+      if (r.graded) setNudge(false);       // a submission answers the nudge; a Run does not
       if (r.passed && r.graded) {
         setResult({ state: "passed", grade: r.grade, box: r.box, stepped: r.stepped, fromBox: r.from_box, reason: r.reason, dueIn: r.due_in, attempts: r.attempts, code: r.code });
         setTask((p) => p && ({ ...p, reference: r.reference, lapses: r.lapses }));
@@ -200,40 +205,34 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     return () => removeEventListener("keydown", on);
   }, [lineage, closeLineage]);
 
-  const hint = async () => {
+  /** Hint and solution are the same spend: over no live PUT, inside an attempt, once. */
+  const spend = async (what: "hint" | "solution", refused: (err: ApiError) => void) => {
     if (busy) return;
     setBusy(true);
     try {
       await pending();               // the payload carries an etag: never over a live PUT
       await ensureOpen();
-      adopt(await post<TaskData>(`${url}/hint`));
+      adopt(await post<TaskData>(`${url}/${what}`));
       setGate(null);
     } catch (e) {
-      const err = e as ApiError;
-      const wait = err.status === 423 ? err.detail?.wait_secs : 0;
-      if (wait) {
-        setNextHintIn(wait);
-        flash(`Not yet — ${secs(wait)}. Keep working; hint ${(task?.hints.shown.length ?? 0) + 1} unlocks itself.`);
-      } else setGate({ at: "hints", message: err.message });
+      refused(e as ApiError);
     } finally { setBusy(false); }
   };
 
-  const solution = async () => {
-    if (busy) return;
-    setBusy(true);
-    try {
-      await pending();               // the payload carries an etag: never over a live PUT
-      await ensureOpen();
-      adopt(await post<TaskData>(`${url}/solution`));
-      setGate(null);
-    } catch (e) {
-      const err = e as ApiError;
-      const d = err.detail ?? {};
-      setGate({ at: "solution", message: d.need_attempts || d.need_secs
-        ? `${err.message} — ${plural(d.need_attempts || 0, "more attempt")}, ${secs(d.need_secs || 0)} more work.`
-        : err.message });
-    } finally { setBusy(false); }
-  };
+  const hint = () => spend("hint", (err) => {
+    const wait = err.status === 423 ? err.detail?.wait_secs : 0;
+    if (wait) {
+      setNextHintIn(wait);
+      flash(`Not yet — ${secs(wait)}. Keep working; hint ${(task?.hints.shown.length ?? 0) + 1} unlocks itself.`);
+    } else setGate({ at: "hints", message: err.message });
+  });
+
+  const solution = () => spend("solution", (err) => {
+    const d = err.detail ?? {};
+    setGate({ at: "solution", message: d.need_attempts || d.need_secs
+      ? `${err.message} — ${plural(d.need_attempts || 0, "more attempt")}, ${secs(d.need_secs || 0)} more work.`
+      : err.message });
+  });
 
   const abandon = async () => {
     if (!confirm("Discard this attempt? The work is archived and the stub comes back.")) return;
@@ -248,6 +247,14 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       if (err.status === 400 || !absorb(err)) setGate({ at: "editor", message: err.message });
     }
   };
+
+  /** A Helm run that named a line in the learner's own file marks it, as a syntax error does.
+   *  Kept stable across the clock's ticks, since a new one redraws the editor's diagnostics. */
+  const edits = task?.meta.edits;
+  const problem = useMemo(() => {
+    const named = result.state === "failed" ? result.diagnostics.find((d) => d.file === edits && d.line) : undefined;
+    return syntax ?? (named ? { message: named.message, line: named.line! } : null);
+  }, [syntax, result, edits]);
 
   if (error) return <EmptyState message={`Could not load ${slug}: ${error}`} actionLabel="Back to Today" onAction={() => { location.hash = "#/"; }} />;
   if (!task) return <EmptyState message="Loading…" />;
@@ -279,16 +286,13 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
 
   const chart = !!meta.edits && task.chart.length > 0;
   const editorHeight = meta.kind !== "python" ? "clamp(280px, 42vh, 560px)" : narrow ? "60vh" : "calc(100vh - 364px)";
-  /** A Helm run that named a line in the learner's own file marks it, as a syntax error does. */
-  const named = result.state === "failed" ? result.diagnostics.find((d) => d.file === meta.edits && d.line) : undefined;
-  const problem = syntax ?? (named ? { message: named.message, line: named.line! } : null);
   const editor = <Editor kind={meta.kind} value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} problem={problem} height={editorHeight} flush={chart} />;
   const rendered = result.state === "failed" || result.state === "ran" ? result.rendered : "";
 
   return (
     <div style={{ maxWidth: 1500, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
-        <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)" }}>{String(meta.topic).padStart(3, "0")}</span>
+        <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)" }}>{topicNo(meta.topic)}</span>
         <h1 style={{ margin: 0, fontSize: "var(--fs-h)", fontWeight: 600 }}>{meta.title}</h1>
         <StatusBadge status={task.status} />
         <StatusBadge status={meta.difficulty} />
@@ -327,7 +331,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
       <TaskPanes narrow={narrow}>
         <div>
           <Card label={`Spec · ${slug}/README.md`}>
-            <SpecText text={task.spec_md} slug={slug} hideTitle />
+            <Spec text={task.spec_md} slug={slug} hideTitle />
 
             <div style={{ marginTop: 22, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
               <div style={{ ...LABEL, marginBottom: 10 }}>
@@ -342,7 +346,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
               {hints.shown.map((text, i) => (
                 <div key={i} style={{ background: "var(--surface-2)", borderRadius: "var(--radius)", padding: "10px 12px", marginBottom: 8 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>Hint {i + 1}</div>
-                  <SpecText text={text} slug={slug} style={{ fontSize: 14 }} />
+                  <Spec text={text} slug={slug} style={HINT_TEXT} />
                 </div>
               ))}
               {hintsLeft ? (
@@ -369,7 +373,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                         : "The reference answer, for comparison with what you wrote. It closes again when this task comes back."}</div>}
                   {mine
                     ? <DiffView kind={meta.kind} mine={mine} reference={reference} dark={dark} maxHeight="46vh" prefs={prefs} />
-                    : <SpecText text={"```" + (meta.kind === "python" ? "python" : "yaml") + "\n" + reference + "\n```"} slug={slug} />}
+                    : <Spec text={"```" + FENCE[meta.kind] + "\n" + reference + "\n```"} slug={slug} />}
                 </div>
               ) : (
                 <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
@@ -535,7 +539,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
                 <div style={{ flex: 1 }} />
                 <Button variant="quiet" onClick={() => { location.hash = "#/"; }}>Back to Today</Button>
                 {nextSlug ? (
-                  <Button variant="secondary" onClick={() => { location.hash = `#/task/${encodeURIComponent(nextSlug)}`; }}>Next in Today<Icon name="ArrowRight" /></Button>
+                  <Button variant="secondary" onClick={() => { location.hash = taskHref(nextSlug); }}>Next in Today<Icon name="ArrowRight" /></Button>
                 ) : null}
               </div>
             ) : null}

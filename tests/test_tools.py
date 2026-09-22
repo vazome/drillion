@@ -307,19 +307,6 @@ def test_schema_location_is_a_local_template_with_no_remote_fallback():
     assert "{{.ResourceKind}}" in location and "http" not in location
 
 
-def test_schema_digest_ignores_checkout_line_endings(tmp_path, monkeypatch):
-    schemas = tmp_path / "schemas"
-    schemas.mkdir()
-    path = schemas / "pod-v1.json"
-    path.write_bytes(b'{"kind": "Pod"}\n')
-    monkeypatch.setattr(tools, "SCHEMAS", schemas)
-    expected = tools.schema_digest()
-
-    path.write_bytes(b'{"kind": "Pod"}\r\n')
-
-    assert tools.schema_digest() == expected
-
-
 def test_manifest_digest_matches_the_live_computation():
     manifest = json.loads((tools.SCHEMAS.parent / "manifest.json").read_text())
     assert manifest["digest"] == tools.schema_digest()

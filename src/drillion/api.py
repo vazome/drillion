@@ -90,13 +90,14 @@ class Erase(BaseModel):
 
 
 @app.exception_handler(Invalid)
-async def _rejected(_request, exc):
+async def _invalid_edit(_request, exc):
     """A refused edit is the learner's problem, not a crash: 400 with the line."""
     return JSONResponse({"error": exc.msg, "line": exc.line}, 400)
 
 
 @app.exception_handler(backup.Rejected)
-async def _rejected(_request, exc):
+async def _bad_backup(_request, exc):
+    """A bundle or a confirmation the learner got wrong: 400 with what to fix."""
     return JSONResponse({"error": str(exc)}, 400)
 
 
@@ -188,8 +189,8 @@ def _check_etag(kind, src, sent):
         )
 
 
-def _status(st, slug):
-    c = card(st, slug)
+def _status(st, slug, c):
+    """`c` is `card(st, slug)`, which the caller already holds."""
     if slug in st["open"]:
         return "open"
     if not c["seen"]:
@@ -240,7 +241,7 @@ def _payload(st, slug, meta, src):
     o = st["open"].get(slug)
     c = card(st, slug)
     att = attempt_view(o, meta["hints"])
-    status = _status(st, slug)
+    status = _status(st, slug, c)
     # one rule, both answers: passing opens them, and while an attempt is open only the
     # deliberate peek does
     reveal = o["solution_shown"] if o else status == "done"
@@ -392,11 +393,12 @@ def catalogue():
                 "slug": slug,
                 **public(m),
                 "text": m["search_text"],
-                "status": _status(st, slug),
+                "status": _status(st, slug, c),
                 "blocked": held.get(slug, []),
-                **{k: card(st, slug)[k] for k in ("box", "due", "seen", "lapses")},
+                **{k: c[k] for k in ("box", "due", "seen", "lapses")},
             }
             for slug, m in all_tasks.items()
+            for c in (card(st, slug),)
         ]
         return {
             "focus": st["focus"],
@@ -463,20 +465,25 @@ def run_task(slug: str, edit: Edit):
 
     `submit` is the learner saying they are done: only then does the run cost an attempt
     and, on green, grade the pass. A plain Run is free and repeatable — it reports the same
-    pytest output and moves nothing."""
+    pytest output and moves nothing.
+
+    The grade itself runs with no lock held, so a slow one never queues every other
+    request; the result is recorded only if the same attempt is still open."""
     with writing() as st:
         meta = _task(slug)
-        o = current(st, slug)
+        sitting = dict(current(st, slug))
         kind = kinds.of(meta)
         src = kind.path(meta).read_text(encoding="utf-8")
         _check_etag(kind, src, edit.etag)
         new_src = kind.validate(edit.code, src)
         write_region(kind.path(meta), new_src)
-        passed, detail = kind.grade(meta, o, new_src)
+    passed, detail = kind.grade(meta, sitting, new_src)
+    with writing() as st:
+        o = current(st, slug)
+        if o.get("started") != sitting.get("started"):  # abandoned, then reopened
+            raise NoAttempt(slug)
         if edit.submit:
             o["attempts"] += 1
-        else:
-            o["runs"] = o.get("runs", 0) + 1  # not graded, but it answers the nudge
         body = kind.body(new_src)
         resp = {
             "passed": passed,

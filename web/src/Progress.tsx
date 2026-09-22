@@ -2,15 +2,16 @@ import { useEffect, useState } from "react";
 import { Card, DueForecast, EmptyState, PracticeHeatmap, StatusBadge, Table, TopicStrips } from "./ds/index.js";
 import { api, type Progress as Payload } from "./api";
 import { Stats } from "./Stats";
+import { taskHref } from "./Deps";
+import { secs } from "./format";
 import { bands, tally } from "./strength";
 
-const mmss = (s: number) => `${Math.floor(s / 60)}m${String(s % 60).padStart(2, "0")}s`;
 /** "2026-08-26" → "26 Aug". Parsed at local midnight so the day never slips a timezone. */
 const day = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 
 const LOG_COLS = [
   { key: "date", label: "Date", width: "76px", mono: true, muted: true, render: (r: LogRow) => day(r.date) },
-  { key: "slug", label: "Task", mono: true, render: (r: LogRow) => <a href={`#/task/${encodeURIComponent(r.slug)}`}>{r.slug}</a> },
+  { key: "slug", label: "Task", mono: true, render: (r: LogRow) => <a href={taskHref(r.slug)}>{r.slug}</a> },
   { key: "grade", label: "Grade", width: "96px", render: (r: LogRow) => <StatusBadge status={r.grade} /> },
   { key: "attempts", label: "Attempts", align: "right" as const, mono: true, width: "84px", muted: true },
   { key: "time", label: "Active", align: "right" as const, mono: true, width: "76px" },
@@ -29,7 +30,7 @@ export function Progress() {
   const tags = Object.entries(data.per_tag).map(([tag, t]) => ({ tag, ...t }));
   const known = tally(data.boxes, data.ladder);
   const band = bands(data.ladder);
-  const logRows = [...data.log].reverse().map((row, i) => ({ ...row, id: i, time: mmss(row.secs), kind: row.new ? "new" : "review" }));
+  const logRows = [...data.log].reverse().map((row, i) => ({ ...row, id: i, time: secs(row.secs), kind: row.new ? "new" : "review" }));
 
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", display: "grid", gap: 18 }}>

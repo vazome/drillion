@@ -4,7 +4,7 @@ difficulty: easy
 minutes: 15
 prereqs: [270]
 track: kubernetes
-tags: [kubernetes, secret, base64]
+tags: [secret, base64]
 kind: manifest
 ---
 # a Secret's data is base64, and stringData is the honest way in

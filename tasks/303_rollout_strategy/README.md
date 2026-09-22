@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [299]
 track: kubernetes
-tags: [kubernetes, deployment, rolling-update, probes]
+tags: [deployment, rollout, probes]
 kind: manifest
 ---
 # a rollout with no gap: maxSurge, maxUnavailable, minReadySeconds

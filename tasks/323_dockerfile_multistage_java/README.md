@@ -4,7 +4,7 @@ difficulty: hard
 minutes: 20
 prereqs: [297]
 track: docker
-tags: [docker, dockerfile, multi-stage, java, maven, layer-cache]
+tags: [multi-stage, layer-cache]
 kind: docker
 edits: Dockerfile
 ---

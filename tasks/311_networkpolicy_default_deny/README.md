@@ -4,7 +4,7 @@ difficulty: hard
 minutes: 20
 prereqs: [272]
 track: kubernetes
-tags: [kubernetes, networkpolicy, networking, labels, multi-document]
+tags: [networking, security, labels]
 kind: manifest
 ---
 # NetworkPolicy: deny everything, then let one app in

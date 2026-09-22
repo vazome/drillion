@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [268, 272]
 track: kubernetes
-tags: [kubernetes, deployment, probes, readiness, liveness]
+tags: [deployment, probes]
 kind: manifest
 ---
 # readiness and liveness: one decides traffic, the other decides restarts

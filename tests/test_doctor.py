@@ -8,15 +8,21 @@ from drillion import cli, doctor
 from drillion.settings import settings
 from tests.fixtures import README, TASK, tasks_root
 
+# shares the fixture README's tag, so a one-task root is not told its tag stands alone
+PEER = "999_peer"
+
 
 def _reasons(**folders):
-    """{folder: [reason]} from a throwaway tasks/ root of {folder: {file: text}}."""
-    tmp, keep = tasks_root(**folders), settings.root
+    """{folder: [reason]} from a throwaway tasks/ root of {folder: {file: text}}, with a
+    silent `PEER` task added beside them."""
+    peer = {PEER: {"README.md": README, "task.py": TASK}}
+    tmp, keep = tasks_root(**peer, **folders), settings.root
     try:
         settings.root = tmp
         out = {}
         for name, reason in doctor.problems():
-            out.setdefault(name, []).append(reason)
+            if name != PEER:
+                out.setdefault(name, []).append(reason)
         return out
     finally:
         settings.root = keep
@@ -191,6 +197,28 @@ def test_a_duplicate_task_number_is_reported():
         }
     )
     assert reasons == {"042_thing": ["task number 042 is already used by 042_other"]}
+
+
+def test_a_tag_is_shared_and_a_task_has_at_most_three():
+    """A tag is a topic to search across tasks, so one no other task carries finds only
+    its own task, and a task wearing four tags is tagged with its story."""
+    many = README.replace("tags: [core]", "tags: [core, loops, sets, strings]")
+    lone = README.replace("tags: [core]", "tags: [core, statefulset]")
+    reasons = _reasons(
+        **{
+            "042_many": {"README.md": many, "task.py": TASK},
+            "043_lone": {"README.md": lone, "task.py": TASK},
+        }
+    )
+    assert reasons == {
+        "042_many": [
+            "README.md: 4 tags, at most 3 per task",
+            "tag 'loops' is on no other task; a tag needs at least two",
+            "tag 'sets' is on no other task; a tag needs at least two",
+            "tag 'strings' is on no other task; a tag needs at least two",
+        ],
+        "043_lone": ["tag 'statefulset' is on no other task; a tag needs at least two"],
+    }
 
 
 def test_the_shipped_catalogue_is_clean():

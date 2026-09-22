@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 18
 prereqs: [291]
 track: docker
-tags: [docker, dockerfile, multi-stage, go, distroless]
+tags: [multi-stage, image-size]
 kind: docker
 edits: Dockerfile
 ---

@@ -135,7 +135,8 @@ const TABS = ["2", "4", "8"];
  *  this browser: none of it is in your progress, and none of it travels in a backup. */
 function EditorSettings() {
   const prefs = usePrefs();
-  const untouched = JSON.stringify(prefs) === JSON.stringify(DEFAULTS);
+  // the pane width belongs to the task screen's drag handle, so it is no editor setting
+  const untouched = JSON.stringify({ ...prefs, taskPanePercent: 0 }) === JSON.stringify({ ...DEFAULTS, taskPanePercent: 0 });
   return (
     <Section title="Editor" note="These live in this browser, so they are not part of a backup.">
       <div>
@@ -176,7 +177,7 @@ function EditorSettings() {
       </div>
       {untouched ? null : (
         <div className={s.defaults}>
-          <Button variant="quiet" onClick={() => setPrefs(DEFAULTS)}><Icon name="Reset" />Put these back to their defaults</Button>
+          <Button variant="quiet" onClick={() => setPrefs({ ...DEFAULTS, taskPanePercent: prefs.taskPanePercent })}><Icon name="Reset" />Put these back to their defaults</Button>
         </div>
       )}
     </Section>

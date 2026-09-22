@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [293]
 track: docker
-tags: [docker, dockerfile, shell, pipefail, curl]
+tags: [shell]
 kind: docker
 edits: Dockerfile
 ---

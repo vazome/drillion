@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 20
 prereqs: [284]
 track: helm
-tags: [helm, templates, named-templates, labels]
+tags: [templates, named-templates, labels]
 kind: helm
 edits: templates/_helpers.tpl
 ---

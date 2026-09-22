@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [272]
 track: kubernetes
-tags: [kubernetes, service, nodeport]
+tags: [service, nodeport]
 kind: manifest
 ---
 # NodePort: three port fields, and 30000 to 32767 is the law

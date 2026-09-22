@@ -10,8 +10,8 @@ import logging
 
 import yaml
 
-from . import region
-from .catalogue import DOCKER, HELM, MANIFEST, PYTHON, solution
+from . import manifest, region, sandbox, tools
+from .catalogue import DOCKER, FILENAMES, HELM, MANIFEST, PYTHON, solution
 from .region import Invalid, _solve
 
 __all__ = ["Invalid", "of"]
@@ -42,11 +42,11 @@ class _Python:
     """The original artifact: a region inside a file it shares with the grader."""
 
     name = PYTHON
-    filename = "task.py"
+    filename = FILENAMES[PYTHON]
     language = "python"
 
     def path(self, meta):
-        return meta["dir"] / self.filename
+        return meta["path"]
 
     def body(self, src):
         return region.cut(src).body
@@ -90,8 +90,6 @@ class _Python:
     def provenance(self, o):
         """What a pass archives beside its grade: with the seed and the interpreter, the
         cases can be made again and the verdict reproduced."""
-        from . import sandbox
-
         return {"seed": o["seed"], "python": sandbox.grading_python()}
 
     def grade(self, meta, o, src):
@@ -122,12 +120,12 @@ class _Manifest:
     """The learner's artifact is the entire file: no marker, no machinery below it."""
 
     name = MANIFEST
-    filename = "task.yaml"
+    filename = FILENAMES[MANIFEST]
     language = "yaml"
     suffix = ".yaml"
 
     def path(self, meta):
-        return meta["dir"] / self.filename
+        return meta["path"]
 
     def body(self, src):
         return src
@@ -164,8 +162,6 @@ class _Manifest:
 
         Regenerating them from the seed on every render would let an upgraded grader change
         the question inside a live sitting, so the answer is written down here instead."""
-        from . import manifest
-
         brief = manifest.generate_brief(meta, seed)
         return {
             "brief": brief,
@@ -184,8 +180,6 @@ class _Manifest:
         one against, and an answer key that will not render is the task's bug, never the
         learner's: it must not cost them the pass that asked for it. `doctor` reports such a
         task, which is where it is meant to be caught."""
-        from . import manifest
-
         if o is None or "brief" not in o:
             return None
         try:
@@ -198,26 +192,26 @@ class _Manifest:
             return None
 
     def answer_key(self, meta, brief):
-        from . import manifest
-
         return manifest.render_solution(meta, brief)
 
     def revision(self, meta, src):
         """What judged this pass, not merely what asked the question: the validator and the
         schemas decide a manifest verdict as much as `grade.py` does, so the archive records
         all three."""
-        from . import manifest
-
         return manifest.fingerprint(meta)
 
     def provenance(self, o):
         """The sitting itself, so a finished one still shows the question it asked and the
-        answer key for it, plus the validator and schema set that judged it."""
-        from . import tools
-
+        answer key for it, plus the tools that judged it."""
         return {
             "seed": o["seed"],
             **{k: o[k] for k in ("brief", "spec_md", "brief_revision") if k in o},
+            **self.judges(),
+        }
+
+    def judges(self):
+        """The validator and schema set that judge a manifest, by version."""
+        return {
             "validator": tools.pin_for(tools.KUBECONFORM).version,
             "kubernetes": tools.KUBERNETES_VERSION,
         }
@@ -232,7 +226,7 @@ class _Manifest:
         The panel is the diagnostics themselves: a field and what is wrong with it, as the
         validator and `check()` said it. `headline` is those messages in a line, for the
         parts of the page that show one whatever the kind."""
-        from . import manifest, runner
+        from . import runner
 
         if "brief" not in o:
             raise manifest.Rejected(
@@ -252,18 +246,14 @@ class _Manifest:
             "rendered": rendered,
         }
 
-    def helm(self, meta):
-        """What a Helm grader adds to the job; a manifest renders nothing first."""
-
     def extra(self, meta):
-        """What this kind adds to the grading job, as `run_manifest`'s keywords."""
-        return {"helm": self.helm(meta)}
+        """What this kind adds to the grading job, as `run_manifest`'s keywords. A manifest
+        adds nothing: it is validated as written."""
+        return {}
 
     def chart(self, meta):
         """The read-only files the page shows beside the learner's: a Helm chart, or a
         Dockerfile's build context. A manifest has none."""
-        from . import manifest
-
         return [
             {
                 "path": p,
@@ -279,7 +269,7 @@ class _Manifest:
         `doctor` already asks whether the answer key renders. This asks the question only
         the grader can answer, which is whether the rendered key actually passes. It is
         judged one task at a time, by the same grader a submission meets."""
-        from . import manifest, runner
+        from . import runner
 
         brief = manifest.generate_brief(meta, SELFCHECK_SEED)
         key = meta["dir"] / f"_selfcheck{self.suffix}"
@@ -296,7 +286,7 @@ class _Manifest:
 class _Helm(_Manifest):
     """A chart with one file missing: the learner's `task.yaml` is that file, at the chart
     path `edits` names. Everything else is the manifest kind's, with Helm in front of the
-    validator: see `manifest.GRADE_SOURCE`."""
+    validator: see `grading.py`."""
 
     name = HELM
 
@@ -308,35 +298,27 @@ class _Helm(_Manifest):
     def answer_key(self, meta, brief):
         """A values file is YAML with placeholders, as a manifest's key is. A template is
         the answer for any values, so it is served as written."""
-        from . import manifest
-
         return manifest.render_solution(
             meta, brief, parse=meta["edits"] == "values.yaml"
         )
 
     def revision(self, meta, src):
-        from . import manifest
-
         return manifest.fingerprint(meta, helm=True)
 
-    def provenance(self, o):
-        from . import tools
+    def judges(self):
+        return {**super().judges(), "helm": tools.pin_for(tools.HELM).version}
 
-        return {**super().provenance(o), "helm": tools.pin_for(tools.HELM).version}
-
-    def helm(self, meta):
-        from . import manifest
-
-        return manifest.helm_job(meta)
+    def extra(self, meta):
+        return {"helm": manifest.helm_job(meta)}
 
 
 class _Docker(_Manifest):
     """A build context with its Dockerfile missing: the learner's `Dockerfile` is that
     file. Everything else is the manifest kind's, with hadolint standing in for the
-    validator and nothing built: see `grade_docker` in `manifest.GRADE_SOURCE`."""
+    validator and nothing built: see `grade_docker` in `grading.py`."""
 
     name = DOCKER
-    filename = "Dockerfile"
+    filename = FILENAMES[DOCKER]
     language = "dockerfile"
     suffix = ".Dockerfile"
 
@@ -346,27 +328,15 @@ class _Docker(_Manifest):
 
     def answer_key(self, meta, brief):
         """`solution.Dockerfile` with its placeholders filled in, as a README's are."""
-        from . import manifest
-
         return manifest.render(solution(meta).read_text(encoding="utf-8"), brief)
 
     def revision(self, meta, src):
-        from . import manifest
-
         return manifest.docker_fingerprint(meta)
 
-    def provenance(self, o):
-        from . import tools
-
-        return {
-            "seed": o["seed"],
-            **{k: o[k] for k in ("brief", "spec_md", "brief_revision") if k in o},
-            "hadolint": tools.pin_for(tools.HADOLINT).version,
-        }
+    def judges(self):
+        return {"hadolint": tools.pin_for(tools.HADOLINT).version}
 
     def extra(self, meta):
-        from . import manifest
-
         return {"docker": manifest.docker_job(meta)}
 
 

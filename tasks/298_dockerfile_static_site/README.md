@@ -4,7 +4,7 @@ difficulty: hard
 minutes: 20
 prereqs: [291, 296]
 track: docker
-tags: [docker, dockerfile, multi-stage, node, nginx]
+tags: [multi-stage]
 kind: docker
 edits: Dockerfile
 ---

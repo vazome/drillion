@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [269]
 track: kubernetes
-tags: [kubernetes, service, clusterip, labels]
+tags: [service, labels]
 kind: manifest
 ---
 # the default Service: a selector finds the pods, and two ports do two jobs

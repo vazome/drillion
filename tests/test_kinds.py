@@ -34,9 +34,9 @@ def test_python_etag_ignores_the_machinery():
     assert k.etag(TASK) == region.etag(TASK)
 
 
-def test_python_path_joins_the_task_dir_with_its_filename():
-    meta = {"kind": "python", "dir": Path("/tasks/001_add")}
-    assert kinds.of(meta).path(meta) == Path("/tasks/001_add/task.py")
+def test_path_is_the_catalogues():
+    meta = {"kind": "python", "path": Path("/tasks/001_add/task.py")}
+    assert kinds.of(meta).path(meta) == meta["path"]
 
 
 def test_an_unknown_kind_raises_rather_than_guessing():

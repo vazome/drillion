@@ -4,7 +4,7 @@ difficulty: easy
 minutes: 12
 prereqs: [268, 272]
 track: helm
-tags: [helm, values, deployment, service]
+tags: [values, deployment, service]
 kind: helm
 edits: values.yaml
 ---

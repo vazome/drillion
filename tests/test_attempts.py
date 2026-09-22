@@ -128,7 +128,8 @@ def test_a_grade_names_the_cause_that_landed_it():
 
 
 def test_the_nudge_offers_a_hint_after_half_an_hour_of_reading():
-    """Half an hour of active work with nothing run and no hint taken earns an offer."""
+    """Half an hour of active work with nothing submitted and no hint taken earns an
+    offer. An ungraded Run does not answer it."""
     st = _st()
     o = attempts.open_attempt(st, "001_a", {})
     assert attempts.nudge_due(o) is False and attempts.nudge_due(None) is False
@@ -139,7 +140,9 @@ def test_the_nudge_offers_a_hint_after_half_an_hour_of_reading():
     assert attempts.attempt_view(o, ["one"])["nudge"] is True  # the page reads it here
     o["hints"] = 1  # taking the offer answers it
     assert attempts.nudge_due(o) is False
-    o["hints"], o["attempts"] = 0, 1  # ...and so does running
+    o["hints"], o["runs"] = 0, 5  # a stored count of ungraded Runs is ignored
+    assert attempts.nudge_due(o) is True
+    o["attempts"] = 1  # ...and a graded submission answers it too
     assert attempts.nudge_due(o) is False
 
 

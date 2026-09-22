@@ -11,10 +11,6 @@ def brief(r):
     return {"python": r.choice(PYTHONS), "port": r.choice([8000, 8080, 9000])}
 
 
-def _all(stage, cmd):
-    return [s for s in stage["steps"] if s["cmd"] == cmd]
-
-
 def _options(mount):
     return dict(part.partition("=")[::2] for part in str(mount).split(",") if part)
 
@@ -34,7 +30,7 @@ def check(stages, b):
     stage = stages[0]
     base = f"python:{b['python']}-slim"
     assert stage["base"] == base, f"line {stage['line']}: FROM {base}"
-    installs = [s for s in _all(stage, "RUN") if "pip" in s["words"] and "install" in s["words"]]
+    installs = [s for s in stage.all("RUN") if "pip" in s["words"] and "install" in s["words"]]
     assert len(installs) == 1, "install the requirements with one `RUN pip install`"
     install = installs[0]
     assert "-r" in install["words"] and "requirements.txt" in install["words"], (
@@ -53,7 +49,7 @@ def check(stages, b):
         f"line {install['line']}: --no-cache-dir tells pip not to use the cache you just "
         "mounted. The mount is never part of the image, so there is nothing to leave out"
     )
-    copies = _all(stage, "COPY")
+    copies = stage.all("COPY")
     reqs = [c for c in copies if c["words"][:1] == ["requirements.txt"]]
     code = [c for c in copies if "app.py" in c["words"][:-1] or "." in c["words"][:-1]]
     assert reqs and reqs[0]["line"] < install["line"], (
@@ -62,9 +58,9 @@ def check(stages, b):
     assert code and all(c["line"] > install["line"] for c in code), (
         "copy app.py after the install, as in 290"
     )
-    exposed = [w for s in _all(stage, "EXPOSE") for w in s["words"]]
+    exposed = [w for s in stage.all("EXPOSE") for w in s["words"]]
     assert exposed in ([str(b["port"])], [f"{b['port']}/tcp"]), f"EXPOSE {b['port']}"
-    cmd = _all(stage, "CMD")
+    cmd = stage.all("CMD")
     assert len(cmd) == 1 and cmd[0]["exec"], "one CMD, in exec form"
     run = cmd[0]["exec"]
     assert run[0] == "uvicorn" and "app:app" in run, "CMD starts uvicorn serving `app:app`"

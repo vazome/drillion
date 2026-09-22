@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [272]
 track: kubernetes
-tags: [kubernetes, ingress, service, networking]
+tags: [ingress, service, networking]
 kind: manifest
 ---
 # an Ingress: one address outside, a Service inside

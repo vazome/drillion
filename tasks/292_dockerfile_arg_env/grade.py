@@ -14,13 +14,9 @@ def brief(r):
     }
 
 
-def _all(steps, cmd):
-    return [s for s in steps if s["cmd"] == cmd]
-
-
 def _args(steps):
     out = {}
-    for step in _all(steps, "ARG"):
+    for step in (s for s in steps if s["cmd"] == "ARG"):
         for w in step["words"]:
             name, _, default = w.partition("=")
             out[name] = (default or None, step["line"])
@@ -29,7 +25,7 @@ def _args(steps):
 
 def _env(steps):
     out = {}
-    for step in _all(steps, "ENV"):
+    for step in (s for s in steps if s["cmd"] == "ENV"):
         words = step["words"]
         if words and "=" not in words[0]:
             out[words[0]] = (" ".join(words[1:]), step["line"])
@@ -75,7 +71,7 @@ def check(stages, b):
         "LOG_LEVEL is only needed while the app runs: ENV, not ARG"
     )
     assert env.get("LOG_LEVEL", (None,))[0] == b["level"], f"set ENV LOG_LEVEL={b['level']}"
-    cmd = _all(stage["steps"], "CMD")
+    cmd = stage.all("CMD")
     assert len(cmd) == 1 and cmd[0]["exec"] and cmd[0]["exec"][-1].endswith("app.py"), (
         "one CMD, in exec form, running app.py with python"
     )

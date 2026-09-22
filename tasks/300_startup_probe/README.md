@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [299]
 track: kubernetes
-tags: [kubernetes, deployment, probes, startup, liveness]
+tags: [deployment, probes]
 kind: manifest
 ---
 # a startup probe, so a slow boot is not mistaken for a hang

@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 15
 prereqs: [289]
 track: docker
-tags: [docker, dockerfile, entrypoint, cmd, signals]
+tags: [cmd, shell]
 kind: docker
 edits: Dockerfile
 ---

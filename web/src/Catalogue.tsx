@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import { Band, Button, Card, EmptyState, Icon, Input, Kbd, NoticeBanner, RowFlags, Select, SortReset, StatusBadge, TagChip, TaskPath, TrackRail } from "./ds/index.js";
 import { api, post, type Catalogue as Payload, type Row } from "./api";
 import { Stats } from "./Stats";
+import css from "./Catalogue.module.css";
 import { inDays, strength } from "./strength";
+import { depsHref, taskHref } from "./Deps";
+import { plural, topicNo } from "./format";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)", whiteSpace: "nowrap" as const };
 const FAINT = { fontSize: 12.5, color: "var(--text-faint)", whiteSpace: "nowrap" as const };
@@ -17,10 +20,8 @@ const LIST_MIN = 840;
 const FIRST_RUN = "drillion-first-run";
 const HOW_IT_WORKS = "https://github.com/vazome/drillion/blob/main/docs/how-it-works.md";
 
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 // the tracks with a logo in web/public/tracks/; any other track wears its first letter
 const TRACK_ICONS = new Set(["python", "kubernetes", "helm", "docker"]);
-const num = (topic: number) => String(topic).padStart(3, "0");
 
 /** Today as a LOCAL YYYY-MM-DD, which parses back to the same UTC midnight `due` does. */
 const localToday = () => new Date().toLocaleDateString("en-CA");
@@ -34,7 +35,7 @@ function noPicks(no: NonNullable<Payload["today"]["no_new"]>, today: Payload["to
                  focus: string | null, by: Map<string, Row>) {
   const link = (slug: string) => {
     const r = by.get(slug);
-    return r ? <a href={href(r)}>#{num(r.topic)} {r.title}</a> : null;
+    return r ? <a href={href(r)}>#{topicNo(r.topic)} {r.title}</a> : null;
   };
   switch (no.why) {
     case "cap": return {
@@ -100,24 +101,18 @@ export function sortRows(rows: Row[], { key, dir }: Sort): Row[] {
   });
 }
 
-function useHover() {
-  const [hover, setHover] = useState(false);
-  return [hover, { onMouseEnter: () => setHover(true), onMouseLeave: () => setHover(false) }] as const;
-}
-
-const href = (row: Row) => `#/task/${encodeURIComponent(row.slug)}`;
+const href = (row: Row) => taskHref(row.slug);
 
 /** A row of the Today card: when it is due, how well you know it, and one way in. */
 function TodayRow({ row, ladder, limit }: { row: Row; ladder: number[]; limit: number }) {
-  const [hover, hoverProps] = useHover();
   return (
-    <div {...hoverProps}
-      style={{ display: "flex", alignItems: "center", borderTop: "1px solid var(--border)", background: hover ? "var(--surface-2)" : "transparent", margin: "0 -18px", padding: "0 18px" }}>
+    <div className={css.row}
+      style={{ display: "flex", alignItems: "center", borderTop: "1px solid var(--border)", margin: "0 -18px", padding: "0 18px" }}>
       <a href={href(row)} className="m-tint"
         style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0, textDecoration: "none", color: "inherit", padding: "9px 0" }}>
         <span style={{ ...FAINT, width: 110, color: "var(--text-muted)" }}>{dueText(row)}</span>
         <span style={{ width: COL.strength }}><Known row={row} ladder={ladder} /></span>
-        <span style={{ ...MONO, width: 30, textAlign: "right" }}>{num(row.topic)}</span>
+        <span style={{ ...MONO, width: 30, textAlign: "right" }}>{topicNo(row.topic)}</span>
         <span style={{ fontSize: 14.5, fontWeight: 500, flex: 1, display: "flex", alignItems: "baseline", gap: 10 }}>
           {/* nothing in this card is blocked: a new pick is offered only once its prereqs clear */}
           {row.title}<RowFlags lapses={row.lapses} lapseLimit={limit} />
@@ -132,15 +127,14 @@ function TodayRow({ row, ladder, limit }: { row: Row; ladder: number[]; limit: n
 /** A row of the list. The trailing spacer holds the reset control's column, so the header
  * stays aligned. */
 function ListRow({ row, blocked, ladder, limit, first = false }: { row: Row; blocked: Row[]; ladder: number[]; limit: number; first?: boolean }) {
-  const [hover, hoverProps] = useHover();
   return (
-    <a href={href(row)} className="m-tint" {...hoverProps}
-      style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 44, minWidth: LIST_MIN, boxSizing: "border-box", borderTop: first ? "none" : "1px solid var(--border)", textDecoration: "none", color: "inherit", background: hover ? "var(--surface-2)" : "transparent" }}>
-      <span style={{ ...MONO, width: COL.num, textAlign: "right" }}>{num(row.topic)}</span>
+    <a href={href(row)} className={`m-tint ${css.row}`}
+      style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 44, minWidth: LIST_MIN, boxSizing: "border-box", borderTop: first ? "none" : "1px solid var(--border)", textDecoration: "none", color: "inherit" }}>
+      <span style={{ ...MONO, width: COL.num, textAlign: "right" }}>{topicNo(row.topic)}</span>
       <span style={{ flex: 1, display: "flex", alignItems: "baseline", gap: 10, overflow: "hidden" }}>
         <span style={{ fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.title}</span>
         {/* the flag is the second way into the lineage; the rest of the row still opens the task */}
-        <RowFlags needs={blocked} onNeedsClick={() => { location.hash = `${href(row)}/deps`; }}
+        <RowFlags needs={blocked} onNeedsClick={() => { location.hash = depsHref(row.slug); }}
           lapses={row.lapses} lapseLimit={limit} />
       </span>
       <span style={{ width: COL.path, display: "flex", overflow: "hidden" }}><TaskPath tier={row.tier} track={row.track} tags={row.tags} /></span>
@@ -157,17 +151,17 @@ function ListRow({ row, blocked, ladder, limit, first = false }: { row: Row; blo
 function SortHead({ label, col, align, sort, onSort, style }: {
   label: string; col: SortKey; align?: "right"; sort: Sort; onSort: (s: Sort) => void; style: CSSProperties;
 }) {
-  const [hover, hoverProps] = useHover();
   const active = sort.key === col;
   const next: Sort = { key: col, dir: active && sort.dir === "asc" ? "desc" : "asc" };
-  const arrow = active && sort.dir === "desc" ? "ArrowDown" : active || hover ? "ArrowUp" : null;
+  // an inactive column's arrow is always drawn, and shown only under the pointer
+  const arrow = active && sort.dir === "desc" ? "ArrowDown" : "ArrowUp";
   const way = (d: string) => (d === "asc" ? "ascending" : "descending");
   return (
-    <button type="button" onClick={() => onSort(next)} {...hoverProps}
+    <button type="button" onClick={() => onSort(next)} className={css.sort} data-active={active || undefined}
       aria-label={active ? `${label}, sorted ${way(sort.dir)}. Sort ${way(next.dir)}` : `Sort by ${label} ${way(next.dir)}`}
-      style={{ ...style, display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, whiteSpace: "nowrap", justifyContent: align === "right" ? "flex-end" : "flex-start", height: 32, padding: 0, background: "transparent", border: "none", font: "inherit", letterSpacing: "inherit", textTransform: "inherit", color: active || hover ? "var(--text)" : "var(--text-muted)", cursor: "pointer" }}>
+      style={{ ...style, display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, whiteSpace: "nowrap", justifyContent: align === "right" ? "flex-end" : "flex-start", height: 32, padding: 0, background: "transparent", border: "none", font: "inherit", letterSpacing: "inherit", textTransform: "inherit", cursor: "pointer" }}>
       <span>{label}</span>
-      <span aria-hidden="true" style={{ display: "inline-flex", width: 12, height: 12, color: active ? "var(--accent)" : "var(--text-faint)" }}>{arrow ? <Icon name={arrow} size={12} /> : null}</span>
+      <span aria-hidden="true" className={active ? undefined : css.ghost} style={{ display: "inline-flex", width: 12, height: 12, color: active ? "var(--accent)" : "var(--text-faint)" }}><Icon name={arrow} size={12} /></span>
     </button>
   );
 }
@@ -231,7 +225,7 @@ export function Catalogue() {
     // `text` is the spec, already flattened and lowercased by the server
     return (data?.tasks ?? []).filter((e) =>
       (!needle || e.title.toLowerCase().includes(needle) || e.slug.includes(needle)
-        || num(e.topic).includes(needle) || e.text.includes(needle)) &&
+        || topicNo(e.topic).includes(needle) || e.text.includes(needle)) &&
       (!status || e.status === status) &&
       (!focus || facets(e).includes(focus)) &&
       activeTags.every((t) => e.tags.includes(t)));

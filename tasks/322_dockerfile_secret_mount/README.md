@@ -4,7 +4,7 @@ difficulty: hard
 minutes: 20
 prereqs: [292, 321]
 track: docker
-tags: [docker, dockerfile, buildkit, secrets, pip]
+tags: [buildkit, secret, security]
 kind: docker
 edits: Dockerfile
 ---

@@ -4,7 +4,7 @@ difficulty: easy
 minutes: 12
 prereqs: [289]
 track: docker
-tags: [docker, dockerfile, layer-cache, pip]
+tags: [layer-cache, pip]
 kind: docker
 edits: Dockerfile
 ---

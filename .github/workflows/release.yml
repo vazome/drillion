@@ -43,7 +43,7 @@ jobs:
           fi
           echo "$GITHUB_REF_NAME matches the declared version"
       # a tag can point at any commit, and no ruleset constrains tags. The `main` ruleset requires
-      # `check` and `image`, so being on main is the proof that this commit went green.
+      # only `gate`, so being on main is the proof that this commit went green.
       - name: the tagged commit must be on main
         run: |
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
@@ -110,6 +110,12 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          # same layer skipped as ci.yml's image job: the runtime stage upgrades its Debian
+          # packages live, and a cached layer never re-runs that, so a release built from stale
+          # cache would ship whatever package set the last cache write happened to catch.
+          cache-to: type=gha,mode=max
+          no-cache-filters: runtime
           # on, and BuildKit pushes a second unsigned provenance wrapped in an index, which
           # shows on the package page as a phantom unknown/unknown architecture. The index the
           # two platforms above produce is the genuine kind and lists exactly those two.

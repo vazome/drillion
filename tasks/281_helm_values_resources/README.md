@@ -4,7 +4,7 @@ difficulty: medium
 minutes: 14
 prereqs: [279]
 track: helm
-tags: [helm, values, resources, toyaml]
+tags: [values, resources, toyaml]
 kind: helm
 edits: values.yaml
 ---

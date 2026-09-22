@@ -1,9 +1,10 @@
 """Confining graded code: what a task's process may touch, decided before it starts.
 
-Everything here shapes the one pytest subprocess `runner._run_pytest` launches, and
-nothing else. Landlock especially: it is irreversible and inherited by every child, so it
-is applied in the forked child from `preexec()` and never in the server process, which
-would sandbox the app — and the language server with it — for the rest of its life.
+Everything here shapes the children `run` and `run_script` start (pytest for a python
+task, a bare grading script for the other kinds), and nothing else. Landlock especially:
+it is irreversible and inherited by every child, so it is applied in the forked child
+from `preexec()` and never in the server process, which would sandbox the app — and the
+language server with it — for the rest of its life.
 
 Three tiers, strongest first, with `status()` saying which one is actually in force — read
 back from a child that tried it, never from intent. drillion ships as a Linux image, so
@@ -72,16 +73,13 @@ def environ(scratch, **extra):
             "TMPDIR",
             "TEMP",
             "TMP",
-            "USERPROFILE",
-            "APPDATA",
-            "LOCALAPPDATA",
             "XDG_CONFIG_HOME",
             "XDG_DATA_HOME",
             "XDG_CACHE_HOME",
         ),
         str(scratch),
     )
-    # task files are UTF-8; a Windows pipe would otherwise be cp1252 at both ends
+    # task files are UTF-8, and `_execute` decodes the pipes as UTF-8 whatever the locale
     out.setdefault("PYTHONIOENCODING", "utf-8")
     # tasks/ is read-only under Landlock, and a failed .pyc write is only noise
     out["PYTHONDONTWRITEBYTECODE"] = "1"
