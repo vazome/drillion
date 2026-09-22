@@ -12,7 +12,7 @@ pnpm --dir web dev              # Vite on 5173, proxying /api to 8765
 pnpm --dir web lint             # runs in CI
 pnpm --dir web build            # emits web/dist, which the server serves at /
 pnpm --dir web test             # module exports and rendered component contracts, in CI
-pnpm --dir web screens          # Playwright: renders all 288 task pages, photographs the rest,
+pnpm --dir web screens          # Playwright: renders all 298 task pages, photographs the rest,
                                 # and runs the keyboard/axe pass on Chromium, Firefox and WebKit
 ```
 

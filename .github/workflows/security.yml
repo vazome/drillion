@@ -65,7 +65,7 @@ jobs:
           # These are curriculum answer keys and the charts Helm tasks ship, intentionally
           # stripped to the concept each exercise teaches; they are not deployment manifests.
           # The Dockerfile and every other repository configuration file remain in this scan.
-          skip-files: ./tasks/*/solution.yaml
+          skip-files: ./tasks/*/solution.yaml,./tasks/*/solution.Dockerfile
           skip-dirs: ./tasks/*/chart
           format: json
           output: trivy-config.json

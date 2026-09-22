@@ -8,7 +8,7 @@ export type Grade = "quick" | "pass" | "struggled" | "abandoned";
 export interface Meta {
   topic: number; title: string;
   difficulty: "easy" | "medium" | "hard"; tier?: "core" | "advanced" | "packages"; track?: string;
-  kind: "python" | "manifest" | "helm";
+  kind: "python" | "manifest" | "helm" | "docker";
   /** a Helm task's one hole: the chart path the learner's file stands in for */
   edits?: string;
   tags: string[]; source?: string;
@@ -89,11 +89,11 @@ export interface Task {
   hints: { total: number; shown: string[]; next_in: number | null };
   solution: { unlocked: boolean; need_attempts: number; need_secs: number };
   /** `code` is the answer you wrote that day, null while the server keeps it closed.
-   *  `seed`, `revision` and either `python` or `validator`/`kubernetes` say what produced
+   *  `seed`, `revision` and `python`, `hadolint` or `validator`/`kubernetes` say what produced
    *  the grade, and are absent on a pass archived before a run recorded it. */
   archive: {
     date: string; grade: Grade; code: string | null;
-    python?: string; validator?: string; kubernetes?: string; helm?: string; seed?: number; revision?: string;
+    python?: string; validator?: string; kubernetes?: string; helm?: string; hadolint?: string; seed?: number; revision?: string;
   }[];
   /** The learner's one note on the task, `""` when there is none — `PUT /api/task/{slug}/note`. */
   note: string;

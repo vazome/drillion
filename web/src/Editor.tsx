@@ -8,6 +8,7 @@ import type { Meta } from "./api";
 // index pulls all ~90 languages; drillion takes only the ones a task artifact is written in.
 import "@codingame/monaco-vscode-standalone-languages/languages/definitions/python/register.js";
 import "@codingame/monaco-vscode-standalone-languages/languages/definitions/yaml/register.js";
+import "@codingame/monaco-vscode-standalone-languages/languages/definitions/dockerfile/register.js";
 import { EditorApp } from "monaco-languageclient/editorApp";
 import { MonacoVscodeApiWrapper } from "monaco-languageclient/vscodeApiWrapper";
 import { LanguageClientWrapper } from "monaco-languageclient/lcwrapper";
@@ -31,7 +32,8 @@ const bare = (name: string) => token(name).replace("#", "");
  *  browser has no business knowing filesystem paths. */
 const WORKSPACE = "file:///workspace";
 // Monaco reads the language off the extension, so naming the file is choosing the mode.
-const ext = (kind: Meta["kind"]) => (kind === "python" ? "py" : "yaml");
+const EXT: Partial<Record<Meta["kind"], string>> = { python: "py", docker: "dockerfile" };
+const ext = (kind: Meta["kind"]) => EXT[kind] ?? "yaml";
 const fileFor = (kind: Meta["kind"]) => `${WORKSPACE}/${kind === "python" ? "solve" : "task"}.${ext(kind)}`;
 
 /** wss on a served-over-TLS page: a tunnel or a reverse proxy in front of drillion makes a

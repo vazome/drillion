@@ -27,12 +27,12 @@ tiered on the solution, while
 lines you can only write once you have seen the trick is `hard`. Anchor the call on the task's
 `## Rules` — rules are where the traps live — and grade a new task against the rubric the rest
 were graded against: [difficulty-rubric.md](difficulty-rubric.md).
-Today: 44 easy · 192 medium · 52 hard.
+Today: 48 easy · 196 medium · 54 hard.
 
 **track** — one per task: a themed run through the catalogue that cuts across tiers. The home
 screen offers each track as a pill, and picking one sets the **focus**. A Python task that names
-none is on `python`; the Kubernetes manifests say `track: kubernetes`, and the Helm charts
-`track: helm`. Name a track only when
+none is on `python`; the Kubernetes manifests say `track: kubernetes`, the Helm charts
+`track: helm`, and the Dockerfiles `track: docker`. Name a track only when
 the task belongs to a run other than `python`, and give the run a logo in `web/public/tracks/`.
 
 **tags** — what Python you practise. Lowercase, kebab-case, 1–3 per task, and one rule decides
@@ -61,7 +61,7 @@ it — and `POST /api/focus` sets it.
 
 One folder per task, `tasks/<NNN>_<name>/`; copy the shape of an existing one.
 
-`<NNN>` is the task's place in the curriculum, `001`–`288` with no gaps, so the next task you add is
+`<NNN>` is the task's place in the curriculum, `001`–`298` with no gaps, so the next task you add is
 `279`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
 always numbers below its own, and `doctor` will not let that stop being true. Append, never insert —
 inserting means rewriting every number after it, and [ADR-0006](adr/0006-the-fundamentals-come-first.md)
@@ -184,10 +184,34 @@ Each render goes through `helm template`, then `helm lint --strict`, then kubeco
 `prereqs`, and give the task `track: helm`. Every rule the README states needs a row in
 `tests/test_helm.py` that breaks it and fails, through the real pipeline.
 
+## Dockerfile tasks
+
+A task whose frontmatter says `kind: docker` is a build context with its Dockerfile missing, and
+`edits: Dockerfile`. It has a manifest task's brief and README placeholders, and in place of
+the chart:
+
+- **`context/`**: the app the Dockerfile builds, shown read-only in tabs. `context/Dockerfile`
+  must not exist. Every `COPY` or `ADD` source that is not `--from` a stage must match a file
+  here, or the run names the line and lists what the context holds.
+- **`Dockerfile`**: the learner's file, empty.
+- **`grade.py`**: `brief(r)` as for a manifest, and `check(stages, brief)`. `stages` is the
+  Dockerfile parsed into build stages, each `{"base", "name", "line", "globals", "steps"}`;
+  a step is `{"cmd", "args", "flags", "exec", "words", "line"}`, `exec` being the JSON array
+  of an exec-form instruction and `None` for shell form, and `globals` the `ARG`s above the
+  first `FROM`. Name the line in a message when one line is at fault.
+- **`solution.Dockerfile`**: the answer key, filled with `str.format`, so a brace Docker needs,
+  `${NAME}`, is written `${{NAME}}`. Why and You get cannot hold a brace at all: write
+  `$NAME` there.
+
+A submission goes through hadolint, run with drillion's config (errors and warnings fail,
+info is advice, `# hadolint ignore=` is ignored), then the context check, then `check()`.
+Nothing is built. Give the task `track: docker`. Every rule the README states needs a row in
+`tests/test_docker.py` that breaks it and fails, through the real pipeline.
+
 ## When a new task does not show up
 
 A folder the catalogue cannot read is **skipped**, not reported: a half-written task must never
-break the menu for the other 287. That makes a mistake look like a task that simply is not there.
+break the menu for the other 297. That makes a mistake look like a task that simply is not there.
 Run `uv run drillion doctor` — it reports every rule the folder breaks, not just the first:
 
 - a required key missing, empty, or misspelt (`tags: []` counts as missing);
@@ -199,7 +223,7 @@ Run `uv run drillion doctor` — it reports every rule the folder breaks, not ju
 
 `uv run drillion selfcheck` splices `_reference` into every file and runs the tests; it must be
 green on Python 3.14 before a task is trusted. But it only counts tasks the catalogue already
-accepted, so if it still says `288/288` after you added one, `doctor` is where to look.
+accepted, so if it still says `298/298` after you added one, `doctor` is where to look.
 
 ## Retired tags
 

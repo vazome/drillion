@@ -41,7 +41,7 @@ def _run_pytest(args, timeout=None, capture_case=None, **env):
     and the only place it may write, and `tasks/` on PYTHONPATH so `from _lib import rng`
     works from any root. `sandbox.run` decides everything else about the child."""
     with tempfile.TemporaryDirectory(
-        dir=settings.root, ignore_cleanup_errors=True
+        dir=sandbox.scratch_root(), ignore_cleanup_errors=True
     ) as scratch:
         # an empty config, pinned: from a checkout pytest would otherwise walk up, adopt
         # the repo's pyproject.toml and grade a learner against our own settings — its
@@ -87,7 +87,7 @@ def run_python(meta, seed):
     `--verbosity=2` rather than `-vv`, which would only cancel out the `-q` above: at the
     default pytest elides the values it is comparing and tells the learner to pass flags
     they have no way to pass."""
-    with tempfile.TemporaryDirectory(dir=settings.root) as box:
+    with tempfile.TemporaryDirectory(dir=sandbox.scratch_root()) as box:
         found = Path(box, "case.json")
         try:
             r = _run_pytest(
@@ -107,9 +107,10 @@ def run_python(meta, seed):
     return r.returncode == 0, r.stdout, case
 
 
-def run_manifest(meta, brief, learner=None, helm=None):
+def run_manifest(meta, brief, learner=None, helm=None, docker=None):
     """A manifest sitting: the validator and the task's `check()`, in one sandboxed child.
-    A Helm sitting is the same child with `helm` set: it renders the chart first.
+    A Helm sitting is the same child with `helm` set: it renders the chart first. A
+    Dockerfile sitting sets `docker`, and hadolint stands in for the validator.
 
     Returns `(passed, diagnostics, validator report, what Helm rendered)`. No pytest: a manifest run is one
     file, one validator call and one `check()`, and a test framework in the middle only
@@ -119,9 +120,9 @@ def run_manifest(meta, brief, learner=None, helm=None):
     already holds a kind, and `kind.grade` picks the one that fits."""
     from . import manifest
 
-    job = manifest.job(meta, brief, learner, helm)
+    job = manifest.job(meta, brief, learner, helm, docker)
     with tempfile.TemporaryDirectory(
-        dir=settings.root, ignore_cleanup_errors=True
+        dir=sandbox.scratch_root(), ignore_cleanup_errors=True
     ) as scratch:
         scratch = Path(scratch)
         script = scratch / "_grade.py"

@@ -16,7 +16,8 @@ words mean.
 The unit of practice: one folder under `tasks/`, holding one spec, one file to fill in, and the
 grader that judges it. A Python task keeps the last two in one `task.py`; a manifest task splits
 them into `task.yaml` and `grade.py`; a Helm task does the same beside the **chart** its
-`task.yaml` completes. There are 288: 267 Python, 11 manifest, 10 Helm.
+`task.yaml` completes, and a Dockerfile task beside the **build context** its `Dockerfile` is
+written for. There are 298: 267 Python, 11 manifest, 10 Helm, 10 Dockerfile.
 _Avoid_: exercise, drill, problem, kata, question
 
 **Slug**:
@@ -62,9 +63,16 @@ The files a Helm task ships under `chart/`: everything a real chart has, but for
 the learner writes. Shown read-only beside the editor, and graded exactly as shipped.
 _Avoid_: package, bundle, template set
 
+**Build context**:
+The files a Dockerfile task ships under `context/`: the app the learner's `Dockerfile` builds.
+Shown read-only beside the editor, and every `COPY` source must be one of them. Nothing is
+built: there is no Docker engine inside drillion.
+_Avoid_: project, source tree, workspace
+
 **Edits**:
-The chart path a Helm task's `task.yaml` stands in for: `values.yaml`, or one template. Fixed per
-task by its frontmatter, and the label on the learner's own tab.
+The path a Helm task's `task.yaml` stands in for in its chart: `values.yaml`, or one template.
+A Dockerfile task's is always `Dockerfile`. Fixed per task by its frontmatter, and the label
+on the learner's own tab.
 _Avoid_: slot, target, learner file
 
 **Render**:

@@ -26,10 +26,12 @@ import ctypes
 import os
 import platform
 import resource
+import shutil
 import struct
 import subprocess
 import sys
 import tempfile
+import time
 from functools import cache
 from pathlib import Path
 
@@ -208,6 +210,25 @@ def _ruleset(version):
     if version >= 6:
         fields.append(_SCOPE_ALL)
     return struct.pack("=" + "Q" * len(fields), *fields)
+
+
+STALE_SECONDS = 3600
+
+
+def scratch_root():
+    """Where a sandboxed child's scratch folders go: one hidden folder under the data root,
+    so a run killed before its cleanup leaves nothing beside the learner's files. Each call
+    clears leftovers older than an hour, far past the longest a grade may run."""
+    home = settings.root / ".scratch"
+    home.mkdir(exist_ok=True)
+    cutoff = time.time() - STALE_SECONDS
+    for old in home.iterdir():
+        try:
+            if old.stat().st_mtime < cutoff:
+                shutil.rmtree(old, ignore_errors=True)
+        except OSError:
+            pass
+    return home
 
 
 def _roots(scratch, targets):

@@ -15,11 +15,17 @@ from .settings import settings
 PYTHON = "python"
 MANIFEST = "manifest"
 HELM = "helm"
-KINDS = (PYTHON, MANIFEST, HELM)
+DOCKER = "docker"
+KINDS = (PYTHON, MANIFEST, HELM, DOCKER)
 # what every task needs, then what each kind adds. `tier` is Python depth and a manifest
 # reaches nowhere into the language, so it is not asked of one.
 REQUIRED = ("title", "difficulty", "minutes", "tags")
-REQUIRED_BY_KIND = {PYTHON: ("tier",), MANIFEST: (), HELM: ("edits",)}
+REQUIRED_BY_KIND = {
+    PYTHON: ("tier",),
+    MANIFEST: (),
+    HELM: ("edits",),
+    DOCKER: ("edits",),
+}
 BROWSER = (
     "topic",
     "title",
@@ -165,9 +171,38 @@ def _check_helm(folder):
     return out
 
 
-CHECKS = {PYTHON: _check_python, MANIFEST: _check_manifest, HELM: _check_helm}
+def _check_docker(folder):
+    """A Dockerfile task is the learner's Dockerfile, the grader, its answer key, and the
+    build context the Dockerfile is written for."""
+    out = [
+        f"{name}: missing"
+        for name in ("Dockerfile", "grade.py", "solution.Dockerfile")
+        if not (folder / name).is_file()
+    ]
+    if not (folder / "context").is_dir():
+        out.append("context/: missing")
+    return out
+
+
+CHECKS = {
+    PYTHON: _check_python,
+    MANIFEST: _check_manifest,
+    HELM: _check_helm,
+    DOCKER: _check_docker,
+}
 # the learner's own file per kind — what a browser tab opens and `path` points at
-FILENAMES = {PYTHON: "task.py", MANIFEST: "task.yaml", HELM: "task.yaml"}
+FILENAMES = {
+    PYTHON: "task.py",
+    MANIFEST: "task.yaml",
+    HELM: "task.yaml",
+    DOCKER: "Dockerfile",
+}
+# the answer key, for the kinds that render one from a brief
+SOLUTIONS = {DOCKER: "solution.Dockerfile"}
+
+
+def solution(meta):
+    return meta["dir"] / SOLUTIONS.get(meta.get("kind", PYTHON), "solution.yaml")
 
 
 def _read(folder) -> tuple[TaskMeta | None, list[str]]:

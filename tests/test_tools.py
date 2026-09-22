@@ -131,6 +131,41 @@ def test_every_helm_pin_is_the_one_release():
         assert pin.member == f"{os_name}-{arch}/helm" and pin.filename == "helm"
 
 
+def test_every_hadolint_pin_is_the_one_release():
+    for (_, arch), pin in tools.PINS[tools.HADOLINT].items():
+        assert pin.version == tools.HADOLINT_VERSION
+        assert pin.url.endswith(
+            f"/{tools.HADOLINT_VERSION}/hadolint-linux-"
+            + {"amd64": "x86_64", "arm64": "arm64"}[arch]
+        )
+        assert pin.filename == "hadolint" and pin.archive_sha256 == pin.binary_sha256
+
+
+@responses.activate
+def test_a_bare_binary_is_installed_as_downloaded(tmp_path, monkeypatch):
+    """hadolint ships the executable itself, no archive around it."""
+    monkeypatch.setattr(settings, "root", tmp_path)
+    payload = b"pretend hadolint"
+    sha = hashlib.sha256(payload).hexdigest()
+    monkeypatch.setitem(
+        tools.PINS["kubeconform"],
+        tools.host(),
+        tools.Pin(
+            "2.15.1",
+            "https://example.invalid/hadolint-linux-x86_64",
+            sha,
+            "hadolint",
+            sha,
+        ),
+    )
+    responses.add(
+        responses.GET, "https://example.invalid/hadolint-linux-x86_64", body=payload
+    )
+    path = tools.acquire("kubeconform")
+    assert path == tmp_path / "tools" / "hadolint" and path.read_bytes() == payload
+    assert tools.installed("kubeconform") == path and path.stat().st_mode & 0o111
+
+
 @responses.activate
 def test_a_member_inside_a_folder_is_installed_by_its_own_name(tmp_path, monkeypatch):
     """Helm's archive holds `linux-amd64/helm`: the tool lands at `tools/helm`, not in a
@@ -253,6 +288,7 @@ def test_report_names_the_command_that_fixes_a_missing_tool(tmp_path, monkeypatc
     assert tools.report() == [
         ("kubeconform", "missing or altered: run `drillion doctor --fetch`"),
         ("helm", "missing or altered: run `drillion doctor --fetch`"),
+        ("hadolint", "missing or altered: run `drillion doctor --fetch`"),
     ]
 
 

@@ -28,6 +28,8 @@ ruff_report.txt
 # Scratch by the skill's own design, and a new folder appears per run.
 .superpowers/
 _selfcheck.py
+# sandboxed children's scratch folders, and what a killed run leaves in them
+.scratch/
 
 # your practice history: yours, never shipped with a clone (#4)
 progress.json
