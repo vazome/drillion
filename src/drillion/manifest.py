@@ -250,7 +250,7 @@ try:
 except (ImportError, OSError):
     pass
 
-import importlib.util, json, shutil, subprocess, sys
+import importlib.util, json, re, shutil, subprocess, sys
 from pathlib import Path
 
 import yaml
@@ -267,7 +267,12 @@ def answer(ok, diagnostics=(), report="", broken=None):
             {
                 "ok": ok,
                 "diagnostics": [
-                    {"path": d[0], "message": d[1], "file": d[2] if len(d) > 2 else None}
+                    {
+                        "path": d[0],
+                        "message": d[1],
+                        "file": d[2] if len(d) > 2 else None,
+                        "line": d[3] if len(d) > 3 else None,
+                    }
                     for d in diagnostics
                 ],
                 "report": report[-4000:],
@@ -384,7 +389,13 @@ def helm_said(where, text):
     named = [f for f in sorted(h["files"], key=len, reverse=True) if f in message]
     if not named and "specifications of the schema" in message:
         named = ["values.yaml"]  # the schema judges values, whichever file set them
-    return (None, where + message, named[0] if named else None)
+    if not named:
+        return (None, where + message)
+    # `templates/x.yaml:17`, or a YAML parser's `line 4` about the learner's own values
+    found = re.search(re.escape(named[0]) + r":(\\d+)", message)
+    if found is None and named[0] == h["edits"] == "values.yaml":
+        found = re.search(r"\\bline (\\d+)", message)
+    return (None, where + message, named[0], int(found.group(1)) if found else None)
 
 
 def lint_said(text):
@@ -555,6 +566,7 @@ def read_result(out):
             "path": d.get("path"),
             "message": str(d.get("message", "")),
             **({"file": str(d["file"])} if d.get("file") else {}),
+            **({"line": d["line"]} if isinstance(d.get("line"), int) else {}),
         }
         for d in result.get("diagnostics", [])
         if isinstance(d, dict)
