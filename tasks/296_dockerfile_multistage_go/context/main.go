@@ -1,0 +1,15 @@
+// A small HTTP service with no dependencies outside the standard library.
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+)
+
+func main() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "ok")
+	})
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
