@@ -69,7 +69,7 @@ A writable directory is a volume in the pod and a mount in the container, joined
 ```yaml
   volumes:
     - name: tmp
-      emptyDir: {{}}
+      emptyDir: {}
 ```
 
 ```yaml
