@@ -20,6 +20,7 @@ from .settings import PKG, settings
 
 KUBECONFORM = "kubeconform"
 HELM = "helm"
+HADOLINT = "hadolint"
 TIMEOUT = (10, 60)  # connect, read
 MAX_ARCHIVE = 64 << 20
 
@@ -123,6 +124,33 @@ PINS[HELM] = {
 }
 
 
+HADOLINT_VERSION = "v2.15.1"
+
+
+def _hadolint(asset, sha256):
+    # a bare binary, not an archive: the download is the executable, so both sums agree
+    return Pin(
+        HADOLINT_VERSION,
+        f"https://github.com/hadolint/hadolint/releases/download/{HADOLINT_VERSION}/{asset}",
+        sha256,
+        "hadolint",
+        sha256,
+    )
+
+
+# Upstream's `checksums.sha256` lists each binary.
+PINS[HADOLINT] = {
+    ("linux", "amd64"): _hadolint(
+        "hadolint-linux-x86_64",
+        "c7187db94eeeeca956519a6af171adc31453941a1e777961f6e680f697c8c507",
+    ),
+    ("linux", "arm64"): _hadolint(
+        "hadolint-linux-arm64",
+        "f6198ef8090f404dbb771abfee086eb8c48ac177f30da7fd3510aca35b344b5d",
+    ),
+}
+
+
 def pin_for(name):
     try:
         return PINS[name][host()]
@@ -219,13 +247,17 @@ def acquire(name):
     target.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=target) as scratch:
         scratch = Path(scratch)
-        archive = _download(pin.url, scratch / f"{name}.tar.gz")
+        archive = _download(pin.url, scratch / f"{name}.download")
         if digest(archive) != pin.archive_sha256:
             raise Rejected(f"{pin.url} does not match its pinned archive checksum")
-        try:
-            binary = _extract(archive, pin.member, scratch / pin.filename)
-        except KeyError:
-            raise Rejected(f"{pin.url} has no member {pin.member!r}") from None
+        if not pin.url.endswith(".tar.gz"):
+            binary = archive  # a bare binary: what was checked is what is installed
+            binary.chmod(0o755)
+        else:
+            try:
+                binary = _extract(archive, pin.member, scratch / pin.filename)
+            except KeyError:
+                raise Rejected(f"{pin.url} has no member {pin.member!r}") from None
         if digest(binary) != pin.binary_sha256:
             raise Rejected(f"{pin.member} does not match its pinned checksum")
         os.replace(binary, target / pin.filename)
