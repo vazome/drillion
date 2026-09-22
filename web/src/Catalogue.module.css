@@ -1,0 +1,6 @@
+.row:hover { background: var(--surface-2); }
+
+/* colour lives here rather than inline, or :hover could never win */
+.sort { color: var(--text-muted); }
+.sort:hover, .sort[data-active] { color: var(--text); }
+.sort:not(:hover) .ghost { visibility: hidden; }

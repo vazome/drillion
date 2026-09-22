@@ -79,9 +79,9 @@ export function setPrefs(patch: Partial<Prefs>) {
   announce();
 }
 
+const subscribe = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
+const snapshot = () => cache;
+
 export function usePrefs(): Prefs {
-  return useSyncExternalStore(
-    (l) => { listeners.add(l); return () => listeners.delete(l); },
-    () => cache,
-  );
+  return useSyncExternalStore(subscribe, snapshot);
 }

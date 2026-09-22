@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
-import { Dialog, Icon, Toggle } from "./ds/index.js";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { Dialog, EmptyState, Icon, Toggle } from "./ds/index.js";
 import { api, type Health } from "./api";
 import { Catalogue } from "./Catalogue";
-import { Task } from "./Task";
 import { Progress } from "./Progress";
 import { Deps } from "./Deps";
 import { Settings } from "./Settings";
+
+// the editor bundle is most of the app, and only the task screen needs it
+const Task = lazy(() => import("./Task").then((m) => ({ default: m.Task })));
 
 /** Hash routing, whole implementation. */
 export function useHash() {
@@ -122,7 +124,7 @@ export function App() {
     <>
       <Header route={route} dark={dark} setDark={setDark} {...head} onSettings={() => setSettings(true)} />
       <main style={{ padding: "24px" }}>
-        {slug ? (deps ? <Deps key={slug} slug={slug} /> : <Task key={slug} slug={slug} dark={dark} />)
+        {slug ? (deps ? <Deps key={slug} slug={slug} /> : <Suspense fallback={<EmptyState message="Loading…" />}><Task key={slug} slug={slug} dark={dark} /></Suspense>)
           : route === "/progress" ? <Progress />
           : <Catalogue />}
       </main>

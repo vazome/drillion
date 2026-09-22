@@ -153,9 +153,8 @@ export class ApiError extends Error {
   }
 }
 
-/** The one fetch wrapper. Non-2xx raises ApiError so callers can branch on 409/423/400. */
 /** GET /api/settings — where this environment keeps the learner's files. */
-export interface Paths { root: string; progress: string; tasks: string; version: string }
+export interface Paths { root: string; progress: string; tasks: string }
 /** What a backup holds: `brings` is the bundle, `replaces` is what is here now. */
 export interface Bundle {
   created: string | null; drillion: string | null;
@@ -172,6 +171,7 @@ export interface Restored {
 /** POST /api/reset — `kept` is the backup taken of everything that was just erased. */
 export interface Erased { cleared: number; failed: string[]; kept: string }
 
+/** The one fetch wrapper. Non-2xx raises ApiError so callers can branch on 409/423/400. */
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch("/api" + path, {
     ...init,

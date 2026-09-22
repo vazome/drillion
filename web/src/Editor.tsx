@@ -329,7 +329,11 @@ export function DiffView({ kind, mine, reference, dark, maxHeight, prefs = DEFAU
   kind: Meta["kind"]; mine: string; reference: string; dark: boolean; maxHeight: string; prefs?: Prefs;
 }) {
   const host = useRef<HTMLDivElement>(null);
+  const app = useRef<EditorApp>(null);
   const [failed, setFailed] = useState(false);
+  const [ready, setReady] = useState(false);
+  // built once per kind, as the editor is: the effects below carry every later change
+  const first = useRef({ mine, reference, dark, prefs });
 
   useEffect(() => {
     let live = true;
@@ -337,17 +341,18 @@ export function DiffView({ kind, mine, reference, dark, maxHeight, prefs = DEFAU
     startApi()
       .then(() => {
         if (!live || !host.current) return;
-        applyTheme(dark);
-        started = new EditorApp({
+        const at = first.current;
+        applyTheme(at.dark);
+        started = app.current = new EditorApp({
           id: "diff",
           useDiffEditor: true,
           readOnly: true,
           codeResources: {
-            original: { text: mine, uri: `${WORKSPACE}/mine.${ext(kind)}` },
-            modified: { text: reference, uri: `${WORKSPACE}/reference.${ext(kind)}` },
+            original: { text: at.mine, uri: `${WORKSPACE}/mine.${ext(kind)}` },
+            modified: { text: at.reference, uri: `${WORKSPACE}/reference.${ext(kind)}` },
           },
           diffEditorOptions: {
-            ...editorOptions, ...looks(prefs), readOnly: true, renderSideBySide: true,
+            ...editorOptions, ...looks(at.prefs), readOnly: true, renderSideBySide: true,
             // Monaco drops to an inline diff below 900px and this pane is narrower than
             // that, which would contradict the "yours on the left, the reference on the
             // right" copy sitting directly above it
@@ -356,15 +361,28 @@ export function DiffView({ kind, mine, reference, dark, maxHeight, prefs = DEFAU
         });
         return started.start(host.current);
       })
+      .then(() => { if (live && started) setReady(true); })
       .catch((err: unknown) => {
         console.error("diff failed to start", err);
         if (live) setFailed(true);
       });
     return () => {
       live = false;
+      app.current = null;
+      setReady(false);
       void started?.dispose();
     };
-  }, [kind, mine, reference, dark, prefs]);
+  }, [kind]);
+
+  useEffect(() => {
+    const models = app.current?.getTextModels();
+    if (!models) return;
+    if (models.original?.getValue() !== mine) app.current?.updateCode({ original: mine });
+    if (models.modified?.getValue() !== reference) app.current?.updateCode({ modified: reference });
+  }, [mine, reference, ready]);
+
+  useEffect(() => { app.current?.getDiffEditor()?.updateOptions(looks(prefs)); }, [prefs, ready]);
+  useEffect(() => { void api?.then(() => applyTheme(dark)).catch(() => {}); }, [dark]);
 
   if (failed) return <Failed height={maxHeight} />;
   return <div ref={host} style={{ height: maxHeight, fontSize: prefs.fontSize, ...frame }} />;
