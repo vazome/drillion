@@ -526,3 +526,27 @@ export interface IconProps {
 }
 export declare function Icon(props: IconProps): El | null;
 export declare const ICON_NAMES: IconName[];
+/** One file of a task's chart. Exactly one has `readOnly: false`, the learner's, and it
+ *  comes first; the rest are read and never written. */
+export interface FileTabsFile {
+  /** as the chart has it: "values.yaml", "templates/deployment.yaml" */
+  path: string;
+  readOnly: boolean;
+  /** the last run reported a problem in this file */
+  marked?: boolean;
+}
+/** The files of a Helm task above the editor: switches what the editor shows and nothing
+ *  else. 2 to 6 files; past the strip's width it scrolls inside itself. */
+export interface FileTabsProps {
+  files?: FileTabsFile[];
+  /** the path the editor is showing */
+  active?: string;
+  onSelect?: (path: string) => void;
+  /** the tablist's accessible name */
+  label?: string;
+  /** id of the element wrapping the editor, which carries role="tabpanel" */
+  panelId?: string;
+  className?: string;
+  style?: Style;
+}
+export declare function FileTabs(props: FileTabsProps): El;

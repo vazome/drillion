@@ -1,5 +1,8 @@
 # Design handover: chart file tabs
 
+> Drawn. `FileTabs` is vendored in `web/src/ds/`; it sits above the editor, flush with it, with
+> a note line under the strip. The brief below is kept as the record of what was asked.
+
 One component for the task page (`#/task/:slug`), to be drawn in Claude Design and vendored into
 `web/src/ds/` like the rest of the Mineral Blue system. [`DESIGN.md`](../../DESIGN.md) is the
 product brief, [`CONTEXT.md`](../../CONTEXT.md) the vocabulary, and the concept this serves is

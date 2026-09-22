@@ -184,12 +184,15 @@ the schema digest, under a new prefix (`h1:`), so existing `m1:` fingerprints do
 
 What the learner sees on a Helm task, top to bottom where it differs from a manifest task:
 
-- **A tab strip over the editor.** The first tab is the learner's, labelled with `edits`
-  (`values.yaml`). Then one tab per chart file, read-only and visibly locked, in a fixed order:
-  `Chart.yaml`, `values.yaml` (level 2), `values.schema.json`, then `templates/` sorted. The
-  task fixes the tabs; nothing is added or closed. **This component is requested from the
-  developer** (AGENTS.md: drawing UI is not the agent's concern); the brief is [helm-chart-tabs.md](../../design/helm-chart-tabs.md). Until it lands, the chart
-  files show as collapsed code blocks under the spec, which already exist.
+- **A tab strip over the editor**: `FileTabs` in `web/src/ds/`, drawn in Claude Design from
+  [helm-chart-tabs.md](../../design/helm-chart-tabs.md). The learner's file comes first,
+  marked "yours"; the others sit under one "Read-only" label. It goes between the Run/Submit
+  row and the editor, flush with it (the editor's top corners go square). It stays out of the
+  toolbar row because that row wraps and would push the editor down. A note line under the
+  strip says what the active file is ("part of the chart, read-only, you write values.yaml"),
+  and for a marked file, that the fix goes in the learner's file. Every variant of that line
+  shares one grid cell, so switching tabs never moves the editor. The editor wrapper carries
+  `role="tabpanel"` and is read-only on every tab but the learner's.
 - **Monaco mode** is YAML for every tab. Go template syntax has no standalone Monaco mode
   and gets YAML highlighting. That is acceptable for 2 levels, and worth revisiting only if
   learners trip on it.
@@ -238,7 +241,7 @@ per AGENTS.md.
 1. Helm pin and the `_Helm` kind with grading, behind one level 1 task (279) and its grader
    tests. No UI beyond the kind checks and the Rendered block; chart files show as code blocks.
 2. Level 2 via `renders`, with 282 and its hardcoding test.
-3. The tab strip, once provided.
+3. Wire `FileTabs` (already vendored) in place of the code blocks.
 4. The remaining tasks (280, 281, 283, 284).
 
 ## Open questions
@@ -246,4 +249,3 @@ per AGENTS.md.
 1. Is `edits` the right frontmatter word? Alternatives: `fills`, `learner_file`.
 2. Should level 1 show the rendered output of the chart's *defaults* before the learner types
    anything? It is a free render with no learner input, and it shows what the chart does.
-3. Should the tab strip sit above the editor (the usual place) or below it, as first sketched?
