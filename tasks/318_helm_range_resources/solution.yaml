@@ -1,0 +1,13 @@
+{{- range .Values.listeners }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Release.Name }}-{{ .name }}
+spec:
+  selector:
+    app: {{ $.Release.Name }}
+  ports:
+    - port: {{ .port }}
+      targetPort: {{ .port }}
+{{- end }}

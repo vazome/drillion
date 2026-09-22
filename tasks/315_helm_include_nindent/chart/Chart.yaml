@@ -1,0 +1,5 @@
+apiVersion: v2
+name: api
+description: An HTTP API whose Deployment calls the chart's helpers
+type: application
+version: 2.1.0

@@ -1,0 +1,6 @@
+# one Service per entry, each named after the release and the entry
+listeners:
+  - name: http
+    port: 8080
+  - name: admin
+    port: 9090
