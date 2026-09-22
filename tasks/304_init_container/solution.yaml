@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {name}
+spec:
+  initContainers:
+    - name: prepare
+      image: busybox:1.37
+      command: ["sh", "-c", "echo ready > /work/index.html"]
+      volumeMounts:
+        - name: content
+          mountPath: /work
+  containers:
+    - name: {name}
+      image: {image}
+      volumeMounts:
+        - name: content
+          mountPath: {path}
+  volumes:
+    - name: content
+      emptyDir: {}
