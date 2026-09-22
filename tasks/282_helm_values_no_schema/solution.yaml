@@ -1,0 +1,10 @@
+replicaCount: {replicas}
+image:
+  tag: {tag}
+env:
+  - name: LOG_LEVEL
+    value: {log_level}
+  - name: RETRIES
+    value: {retries}
+  - name: DRY_RUN
+    value: {dry_run}

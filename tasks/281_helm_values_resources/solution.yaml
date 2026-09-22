@@ -1,0 +1,7 @@
+image: {image}
+resources:
+  requests:
+    cpu: {cpu}
+    memory: {memory}
+  limits:
+    memory: {limit_memory}

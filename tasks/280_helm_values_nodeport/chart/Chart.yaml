@@ -1,0 +1,5 @@
+apiVersion: v2
+name: web
+description: A web server, reachable from outside the cluster when you ask for it
+type: application
+version: 0.2.0
