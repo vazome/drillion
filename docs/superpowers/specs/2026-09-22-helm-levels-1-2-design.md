@@ -195,8 +195,8 @@ What the learner sees on a Helm task, top to bottom where it differs from a mani
   learners trip on it.
 - **Result panel:** diagnostics as for manifests, then a collapsible "Rendered" block holding
   `rendered`, open by default on Run and closed on Submit.
-- **The track rail** gets a `helm` track and a logo in `web/public/tracks/`, requested with
-  the tab strip.
+- **The track rail** gets a `helm` track. Its logo is already in `web/public/tracks/helm.svg`,
+  from devicon v2.16.0 like the others.
 
 Payload: `_payload` adds `chart: [{"path": ..., "text": ...}]` for Helm tasks, in tab order,
 and `meta.edits`. `grade.py` and `solution.yaml` are never in it.
@@ -238,7 +238,7 @@ per AGENTS.md.
 1. Helm pin and the `_Helm` kind with grading, behind one level 1 task (279) and its grader
    tests. No UI beyond the kind checks and the Rendered block; chart files show as code blocks.
 2. Level 2 via `renders`, with 282 and its hardcoding test.
-3. The tab strip and track logo, once provided.
+3. The tab strip, once provided.
 4. The remaining tasks (280, 281, 283, 284).
 
 ## Open questions
@@ -247,5 +247,3 @@ per AGENTS.md.
 2. Should level 1 show the rendered output of the chart's *defaults* before the learner types
    anything? It is a free render with no learner input, and it shows what the chart does.
 3. Should the tab strip sit above the editor (the usual place) or below it, as first sketched?
-4. Is the Helm logo usable for the track rail? It is a CNCF trademark, the same situation as
-   the Kubernetes logo the rail already uses.
