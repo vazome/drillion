@@ -17,7 +17,7 @@ The unit of practice: one folder under `tasks/`, holding one spec, one file to f
 grader that judges it. A Python task keeps the last two in one `task.py`; a manifest task splits
 them into `task.yaml` and `grade.py`; a Helm task does the same beside the **chart** its
 `task.yaml` completes, and a Dockerfile task beside the **build context** its `Dockerfile` is
-written for. There are 305: 267 Python, 18 manifest, 10 Helm, 10 Dockerfile.
+written for. There are 313: 267 Python, 26 manifest, 10 Helm, 10 Dockerfile.
 _Avoid_: exercise, drill, problem, kata, question
 
 **Slug**:

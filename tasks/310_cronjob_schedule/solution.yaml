@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {name}
+spec:
+  schedule: {schedule}
+  timeZone: {timeZone}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: {keep}
+  failedJobsHistoryLimit: {keepFailed}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: {name}
+              image: {image}
+              command: ["python", "run.py"]
