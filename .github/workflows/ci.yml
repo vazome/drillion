@@ -107,7 +107,8 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 26
-      - run: corepack enable
+      # node 26 ships no corepack; the same pin as the Dockerfile's
+      - run: npm install -g corepack@0.35.0 && corepack enable pnpm
       - name: locate the pnpm store
         run: echo "PNPM_STORE=$(pnpm store path)" >> "$GITHUB_ENV"
         working-directory: web
@@ -192,7 +193,8 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 26
-      - run: corepack enable
+      # node 26 ships no corepack; the same pin as the Dockerfile's
+      - run: npm install -g corepack@0.35.0 && corepack enable pnpm
       - name: locate the pnpm store
         run: echo "PNPM_STORE=$(pnpm store path)" >> "$GITHUB_ENV"
         working-directory: web
