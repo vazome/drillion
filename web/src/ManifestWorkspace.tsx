@@ -31,8 +31,8 @@ export function ManifestFailure({ diagnostics, kind }: { diagnostics: Diagnostic
  *  file first, the rest read-only.
  *  A chart file is laid over the editor rather than swapped in, so the editor keeps its
  *  cursor, undo and layout, and it is `inert` meanwhile so focus cannot reach under. */
-export function ChartFiles({ edits, chart, diagnostics, height, context = false, children }: {
-  edits: string; chart: ChartFile[]; diagnostics: Diagnostic[]; height: string; context?: boolean; children: ReactNode;
+export function ChartFiles({ edits, chart, diagnostics, context = false, children }: {
+  edits: string; chart: ChartFile[]; diagnostics: Diagnostic[]; context?: boolean; children: ReactNode;
 }) {
   const [open, setOpen] = useState(edits);
   const panel = useId();
@@ -47,8 +47,8 @@ export function ChartFiles({ edits, chart, diagnostics, height, context = false,
       <FileTabs files={files} active={open} onSelect={setOpen} panelId={panel}
         {...(context ? { label: "Build context files", partOf: "the build context" } : {})} />
       <div id={panel} role="tabpanel" aria-label={open} className={s.panel}>
-        <div inert={!!shown}>{children}</div>
-        {shown ? <pre tabIndex={0} className={s.chartFile} style={{ height }}>{shown.text}</pre> : null}
+        <div inert={!!shown} className={s.fill}>{children}</div>
+        {shown ? <pre tabIndex={0} className={s.chartFile}>{shown.text}</pre> : null}
       </div>
     </div>
   );

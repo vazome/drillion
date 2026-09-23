@@ -143,7 +143,6 @@ const frame = {
   borderRadius: "var(--radius)",
   overflow: "hidden",
 };
-export const SQUARE_TOP = { borderTopLeftRadius: 0, borderTopRightRadius: 0 };
 
 /** The binding's own line: Vim's mode, pending keys and `:` prompt, or the keys Emacs is
  *  still waiting on. It has to be a real element outside the editor, so the binding has
@@ -169,11 +168,9 @@ function Failed({ height }: { height: string }) {
   );
 }
 
-export function Editor({ kind, value, onChange, onRun, onSubmit, readOnly, dark, height, prefs, problem, flush }: {
+export function Editor({ kind, value, onChange, onRun, onSubmit, readOnly, dark, height, prefs, problem }: {
   kind: Meta["kind"]; value: string; onChange: (v: string) => void; onRun: () => void; onSubmit: () => void;
   readOnly?: boolean; dark: boolean; height: string; prefs: Prefs;
-  /** square top corners, for an editor that sits under a tab strip */
-  flush?: boolean;
   problem?: { message: string; line: number | null } | null;
 }) {
   const host = useRef<HTMLDivElement>(null);
@@ -313,7 +310,7 @@ export function Editor({ kind, value, onChange, onRun, onSubmit, readOnly, dark,
 
   if (failed) return <Failed height={height} />;
   return (
-    <div style={{ ...frame, ...(flush ? SQUARE_TOP : {}), display: "flex", flexDirection: "column", height }}>
+    <div style={{ display: "flex", flexDirection: "column", height, background: "var(--editor)" }}>
       <div ref={host} style={{ flex: 1, minHeight: 0, fontSize: prefs.fontSize }} />
       {/* always mounted, so the binding has a node the moment it is switched on */}
       <div ref={status} style={{ ...statusStyle, display: keys === "regular" ? "none" : "flex" }}>

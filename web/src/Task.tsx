@@ -13,9 +13,7 @@ import { Crumbs } from "./Shell";
 import { Level } from "./Level";
 import css from "./Task.module.css";
 
-const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
 const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };
-const PLAIN = { fontWeight: 400, textTransform: "none" as const, letterSpacing: 0, ...ASIDE };
 const ATTEMPT_MS = 5000;    // reading the task is work: the clock starts once the page settles
 const HEARTBEAT_MS = 60_000;
 // long enough for `role="status"` to finish speaking the message before the node goes
@@ -23,7 +21,7 @@ const GATE_MS = 4000;
 /** Below this the two panes stack, spec first. A tablet is for reading a spec and running it,
  *  never for writing code side by side. Both arguments are module constants: rebuilt every
  *  render, they would make `useSyncExternalStore` re-subscribe every render. */
-const NARROW = "(max-width: 999px)";
+const NARROW = "(max-width: 1099px)";
 const watchNarrow = (onChange: () => void) => {
   const q = matchMedia(NARROW);
   q.addEventListener("change", onChange);
@@ -31,6 +29,10 @@ const watchNarrow = (onChange: () => void) => {
 };
 const isNarrow = () => matchMedia(NARROW).matches;
 const HINT_TEXT = { fontSize: 14 };
+/** The shortcut's modifier as this keyboard labels it. */
+const MOD = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl";
+/** `0:48`, the way the hint countdown reads. */
+const clockOf = (n: number) => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
 /** The page re-renders every second while the clock runs; Markdown is only re-parsed when
  *  its text changes. */
 const Spec = memo(SpecText);
@@ -148,6 +150,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
   const gateTimer = useRef<number | undefined>(undefined);
   const unlocksBtn = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
+  const lastHint = useRef<HTMLDivElement>(null);
   const dropped = useRef(false);             // discarded here: do not re-open the attempt behind them
   const hasAttempt = !!task?.attempt;
   const passed = result.state === "passed";
@@ -217,6 +220,14 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
   }, [hasAttempt, passed, slug]);
 
   useEffect(() => { graceRef.current = grace; }, [grace]);
+
+  // a hint just revealed lands at the end of the spec, right above the bar that asked for it
+  const shownHints = task?.hints.shown.length ?? 0;
+  const seenHints = useRef(shownHints);
+  useEffect(() => {
+    if (shownHints > seenHints.current) lastHint.current?.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    seenHints.current = shownHints;
+  }, [shownHints]);
 
   /** Run and Submit are the same round trip; `submit` is the learner saying they are done.
    *  Only a submitted run costs an attempt and moves the card — a Run is free, repeatable,
@@ -334,21 +345,19 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
     </div>
   );
 
-  const runNo = passed ? result.attempts : attempt ? attempt.attempts + 1 : 0;   // the attempt you are on
   // an ungraded Run cost no attempt, so the card must not number it as one
   const ungraded = result.state === "ran" || (result.state === "failed" && !result.graded);
   const resultNo = !ungraded && "attempts" in result ? result.attempts : 0;   // the attempt this result came from
   const fell = passed && result.stepped && result.box < result.fromBox;
 
   const chart = !!meta.edits && task.chart.length > 0;
-  const editorHeight = meta.kind !== "python" ? "clamp(280px, 42vh, 560px)" : narrow ? "60vh" : "calc(100vh - 364px)";
-  const editor = <Editor kind={meta.kind} value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} problem={problem} height={editorHeight} flush={chart} />;
+  const editor = <Editor kind={meta.kind} value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} problem={problem} height="100%" />;
   const rendered = result.state === "failed" || result.state === "ran" ? result.rendered : "";
+  const submits = attempt?.attempts ?? 0;
 
   return (<>
     {bar(<Crumbs group={meta.track ?? meta.tier} topic={meta.topic} />)}
-    <main style={{ padding: 24 }}>
-    <div style={{ maxWidth: 1500, margin: "0 auto" }}>
+    <main className={css.page}>
       <TaskHeader task={task} active={active} showTimer={prefs.showTimer} paused={!hasAttempt || passed} passed={passed}
         onLineage={() => setLineage(true)} lineageOpen={lineage} lineageBtn={unlocksBtn}
         onAbandon={hasAttempt && !passed ? abandon : undefined} />
@@ -372,70 +381,26 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
       ) : null}
 
       <TaskPanes narrow={narrow}>
-        <div>
-          <Card label={`Spec · ${slug}/README.md`}>
+        <div className={css.brief}>
+          <div className={css.read}>
             <Spec text={task.spec_md} slug={slug} hideTitle />
 
-            <div style={{ marginTop: 22, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-              <div style={{ ...LABEL, marginBottom: 10 }}>
-                Hints <span style={PLAIN}>· {hints.shown.length} of {hints.total} shown, unlocked by time on task</span>
+            {reference ? (
+              <div className={css.after}>
+                <div className={css.label}>Solution</div>
+                {peeked
+                  ? <NoticeBanner message="Solution shown: this pass won’t move the task further out. It grades as struggled and comes back just as soon." actions={[]} />
+                  : <p className={css.aside}>{mine
+                      ? "Your solution on the left, the reference on the right. It closes again when this task comes back."
+                      : "The reference answer, for comparison with what you wrote. It closes again when this task comes back."}</p>}
+                {mine
+                  ? <DiffView kind={meta.kind} mine={mine} reference={reference} dark={dark} maxHeight="46vh" prefs={prefs} />
+                  : <Spec text={"```" + FENCE[meta.kind] + "\n" + reference + "\n```"} slug={slug} />}
               </div>
-              {flagged ? (
-                <div style={{ ...ASIDE, color: "var(--text-muted)", marginBottom: 10 }}>
-                  You have struggled with this {plural(task.lapses, "time")}. The hints below, or the
-                  tasks it builds on, are the likelier problem — not you.
-                </div>
-              ) : null}
-              {hints.shown.map((text, i) => (
-                <div key={i} style={{ background: "var(--surface-2)", borderRadius: "var(--radius)", padding: "10px 12px", marginBottom: 8 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>Hint {i + 1}</div>
-                  <Spec text={text} slug={slug} style={HINT_TEXT} />
-                </div>
-              ))}
-              {hintsLeft ? (
-                <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                  <Button variant="secondary" onClick={hint} disabled={busy}><Icon name="Idea" />Show hint {hints.shown.length + 1}</Button>
-                  <span style={ASIDE}>{hintReady ? "ready" : `unlocks in ${secs(nextHintIn!)}`}</span>
-                </div>
-              ) : (
-                <div style={ASIDE}>All {hints.total} levels shown. Nothing else is gated except the solution.</div>
-              )}
-              {notice("hints")}
-            </div>
-
-            <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-              <div style={{ ...LABEL, marginBottom: 10 }}>
-                Solution <span style={PLAIN}>· {peeked ? "revealed — this attempt is marked" : reference ? "open — you passed this one" : gateState.unlocked ? "unlocked" : `locked · needs ${plural(gateState.need_attempts, "more attempt")} and ${secs(gateState.need_secs)} more work`}</span>
-              </div>
-              {reference ? (
-                <div style={{ display: "grid", gap: 8 }}>
-                  {peeked
-                    ? <NoticeBanner message="Solution shown — this pass won’t move the task further out. It grades as struggled and comes back just as soon." actions={[]} />
-                    : <div style={ASIDE}>{mine
-                        ? "Your solution on the left, the reference on the right. It closes again when this task comes back."
-                        : "The reference answer, for comparison with what you wrote. It closes again when this task comes back."}</div>}
-                  {mine
-                    ? <DiffView kind={meta.kind} mine={mine} reference={reference} dark={dark} maxHeight="46vh" prefs={prefs} />
-                    : <Spec text={"```" + FENCE[meta.kind] + "\n" + reference + "\n```"} slug={slug} />}
-                </div>
-              ) : (
-                <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                  <Button variant="secondary" onClick={solution} disabled={busy}>{gateState.unlocked ? <><Icon name="Unlocked" />Show solution</> : <><Icon name="Locked" />Unlock solution</>}</Button>
-                  <span style={ASIDE}>taking it means this pass won’t promote</span>
-                </div>
-              )}
-              {notice("solution")}
-            </div>
-
-            <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-              <NoteField value={note} onChange={editNote} dirty={noteDirty}
-                ariaLabel={`Your note on ${meta.title}`}
-                placeholder="What caught you out? Write it down while you still remember." />
-              {notice("note")}
-            </div>
+            ) : null}
 
             {task.archive.length ? (
-              <Collapsible label={`Archive · ${plural(task.archive.length, "previous pass")}`} mono={false} style={{ marginTop: 12 }}>
+              <Collapsible label={`Archive · ${plural(task.archive.length, "previous pass")}`} mono={false} className={css.after}>
                 {task.archive.slice().reverse().map((a, i) => (
                   <div key={i} style={{ marginBottom: 8 }}>
                     <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13 }}>
@@ -452,10 +417,57 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
                 ))}
               </Collapsible>
             ) : null}
-          </Card>
+
+            <div className={css.after}>
+              <NoteField value={note} onChange={editNote} dirty={noteDirty}
+                ariaLabel={`Your note on ${meta.title}`}
+                placeholder="What caught you out? Write it down while you still remember." />
+              {notice("note")}
+            </div>
+
+            {flagged || hints.shown.length ? (
+              <div className={css.after}>
+                {flagged ? (
+                  <p className={css.aside}>
+                    You have struggled with this {plural(task.lapses, "time")}. The hints below, or the
+                    tasks it builds on, are the likelier problem, not you.
+                  </p>
+                ) : null}
+                {hints.shown.map((text, i) => (
+                  <div key={i} ref={i === hints.shown.length - 1 ? lastHint : undefined} className={css.hint}>
+                    <div className={css.hintHead}><Icon name="Idea" size={14} />Hint {i + 1} of {hints.total}</div>
+                    <Spec text={text} slug={slug} style={HINT_TEXT} />
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+          {notice("hints")}
+          {notice("solution")}
+          <div role="group" aria-label="Help with this task" className={css.stuck}>
+            <span className={css.aside}>Stuck?</span>
+            {hintsLeft ? (
+              <button type="button" onClick={hint} disabled={busy || passed} className={css.help}>
+                <Icon name="Idea" />Hint {hints.shown.length + 1}
+                {hintReady ? null : <span className={css.mono}>in {clockOf(nextHintIn!)}</span>}
+              </button>
+            ) : <span className={css.aside}>All {hints.total} hints shown</span>}
+            {reference ? (
+              <span className={css.aside}><Icon name="Unlocked" size={14} />{peeked ? "Solution shown: this attempt is marked." : "Solution open: you passed this one."}</span>
+            ) : (
+              <button type="button" onClick={solution} disabled={busy} className={css.help}
+                title="Taking it means this pass won’t move the task further out">
+                <Icon name={gateState.unlocked ? "Unlocked" : "Locked"} size={14} />Solution
+                {gateState.unlocked ? null : <span className={css.small}>after {[
+                  gateState.need_attempts ? plural(gateState.need_attempts, "submit") : null,
+                  gateState.need_secs ? `${secs(gateState.need_secs)} more work` : null,
+                ].filter(Boolean).join(" and ")}</span>}
+              </button>
+            )}
+          </div>
         </div>
 
-        <div style={{ minWidth: 0, display: "grid", gap: 12 }}>
+        <div className={css.work}>
           {conflict ? <div className="m-drop"><ConflictBanner detail="Your draft and the file on disk have diverged." onReload={takeDisk} onKeep={keepMine} /></div> : null}
           {offer ? (
             <div className="m-drop">
@@ -467,58 +479,45 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
             </div>
           ) : null}
           {notice("editor")}
-          {grace > 0 && !readFirstOff && !passed ? (
-            <div style={{ position: "fixed", right: 24, left: narrow ? 24 : undefined, bottom: 24, zIndex: 30 }}>
-              <GraceNotice seconds={grace} onDismiss={() => setReadFirstOff(true)} />
-            </div>
-          ) : null}
-          {nudge && !nudgeOff && !passed ? (
-            <div style={{ position: "fixed", right: 24, left: narrow ? 24 : undefined, bottom: 24, zIndex: 30 }}>
-              <StuckNudge minutes={Math.round(active / 60)} hintsShown={hints.shown.length} hintsTotal={hints.total} hintReady={hintReady}
-                onHint={() => { setNudgeOff(true); hint(); }} onDismiss={() => setNudgeOff(true)} />
-            </div>
-          ) : null}
-          {task.has_given ? <NoticeBanner message="This task ships given code above solve() — read it, but leave it alone." actions={[]} /> : null}
+          {task.has_given ? <NoticeBanner message="This task ships given code above solve(): read it, but leave it alone." actions={[]} /> : null}
 
-          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-            {/* Run executes and grades nothing; Submit is the committing act, so it is the
-              * one primary in the row and the only one that costs an attempt */}
-            <Button variant="secondary" kbdHint="Ctrl/⌘+Enter" onClick={run} disabled={!!inflight || passed}>
-              <Icon name="Play" />{inflight === "run" ? "Running…" : "Run"}
-            </Button>
-            <Button kbdHint="Ctrl/⌘+⇧+Enter" onClick={submit} disabled={!!inflight || passed}>
-              <Icon name="Send" />{inflight === "submit" ? "Submitting…" : "Submit"}
-            </Button>
-            <span className="tabular" style={{ fontSize: 13, color: "var(--text-muted)" }}>
-              {runNo ? `attempt ${runNo}` : "not started"}
-            </span>
-            {attempt ? <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--text-faint)" }}>seed {attempt.seed}</span> : null}
+          <div className={css.editorBox}>
+            <div className={css.fill}>
+              {chart && meta.edits ? (
+                // keyed by task: a new task opens on the learner's own file
+                <ChartFiles key={slug} edits={meta.edits} chart={task.chart} context={meta.kind === "docker"}
+                  diagnostics={result.state === "failed" ? result.diagnostics : []}>
+                  {editor}
+                </ChartFiles>
+              ) : editor}
+            </div>
+          </div>
+
+          <div role="toolbar" aria-label="Grade your file" className={css.grading}>
+            <span className={css.mono}>{plural(submits, "submit")}{attempt ? ` · seed ${attempt.seed}` : ""}</span>
             {/* the marker lives inside the spacer, which is allowed to shrink below its own
               * content: a status that appears while you type must not re-wrap the row and
               * push the editor down under the cursor */}
-            <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textAlign: "right", whiteSpace: "nowrap" }}>
+            <div className={css.marker}>
               {dirty || syntax ? (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: syntax ? "var(--warn)" : "var(--text-faint)" }}
-                  title={syntax ? syntax.message : undefined}>
-                  {/* the editor's squiggle carries the reason; this row only has width for
-                    * the fact, and truncating a sentence mid-word reads as a bug */}
+                <span data-syntax={syntax ? "" : undefined} title={syntax ? syntax.message : undefined}>
                   {syntax ? <Icon name="WarningAlt" size={14} /> : <Icon name="CircleFill" size={8} />}{syntax
                     ? `syntax error${syntax.line != null ? ` on line ${syntax.line}` : ""}, not saved`
                     : "unsaved"}
                 </span>
               ) : null}
             </div>
+            {/* Run executes and grades nothing; Submit is the committing act, so it is the
+              * one primary in the row and the only one that costs an attempt */}
+            <Button variant="secondary" kbdHint={`${MOD} ↵`} onClick={run} disabled={!!inflight || passed}>
+              <Icon name="Play" />{inflight === "run" ? "Running…" : "Run"}
+            </Button>
+            <Button kbdHint={`${MOD} ⇧ ↵`} onClick={submit} disabled={!!inflight || passed}>
+              <Icon name="Send" />{inflight === "submit" ? "Submitting…" : "Submit"}
+            </Button>
           </div>
 
-          {chart && meta.edits ? (
-            // keyed by task: a new task opens on the learner's own file
-            <ChartFiles key={slug} edits={meta.edits} chart={task.chart} height={editorHeight} context={meta.kind === "docker"}
-              diagnostics={result.state === "failed" ? result.diagnostics : []}>
-              {editor}
-            </ChartFiles>
-          ) : editor}
-
-          <Card label={ungraded ? "Output · your run" : resultNo ? `Result · attempt ${resultNo}` : "Result"} padding={16}>
+          <section aria-label={ungraded ? "Output of your run" : resultNo ? `Result of submit ${resultNo}` : "Result"} className={css.result}>
             {/* the region stays mounted and only the banner inside it is keyed: a live region
               * that arrives with its text already in place is never announced */}
             <div role="status">
@@ -582,10 +581,21 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
                 ) : null}
               </div>
             ) : null}
-          </Card>
+          </section>
         </div>
       </TaskPanes>
-    </div>
+
+      {grace > 0 && !readFirstOff && !passed ? (
+        <div className={css.corner}>
+          <GraceNotice seconds={grace} onDismiss={() => setReadFirstOff(true)} />
+        </div>
+      ) : null}
+      {nudge && !nudgeOff && !passed ? (
+        <div className={css.corner}>
+          <StuckNudge minutes={Math.round(active / 60)} hintsShown={hints.shown.length} hintsTotal={hints.total} hintReady={hintReady}
+            onHint={() => { setNudgeOff(true); hint(); }} onDismiss={() => setNudgeOff(true)} />
+        </div>
+      ) : null}
     </main>
   </>);
 }
