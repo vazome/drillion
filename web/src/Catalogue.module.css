@@ -1,7 +1,47 @@
-.row:hover { background: var(--surface-2); }
+.page{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+.section{display:flex;flex-direction:column;gap:16px}
+.heading{display:flex;align-items:center;gap:16px;flex-wrap:wrap;scroll-margin-top:64px}
+.h2{margin:0;font-size:var(--fs-title);font-weight:600;letter-spacing:-.01em}
+.grow{flex-grow:1}
+.count{font-size:13px;color:var(--text-muted);white-space:nowrap}
+.focus{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 4px 0 10px;background:var(--accent-tint);color:var(--accent);border-radius:var(--radius-pill);font-size:13px;font-weight:500;white-space:nowrap}
+.focus button{display:flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:var(--radius-pill);background:transparent;color:var(--accent);cursor:pointer}
+@media (hover:hover){.focus button:hover{background:var(--accent-line)}}
+.search{position:relative;display:flex;align-items:center;width:360px;max-width:100%}
+.searchIcon{position:absolute;left:12px;color:var(--text-muted);pointer-events:none}
+.slash{position:absolute;right:8px}
+
+.filters{display:flex;align-items:flex-start;gap:24px}
+.segment{flex-shrink:0;display:flex;gap:2px;padding:3px;background:var(--surface);border-radius:var(--radius-lg);box-shadow:0 0 0 1px var(--border)}
+.segment button{display:flex;align-items:center;gap:6px;height:28px;padding:0 12px;background:transparent;border:0;border-radius:var(--radius);font:inherit;font-size:13px;color:var(--text-muted);cursor:pointer;transition:background var(--dur-press) var(--ease-out)}
+@media (hover:hover){.segment button:hover:not([aria-pressed="true"]){background:var(--surface-2);color:var(--text)}}
+.segment button[aria-pressed="true"]{background:var(--accent-tint);color:var(--accent);font-weight:600}
+.segCount{font-family:var(--font-mono);font-size:12px;font-variant-numeric:tabular-nums}
+.tags{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:2px}
+.rule{width:1px;height:20px;background:var(--border);margin:0 4px}
+
+/* one column geometry for the header and the rows */
+.list{background:var(--surface);border-radius:var(--radius-lg);box-shadow:0 0 0 1px var(--border);overflow-x:auto}
+.header,.row{display:grid;grid-template-columns:64px minmax(0,1fr) 220px 110px 100px 64px 32px;align-items:center;column-gap:8px;min-width:820px;box-sizing:border-box;padding:0 12px 0 20px}
+.header{height:40px;border-bottom:1px solid var(--border)}
+.row{height:44px;border-bottom:1px solid var(--border);color:var(--text)}
+.row:last-child{border-bottom:0}
+.row:hover{color:var(--text);text-decoration:none;background:var(--surface-2)}
+.num{font-family:var(--font-mono);font-size:13px;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.task{display:flex;align-items:center;gap:10px;min-width:0}
+.title{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.next{flex-shrink:0;height:20px;display:inline-flex;align-items:center;padding:0 8px;border-radius:var(--radius-pill);background:var(--accent-tint);font-size:12px;font-weight:500;color:var(--accent)}
+.cell{display:flex;min-width:0}
+.status{font-size:13px;color:var(--text-muted)}
 
 /* colour lives here rather than inline, or :hover could never win */
-.sort { color: var(--text-muted); }
-.sort:hover, .sort[data-active] { color: var(--text); }
-.sort:not(:hover) .ghost { visibility: hidden; }
-@media (min-width:1100px){.rail{display:none}}
+.sort{display:inline-flex;align-items:center;gap:4px;height:32px;padding:0;background:transparent;border:0;font:inherit;font-size:var(--fs-label);font-weight:500;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--text-muted);cursor:pointer;white-space:nowrap}
+.sort:hover,.sort[data-active]{color:var(--text)}
+.arrow{display:inline-flex;color:var(--accent)}
+.sort:not([data-active]) .arrow{color:var(--text-muted)}
+.sort:not(:hover):not([data-active]) .arrow{visibility:hidden}
+
+@media (max-width:1099px){
+  .filters{flex-direction:column;gap:12px}
+  .search{width:100%}
+}

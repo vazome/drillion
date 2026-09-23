@@ -12,6 +12,8 @@ export interface Meta {
   /** a Helm task's one hole: the chart path the learner's file stands in for */
   edits?: string;
   tags: string[]; source?: string;
+  /** the task numbers this one builds on; information, never a gate */
+  prereqs?: number[];
 }
 /** A catalogue row: the task's facts plus this learner's card. */
 export interface Row extends Meta {
@@ -49,11 +51,12 @@ export interface Catalogue {
   };
   /** `due` is the whole backlog, not `review.length` — the two differ once it is over the cap.
    *  `stuck` is the tag with the most flagged tasks, or null when none stands out. */
-  stats: { boxes: number[]; ladder: number[]; due: number; seen: number; total: number; practised: number; window: number; lapse_limit: number; stuck: { tag: string; flagged: number } | null };
+  /** `week` is which of the last `window` days were worked, oldest first; `practised` counts them. */
+  stats: { boxes: number[]; ladder: number[]; due: number; seen: number; total: number; practised: number; week: boolean[]; window: number; lapse_limit: number; stuck: { tag: string; flagged: number } | null };
   tasks: Row[];
 }
 export interface Progress {
-  boxes: number[]; ladder: number[]; due: number; seen: number; total: number; practised: number; window: number;
+  boxes: number[]; ladder: number[]; due: number; seen: number; total: number; practised: number; week: boolean[]; window: number;
   today: string;
   /** cards due per day for the next 14, [0] today with everything overdue folded in */
   forecast: number[];

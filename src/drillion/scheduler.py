@@ -121,13 +121,17 @@ def boxes(st, all_tasks):
     return out
 
 
+def week(st):
+    """Which of the last WINDOW days were worked, oldest first, counted from the archive so
+    a day you gave up on still counts."""
+    start = date.fromisoformat(today()) - timedelta(days=WINDOW - 1)
+    worked = {r["date"] for runs in st["archive"].values() for r in runs}
+    return [(start + timedelta(days=i)).isoformat() in worked for i in range(WINDOW)]
+
+
 def practised(st):
-    """Days worked in the last WINDOW, counted from the archive, so a day you gave up on
-    still counts. A rolling window, never a streak."""
-    cut = (date.fromisoformat(today()) - timedelta(days=WINDOW - 1)).isoformat()
-    return len(
-        {r["date"] for runs in st["archive"].values() for r in runs if r["date"] >= cut}
-    )
+    """Days worked in the last WINDOW. A rolling window, never a streak."""
+    return sum(week(st))
 
 
 def stats(st, all_tasks, due=None):
@@ -142,6 +146,7 @@ def stats(st, all_tasks, due=None):
         "seen": sum(spread),
         "total": len(all_tasks),
         "practised": practised(st),
+        "week": week(st),
         "window": WINDOW,
     }
 
