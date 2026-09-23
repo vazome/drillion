@@ -1,5 +1,5 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { Button, Card, Icon, Collapsible, ConflictBanner, DepLineage, EmptyState, FailedCase, NoteField, GraceNotice, NoticeBanner, RequiresTag, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
+import { Button, Card, Icon, Collapsible, ConflictBanner, DepLineage, EmptyState, FailedCase, NoteField, GraceNotice, NoticeBanner, RequiresTag, ResultBanner, RowFlags, SpecText, StatusBadge, TaskPath, Timer, StuckNudge } from "./ds/index.js";
 import { ApiError, api, post, type Task as TaskData, type RunResult, type Case, type Diagnostic } from "./api";
 import { depsHref, prefetch, taskHref } from "./Deps";
 import { plural, secs, topicNo } from "./format";
@@ -10,6 +10,8 @@ import { useDraft } from "./useDraft";
 import { usePrefs } from "./prefs";
 import { TaskPanes } from "./TaskPanes";
 import { Crumbs } from "./Shell";
+import { Level } from "./Level";
+import css from "./Task.module.css";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
 const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };
@@ -55,19 +57,72 @@ export function stepLine(grade: string, box: number, fromBox: number, stepped: b
   return `${grade} leaves it where it is`;
 }
 
-/** The header chips: `requires 019 040`, each passed one checkmarked. Titles are dropped
- *  past two — the row is already crowded, and a number-only tag still links. */
-function RequiresChips({ requires }: { requires: TaskData["requires"] }) {
-  if (!requires.length) return null;
-  const withTitles = requires.length <= 2 && requires.every((r) => r.title.length < 30);
-  return (
-    <>
-      <span style={{ ...LABEL, fontSize: 11, color: "var(--text-faint)", marginLeft: 4 }}>requires</span>
+/** The task's header: number, title and clock on the first line; what it is, what it needs
+ *  and what it opens on the second. With no prereqs it all fits on one. Needs chips drop
+ *  their titles past two, or past a 30-character one; the title stays in the tooltip. */
+function TaskHeader({ task, active, showTimer, paused, passed, onLineage, lineageOpen, lineageBtn, onAbandon }: {
+  task: TaskData; active: number; showTimer: boolean; paused: boolean; passed: boolean;
+  onLineage: () => void; lineageOpen: boolean; lineageBtn: RefObject<HTMLButtonElement | null>; onAbandon?: () => void;
+}) {
+  const { meta, requires, unlocks } = task;
+  const titles = requires.length <= 2 && requires.every((r) => r.title.length <= 30);
+  const facts = <>
+    <Level of={meta.difficulty} />
+    <TaskPath tier={meta.tier} track={meta.track} tags={meta.tags} />
+    <span className={css.pill} data-status={task.status}>{task.status}</span>
+    <RowFlags lapses={task.lapses} lapseLimit={task.lapse_limit} />
+    {meta.source ? <span className={css.aside}>{meta.source}</span> : null}
+  </>;
+  const needs = requires.length ? (
+    <span className={css.needs}>Needs
       {requires.map((r) => (
-        <RequiresTag key={r.slug} topic={r.topic} title={withTitles ? r.title : undefined}
+        <RequiresTag key={r.slug} topic={r.topic} title={titles ? r.title : undefined}
           state={r.state} href={depsHref(r.slug)} onPointerEnter={() => { void prefetch(r.slug); }} />
       ))}
-    </>
+    </span>
+  ) : <span className={css.aside}>No prereqs</span>;
+  // the lineage opens over the page: the editor, the run and the clock all survive it
+  const opens = (
+    <button type="button" ref={lineageBtn} onClick={onLineage} aria-expanded={lineageOpen} className={css.opens}>
+      {unlocks.length ? `Opens ${plural(unlocks.length, "task")}` : "Lineage"}<Icon name="ArrowRight" size={14} />
+    </button>
+  );
+  // hidden by preference only: the clock behind it keeps running, and the grade is the same
+  const clock = (
+    <span className={css.clock}>
+      {showTimer ? <><Timer seconds={active} paused={paused} /><span className={css.aside}>active{passed ? " · passed" : ""}</span></> : null}
+      {onAbandon ? <button type="button" onClick={onAbandon} className={css.abandon}>Abandon</button> : null}
+    </span>
+  );
+  return requires.length ? (
+    <section aria-label="Task" className={css.header} data-lines="2">
+      <div className={css.line}>
+        <span className={css.num}>{topicNo(meta.topic)}</span>
+        <h1 className={css.h1}>{meta.title}</h1>
+        <span className={css.grow} />
+        {clock}
+      </div>
+      <div className={css.line} data-second="">
+        {facts}
+        <span aria-hidden="true" className={css.rule} />
+        {needs}
+        <span className={css.grow} />
+        {opens}
+      </div>
+    </section>
+  ) : (
+    <section aria-label="Task" className={css.header}>
+      <div className={css.line}>
+        <span className={css.num}>{topicNo(meta.topic)}</span>
+        <h1 className={css.h1}>{meta.title}</h1>
+        {facts}
+        <span className={css.grow} />
+        {needs}
+        {opens}
+        <span aria-hidden="true" className={css.rule} />
+        {clock}
+      </div>
+    </section>
   );
 }
 
@@ -294,24 +349,9 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
     {bar(<Crumbs group={meta.track ?? meta.tier} topic={meta.topic} />)}
     <main style={{ padding: 24 }}>
     <div style={{ maxWidth: 1500, margin: "0 auto" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
-        <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)" }}>{topicNo(meta.topic)}</span>
-        <h1 style={{ margin: 0, fontSize: "var(--fs-h)", fontWeight: 600 }}>{meta.title}</h1>
-        <StatusBadge status={task.status} />
-        <StatusBadge status={meta.difficulty} />
-        <RequiresChips requires={task.requires} />
-        <RowFlags lapses={task.lapses} lapseLimit={task.lapse_limit} />
-        <div style={{ flex: 1 }} />
-        {meta.track ? <TagChip label={meta.track} small /> : null}
-        {task.unlocks.length ? (
-          <button type="button" ref={unlocksBtn} onClick={() => setLineage(true)} aria-expanded={lineage}
-            style={{ background: "transparent", border: "none", padding: 0, font: "inherit", fontSize: 12.5, color: "var(--accent)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
-            unlocks {task.unlocks.length}<Icon name="ArrowRight" size={14} />
-          </button>
-        ) : null}
-        <TaskPath tier={meta.tier} track={meta.track} tags={meta.tags} />
-        {meta.source ? <span style={ASIDE}>{meta.source}</span> : null}
-      </div>
+      <TaskHeader task={task} active={active} showTimer={prefs.showTimer} paused={!hasAttempt || passed} passed={passed}
+        onLineage={() => setLineage(true)} lineageOpen={lineage} lineageBtn={unlocksBtn}
+        onAbandon={hasAttempt && !passed ? abandon : undefined} />
 
       {lineage ? (
         <div role="dialog" aria-label={`Lineage of ${meta.title}`} onClick={closeLineage} className="m-fade"
@@ -449,9 +489,6 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
             <Button kbdHint="Ctrl/⌘+⇧+Enter" onClick={submit} disabled={!!inflight || passed}>
               <Icon name="Send" />{inflight === "submit" ? "Submitting…" : "Submit"}
             </Button>
-            {/* hidden by preference only: the clock behind it keeps running, and the grade
-              * is the same one either way */}
-            {prefs.showTimer ? <Timer seconds={active} paused={!hasAttempt || passed} /> : null}
             <span className="tabular" style={{ fontSize: 13, color: "var(--text-muted)" }}>
               {runNo ? `attempt ${runNo}` : "not started"}
             </span>
@@ -471,7 +508,6 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
                 </span>
               ) : null}
             </div>
-            {hasAttempt && !passed ? <Button variant="quiet" onClick={abandon} style={{ fontSize: 13 }}>Abandon</Button> : null}
           </div>
 
           {chart && meta.edits ? (

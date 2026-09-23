@@ -10,7 +10,7 @@ export function RequiresTag({ topic, title, state = "neutral", href, onClick, on
     <React.Fragment>
       {MARK[state] ? <span aria-hidden="true" className={css.mark}><Icon name={MARK[state]} size={12} /></span> : null}
       <span className={css.num + " tabular"}>{numR(topic)}</span>
-      {title ? <span>{title}</span> : null}
+      {title ? <span className={css.title}>{title}</span> : null}
     </React.Fragment>
   );
   const shared = {

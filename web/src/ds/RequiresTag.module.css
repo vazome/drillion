@@ -1,7 +1,8 @@
-.root{display:inline-flex;align-items:center;gap:5px;font-size:12px;line-height:1.4;padding:2px 8px 2px 7px;border-radius:var(--radius-pill);white-space:nowrap;text-decoration:none;font-family:var(--font-sans);background:var(--surface-2);border:1px solid var(--border);color:var(--text-muted);cursor:default;transition:border-color var(--dur-press) var(--ease-out)}
-.root[data-state="passed"]{background:var(--pass-bg);border-color:var(--pass);color:var(--pass)}
-.root[data-state="blocked"]{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
+.root{display:inline-flex;align-items:center;gap:6px;height:24px;box-sizing:border-box;font-size:13px;line-height:1.4;padding:0 10px;border-radius:var(--radius-pill);white-space:nowrap;text-decoration:none;font-family:var(--font-sans);background:var(--surface-2);border:1px solid var(--border);color:var(--text-muted);cursor:default;transition:border-color var(--dur-press) var(--ease-out)}
+.root[data-state="passed"]{background:var(--pass-bg);border-color:transparent;color:var(--pass)}
+.root[data-state="blocked"]{background:var(--warn-bg);border-color:transparent;color:var(--warn)}
 .root[data-interactive]{cursor:pointer}
 @media (hover:hover){.root[data-interactive]:hover{border-color:var(--accent-line);text-decoration:none;color:var(--text-muted)}.root[data-state="passed"]:hover{color:var(--pass)}.root[data-state="blocked"]:hover{color:var(--warn)}}
 .mark{display:inline-flex}
-.num{font-family:var(--font-mono);font-size:11.5px;font-variant-numeric:tabular-nums;color:inherit}
+.title{color:var(--text)}
+.num{font-family:var(--font-mono);font-size:12px;font-variant-numeric:tabular-nums;color:inherit}
