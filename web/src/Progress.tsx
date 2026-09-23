@@ -11,11 +11,11 @@ const day = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString(unde
 const WORDS = ["learning", "familiar", "solid"] as const;
 
 const LOG_COLS = [
-  { key: "date", label: "Date", width: "68px", mono: true, muted: true, render: (r: LogRow) => day(r.date) },
+  { key: "date", label: "Date", width: "52px", mono: true, muted: true, render: (r: LogRow) => day(r.date) },
   { key: "slug", label: "Task", mono: true, render: (r: LogRow) => <a href={taskHref(r.slug)} title={r.slug} className={s.clip}>{r.slug}</a> },
-  { key: "grade", label: "Grade", width: "112px", render: (r: LogRow) => <StatusBadge status={r.grade} /> },
-  { key: "attempts", label: "Tries", align: "right" as const, mono: true, width: "60px", muted: true },
-  { key: "time", label: "Active", align: "right" as const, mono: true, width: "68px" },
+  { key: "grade", label: "Grade", width: "96px", render: (r: LogRow) => <StatusBadge status={r.grade} /> },
+  { key: "attempts", label: "Tries", align: "right" as const, mono: true, width: "44px", muted: true },
+  { key: "time", label: "Active", align: "right" as const, mono: true, width: "52px" },
 ];
 type LogRow = Payload["log"][number];
 

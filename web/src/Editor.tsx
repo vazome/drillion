@@ -357,7 +357,7 @@ export function DiffView({ kind, mine, reference, dark, maxHeight, prefs = DEFAU
             modified: { text: at.reference, uri: `${WORKSPACE}/reference.${ext(kind)}` },
           },
           diffEditorOptions: {
-            ...editorOptions, ...looks(at.prefs), readOnly: true, renderSideBySide: at.sideBySide,
+            ...editorOptions, ...looks(at.prefs), readOnly: true, renderSideBySide: at.sideBySide, renderOverviewRuler: false,
             // Monaco drops to an inline diff below 900px and this pane is narrower than
             // that, which would contradict the "yours on the left, the reference on the
             // right" copy sitting directly above it

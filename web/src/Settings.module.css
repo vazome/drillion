@@ -4,7 +4,9 @@
 .title{margin:0;font-size:var(--fs-label);font-weight:500;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--text-muted)}
 .note,.hint{font-size:12px;line-height:1.5;color:var(--text-muted)}
 .text{margin:0;font-size:13px;line-height:1.5;color:var(--text-muted);text-wrap:pretty}
-.row{display:grid;grid-template-columns:200px minmax(0,1fr);align-items:center;gap:16px;min-height:52px;padding:6px 0;border-bottom:1px solid var(--border)}
+.card:has(> .row){gap:0}
+.card:has(> .row) > .cardHead{margin-bottom:4px}
+.row{display:grid;grid-template-columns:200px minmax(0,1fr);align-items:center;gap:16px;box-sizing:border-box;min-height:53px;padding:8px 0;border-bottom:1px solid var(--border)}
 .row:has(+ .defaults),.row:last-child{border-bottom:none}
 .rowLabel{font-size:14px;font-weight:500}
 .control{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;min-width:0}
@@ -17,7 +19,7 @@
 .segment button[aria-pressed="true"]{background:var(--accent-line);font-weight:600}
 .defaults{padding-top:4px}
 .places{display:flex;flex-direction:column}
-.place{display:grid;grid-template-columns:16px 100px minmax(0,1fr) auto;align-items:center;gap:18px;min-height:48px;border-bottom:1px solid var(--border);color:var(--text-muted)}
+.place{display:grid;grid-template-columns:16px 100px minmax(0,1fr) auto;align-items:center;gap:18px;box-sizing:border-box;min-height:49px;padding:8px 0;border-bottom:1px solid var(--border);color:var(--text-muted)}
 .place:last-child{border-bottom:none}
 .placeLabel{font-weight:500;color:var(--text)}
 .path{font-size:13px;color:var(--text-muted);overflow-wrap:anywhere;min-width:0}

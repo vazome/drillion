@@ -31,6 +31,7 @@
 .pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
 .log{max-height:420px;overflow:auto}
 .log table{table-layout:fixed}
+.log th,.log td{padding-inline:8px}
 .clip{display:block;overflow:hidden;text-overflow:ellipsis}
 
 @media (max-width:1099px){
