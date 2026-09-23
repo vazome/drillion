@@ -1,5 +1,80 @@
 # design-sync notes
 
+## Ladder desk (B2, refined) · 2026-09-23
+
+Source: the handoff in `2026-09-23-app-screens/` (README, PROMPT, DESIGN-SYSTEM.md, tokens, one
+HTML and PNG per screen), committed without its `fonts/`. Every screen was rebuilt against it:
+the sidebar shell, Today and the catalogue, the task header, the task page, the result panel,
+Review, the lineage, Progress and Settings. The old top header, `Stats.tsx` and the two-step
+danger zone are gone.
+
+**Tokens.** `--control-edge` (every control's outline: Button secondary, Input, Select, Toggle,
+NoteField, StuckNudge, ConflictBanner, TrackRail), `--strength-learning/familiar/solid`,
+`--heat-0..4`, `--danger-surface`, `--danger-edge`, `--scrim` (the dialog backdrop and the
+lineage overlay, the only blur). The favicon is theme-aware SVG plus 16/32 PNGs and a 180px
+apple-touch-icon.
+
+**Decisions made while building it:**
+
+- *Review queue.* Up next is the head of the queue: reviews first, most overdue first, then
+  new picks. The headline is a sentence: "One new pick, nothing due." / "12 reviews and 2 new
+  picks." / "12 of 100 due reviews today, and 2 new picks." Over the cap, a muted line says
+  "12 are served a day; the other 88 stay due." The Up next foot reads "1 of 14 today · then
+  291 · 305 · 118 · all due →"; the numbers are links and "all due →" opens the catalogue with
+  the due filter on. "Next in Today" after a pass moves to the next item.
+- *Placement.* The first-run note sits above the headline and can be dismissed. With nothing
+  left at all, the no-new reason fills the Up next card with its action (Clear focus, or the
+  prereq link); with reviews left but no new picks, it is one muted line in the card's foot.
+  "Worth a focus" moved to the sidebar under New picks from: "You keep struggling with [tag] ·
+  N flagged", where the chip toggles focus. The spec pane ends with archive, note, hints, in
+  that order, above the Stuck? bar, and a revealed hint scrolls into view.
+- *Theme on the task page* is a text button with an icon (Sun/Asleep + Light/Dark) in the top
+  bar, on the same state and store as the sidebar switch.
+- *Narrow widths.* Below 1100px the sidebar becomes the 48px top bar (wordmark, Catalogue,
+  Progress, Settings, theme) and New picks from moves into Today as wrapping track chips with
+  the stuck line. Up next and the ladder stack; the recent cards go to 2 columns, then 1. The
+  task puts the spec above the editor with the Stuck? bar pinned to its foot, and Review goes
+  inline. The lineage columns stack under plain headings with no curves. Progress cards wrap
+  and the year scrolls inside its own box. Nothing scrolls the page sideways at 720px.
+
+**Local changes to vendored components:** RowFlags reads `needs 289` in warn mono; TaskPath
+mutes the tier; Timer is `m:ss` at 17px; RequiresTag is a 24px borderless chip; FileTabs is an
+editor-edge strip with an inset accent top; Dialog has a 64px header with "Esc closes" and an
+icon-only Close; DepLineage is rewritten (280px cards, coloured curves, a `stacked` mode for
+narrow screens, a legend); DueForecast draws the cap line and a hatched overflow;
+PracticeHeatmap uses `--heat-0..4` on fixed 14px squares and scrolls, focusable, inside its
+box; TopicStrips colours by strength and takes `bands`, `label`, `lapseLimit` and a sort.
+`index.d.ts` follows.
+
+**API additions**, each the smallest that made a screen real: `GET /api/picks` (focus, track
+sizes, the stuck tag), `stats.week` (the last seven days worked), `prereqs` on catalogue rows,
+`difficulty` and `status` on lineage refs, and `lapse_limit` on progress.
+
+**Left out, and why:**
+
+- Nav icons for Catalogue and Progress: neither is in the fixed Carbon set. The All tracks mark
+  is a CSS 2x2 glyph.
+- The fade above the Stuck? bar: no new gradients.
+- The failed Run's list of rules that passed: the graders report only failures, so it says
+  "N rules not met".
+- "up next in Today" on lineage cards: that screen has no queue to ask.
+- "See the passing code" after a pass: Review already shows it.
+- ScreenTaskReviewFiles: every task edits one file, so Review takes one.
+- Kept against the drawing: the catalogue's Known column, the FileTabs note line, tab size 8,
+  and the Back to Today button beside Next in Today.
+- TrackRail and ResultBanner are no longer used but stay vendored.
+
+**Keyboard.** `/`, Enter on the first row or on Up next, and Mod-Enter / Mod-Shift-Enter all
+still work. The grading bar is drawn under the editor but comes first in the DOM, so Tab
+reaches Run before Monaco, where Tab only indents.
+
+**E2e expectations changed:** Today is found by its Up next heading; results by region name
+(Result of submit N, Output of your run) and the verdict words; Key binding, Tab size and the
+Practice timer are pressed buttons; the danger zone is one step with no Cancel; the dialog
+closes by "Close settings"; the lineage reads "Needs · N" and the header button "Opens N tasks";
+a passed task opens on Review, so the a11y spec moved to 010; the restore wait is 30s because
+it fsyncs every saved task file.
+
 ## Carbon icons — 2026-09-22
 
 Source: the design system at 0.9.0 (`04a3cba`). `Icon`, `icons.js` and the Carbon licence came
