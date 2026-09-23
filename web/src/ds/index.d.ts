@@ -317,7 +317,13 @@ export interface TopicStripsTag {
 }
 export interface TopicStripsProps {
   tags?: TopicStripsTag[];
-  defaultSort?: "stuck first" | "neglected first" | "most lapses" | "a–z";
+  /** each ladder box's word, shakiest first: the strip's colours */
+  bands?: Array<"learning" | "familiar" | "solid">;
+  /** the card's heading, drawn on the line the sort sits on */
+  label?: string;
+  /** struggles at which a topic says `struggled N×` under its name */
+  lapseLimit?: number;
+  defaultSort?: "stuck first" | "neglected first" | "a–z";
   /** scroll height of the row list, px */
   maxHeight?: number;
   className?: string;

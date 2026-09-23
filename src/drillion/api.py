@@ -426,6 +426,7 @@ def progress():
             "today": today(),
             "forecast": forecast(st, all_tasks),
             "cap": REVIEWS_PER_DAY,
+            "lapse_limit": LAPSE_LIMIT,
             "days": dict(Counter(e["date"] for e in st["log"])),
             "log": st["log"][-30:],
             "per_tag": by_tag(st, all_tasks),

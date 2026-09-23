@@ -62,6 +62,8 @@ export interface Progress {
   forecast: number[];
   /** reviews served a day — the line the forecast draws */
   cap: number;
+  /** struggles at which a topic says so under its name */
+  lapse_limit: number;
   /** passes per calendar day, all history */
   days: Record<string, number>;
   per_tag: Record<string, { seen: number; total: number; boxes: number[]; lapses: number; due7: number }>;

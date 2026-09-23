@@ -28,8 +28,8 @@ export function DueForecast({ forecast = [], cap = 12, today, className, style }
             const text = n + (n === 1 ? " task" : " tasks") + " due " + (isToday ? "today, " : "") + fmt(dates[i]) + (over > 0 ? " · " + over + " over the cap" : "");
             return (
               <div key={i} className={s.bar} title={text} onMouseEnter={(e) => show(e, text)}>
-                <div className={s.count} data-today={isToday ? "" : undefined}>{n}</div>
                 <div className={s.column} style={{ height: H }}>
+                  <div className={s.count} data-today={isToday ? "" : undefined}>{n}</div>
                   {over > 0 ? <div className={s.over} style={{ height: px(over) }} /> : null}
                   <div className={s.fill} data-today={isToday && n !== 0 ? "" : undefined} data-zero={n === 0 ? "" : undefined} data-capped={over > 0 ? "" : undefined} style={{ height: n === 0 ? 2 : px(base) }} />
                 </div>
@@ -38,23 +38,16 @@ export function DueForecast({ forecast = [], cap = 12, today, className, style }
           })}
         </div>
         <div aria-hidden="true" className={s.capLine} style={{ bottom: px(cap) }} />
-        <div aria-hidden="true" className={s.capLabel} style={{ bottom: px(cap) - 8 }}>{cap}/day</div>
+        <div aria-hidden="true" className={s.capLabel} style={{ bottom: px(cap) + 4 }}>cap {cap}</div>
       </div>
       <div className={s.axis}>
         {dates.map((d, i) => (
           <div key={i} className={s.axisCell}>
-            <div className={s.dayLetter} data-today={i === 0 ? "" : undefined}>{"SMTWTFS"[d.getDay()]}</div>
-            <div className={s.dayNum}>{d.getDate()}</div>
+            <div className={s.dayLetter} data-today={i === 0 ? "" : undefined} title={fmt(d)}>{i === 0 ? "today" : "SMTWTFS"[d.getDay()]}</div>
           </div>
         ))}
       </div>
-      <div className={s.foot}>
-        <span className={s.note}>
-          {total === 0 ? "Nothing due in the next two weeks. New tasks arrive as you pick them up." : "Today includes everything overdue. A day over the line spills into the next."}
-        </span>
-        <div className={s.spacer} />
-        {total === 0 ? null : <span className={s.total}>{total} tasks over 14 days · {forecast.filter((n) => n > cap).length} days above the cap</span>}
-      </div>
+      {total === 0 ? <p className={s.note}>Nothing due in the next two weeks. New tasks arrive as you pick them up.</p> : null}
     </div>
   );
 }
