@@ -19,6 +19,8 @@
 .segCount{font-family:var(--font-mono);font-size:12px;font-variant-numeric:tabular-nums}
 .tags{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:2px}
 .rule{width:1px;height:20px;background:var(--border);margin:0 4px}
+.more{height:24px;padding:0 8px;border:0;border-radius:var(--radius-sm);background:transparent;font:inherit;font-size:13px;color:var(--accent);cursor:pointer}
+@media (hover:hover){.more:hover{text-decoration:underline}}
 
 /* one column geometry for the header and the rows */
 .list{background:var(--surface);border-radius:var(--radius-lg);box-shadow:0 0 0 1px var(--border);overflow-x:auto}

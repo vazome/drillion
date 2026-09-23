@@ -9,7 +9,9 @@ import { depsHref, taskHref } from "./Deps";
 import { topicNo } from "./format";
 
 const STATUSES = ["new", "due", "open", "done"] as const;
-const DIFFICULTY = ["easy", "medium", "hard"];     // the order the word means, not the alphabet
+const DIFFICULTY = ["easy", "medium", "hard"];
+// about two rows of chips; the rest wait behind "+N more", and the search box finds them too
+const TAGS_SHOWN = 12;     // the order the word means, not the alphabet
 
 /** Everything `focus` may name — tier, track and tags alike, as `_facets()` in scheduler.py.
  * All three, or the screen disagrees with the scheduler. */
@@ -93,6 +95,7 @@ export function Catalogue() {
   const [activeTags, setActiveTags] = useState<string[]>(() => inbox().getAll("tag"));
   const [notice, setNotice] = useState<string | null>(null);
   const [sort, setSort] = useState<Sort>(DEFAULT_SORT);
+  const [allTags, setAllTags] = useState(false);
   const [firstRun, setFirstRun] = useState(() => !localStorage.getItem(FIRST_RUN));
   const searchBox = useRef<HTMLSpanElement>(null);
   const listHead = useRef<HTMLDivElement>(null);
@@ -170,8 +173,16 @@ export function Catalogue() {
     if (focus === t) return setFocus(null);
     setActiveTags((a) => a.includes(t) ? a.filter((x) => x !== t) : [...a, t]);
   };
-  const here = new Set(rows.flatMap((e) => e.tags).concat(activeTags));
-  const tagsHere = data.tags.filter((t) => here.has(t));
+  // The tags of what is listed, the ones covering the most tasks first. A chip that is on, or
+  // that the search names, always makes the cut; the full list is alphabetical, for scanning.
+  const cover = new Map<string, number>(activeTags.map((t) => [t, 0]));
+  for (const t of rows.flatMap((e) => e.tags)) cover.set(t, (cover.get(t) ?? 0) + 1);
+  const needle = q.trim().toLowerCase();
+  const first = (t: string) => (tagOn(t) ? 2 : 0) + (needle && t.includes(needle) ? 1 : 0);
+  const ranked = [...cover.keys()].sort((a, b) => first(b) - first(a) || cover.get(b)! - cover.get(a)! || a.localeCompare(b));
+  const cut = Math.max(TAGS_SHOWN, ranked.filter((t) => first(t)).length);
+  const folded = !allTags && ranked.length > cut + 4;
+  const tagsHere = folded ? ranked.slice(0, cut) : data.tags.filter((t) => cover.has(t));
   const tiersHere = rows.some((e) => e.tier) || data.tiers.includes(focus ?? "");
   // Enter in the search box takes the top row of what is on screen — an IME commit is not one
   const onSearchKey = (e: KeyboardEvent) => {
@@ -224,6 +235,11 @@ export function Catalogue() {
               <span className={css.rule} />
             </> : null}
             {tagsHere.map((t) => <TagChip key={t} label={t} active={tagOn(t)} onClick={() => toggleTag(t)} />)}
+            {folded || (allTags && ranked.length > TAGS_SHOWN + 4) ? (
+              <button type="button" aria-expanded={!folded} onClick={() => setAllTags(folded)} className={css.more}>
+                {folded ? `+${ranked.length - cut} more` : "Fewer"}
+              </button>
+            ) : null}
           </div>
         </div>
 
