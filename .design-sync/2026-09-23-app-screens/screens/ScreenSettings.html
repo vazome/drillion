@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>ScreenSettings — Settings: the one dialog, over any screen</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="_base.css">
+<script>document.documentElement.dataset.theme=new URLSearchParams(location.search).get('theme')||'light'</script>
+</head>
+<body><!-- Reference screen, 1400px tall, 1440px wide. Open with ?theme=dark or ?theme=light. -->
+<div style="position: relative; width: 1440px; height: 1400px; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font-sans);">
+<div aria-hidden="true" style="position: absolute; inset: 0;"><div style="width: 1440px; height: 1400px; box-sizing: border-box; background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', system-ui, sans-serif; display: flex;">
+
+<aside style="width: 248px; flex-shrink: 0; box-sizing: border-box; padding: 28px 16px 24px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 28px;">
+<div style="display: flex; align-items: baseline; gap: 10px; padding: 0 10px;">
+<span style="font-size: 17px; font-weight: 600;">drillion</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">323 tasks</span>
+</div>
+
+<nav aria-label="Main" style="display: flex; flex-direction: column; gap: 2px;">
+<a href="#" aria-current="page" style="display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: 6px; background: var(--surface-2); color: var(--text); font-size: 14px; font-weight: 600; text-decoration: none;">
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="1.5"></rect><path d="M5 6h6M5 9h6M5 12h3"></path></svg>
+Catalogue</a>
+<a href="#" style="display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: 6px; color: var(--text-muted); font-size: 14px; font-weight: 500; text-decoration: none;">
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M2 13.5h12M4 11V8M7 11V5.5M10 11V7M13 11V3"></path></svg>
+Progress</a>
+</nav>
+
+<section aria-labelledby="tracks-h" style="display: flex; flex-direction: column; gap: 10px;">
+<h2 id="tracks-h" style="margin: 0; padding: 0 10px; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">New picks from</h2>
+<div role="radiogroup" aria-label="Track" style="display: flex; flex-direction: column; gap: 2px;">
+
+<button type="button" role="radio" aria-checked="false" style="display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: transparent; border: 0; border-radius: 6px; font: inherit; color: var(--text); cursor: pointer; text-align: left;">
+<span style="display: flex; align-items: center; gap: 10px; width: 100%;">
+<span aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: 4px; color: var(--text-muted);"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5"></rect><rect x="9" y="2" width="5" height="5"></rect><rect x="2" y="9" width="5" height="5"></rect><rect x="9" y="9" width="5" height="5"></rect></svg></span>
+<span style="flex-grow: 1; font-size: 14px; font-weight: 500;">All tracks</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">323</span></span>
+<span aria-hidden="true" style="margin-left: 32px; width: calc(100% - 32px); height: 3px; border-radius: 999px; background: var(--border);"></span>
+</button>
+
+<button type="button" role="radio" aria-checked="true" style="display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: var(--accent-tint); border: 0; border-radius: 6px; font: inherit; color: var(--text); cursor: pointer; text-align: left;">
+<span style="display: flex; align-items: center; gap: 10px; width: 100%;">
+<span aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; box-sizing: border-box; border: 1px solid var(--accent-line); border-radius: 4px; font-family: 'Spline Sans Mono', monospace; font-size: 11px; color: var(--accent);">d</span>
+<span style="flex-grow: 1; font-size: 14px; font-weight: 600; color: var(--accent);">docker</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">15</span></span>
+<span aria-hidden="true" style="margin-left: 32px; width: calc((100% - 32px) * 0.046); min-width: 6px; height: 3px; border-radius: 999px; background: var(--accent-line);"></span>
+</button>
+
+<button type="button" role="radio" aria-checked="false" style="display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: transparent; border: 0; border-radius: 6px; font: inherit; color: var(--text); cursor: pointer; text-align: left;">
+<span style="display: flex; align-items: center; gap: 10px; width: 100%;">
+<span aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: 4px; font-family: 'Spline Sans Mono', monospace; font-size: 11px; color: var(--text-muted);">h</span>
+<span style="flex-grow: 1; font-size: 14px; font-weight: 500;">helm</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">15</span></span>
+<span aria-hidden="true" style="margin-left: 32px; width: calc((100% - 32px) * 0.046); min-width: 6px; height: 3px; border-radius: 999px; background: var(--border);"></span>
+</button>
+
+<button type="button" role="radio" aria-checked="false" style="display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: transparent; border: 0; border-radius: 6px; font: inherit; color: var(--text); cursor: pointer; text-align: left;">
+<span style="display: flex; align-items: center; gap: 10px; width: 100%;">
+<span aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: 4px; font-family: 'Spline Sans Mono', monospace; font-size: 11px; color: var(--text-muted);">k</span>
+<span style="flex-grow: 1; font-size: 14px; font-weight: 500;">kubernetes</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">26</span></span>
+<span aria-hidden="true" style="margin-left: 32px; width: calc((100% - 32px) * 0.08); height: 3px; border-radius: 999px; background: var(--border);"></span>
+</button>
+
+<button type="button" role="radio" aria-checked="false" style="display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: transparent; border: 0; border-radius: 6px; font: inherit; color: var(--text); cursor: pointer; text-align: left;">
+<span style="display: flex; align-items: center; gap: 10px; width: 100%;">
+<span aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: 4px; font-family: 'Spline Sans Mono', monospace; font-size: 11px; color: var(--text-muted);">p</span>
+<span style="flex-grow: 1; font-size: 14px; font-weight: 500;">python</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">267</span></span>
+<span aria-hidden="true" style="margin-left: 32px; width: calc((100% - 32px) * 0.827); height: 3px; border-radius: 999px; background: var(--border);"></span>
+</button>
+</div>
+<p style="margin: 0; padding: 0 10px; font-size: 12px; line-height: 1.45; color: var(--text-muted);">Reviews still come from every track.</p>
+</section>
+
+<div style="flex-grow: 1;"></div>
+
+<div style="display: flex; flex-direction: column; gap: 4px; padding-top: 16px; border-top: 1px solid var(--border);">
+<button type="button" style="display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; background: transparent; border: 0; border-radius: 6px; font: inherit; font-size: 14px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-align: left;">
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="8" cy="8" r="2.2"></circle><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"></path></svg>
+Settings</button>
+<button type="button" role="switch" aria-checked="true" style="display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; background: transparent; border: 0; border-radius: 6px; font: inherit; font-size: 14px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-align: left;">
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M13 9.5A5.5 5.5 0 0 1 6.5 3a5.5 5.5 0 1 0 6.5 6.5z"></path></svg>
+<span style="flex-grow: 1;">Dark</span>
+<span aria-hidden="true" style="position: relative; width: 30px; height: 18px; border-radius: 999px; background: var(--accent);"><span style="position: absolute; top: 2px; left: 14px; width: 14px; height: 14px; border-radius: 999px; background: var(--bg);"></span></span>
+</button>
+<span style="padding: 8px 10px 0; font-family: 'Spline Sans Mono', monospace; font-size: 11px; color: var(--text-muted);">v0.9.5 · Python 3.14.7</span>
+</div>
+</aside>
+
+<main style="flex-grow: 1; min-width: 0; box-sizing: border-box; padding: 44px 64px 48px; display: flex; flex-direction: column; gap: 40px;">
+
+<header style="display: flex; align-items: flex-end; gap: 24px;">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px;">
+<span style="font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">Wednesday 23 September</span>
+<h1 style="margin: 0; font-size: 40px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.15;">One new pick, nothing due.</h1>
+</div>
+<dl style="margin: 0; display: flex; gap: 28px;">
+<div style="display: flex; flex-direction: column; gap: 2px;"><dt style="font-size: 12px; color: var(--text-muted);">done today</dt><dd style="margin: 0; font-family: 'Spline Sans Mono', monospace; font-size: 20px;">0</dd></div>
+<div style="display: flex; flex-direction: column; gap: 2px;"><dt style="font-size: 12px; color: var(--text-muted);">practised</dt><dd style="margin: 0; font-family: 'Spline Sans Mono', monospace; font-size: 20px;">0<span style="font-size: 13px; color: var(--text-muted);"> / 323</span></dd></div>
+</dl>
+</header>
+
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 24px;">
+
+<section aria-labelledby="next-h" style="display: grid; grid-template-columns: 176px minmax(0, 1fr); background: var(--surface); border-radius: 8px; box-shadow: 0 0 0 1px var(--border); overflow: hidden;">
+<div style="background: var(--accent-tint); padding: 28px 24px; display: flex; flex-direction: column; gap: 6px; border-right: 1px solid var(--accent-line);">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 56px; font-weight: 500; line-height: 1; letter-spacing: -0.03em; color: var(--accent);">289</span>
+<span style="flex-grow: 1;"></span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">docker/cmd</span>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--accent-line);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--accent-line);"></span></span>easy</span>
+</div>
+<div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 12px;">
+<h2 id="next-h" style="margin: 0; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--accent);">Up next · new pick</h2>
+<p style="margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.2;">your first Dockerfile</p>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-muted);">No prereqs. The first of 15 in docker.</p>
+<div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--border);">
+<span style="font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">PROGRESSES INTO 4 NEW TASKS</span>
+<ul style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 20px;">
+<li style="display: flex; align-items: baseline; gap: 10px; min-width: 0; font-size: 13px;"><span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">290</span><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">the layer cache, and why requirements.txt goes first</span></li>
+<li style="display: flex; align-items: baseline; gap: 10px; min-width: 0; font-size: 13px;"><span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">291</span><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">run as a numbered user, not root</span></li>
+<li style="display: flex; align-items: baseline; gap: 10px; min-width: 0; font-size: 13px;"><span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">292</span><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">ARG or ENV: build time, run time, or both</span></li>
+<li style="display: flex; align-items: baseline; gap: 10px; min-width: 0; font-size: 13px;"><span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">294</span><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">ENTRYPOINT and CMD: the program and its default arguments</span></li>
+</ul>
+</div>
+<span style="flex-grow: 1;"></span>
+<div style="display: flex; align-items: center; gap: 14px;">
+<a href="#" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 20px 0 18px; background: var(--accent); color: var(--on-accent); border-radius: 6px; font-size: 15px; font-weight: 600; text-decoration: none;">
+<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z"></path></svg>
+Start task</a>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted);">or press <kbd style="font-family: 'Spline Sans Mono', monospace; font-size: 11px; padding: 1px 6px; border: 1px solid var(--border-strong); border-radius: 4px; color: var(--text);">Enter</kbd></span>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="ladder-h" style="background: var(--surface); border-radius: 8px; box-shadow: 0 0 0 1px var(--border); padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+<div style="display: flex; align-items: baseline; justify-content: space-between;">
+<h2 id="ladder-h" style="margin: 0; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">The ladder</h2>
+<a href="#" style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; text-decoration: none;">Your progress<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<div aria-hidden="true" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; align-items: end; height: 96px;">
+<span style="height: 14px; box-sizing: border-box; background: color-mix(in srgb, var(--warn) 8%, transparent); border: 1px dashed color-mix(in srgb, var(--warn) 60%, transparent); border-bottom: 0; border-radius: 4px 4px 0 0;"></span>
+<span style="height: 24px; box-sizing: border-box; background: color-mix(in srgb, var(--warn) 8%, transparent); border: 1px dashed color-mix(in srgb, var(--warn) 60%, transparent); border-bottom: 0; border-radius: 4px 4px 0 0;"></span>
+<span style="height: 34px; box-sizing: border-box; background: color-mix(in srgb, var(--accent) 8%, transparent); border: 1px dashed color-mix(in srgb, var(--accent) 60%, transparent); border-bottom: 0; border-radius: 4px 4px 0 0;"></span>
+<span style="height: 46px; box-sizing: border-box; background: color-mix(in srgb, var(--accent) 8%, transparent); border: 1px dashed color-mix(in srgb, var(--accent) 60%, transparent); border-bottom: 0; border-radius: 4px 4px 0 0;"></span>
+<span style="height: 58px; box-sizing: border-box; background: color-mix(in srgb, var(--accent) 8%, transparent); border: 1px dashed color-mix(in srgb, var(--accent) 60%, transparent); border-bottom: 0; border-radius: 4px 4px 0 0;"></span>
+<span style="height: 74px; box-sizing: border-box; background: color-mix(in srgb, var(--pass) 8%, transparent); border: 1px dashed color-mix(in srgb, var(--pass) 60%, transparent); border-bottom: 0; border-radius: 4px 4px 0 0;"></span>
+<span style="height: 92px; box-sizing: border-box; background: color-mix(in srgb, var(--pass) 8%, transparent); border: 1px dashed color-mix(in srgb, var(--pass) 60%, transparent); border-bottom: 0; border-radius: 4px 4px 0 0;"></span>
+</div>
+<div aria-hidden="true" style="height: 1px; background: var(--border-strong);"></div>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; font-family: 'Spline Sans Mono', monospace; font-size: 11px; color: var(--text-muted); text-align: center;">
+<span>2d</span><span>4d</span><span>8d</span><span>16d</span><span>28d</span><span>60d</span><span>120d</span>
+</div>
+<div style="display: grid; grid-template-columns: 2fr 3fr 2fr; gap: 6px; font-size: 13px;">
+<span style="display: flex; align-items: center; gap: 6px; padding-top: 7px; border-top: 3px solid var(--warn); color: var(--warn);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 3px; height: 9px; border-radius: 1px; background: var(--warn);"></span><span style="width: 3px; height: 9px; border-radius: 1px; background: var(--border-strong);"></span><span style="width: 3px; height: 9px; border-radius: 1px; background: var(--border-strong);"></span></span><span style="flex-grow: 1;">learning</span><span style="font-family: 'Spline Sans Mono', monospace; color: var(--text-muted);">0</span></span>
+<span style="display: flex; align-items: center; gap: 6px; padding-top: 7px; border-top: 3px solid var(--accent); color: var(--accent);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 3px; height: 9px; border-radius: 1px; background: var(--accent);"></span><span style="width: 3px; height: 9px; border-radius: 1px; background: var(--accent);"></span><span style="width: 3px; height: 9px; border-radius: 1px; background: var(--border-strong);"></span></span><span style="flex-grow: 1;">familiar</span><span style="font-family: 'Spline Sans Mono', monospace; color: var(--text-muted);">0</span></span>
+<span style="display: flex; align-items: center; gap: 6px; padding-top: 7px; border-top: 3px solid var(--pass); color: var(--pass);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 3px; height: 9px; border-radius: 1px; background: var(--pass);"></span><span style="width: 3px; height: 9px; border-radius: 1px; background: var(--pass);"></span><span style="width: 3px; height: 9px; border-radius: 1px; background: var(--pass);"></span></span><span style="flex-grow: 1;">solid</span><span style="font-family: 'Spline Sans Mono', monospace; color: var(--text-muted);">0</span></span>
+</div>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted);">Empty for now. Pass a task and it lands on the first rung; each rung is how long until it comes back.</p>
+<div style="display: flex; flex-direction: column; gap: 8px; padding-top: 16px; border-top: 1px solid var(--border);">
+<div style="display: flex; align-items: baseline; justify-content: space-between;">
+<span style="font-size: 13px; color: var(--text-muted);">Days practised</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 13px; color: var(--text-muted);"><span style="color: var(--text);">0</span> of 7</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px;">
+<span style="display: flex; flex-direction: column; align-items: center; gap: 4px;"><span style="width: 100%; height: 10px; border-radius: 3px; background: var(--surface-2);"></span><span style="font-size: 11px; color: var(--text-muted);">T</span></span>
+<span style="display: flex; flex-direction: column; align-items: center; gap: 4px;"><span style="width: 100%; height: 10px; border-radius: 3px; background: var(--surface-2);"></span><span style="font-size: 11px; color: var(--text-muted);">F</span></span>
+<span style="display: flex; flex-direction: column; align-items: center; gap: 4px;"><span style="width: 100%; height: 10px; border-radius: 3px; background: var(--surface-2);"></span><span style="font-size: 11px; color: var(--text-muted);">S</span></span>
+<span style="display: flex; flex-direction: column; align-items: center; gap: 4px;"><span style="width: 100%; height: 10px; border-radius: 3px; background: var(--surface-2);"></span><span style="font-size: 11px; color: var(--text-muted);">S</span></span>
+<span style="display: flex; flex-direction: column; align-items: center; gap: 4px;"><span style="width: 100%; height: 10px; border-radius: 3px; background: var(--surface-2);"></span><span style="font-size: 11px; color: var(--text-muted);">M</span></span>
+<span style="display: flex; flex-direction: column; align-items: center; gap: 4px;"><span style="width: 100%; height: 10px; border-radius: 3px; background: var(--surface-2);"></span><span style="font-size: 11px; color: var(--text-muted);">T</span></span>
+<span style="display: flex; flex-direction: column; align-items: center; gap: 4px;"><span style="width: 100%; height: 10px; box-sizing: border-box; border-radius: 3px; border: 1.5px dashed var(--accent);"></span><span style="font-size: 11px; font-weight: 600; color: var(--accent);">W</span></span>
+</div>
+</div>
+</section>
+</div>
+
+<section aria-labelledby="recent-h" style="display: flex; flex-direction: column; gap: 14px;">
+<div style="display: flex; align-items: baseline; gap: 12px;">
+<h2 id="recent-h" style="margin: 0; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">Pick up where you left off</h2>
+<span style="font-size: 13px; color: var(--text-muted);">last 7 days · none passed yet</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;">
+<a href="#" style="display: flex; flex-direction: column; gap: 10px; height: 120px; box-sizing: border-box; padding: 16px 18px; background: var(--surface); border-radius: 8px; box-shadow: 0 0 0 1px var(--border); color: var(--text); text-decoration: none;">
+<span style="font-size: 15px; font-weight: 500; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">a private package index, and a token that never lands in the image</span>
+<span style="flex-grow: 1;"></span>
+<span style="display: flex; align-items: center; gap: 8px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);"><span>322</span><span aria-hidden="true">·</span><span style="flex-grow: 1;">docker</span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></span>
+</a>
+<a href="#" style="display: flex; flex-direction: column; gap: 10px; height: 120px; box-sizing: border-box; padding: 16px 18px; background: var(--surface); border-radius: 8px; box-shadow: 0 0 0 1px var(--border); color: var(--text); text-decoration: none;">
+<span style="font-size: 15px; font-weight: 500; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">a chart with no schema: the typo that renders anyway</span>
+<span style="flex-grow: 1;"></span>
+<span style="display: flex; align-items: center; gap: 8px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);"><span>282</span><span aria-hidden="true">·</span><span style="flex-grow: 1;">helm</span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></span>
+</a>
+<a href="#" style="display: flex; flex-direction: column; gap: 10px; height: 120px; box-sizing: border-box; padding: 16px 18px; background: var(--surface); border-radius: 8px; box-shadow: 0 0 0 1px var(--border); color: var(--text); text-decoration: none;">
+<span style="font-size: 15px; font-weight: 500; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">a StorageClass decides who provisions and what happens when you walk away</span>
+<span style="flex-grow: 1;"></span>
+<span style="display: flex; align-items: center; gap: 8px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);"><span>278</span><span aria-hidden="true">·</span><span style="flex-grow: 1;">kubernetes</span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></span>
+</a>
+<a href="#" style="display: flex; flex-direction: column; gap: 10px; height: 120px; box-sizing: border-box; padding: 16px 18px; background: var(--surface); border-radius: 8px; box-shadow: 0 0 0 1px var(--border); color: var(--text); text-decoration: none;">
+<span style="font-size: 15px; font-weight: 500; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">your first Deployment, and the two labels that have to agree</span>
+<span style="flex-grow: 1;"></span>
+<span style="display: flex; align-items: center; gap: 8px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);"><span>268</span><span aria-hidden="true">·</span><span style="flex-grow: 1;">kubernetes</span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></span>
+</a>
+</div>
+</section>
+
+<section aria-labelledby="cat-h" style="display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; align-items: center; gap: 16px;">
+<h2 id="cat-h" style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">Catalogue</h2>
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 4px 0 10px; background: var(--accent-tint); color: var(--accent); border-radius: 999px; font-size: 13px; font-weight: 500;">docker · 15 of 323
+<button type="button" aria-label="Show all 323 tasks" style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 999px; background: transparent; color: var(--accent); cursor: pointer;"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button></span>
+<span style="flex-grow: 1;"></span>
+<label style="display: flex; align-items: center; gap: 8px; width: 360px; height: 36px; box-sizing: border-box; padding: 0 8px 0 12px; background: var(--surface); border: 1px solid var(--control-edge); border-radius: 6px; color: var(--text-muted);">
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5 14 14"></path></svg>
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%);">Search tasks</span>
+<input type="search" placeholder="Search titles, specs and tags" style="flex-grow: 1; min-width: 0; border: 0; outline: 0; font: inherit; font-size: 14px; color: var(--text); background: transparent;">
+<kbd style="font-family: 'Spline Sans Mono', monospace; font-size: 11px; padding: 1px 6px; border: 1px solid var(--border-strong); border-radius: 4px; color: var(--text-muted);">/</kbd>
+</label>
+</div>
+
+<div style="display: flex; align-items: flex-start; gap: 24px;">
+<div role="radiogroup" aria-label="Status" style="flex-shrink: 0; display: flex; gap: 2px; padding: 3px; background: var(--surface); border-radius: 8px; box-shadow: 0 0 0 1px var(--border);">
+<button type="button" role="radio" aria-checked="true" style="height: 28px; padding: 0 12px; background: var(--accent-tint); border: 0; border-radius: 6px; font: inherit; font-size: 13px; font-weight: 600; color: var(--accent); cursor: pointer;">Any</button>
+<button type="button" role="radio" aria-checked="false" style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; background: transparent; border: 0; border-radius: 6px; font: inherit; font-size: 13px; color: var(--text); cursor: pointer;">new <span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">15</span></button>
+<button type="button" role="radio" aria-checked="false" style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; background: transparent; border: 0; border-radius: 6px; font: inherit; font-size: 13px; color: var(--text-muted); cursor: pointer;">due <span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px;">0</span></button>
+<button type="button" role="radio" aria-checked="false" style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; background: transparent; border: 0; border-radius: 6px; font: inherit; font-size: 13px; color: var(--text-muted); cursor: pointer;">open <span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px;">0</span></button>
+<button type="button" role="radio" aria-checked="false" style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; background: transparent; border: 0; border-radius: 6px; font: inherit; font-size: 13px; color: var(--text-muted); cursor: pointer;">done <span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px;">0</span></button>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; padding-top: 4px;">
+<button type="button" aria-pressed="false" style="height: 26px; padding: 0 10px; background: transparent; border: 1px solid var(--border); border-radius: 999px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text); cursor: pointer;">buildkit</button>
+<button type="button" aria-pressed="false" style="height: 26px; padding: 0 10px; background: transparent; border: 1px solid var(--border); border-radius: 999px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text); cursor: pointer;">cmd</button>
+<button type="button" aria-pressed="false" style="height: 26px; padding: 0 10px; background: transparent; border: 1px solid var(--border); border-radius: 999px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text); cursor: pointer;">env</button>
+<button type="button" aria-pressed="false" style="height: 26px; padding: 0 10px; background: transparent; border: 1px solid var(--border); border-radius: 999px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text); cursor: pointer;">image-size</button>
+<button type="button" aria-pressed="false" style="height: 26px; padding: 0 10px; background: transparent; border: 1px solid var(--border); border-radius: 999px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text); cursor: pointer;">labels</button>
+<button type="button" aria-pressed="false" style="height: 26px; padding: 0 10px; background: transparent; border: 1px solid var(--border); border-radius: 999px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text); cursor: pointer;">layer-cache</button>
+<button type="button" aria-pressed="false" style="height: 26px; padding: 0 10px; background: transparent; border: 1px solid var(--border); border-radius: 999px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text); cursor: pointer;">multi-stage</button>
+<button type="button" aria-pressed="false" style="height: 26px; padding: 0 10px; background: transparent; border: 1px solid var(--border); border-radius: 999px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text); cursor: pointer;">non-root</button>
+<button type="button" aria-pressed="false" style="height: 26px; padding: 0 10px; background: transparent; border: 1px solid var(--border); border-radius: 999px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text); cursor: pointer;">pip</button>
+<button type="button" aria-pressed="false" style="height: 26px; padding: 0 10px; background: transparent; border: 1px solid var(--border); border-radius: 999px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text); cursor: pointer;">probes</button>
+<button type="button" aria-pressed="false" style="height: 26px; padding: 0 10px; background: transparent; border: 1px solid var(--border); border-radius: 999px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text); cursor: pointer;">secret</button>
+<button type="button" aria-pressed="false" style="height: 26px; padding: 0 10px; background: transparent; border: 1px solid var(--border); border-radius: 999px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text); cursor: pointer;">security</button>
+<button type="button" aria-pressed="false" style="height: 26px; padding: 0 10px; background: transparent; border: 1px solid var(--border); border-radius: 999px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text); cursor: pointer;">shell</button>
+</div>
+</div>
+
+<div role="table" aria-label="Tasks" style="background: var(--surface); border-radius: 8px; box-shadow: 0 0 0 1px var(--border); overflow: hidden;">
+<div role="row" style="display: grid; grid-template-columns: 64px minmax(0, 1fr) 220px 110px 80px 32px; align-items: center; height: 40px; padding: 0 12px 0 20px; border-bottom: 1px solid var(--border);">
+<span role="columnheader" aria-sort="ascending" style="display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text);"># <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 13V3M4 7l4-4 4 4"></path></svg></span>
+<span role="columnheader" style="font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">Task</span>
+<span role="columnheader" style="font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">Path</span>
+<span role="columnheader" style="font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">Difficulty</span>
+<span role="columnheader" style="font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">Status</span>
+<button type="button" disabled="" aria-label="Sort is already by number, ascending" style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; background: transparent; border: 0; color: var(--border-strong);"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.5-3.5M3 2.5v2.5h2.5"></path></svg></button>
+</div>
+
+<a href="#" role="row" style="display: grid; grid-template-columns: 64px minmax(0, 1fr) 220px 110px 80px 32px; align-items: center; height: 44px; padding: 0 12px 0 20px; border-bottom: 1px solid var(--border); color: var(--text); text-decoration: none;">
+<span role="cell" style="font-family: 'Spline Sans Mono', monospace; font-size: 13px; color: var(--text-muted);">289</span>
+<span role="cell" style="display: flex; align-items: center; gap: 10px; min-width: 0;"><span style="font-size: 15px;">your first Dockerfile</span><span style="flex-shrink: 0; height: 20px; display: inline-flex; align-items: center; padding: 0 8px; border-radius: 999px; background: var(--accent-tint); font-size: 12px; font-weight: 500; color: var(--accent);">up next</span></span>
+<span role="cell" style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">docker/<span style="color: var(--text);">cmd</span></span>
+<span role="cell" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span></span>easy</span>
+<span role="cell" style="font-size: 13px; color: var(--text-muted);">new</span>
+<span></span>
+</a>
+<a href="#" role="row" style="display: grid; grid-template-columns: 64px minmax(0, 1fr) 220px 110px 80px 32px; align-items: center; height: 44px; padding: 0 12px 0 20px; border-bottom: 1px solid var(--border); color: var(--text); text-decoration: none;">
+<span role="cell" style="font-family: 'Spline Sans Mono', monospace; font-size: 13px; color: var(--text-muted);">290</span>
+<span role="cell" style="display: flex; align-items: center; gap: 10px; min-width: 0;"><span style="font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">the layer cache, and why requirements.txt goes first</span><span style="flex-shrink: 0; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--warn);">needs 289</span></span>
+<span role="cell" style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">docker/<span style="color: var(--text);">layer-cache · pip</span></span>
+<span role="cell" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span></span>easy</span>
+<span role="cell" style="font-size: 13px; color: var(--text-muted);">new</span>
+<span></span>
+</a>
+<a href="#" role="row" style="display: grid; grid-template-columns: 64px minmax(0, 1fr) 220px 110px 80px 32px; align-items: center; height: 44px; padding: 0 12px 0 20px; border-bottom: 1px solid var(--border); color: var(--text); text-decoration: none;">
+<span role="cell" style="font-family: 'Spline Sans Mono', monospace; font-size: 13px; color: var(--text-muted);">291</span>
+<span role="cell" style="display: flex; align-items: center; gap: 10px; min-width: 0;"><span style="font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">run as a numbered user, not root</span><span style="flex-shrink: 0; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--warn);">needs 289</span></span>
+<span role="cell" style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">docker/<span style="color: var(--text);">security · non-root</span></span>
+<span role="cell" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span></span>medium</span>
+<span role="cell" style="font-size: 13px; color: var(--text-muted);">new</span>
+<span></span>
+</a>
+<a href="#" role="row" style="display: grid; grid-template-columns: 64px minmax(0, 1fr) 220px 110px 80px 32px; align-items: center; height: 44px; padding: 0 12px 0 20px; border-bottom: 1px solid var(--border); color: var(--text); text-decoration: none;">
+<span role="cell" style="font-family: 'Spline Sans Mono', monospace; font-size: 13px; color: var(--text-muted);">292</span>
+<span role="cell" style="display: flex; align-items: center; gap: 10px; min-width: 0;"><span style="font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">ARG or ENV: build time, run time, or both</span><span style="flex-shrink: 0; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--warn);">needs 289</span></span>
+<span role="cell" style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">docker/<span style="color: var(--text);">env</span></span>
+<span role="cell" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span></span>medium</span>
+<span role="cell" style="font-size: 13px; color: var(--text-muted);">new</span>
+<span></span>
+</a>
+<a href="#" role="row" style="display: grid; grid-template-columns: 64px minmax(0, 1fr) 220px 110px 80px 32px; align-items: center; height: 44px; padding: 0 12px 0 20px; border-bottom: 1px solid var(--border); color: var(--text); text-decoration: none;">
+<span role="cell" style="font-family: 'Spline Sans Mono', monospace; font-size: 13px; color: var(--text-muted);">293</span>
+<span role="cell" style="display: flex; align-items: center; gap: 10px; min-width: 0;"><span style="font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">apt-get in one RUN: update, install, clean up</span><span style="flex-shrink: 0; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--warn);">needs 290</span></span>
+<span role="cell" style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">docker/<span style="color: var(--text);">image-size</span></span>
+<span role="cell" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span></span>easy</span>
+<span role="cell" style="font-size: 13px; color: var(--text-muted);">new</span>
+<span></span>
+</a>
+<a href="#" role="row" style="display: grid; grid-template-columns: 64px minmax(0, 1fr) 220px 110px 80px 32px; align-items: center; height: 44px; padding: 0 12px 0 20px; border-bottom: 1px solid var(--border); color: var(--text); text-decoration: none;">
+<span role="cell" style="font-family: 'Spline Sans Mono', monospace; font-size: 13px; color: var(--text-muted);">294</span>
+<span role="cell" style="display: flex; align-items: center; gap: 10px; min-width: 0;"><span style="font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">ENTRYPOINT and CMD: the program and its default arguments</span><span style="flex-shrink: 0; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--warn);">needs 289</span></span>
+<span role="cell" style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">docker/<span style="color: var(--text);">cmd · shell</span></span>
+<span role="cell" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span></span>medium</span>
+<span role="cell" style="font-size: 13px; color: var(--text-muted);">new</span>
+<span></span>
+</a>
+<div style="height: 44px; display: flex; align-items: center; padding: 0 20px; font-size: 13px; color: var(--text-muted);">[9 more docker tasks]</div>
+</div>
+</section>
+</main>
+</div></div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);"></div>
+
+<section role="dialog" aria-modal="true" aria-labelledby="set-h" style="position: absolute; left: 340px; top: 48px; width: 760px; height: 1300px; box-sizing: border-box; display: flex; flex-direction: column; background: var(--surface); border-radius: 12px; box-shadow: var(--shadow-pop); overflow: hidden;">
+<header style="flex-shrink: 0; height: 64px; box-sizing: border-box; padding: 0 16px 0 28px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border);">
+<h1 id="set-h" style="margin: 0; flex-grow: 1; font-size: 20px; font-weight: 600;">Settings</h1>
+<span style="font-size: 12px; color: var(--text-muted);">Esc closes</span>
+<button type="button" aria-label="Close settings" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; background: transparent; border: 0; border-radius: 6px; color: var(--text); cursor: pointer;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button>
+</header>
+
+<div style="flex-grow: 1; min-height: 0; box-sizing: border-box; padding: 24px 28px 28px; display: flex; flex-direction: column; gap: 16px;">
+
+<section aria-labelledby="ed-h" style="border-radius: 8px; background: var(--bg); box-shadow: 0 0 0 1px var(--border); padding: 18px 20px 16px; display: flex; flex-direction: column;">
+<div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px;">
+<h2 id="ed-h" style="margin: 0; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">Editor</h2>
+<span style="font-size: 12px; color: var(--text-muted);">These live in this browser, so they are not part of a backup.</span>
+</div>
+
+<div style="display: grid; grid-template-columns: 200px minmax(0, 1fr); align-items: center; gap: 16px; min-height: 52px; border-bottom: 1px solid var(--border);">
+<span id="l-font" style="font-size: 14px; font-weight: 500;">Font</span>
+<span style="display: flex; align-items: center; gap: 12px;"><span id="s-font" role="combobox" aria-labelledby="l-font" aria-expanded="false" tabindex="0" style="display: flex; align-items: center; justify-content: space-between; width: 260px; height: 36px; box-sizing: border-box; padding: 0 10px 0 12px; border: 1px solid var(--control-edge); border-radius: 6px; background: var(--surface); font-family: 'Spline Sans Mono', monospace; font-size: 13px;">Spline Sans Mono<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--text-muted)" stroke-width="1.6" aria-hidden="true"><path d="M4 6l4 4 4-4"></path></svg></span><span style="font-size: 12px; color: var(--text-muted);">default</span></span>
+</div>
+
+<div style="display: grid; grid-template-columns: 200px minmax(0, 1fr); align-items: center; gap: 16px; min-height: 52px; border-bottom: 1px solid var(--border);">
+<span id="l-size" style="font-size: 14px; font-weight: 500;">Font size</span>
+<span id="s-size" role="combobox" aria-labelledby="l-size" aria-expanded="false" tabindex="0" style="display: flex; align-items: center; justify-content: space-between; width: 120px; height: 36px; box-sizing: border-box; padding: 0 10px 0 12px; border: 1px solid var(--control-edge); border-radius: 6px; background: var(--surface); font-family: 'Spline Sans Mono', monospace; font-size: 13px;">14 px<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--text-muted)" stroke-width="1.6" aria-hidden="true"><path d="M4 6l4 4 4-4"></path></svg></span>
+</div>
+
+<div style="display: grid; grid-template-columns: 200px minmax(0, 1fr); align-items: center; gap: 16px; min-height: 52px; border-bottom: 1px solid var(--border);">
+<span style="font-size: 14px; font-weight: 500;">Font ligatures</span>
+<button type="button" role="switch" aria-checked="false" aria-label="Font ligatures" style="justify-self: start; display: flex; align-items: center; gap: 10px; padding: 0; background: transparent; border: 0; font: inherit; font-size: 13px; color: var(--text-muted); cursor: pointer;"><span aria-hidden="true" style="position: relative; width: 32px; height: 18px; border-radius: 999px; background: var(--border-strong);"><span style="position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 999px; background: var(--text);"></span></span>Off</button>
+</div>
+
+<div style="display: grid; grid-template-columns: 200px minmax(0, 1fr); align-items: start; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border);">
+<span style="font-size: 14px; font-weight: 500; padding-top: 8px;">Key binding</span>
+<span style="display: flex; flex-direction: column; gap: 8px;">
+<span role="radiogroup" aria-label="Key binding" style="align-self: flex-start; display: flex; gap: 2px; padding: 3px; background: var(--surface-2); border-radius: 8px;">
+<button type="button" role="radio" aria-checked="true" style="height: 30px; padding: 0 14px; background: var(--accent-line); border: 0; border-radius: 6px; font: inherit; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer;">Standard</button>
+<button type="button" role="radio" aria-checked="false" style="height: 30px; padding: 0 14px; background: transparent; border: 0; border-radius: 6px; font: inherit; font-size: 13px; color: var(--text); cursor: pointer;">Vim</button>
+<button type="button" role="radio" aria-checked="false" style="height: 30px; padding: 0 14px; background: transparent; border: 0; border-radius: 6px; font: inherit; font-size: 13px; color: var(--text); cursor: pointer;">Emacs</button>
+</span>
+<span style="font-size: 12px; line-height: 1.5; color: var(--text-muted);">Ctrl+Enter runs and Ctrl+Shift+Enter submits whichever you pick, and <kbd style="font-family: 'Spline Sans Mono', monospace; font-size: 11px; padding: 0 5px; border: 1px solid var(--border-strong); border-radius: 4px; color: var(--text);">C-g</kbd> always gets you out of a half-typed Emacs chord.</span>
+</span>
+</div>
+
+<div style="display: grid; grid-template-columns: 200px minmax(0, 1fr); align-items: center; gap: 16px; min-height: 52px; border-bottom: 1px solid var(--border);">
+<span style="font-size: 14px; font-weight: 500;">Tab size</span>
+<span role="radiogroup" aria-label="Tab size" style="justify-self: start; display: flex; gap: 2px; padding: 3px; background: var(--surface-2); border-radius: 8px;">
+<button type="button" role="radio" aria-checked="false" style="height: 30px; width: 44px; background: transparent; border: 0; border-radius: 6px; font: inherit; font-family: 'Spline Sans Mono', monospace; font-size: 13px; color: var(--text); cursor: pointer;">2</button>
+<button type="button" role="radio" aria-checked="true" style="height: 30px; width: 44px; background: var(--accent-line); border: 0; border-radius: 6px; font: inherit; font-family: 'Spline Sans Mono', monospace; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer;">4</button>
+</span>
+</div>
+
+<div style="display: grid; grid-template-columns: 200px minmax(0, 1fr); align-items: center; gap: 16px; min-height: 52px; border-bottom: 1px solid var(--border);">
+<span style="font-size: 14px; font-weight: 500;">Word wrap</span>
+<span style="display: flex; align-items: center; gap: 16px;"><button type="button" role="switch" aria-checked="true" aria-label="Word wrap" style="display: flex; align-items: center; gap: 10px; padding: 0; background: transparent; border: 0; font: inherit; font-size: 13px; color: var(--text); cursor: pointer;"><span aria-hidden="true" style="position: relative; width: 32px; height: 18px; border-radius: 999px; background: var(--accent);"><span style="position: absolute; top: 2px; left: 16px; width: 14px; height: 14px; border-radius: 999px; background: var(--bg);"></span></span>On</button><span style="font-size: 12px; color: var(--text-muted);">Off puts long lines behind a horizontal scrollbar.</span></span>
+</div>
+
+<div style="display: grid; grid-template-columns: 200px minmax(0, 1fr); align-items: center; gap: 16px; min-height: 52px; border-bottom: 1px solid var(--border);">
+<span style="font-size: 14px; font-weight: 500;">Relative line numbers</span>
+<span style="display: flex; align-items: center; gap: 16px;"><button type="button" role="switch" aria-checked="false" aria-label="Relative line numbers" style="display: flex; align-items: center; gap: 10px; padding: 0; background: transparent; border: 0; font: inherit; font-size: 13px; color: var(--text-muted); cursor: pointer;"><span aria-hidden="true" style="position: relative; width: 32px; height: 18px; border-radius: 999px; background: var(--border-strong);"><span style="position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 999px; background: var(--text);"></span></span>Off</button><span style="font-size: 12px; color: var(--text-muted);">Counts from the cursor.</span></span>
+</div>
+
+<div style="display: grid; grid-template-columns: 200px minmax(0, 1fr); align-items: center; gap: 16px; min-height: 52px; border-bottom: 1px solid var(--border);">
+<span style="font-size: 14px; font-weight: 500;">Practice timer</span>
+<span style="display: flex; align-items: center; gap: 16px;">
+<span role="radiogroup" aria-label="Practice timer" style="display: flex; gap: 2px; padding: 3px; background: var(--surface-2); border-radius: 8px;">
+<button type="button" role="radio" aria-checked="true" style="height: 30px; padding: 0 14px; background: var(--accent-line); border: 0; border-radius: 6px; font: inherit; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer;">Shown</button>
+<button type="button" role="radio" aria-checked="false" style="height: 30px; padding: 0 14px; background: transparent; border: 0; border-radius: 6px; font: inherit; font-size: 13px; color: var(--text); cursor: pointer;">Hidden</button>
+</span>
+<span style="font-size: 12px; color: var(--text-muted);">Hidden or not, the time is still counted.</span>
+</span>
+</div>
+
+<button type="button" style="align-self: flex-start; display: flex; align-items: center; gap: 8px; margin-top: 12px; height: 32px; padding: 0 4px; background: transparent; border: 0; font: inherit; font-size: 13px; color: var(--text); text-decoration: underline; text-underline-offset: 3px; cursor: pointer;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.5-3.5M3 2.5v2.5h2.5"></path></svg>Put these back to their defaults</button>
+</section>
+
+<section aria-labelledby="data-h" style="border-radius: 8px; background: var(--bg); box-shadow: 0 0 0 1px var(--border); padding: 18px 20px; display: flex; flex-direction: column; gap: 4px;">
+<h2 id="data-h" style="margin: 0 0 6px; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">Your data</h2>
+<div style="display: grid; grid-template-columns: 24px 110px minmax(0, 1fr) auto; align-items: center; gap: 10px; height: 44px; border-bottom: 1px solid var(--border);"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--text-muted)" stroke-width="1.4" aria-hidden="true"><path d="M1.5 4.5v8h13v-7H7.5L6 4H1.5z"></path></svg><span style="font-size: 14px; font-weight: 500;">Data folder</span><code style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">[data folder path]</code><button type="button" style="display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; background: transparent; border: 1px solid var(--control-edge); border-radius: 6px; font: inherit; font-size: 12px; color: var(--text); cursor: pointer;"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="1"></rect><path d="M11 5V2H2v9h3"></path></svg>Copy</button></div>
+<div style="display: grid; grid-template-columns: 24px 110px minmax(0, 1fr) auto; align-items: center; gap: 10px; height: 44px; border-bottom: 1px solid var(--border);"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--text-muted)" stroke-width="1.4" aria-hidden="true"><ellipse cx="8" cy="3.5" rx="5.5" ry="2"></ellipse><path d="M2.5 3.5v9c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-9M2.5 8c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2"></path></svg><span style="font-size: 14px; font-weight: 500;">Progress</span><code style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">[progress database path]</code><button type="button" style="display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; background: transparent; border: 1px solid var(--control-edge); border-radius: 6px; font: inherit; font-size: 12px; color: var(--text); cursor: pointer;"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="1"></rect><path d="M11 5V2H2v9h3"></path></svg>Copy</button></div>
+<div style="display: grid; grid-template-columns: 24px 110px minmax(0, 1fr) auto; align-items: center; gap: 10px; height: 44px;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--text-muted)" stroke-width="1.4" aria-hidden="true"><path d="M1.5 4.5v8h13v-7H7.5L6 4H1.5z"></path></svg><span style="font-size: 14px; font-weight: 500;">Tasks</span><code style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">[tasks folder path]</code><button type="button" style="display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; background: transparent; border: 1px solid var(--control-edge); border-radius: 6px; font: inherit; font-size: 12px; color: var(--text); cursor: pointer;"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="1"></rect><path d="M11 5V2H2v9h3"></path></svg>Copy</button></div>
+</section>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;">
+<section aria-labelledby="bk-h" style="border-radius: 8px; background: var(--bg); box-shadow: 0 0 0 1px var(--border); padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;">
+<h2 id="bk-h" style="margin: 0; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">Back up</h2>
+<p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted);">One file holding your cards, notes, log, archive and the code saved in every task.</p>
+<button type="button" style="align-self: flex-start; display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; background: var(--surface); border: 1px solid var(--control-edge); border-radius: 6px; font: inherit; font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 13.5h11"></path></svg>Download a backup</button>
+</section>
+<section aria-labelledby="rs-h" style="border-radius: 8px; background: var(--bg); box-shadow: 0 0 0 1px var(--border); padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;">
+<h2 id="rs-h" style="margin: 0; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">Restore</h2>
+<p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted);">You see what the file brings and what it replaces before anything is touched.</p>
+<button type="button" style="align-self: flex-start; display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; background: var(--surface); border: 1px solid var(--control-edge); border-radius: 6px; font: inherit; font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 11V3M4.5 6.5 8 3l3.5 3.5M2.5 13.5h11"></path></svg>Choose a backup file</button>
+</section>
+</div>
+
+<section aria-labelledby="dz-h" style="border-radius: 8px; background: var(--danger-surface); box-shadow: 0 0 0 1px var(--danger-edge); padding: 18px 20px; display: flex; flex-direction: column; gap: 12px;">
+<h2 id="dz-h" style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--fail);">Danger zone</h2>
+<p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text);">Erases your progress and puts every task back to its stub. A backup is written first; it is the only way back, and you will be told where it is.</p>
+<div style="display: flex; align-items: flex-end; gap: 12px;">
+<label style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-muted);">Type <code style="font-family: 'Spline Sans Mono', monospace; color: var(--text);">erase progress</code> to confirm
+<input type="text" autocomplete="off" style="height: 36px; box-sizing: border-box; padding: 0 12px; background: var(--bg); border: 1px solid var(--control-edge); border-radius: 6px; font: inherit; font-family: 'Spline Sans Mono', monospace; font-size: 13px; color: var(--text); outline: 0;"></label>
+<button type="button" disabled="" style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; background: var(--fail-bg); border: 1px solid var(--fail-bg); border-radius: 6px; font: inherit; font-size: 14px; font-weight: 500; color: var(--text-faint); cursor: not-allowed;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4M6.5 6.5v5M9.5 6.5v5"></path></svg>Erase all progress</button>
+</div>
+</section>
+</div>
+</section>
+</div>
+<script>/* A static screen: nothing to mount. Until the page regenerates tokens.css with the tokens this screen uses, define them here; once tokens.css has them, this does nothing. */
+(function(){if(getComputedStyle(document.documentElement).getPropertyValue("--control-edge").trim())return;var s=document.createElement("style");s.textContent=':root,[data-theme="light"]{--control-edge:#8a959d;--strength-learning:var(--warn);--strength-familiar:var(--accent);--strength-solid:var(--pass);--heat-0:var(--surface-2);--heat-1:#d3e0f6;--heat-2:var(--accent-line);--heat-3:#6f95d9;--heat-4:var(--accent-hover);--danger-surface:#fff8f8;--danger-edge:var(--fail);--scrim:rgba(28,34,38,.32);}[data-theme="dark"]{--control-edge:#6b7883;--heat-1:#2e4466;--heat-3:#5a86cc;--danger-surface:#221c1f;--scrim:rgba(10,13,16,.62);}';document.head.appendChild(s);})();
+</script>
+
+</body></html>

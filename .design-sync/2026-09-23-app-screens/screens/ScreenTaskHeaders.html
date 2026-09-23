@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>ScreenTaskHeaders — Task: header with prereqs, needs and opens</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="_base.css">
+<script>document.documentElement.dataset.theme=new URLSearchParams(location.search).get('theme')||'light'</script>
+</head>
+<body><!-- Reference screen, 620px tall, 1440px wide. Open with ?theme=dark or ?theme=light. -->
+<div style="width: 1440px; height: 620px; box-sizing: border-box; padding: 40px 0; background: var(--bg); color: var(--text); font-family: var(--font-sans); display: flex; flex-direction: column; gap: 36px;">
+<header style="padding: 0 24px; display: flex; flex-direction: column; gap: 6px;">
+<h1 style="margin: 0; font-size: 22px; font-weight: 500;">Task header when a task has prereqs</h1>
+<p style="margin: 0; font-size: 13px; color: var(--text-muted);">Title on the first line; what the task is, what it needs and what it opens on the second. Every chip links to that task's lineage.</p>
+</header>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="padding: 0 24px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">290 · its prereq not passed yet</figcaption>
+<section aria-label="Task" style="box-sizing: border-box; padding: 16px 24px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+<div style="display: flex; align-items: baseline; gap: 16px;">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 15px; color: var(--text-muted);">290</span>
+<h2 style="margin: 0; flex-grow: 1; font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">the layer cache, and why requirements.txt goes first</h2>
+<div role="timer" aria-label="Active time 0 seconds" style="display: flex; align-items: baseline; gap: 6px;"><span style="font-family: 'Spline Sans Mono', monospace; font-size: 17px;">0:00</span><span style="font-size: 12px; color: var(--text-muted);">active</span></div>
+</div>
+<div style="display: flex; align-items: center; gap: 16px; padding-left: 50px;">
+<span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span></span>easy</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">docker/<span style="color: var(--text);">layer-cache · pip</span></span>
+<span style="height: 22px; display: inline-flex; align-items: center; padding: 0 8px; border-radius: 999px; background: var(--accent-tint); font-size: 12px; font-weight: 500; color: var(--accent);">open</span>
+<span aria-hidden="true" style="width: 1px; height: 18px; background: var(--border);"></span>
+<span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">Needs
+<a href="#" style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; background: var(--warn-bg); color: var(--warn); font-size: 13px; text-decoration: none;"><svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 2 15 14H1z"></path></svg><span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px;">289</span><span style="color: var(--text);">your first Dockerfile</span><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%);">, not passed yet</span></a></span>
+<span style="flex-grow: 1;"></span>
+<a href="#" style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; text-decoration: none;">Opens 4 tasks<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a>
+</div>
+</section>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="padding: 0 24px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">290 · once 289 is passed</figcaption>
+<section aria-label="Task" style="box-sizing: border-box; padding: 16px 24px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+<div style="display: flex; align-items: baseline; gap: 16px;">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 15px; color: var(--text-muted);">290</span>
+<h2 style="margin: 0; flex-grow: 1; font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">the layer cache, and why requirements.txt goes first</h2>
+<div role="timer" aria-label="Active time 3 minutes 5 seconds" style="display: flex; align-items: baseline; gap: 6px;"><span style="font-family: 'Spline Sans Mono', monospace; font-size: 17px;">3:05</span><span style="font-size: 12px; color: var(--text-muted);">active</span></div>
+</div>
+<div style="display: flex; align-items: center; gap: 16px; padding-left: 50px;">
+<span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span></span>easy</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">docker/<span style="color: var(--text);">layer-cache · pip</span></span>
+<span style="height: 22px; display: inline-flex; align-items: center; padding: 0 8px; border-radius: 999px; background: var(--accent-tint); font-size: 12px; font-weight: 500; color: var(--accent);">open</span>
+<span aria-hidden="true" style="width: 1px; height: 18px; background: var(--border);"></span>
+<span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">Needs
+<a href="#" style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; background: var(--pass-bg); color: var(--pass); font-size: 13px; text-decoration: none;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8.5l3 3 7-7"></path></svg><span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px;">289</span><span style="color: var(--text);">your first Dockerfile</span><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%);">, passed</span></a></span>
+<span style="flex-grow: 1;"></span>
+<a href="#" style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; text-decoration: none;">Opens 4 tasks<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a>
+</div>
+</section>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="padding: 0 24px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">322 · two prereqs, one title over 30 characters, so chips drop the titles · opens nothing</figcaption>
+<section aria-label="Task" style="box-sizing: border-box; padding: 16px 24px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+<div style="display: flex; align-items: baseline; gap: 16px;">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 15px; color: var(--text-muted);">322</span>
+<h2 style="margin: 0; flex-grow: 1; font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">a private package index, and a token that never lands in the image</h2>
+<div role="timer" aria-label="Active time 12 minutes 40 seconds" style="display: flex; align-items: baseline; gap: 6px;"><span style="font-family: 'Spline Sans Mono', monospace; font-size: 17px;">12:40</span><span style="font-size: 12px; color: var(--text-muted);">active</span></div>
+</div>
+<div style="display: flex; align-items: center; gap: 16px; padding-left: 50px;">
+<span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span></span>hard</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">docker/<span style="color: var(--text);">buildkit · secret · security</span></span>
+<span style="height: 22px; display: inline-flex; align-items: center; padding: 0 8px; border-radius: 999px; background: var(--accent-tint); font-size: 12px; font-weight: 500; color: var(--accent);">open</span>
+<span aria-hidden="true" style="width: 1px; height: 18px; background: var(--border);"></span>
+<span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">Needs
+<a href="#" title="292 · ARG or ENV: build time, run time, or both" style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; background: var(--warn-bg); color: var(--warn); text-decoration: none;"><svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 2 15 14H1z"></path></svg><span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px;">292</span><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%);">, not passed yet</span></a>
+<a href="#" title="321 · a cache mount, so pip stops downloading the same wheels" style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; background: var(--warn-bg); color: var(--warn); text-decoration: none;"><svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 2 15 14H1z"></path></svg><span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px;">321</span><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%);">, not passed yet</span></a></span>
+<span style="flex-grow: 1;"></span>
+<a href="#" style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; text-decoration: none;">Lineage<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a>
+</div>
+</section>
+</figure>
+</div>
+<script>/* A static screen: nothing to mount. Until the page regenerates tokens.css with the tokens this screen uses, define them here; once tokens.css has them, this does nothing. */
+(function(){if(getComputedStyle(document.documentElement).getPropertyValue("--control-edge").trim())return;var s=document.createElement("style");s.textContent=':root,[data-theme="light"]{--control-edge:#8a959d;--strength-learning:var(--warn);--strength-familiar:var(--accent);--strength-solid:var(--pass);--heat-0:var(--surface-2);--heat-1:#d3e0f6;--heat-2:var(--accent-line);--heat-3:#6f95d9;--heat-4:var(--accent-hover);--danger-surface:#fff8f8;--danger-edge:var(--fail);--scrim:rgba(28,34,38,.32);}[data-theme="dark"]{--control-edge:#6b7883;--heat-1:#2e4466;--heat-3:#5a86cc;--danger-surface:#221c1f;--scrim:rgba(10,13,16,.62);}';document.head.appendChild(s);})();
+</script>
+
+</body></html>

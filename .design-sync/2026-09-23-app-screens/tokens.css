@@ -1,0 +1,189 @@
+/* drillion design system — generated from tokens.json */
+:root, [data-theme="light"] {
+  --bg: #f4f6f7;
+  --surface: #ffffff;
+  --surface-2: #edf0f2;
+  --editor: #fafbfc;
+  --gutter: #f0f3f5;
+  --border: #dee4e7;
+  --border-strong: #c6cfd5; /* Hairlines that need more weight than border, not control edges: 1.6:1 on surface in light, 1.7:1 in dark, short of the 3:1 a control edge needs. Controls take control-edge. */
+  --text: #1c2226;
+  --text-muted: #3f4950; /* Secondary text and uppercase labels. 9.2:1 on surface in light, 7.9:1 in dark. */
+  --text-faint: #616c75; /* Faint captions and asides, the ramp's last step. 4.69:1 on surface-2, its tightest ground, in light and 4.56:1 in dark: clears AA for small text. Re-spaced with text-muted to keep about 1.7x between steps (the app's #237). */
+  --accent: #2a62c9;
+  --accent-hover: #2251a8;
+  --on-accent: #ffffff;
+  --accent-tint: #e5edfa; /* Selected fill: TrackRail's lit pill, FileTabs' open tab, diff lines. Not a state on its own (1.18:1 on surface): pair it with an accent mark. text-faint on it is 4.30:1 in dark, so text there steps up to text-muted. */
+  --accent-line: #b9cdf0;
+  --pass: #22795b; /* Pass text and marks. 4.53:1 on pass-bg in light: at the AA floor, so do not lighten it. */
+  --pass-bg: #e0f1e9;
+  --fail: #c2333f; /* Fail text and marks. 4.50:1 on fail-bg in light: at the AA floor, so do not lighten it. */
+  --fail-bg: #fae4e5;
+  --warn: #835b08;
+  --warn-bg: #f8efd4;
+  --syn-keyword: #2a62c9;
+  --syn-string: #22795b;
+  --syn-number: #a2522c;
+  --syn-comment: var(--text-faint); /* Editor comments. An alias of text-faint, so it clears AA with it. */
+  --syn-function: #1c2226;
+  --surface-card: var(--surface);
+  --text-body: var(--text);
+  --control-edge: #8a959d; /* The edge of a control that sits on a surface of its own colour: Input, Select, a secondary Button, the search field. 3.1:1 on surface in light, 3.3:1 in dark, so it clears the 3:1 a control edge needs where border-strong (1.6:1) does not. Used by the App screens. */
+  --strength-learning: var(--warn); /* The word learning and its marks: a task back in 2 to 4 days. Always beside the word and a one-bar mark, never colour alone. */
+  --strength-familiar: var(--accent); /* The word familiar and its marks: back in 8 days to 4 weeks. Two-bar mark. */
+  --strength-solid: var(--pass); /* The word solid and its marks: back in 2 to 4 months. Three-bar mark. */
+  --heat-0: var(--surface-2); /* PracticeHeatmap: a day with no passes. */
+  --heat-1: #d3e0f6; /* PracticeHeatmap: the first intensity step. */
+  --heat-2: var(--accent-line); /* PracticeHeatmap: the second step. */
+  --heat-3: #6f95d9; /* PracticeHeatmap: the third step. */
+  --heat-4: var(--accent-hover); /* PracticeHeatmap: the busiest days. */
+  --danger-surface: #fff8f8; /* The Danger zone card in Settings: the one place that destroys data. */
+  --danger-edge: var(--fail); /* The Danger zone's frame and heading. */
+  --scrim: rgba(28,34,38,.32); /* Behind the Settings dialog, with the 3px blur. Lighter in light mode so the page behind still reads as the same page. */
+  --shadow-card: 0 1px 2px rgba(28,34,38,.05),0 0 0 1px #dee4e7;
+  --shadow-pop: 0 8px 24px rgba(28,34,38,.14),0 0 0 1px #dee4e7;
+  --focus-ring: 0 0 0 2px #ffffff,0 0 0 4px #2a62c9; /* 2px surface gap + 2px accent ring on :focus-visible, everything interactive. In the app it is var(--surface) and var(--accent), so dark gets its own pair. Kept under Shadows: a box-shadow is the one family the page keeps a composite value in. */
+}
+[data-theme="dark"] {
+  --bg: #171c21;
+  --surface: #1f262d;
+  --surface-2: #262e37;
+  --editor: #1b2127;
+  --gutter: #232b33;
+  --border: #303a44;
+  --border-strong: #3d4954;
+  --text: #e4e9ed;
+  --text-muted: #b2bcc5;
+  --text-faint: #8b96a0;
+  --accent: #6fa2f5;
+  --accent-hover: #8db4f7;
+  --on-accent: #171c21;
+  --accent-tint: #263243;
+  --accent-line: #3a5480;
+  --pass: #5cc496;
+  --pass-bg: #20332b;
+  --fail: #f08a8a;
+  --fail-bg: #392527;
+  --warn: #e0b45c;
+  --warn-bg: #363023;
+  --syn-keyword: #6fa2f5;
+  --syn-string: #5cc496;
+  --syn-number: #e0a46f;
+  --syn-comment: var(--text-faint);
+  --syn-function: #e4e9ed;
+  --surface-card: var(--surface);
+  --text-body: var(--text);
+  --control-edge: #6b7883;
+  --strength-learning: var(--warn);
+  --strength-familiar: var(--accent);
+  --strength-solid: var(--pass);
+  --heat-0: var(--surface-2);
+  --heat-1: #2e4466;
+  --heat-2: var(--accent-line);
+  --heat-3: #5a86cc;
+  --heat-4: var(--accent-hover);
+  --danger-surface: #221c1f;
+  --danger-edge: var(--fail);
+  --scrim: rgba(10,13,16,.62);
+  --shadow-card: 0 1px 2px rgba(0,0,0,.25),0 0 0 1px #303a44;
+  --shadow-pop: 0 10px 28px rgba(0,0,0,.5),0 0 0 1px #3d4954;
+  --focus-ring: 0 0 0 2px #1f262d,0 0 0 4px #6fa2f5;
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --control-h: 36px;
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 8px;
+  --radius-pill: 999px;
+  --dur-press: 90ms; /* Pointer transitions and the 1px press on every control. */
+  --dur-fast: 140ms; /* Leaving, and a disclosure opening in place. */
+  --dur-base: 200ms; /* Entering: result banners, hint cards, anything that arrives. */
+  --dur-slow: 280ms; /* The ladder cell filling, and a number that just changed meaning. */
+  --ease-out: cubic-bezier(.16,.84,.44,1);
+  --ease-in: cubic-bezier(.45,0,.9,.35);
+  --ease-inout: cubic-bezier(.65,0,.35,1);
+  --ease-step: cubic-bezier(.34,1.42,.64,1);
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --font-sans: "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono: "Spline Sans Mono",ui-monospace,Consolas,Menlo,monospace;
+  --text-fs-title: 400 22px/1.4 var(--font-sans);
+  --text-fs-h: 400 17px/1.4 var(--font-sans);
+  --text-fs-body: 400 15px/1.5 var(--font-sans);
+  --text-fs-small: 400 13px/1.4 var(--font-sans);
+  --text-fs-label: 400 12px/1.4 var(--font-sans);
+  --text-fs-spec: 400 13.5px/1.6 var(--font-sans);
+  --text-fs-code: 400 14px/1.55 var(--font-sans);
+  --text-kbd: 400 11px/1.5 var(--font-mono); /* From `kbd` in tokens/base.css. */
+}
+.fs-title {
+  font-family: var(--font-sans);
+  font-size: 22px;
+  line-height: 1.4;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.fs-h {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.4;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.fs-body {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.fs-small {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.fs-label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+.fs-spec {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.6;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.fs-code {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.body {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
+}
