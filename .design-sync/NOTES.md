@@ -28,6 +28,9 @@ apple-touch-icon.
   "Worth a focus" moved to the sidebar under New picks from: "You keep struggling with [tag] ·
   N flagged", where the chip toggles focus. The spec pane ends with archive, note, hints, in
   that order, above the Stuck? bar, and a revealed hint scrolls into view.
+- *Tags.* The catalogue shows the twelve tags that cover the most listed tasks; a chip that is
+  on, or that the search names, always makes the cut. "+N more" opens the rest in alphabetical
+  order. With no filter, ~150 chips had pushed the table off the screen.
 - *Theme on the task page* is a text button with an icon (Sun/Asleep + Light/Dark) in the top
   bar, on the same state and store as the sidebar switch.
 - *Narrow widths.* Below 1100px the sidebar becomes the 48px top bar (wordmark, Catalogue,
