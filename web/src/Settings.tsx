@@ -235,7 +235,7 @@ export function Settings() {
           <p className={s.text}>You see what the file brings and what it replaces before anything is touched.</p>
           <label className={s.small} data-big="" data-busy={busy || undefined}>
             <Icon name="Upload" size={14} />Choose a backup file
-            <input ref={picker} type="file" accept=".zip,application/zip" disabled={busy}
+            <input ref={picker} type="file" accept=".zip,application/zip" disabled={busy} aria-label="Choose a backup file to restore"
               onChange={(e) => choose(e.target.files?.[0] ?? null)} className={s.picker} />
           </label>
           {error ? <NoticeBanner message={error} /> : null}

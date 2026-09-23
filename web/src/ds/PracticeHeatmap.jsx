@@ -34,7 +34,7 @@ export function PracticeHeatmap({ days = {}, today, className, style, cell = 14,
 
   return (
     <div className={className} style={style}>
-      <div role="img" aria-label={aria} className={s.plot} onMouseLeave={() => setTip(null)}>
+      <div role="img" aria-label={aria} tabIndex={0} className={s.plot} onMouseLeave={() => setTip(null)}>
         {tip ? <Tip text={tip.text} x={tip.x} y={tip.y} /> : null}
         <div className={s.grid} style={{ "--cols": "repeat(53, " + cellSize + "px)" }}>
           <div className={s.months} style={{ gap: gap + "px" }}>

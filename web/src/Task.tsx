@@ -596,18 +596,8 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
           {task.has_given ? <NoticeBanner message="This task ships given code above solve(): read it, but leave it alone." actions={[]} /> : null}
 
           {review ? <Review kind={meta.kind} mine={mine} reference={reference!} dark={dark} prefs={prefs} narrow={narrow} fresh={passed} /> : <>
-          <div className={css.editorBox}>
-            <div className={css.fill}>
-              {chart && meta.edits ? (
-                // keyed by task: a new task opens on the learner's own file
-                <ChartFiles key={slug} edits={meta.edits} chart={task.chart} context={meta.kind === "docker"}
-                  diagnostics={result.state === "failed" ? result.diagnostics : []}>
-                  {editor}
-                </ChartFiles>
-              ) : editor}
-            </div>
-          </div>
-
+          {/* first in the DOM and drawn below the editor: Tab reaches Run before it lands in Monaco,
+            * where Tab only indents */}
           <div role="toolbar" aria-label="Grade your file" className={css.grading}>
             <span className={css.mono}>{plural(submits, "submit")}{attempt ? ` · seed ${attempt.seed}` : ""}</span>
             {/* the marker lives inside the spacer, which is allowed to shrink below its own
@@ -631,11 +621,21 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
               <Icon name="Send" />{inflight === "submit" ? "Submitting…" : "Submit"}
             </Button>
           </div>
+
+          <div className={css.editorBox}>
+            <div className={css.fill}>
+              {chart && meta.edits ? (
+                // keyed by task: a new task opens on the learner's own file
+                <ChartFiles key={slug} edits={meta.edits} chart={task.chart} context={meta.kind === "docker"}
+                  diagnostics={result.state === "failed" ? result.diagnostics : []}>
+                  {editor}
+                </ChartFiles>
+              ) : editor}
+            </div>
+          </div>
           </>}
 
           {review && !passed ? null : <section aria-label={ungraded ? "Output of your run" : resultNo ? `Result of submit ${resultNo}` : "Result"} className={css.result}>
-            {/* the region stays mounted and only the banner inside it is keyed: a live region
-              * that arrives with its text already in place is never announced */}
             {/* the region stays mounted and only the state inside it is keyed: a live region
               * that arrives with its text already in place is never announced */}
             <div role="status">

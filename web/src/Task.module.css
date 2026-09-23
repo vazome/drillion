@@ -39,11 +39,11 @@
 .work > [role="status"]:empty{display:none}
 .editorBox{position:relative;flex:1;min-height:240px}
 .fill{position:absolute;inset:0}
-.grading{flex-shrink:0;height:60px;box-sizing:border-box;padding:0 20px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--border);background:var(--bg)}
+.grading{order:1;flex-shrink:0;height:60px;box-sizing:border-box;padding:0 20px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--border);background:var(--bg)}
 .marker{flex:1;min-width:0;overflow:hidden;text-align:right;white-space:nowrap}
 .marker span{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-muted)}
 .marker span[data-syntax]{color:var(--warn)}
-.result{flex-shrink:0;max-height:40%;min-height:120px;overflow-y:auto;box-sizing:border-box;padding:16px 20px;border-top:1px solid var(--border);background:var(--surface)}
+.result{order:2;flex-shrink:0;max-height:40%;min-height:120px;overflow-y:auto;box-sizing:border-box;padding:16px 20px;border-top:1px solid var(--border);background:var(--surface)}
 .corner{position:fixed;right:24px;bottom:24px;z-index:30}
 
 @media (max-width:1099px){
