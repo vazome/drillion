@@ -4,3 +4,4 @@
 .sort { color: var(--text-muted); }
 .sort:hover, .sort[data-active] { color: var(--text); }
 .sort:not(:hover) .ghost { visibility: hidden; }
+@media (min-width:1100px){.rail{display:none}}

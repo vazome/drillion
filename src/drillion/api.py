@@ -615,6 +615,20 @@ def asset(slug: str, name: str):
     return FileResponse(path)
 
 
+@app.get("/api/picks")
+def picks():
+    """What new picks are drawn from, for the sidebar every screen shows: the focus, each
+    track's size, and the tag worth focusing on."""
+    with reading() as st:
+        all_tasks = tasks()
+        sizes = Counter(t for m in all_tasks.values() if (t := m.get("track")))
+        return {
+            "focus": st["focus"],
+            "tracks": dict(sorted(sizes.items())),
+            "stuck": stuck(st, all_tasks),
+        }
+
+
 @app.post("/api/focus")
 def set_focus(focus: Focus):
     with writing() as st:

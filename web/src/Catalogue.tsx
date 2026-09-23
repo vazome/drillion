@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { Band, Button, Card, EmptyState, Icon, Input, Kbd, NoticeBanner, RowFlags, Select, SortReset, StatusBadge, TagChip, TaskPath, TrackRail } from "./ds/index.js";
-import { api, post, type Catalogue as Payload, type Row } from "./api";
+import { api, FOCUS_SAVED, setFocus as saveFocus, type Catalogue as Payload, type Row } from "./api";
+import { trackIcon } from "./Shell";
 import { Stats } from "./Stats";
 import css from "./Catalogue.module.css";
 import { inDays, strength } from "./strength";
@@ -19,9 +20,6 @@ const COL = { num: 30, path: 230, difficulty: 104, strength: 92, status: 78, res
 const LIST_MIN = 840;
 const FIRST_RUN = "drillion-first-run";
 const HOW_IT_WORKS = "https://github.com/vazome/drillion/blob/main/docs/how-it-works.md";
-
-// the tracks with a logo in web/public/tracks/; any other track wears its first letter
-const TRACK_ICONS = new Set(["python", "kubernetes", "helm", "docker"]);
 
 /** Today as a LOCAL YYYY-MM-DD, which parses back to the same UTC midnight `due` does. */
 const localToday = () => new Date().toLocaleDateString("en-CA");
@@ -182,7 +180,11 @@ export function Catalogue() {
   const wantSearch = useRef(inbox().has("q"));
 
   const load = useCallback(() => api<Payload>("/catalogue").then(setData).catch((e) => setError(e.message)), []);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    addEventListener(FOCUS_SAVED, load);
+    return () => removeEventListener(FOCUS_SAVED, load);
+  }, [load]);
 
   // the box exists only once the payload has rendered, so a `/` from another route waits
   const focusSearch = () => {
@@ -216,7 +218,7 @@ export function Catalogue() {
   // focus decides what the scheduler may pick next, so the whole payload is stale after it changes
   const setFocus = (tag: string | null) => {
     setNotice(null);
-    post("/focus", { tag }).then(load).catch((e) => setNotice(`Focus is still “${focus ?? "any"}” — the change did not save: ${e.message}`));
+    saveFocus(tag).catch((e) => setNotice(`Focus is still “${focus ?? "any"}” — the change did not save: ${e.message}`));
   };
 
   const by = useMemo(() => new Map((data?.tasks ?? []).map((e) => [e.slug, e])), [data]);
@@ -271,16 +273,17 @@ export function Catalogue() {
   const tracks = data.tracks.map((name) => {
     const all = data.tasks.filter((e) => e.track === name);
     return { name, total: all.length, seen: all.filter((e) => e.seen > 0).length,
-      icon: TRACK_ICONS.has(name) ? `tracks/${name}.svg` : undefined };
+      icon: trackIcon(name) };
   });
   const unseen = focus ? data.tasks.filter((e) => !e.seen && facets(e).includes(focus)).length : 0;
   const act = empty?.act === "focus" ? { label: "Clear focus", run: () => setFocus(null) } : null;
 
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", display: "grid", gap: 18 }}>
-      {tracks.length ? <TrackRail tracks={tracks} active={focus} onPick={setFocus} allTotal={stats.total} allSeen={stats.seen}
+      {/* the sidebar is the focus control; below 1100px it is gone, and the rail stands in */}
+      {tracks.length ? <div className={css.rail}><TrackRail tracks={tracks} active={focus} onPick={setFocus} allTotal={stats.total} allSeen={stats.seen}
         readout={focus ? <>New picks come from <strong>{focus}</strong>, {unseen} unseen left.</> : "New picks come from every track."}
-        aside={focus ? "Reviews still come from everywhere; the list below is filtered to match." : null} /> : null}
+        aside={focus ? "Reviews still come from everywhere; the list below is filtered to match." : null} /></div> : null}
       <Stats boxes={stats.boxes} ladder={stats.ladder} due={stats.due} seen={stats.seen} total={stats.total} practised={stats.practised} outOf={stats.window} progressHref="#/progress" />
 
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>

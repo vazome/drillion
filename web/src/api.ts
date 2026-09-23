@@ -24,6 +24,13 @@ export interface Row extends Meta {
   /** prereqs not yet passed, so the task is not offered as a new pick */
   blocked: string[];
 }
+/** GET /api/picks — what new picks are drawn from, for the sidebar on every screen. */
+export interface Picks {
+  focus: string | null;
+  /** each track's size, by name */
+  tracks: Record<string, number>;
+  stuck: { tag: string; flagged: number } | null;
+}
 /** GET /api/health — the version the header shows; never hardcode it here. */
 export interface Health { version: string; tasks: number; python: string }
 export interface Catalogue {
@@ -184,3 +191,10 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const post = <T,>(path: string, body?: unknown) =>
   api<T>(path, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
+
+/** Fired once a new focus is saved: the sidebar and the catalogue both redraw from it. */
+export const FOCUS_SAVED = "drillion-focus";
+
+/** Set the one focus new picks come from, or clear it with null. */
+export const setFocus = (tag: string | null) =>
+  post("/focus", { tag }).then(() => { dispatchEvent(new Event(FOCUS_SAVED)); });

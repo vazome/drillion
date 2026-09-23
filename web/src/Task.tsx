@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Button, Card, Icon, Collapsible, ConflictBanner, DepLineage, EmptyState, FailedCase, NoteField, GraceNotice, NoticeBanner, RequiresTag, ResultBanner, RowFlags, SpecText, StatusBadge, TagChip, TaskPath, Timer, StuckNudge } from "./ds/index.js";
 import { ApiError, api, post, type Task as TaskData, type RunResult, type Case, type Diagnostic } from "./api";
 import { depsHref, prefetch, taskHref } from "./Deps";
@@ -9,6 +9,7 @@ import { ChartFiles, ManifestFailure } from "./ManifestWorkspace";
 import { useDraft } from "./useDraft";
 import { usePrefs } from "./prefs";
 import { TaskPanes } from "./TaskPanes";
+import { Crumbs } from "./Shell";
 
 const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)" };
 const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };
@@ -70,7 +71,7 @@ function RequiresChips({ requires }: { requires: TaskData["requires"] }) {
   );
 }
 
-export function Task({ slug, dark }: { slug: string; dark: boolean }) {
+export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (crumbs: ReactNode) => ReactNode }) {
   const prefs = usePrefs();
   const [task, setTask] = useState<TaskData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -256,8 +257,8 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
     return syntax ?? (named ? { message: named.message, line: named.line! } : null);
   }, [syntax, result, edits]);
 
-  if (error) return <EmptyState message={`Could not load ${slug}: ${error}`} actionLabel="Back to Today" onAction={() => { location.hash = "#/"; }} />;
-  if (!task) return <EmptyState message="Loading…" />;
+  if (error) return <>{bar(null)}<EmptyState message={`Could not load ${slug}: ${error}`} actionLabel="Back to Today" onAction={() => { location.hash = "#/"; }} /></>;
+  if (!task) return <>{bar(null)}<EmptyState message="Loading…" /></>;
 
   const { meta, hints, solution: gateState, attempt, reference } = task;
   const hintsLeft = hints.total - hints.shown.length;
@@ -289,7 +290,9 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
   const editor = <Editor kind={meta.kind} value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} problem={problem} height={editorHeight} flush={chart} />;
   const rendered = result.state === "failed" || result.state === "ran" ? result.rendered : "";
 
-  return (
+  return (<>
+    {bar(<Crumbs group={meta.track ?? meta.tier} topic={meta.topic} />)}
+    <main style={{ padding: 24 }}>
     <div style={{ maxWidth: 1500, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
         <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)" }}>{topicNo(meta.topic)}</span>
@@ -547,5 +550,6 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
         </div>
       </TaskPanes>
     </div>
-  );
+    </main>
+  </>);
 }

@@ -240,6 +240,11 @@ async def _guards(api, path):
     assert (await api.get("/api/catalogue")).json()[
         "focus"
     ] == "core"  # a tier, not a tag
+    assert (await api.get("/api/picks")).json() == {
+        "focus": "core",
+        "tracks": {"python": 1},
+        "stuck": None,
+    }
     assert (await api.get("/api/progress")).json()["per_tag"] == {
         "f-strings": {
             "seen": 0,
