@@ -1,6 +1,6 @@
 import React from "react";
 import s from "./Dialog.module.css";
-import { Button } from "./Button.jsx";
+import { Icon } from "./Icon.jsx";
 
 /** A modal panel over the current screen. It is a native <dialog> opened with showModal(),
  *  which is where the focus trap, the Escape key, the inert background and the backdrop all
@@ -21,7 +21,8 @@ export function Dialog({ open = false, onClose, label, children, className, styl
       <div className={s.head}>
         <h2 className={s.title}>{label}</h2>
         <div className={s.spacer}></div>
-        <Button variant="quiet" onClick={() => ref.current?.close()}>Close</Button>
+        <span className={s.esc}>Esc closes</span>
+        <button type="button" aria-label={"Close " + String(label).toLowerCase()} onClick={() => ref.current?.close()} className={s.close}><Icon name="Close" /></button>
       </div>
       <div className={s.body}>{children}</div>
     </dialog>
