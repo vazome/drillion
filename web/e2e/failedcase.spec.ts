@@ -16,7 +16,7 @@ test("a failed case wraps, numbers its lines, and keeps the pair level", async (
   await page.keyboard.press("ControlOrMeta+a");
   await page.keyboard.insertText(WRONG);
   await page.getByRole("button", { name: "Run" }).first().click();
-  await expect(page.getByText("Output · your run")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Output of your run" }).locator("[data-wrong]")).toBeVisible();
 
   const pair = await page.evaluate(() => {
     const boxes = [...document.querySelectorAll("[data-wrong], [data-right]")];

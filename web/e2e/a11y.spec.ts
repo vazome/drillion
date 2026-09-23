@@ -9,7 +9,8 @@ import { expect, type Page, test } from "@playwright/test";
 // collapses every one of them under this setting, so the page under audit is the settled one.
 test.use({ reducedMotion: "reduce" });
 
-const SLUG = "009_fstrings";
+// not 009: screens.spec.ts passes that one, and a passed task opens on Review, not the editor
+const SLUG = "010_little_sisters_vocab";
 // a Helm task: the chart's file tabs sit over the editor, and they are ours to audit
 const SCREENS = ["/#/", `/#/task/${SLUG}`, "/#/task/280_helm_values_nodeport", "/#/progress"];
 
@@ -17,7 +18,8 @@ const SCREENS = ["/#/", `/#/task/${SLUG}`, "/#/task/280_helm_values_nodeport", "
 async function settled(page: Page, route: string) {
   const there = route.includes("/task/")
     ? page.getByRole("button", { name: "Run" })
-    : page.getByText(route === "/#/" ? "Today" : "How well you know them", { exact: true }).first();
+    : route === "/#/" ? page.getByRole("heading", { name: /^Up next/ })
+    : page.getByText("How well you know them", { exact: true }).first();
   await expect(there).toBeVisible();
 }
 
@@ -73,7 +75,7 @@ test("every screen passes an axe audit", async ({ page }) => {
 
 test("Settings opens from the keyboard, keeps focus, and Escape gives it back", async ({ page }) => {
   await page.goto("/#/");
-  await expect(page.getByText("Today", { exact: true })).toBeVisible();
+  await settled(page, "/#/");
   await tabTo(page, "Settings");
   await page.keyboard.press("Enter");
 
@@ -89,7 +91,7 @@ test("Settings opens from the keyboard, keeps focus, and Escape gives it back", 
     await page.keyboard.press("Tab");
     const behind = await page.evaluate(() => {
       const el = document.activeElement;
-      return !!(el && (el.closest("header") || el.closest("main")));
+      return !!(el && (el.closest("header") || el.closest("main") || el.closest("aside")));
     });
     expect(behind, `tab ${i + 1} landed on the page behind the dialog`).toBe(false);
   }
@@ -102,11 +104,11 @@ test("Settings opens from the keyboard, keeps focus, and Escape gives it back", 
 
 test("a task can be opened, run and read without a pointer", async ({ page }) => {
   await page.goto("/#/");
-  await expect(page.getByText("Today", { exact: true })).toBeVisible();
+  await settled(page, "/#/");
 
   // `/` is the app's own shortcut into the search box
   await page.keyboard.press("/");
-  await page.keyboard.type("fstrings");
+  await page.keyboard.type("vocab");
   await tabTo(page, `#/task/${SLUG}`);
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(new RegExp(`#/task/${SLUG}`));
@@ -115,7 +117,7 @@ test("a task can be opened, run and read without a pointer", async ({ page }) =>
   await tabTo(page, "Run");
   await page.keyboard.press("Enter");
   // the verdict arrives inside a live region, or a screen reader is never told the run ended
-  const said = page.getByRole("status").filter({ hasText: /✗|✓|passed|failed/i });
+  const said = page.getByRole("status").filter({ hasText: /passed|failed|not met|not passing|not yet/i });
   await expect(said.first()).toBeVisible({ timeout: 30_000 });
 });
 
