@@ -27,7 +27,7 @@
 /* Blurred rather than merely dimmed, so the dialog reads as being in front of the page
    instead of on it; the dim alone keeps it legible where the browser has no backdrop-filter. */
 .root::backdrop{
-  background:rgb(0 0 0 / .38);backdrop-filter:blur(3px);opacity:0;
+  background:var(--scrim);backdrop-filter:blur(3px);opacity:0;
   transition:opacity var(--dur-fast) var(--ease-in),
     overlay var(--dur-fast) allow-discrete,display var(--dur-fast) allow-discrete;
 }

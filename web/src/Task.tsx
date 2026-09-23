@@ -312,7 +312,7 @@ export function Task({ slug, dark }: { slug: string; dark: boolean }) {
 
       {lineage ? (
         <div role="dialog" aria-label={`Lineage of ${meta.title}`} onClick={closeLineage} className="m-fade"
-          style={{ position: "fixed", inset: 0, zIndex: 40, background: "color-mix(in srgb, var(--text) 28%, transparent)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "72px 24px", overflow: "hidden" }}>
+          style={{ position: "fixed", inset: 0, zIndex: 40, background: "var(--scrim)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "72px 24px", overflow: "hidden" }}>
           {/* the scroll lives on the animated element, not around it: `m-rise` starts the
             * panel 6px low, and inside a scrolling parent those 6px are overflow — one frame
             * of scrollbar on the way in. An element's own transform never adds to its own
