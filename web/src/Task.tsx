@@ -1,7 +1,7 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Button, Card, Icon, Collapsible, ConflictBanner, DepLineage, EmptyState, FailedCase, Kbd, NoteField, GraceNotice, NoticeBanner, RequiresTag, RowFlags, SpecText, StatusBadge, TaskPath, Timer, StuckNudge } from "./ds/index.js";
 import { ApiError, api, post, type Task as TaskData, type RunResult, type Case, type Diagnostic } from "./api";
-import { depsHref, prefetch, taskHref } from "./Deps";
+import { Centre, depsHref, prefetch, taskHref } from "./Deps";
 import { plural, secs, topicNo } from "./format";
 import { inDays, strength } from "./strength";
 import { DiffView, Editor } from "./Editor";
@@ -10,6 +10,7 @@ import { useDraft } from "./useDraft";
 import { usePrefs, type Prefs } from "./prefs";
 import { TaskPanes } from "./TaskPanes";
 import { Crumbs } from "./Shell";
+import { useNarrow } from "./narrow";
 import { Level } from "./Level";
 import css from "./Task.module.css";
 
@@ -17,16 +18,6 @@ const ATTEMPT_MS = 5000;    // reading the task is work: the clock starts once t
 const HEARTBEAT_MS = 60_000;
 // long enough for `role="status"` to finish speaking the message before the node goes
 const GATE_MS = 4000;
-/** Below this the two panes stack, spec first. A tablet is for reading a spec and running it,
- *  never for writing code side by side. Both arguments are module constants: rebuilt every
- *  render, they would make `useSyncExternalStore` re-subscribe every render. */
-const NARROW = "(max-width: 1099px)";
-const watchNarrow = (onChange: () => void) => {
-  const q = matchMedia(NARROW);
-  q.addEventListener("change", onChange);
-  return () => q.removeEventListener("change", onChange);
-};
-const isNarrow = () => matchMedia(NARROW).matches;
 const HINT_TEXT = { fontSize: 14 };
 /** The shortcut's modifier as this keyboard labels it. */
 const MOD = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl";
@@ -262,7 +253,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
   const [nudgeOff, setNudgeOff] = useState(false);
   const [inflight, setInflight] = useState<"run" | "submit" | null>(null);
   const [lineage, setLineage] = useState(false);
-  const narrow = useSyncExternalStore(watchNarrow, isNarrow);
+  const narrow = useNarrow();
 
   const graceRef = useRef(0);                // read inside the tick, so it is not a dep
   const gateTimer = useRef<number | undefined>(undefined);
@@ -489,10 +480,10 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
             * of scrollbar on the way in. An element's own transform never adds to its own
             * scroll content, so putting the two on one box makes the flash impossible. */}
           <div ref={panel} tabIndex={-1} onClick={(e) => e.stopPropagation()} className="m-rise"
-            style={{ width: "min(1040px, 100%)", maxHeight: "100%", overflowY: "auto", outline: "none" }}>
+            style={{ width: "min(1080px, 100%)", maxHeight: "100%", overflowY: "auto", outline: "none" }}>
             <Card label={`Lineage · ${task.slug}`} style={{ boxShadow: "var(--shadow-pop)" }}>
-              <DepLineage task={{ topic: meta.topic, title: meta.title, tags: meta.tags, strength: strength(task.box, !!task.seen, task.ladder), aside: "attempt still open behind this" }}
-                requires={task.requires} unlocks={task.unlocks}
+              <DepLineage task={{ topic: meta.topic, title: meta.title, tags: meta.tags, aside: <><Centre task={task} /><span>attempt still open behind this</span></> }}
+                requires={task.requires} unlocks={task.unlocks} stacked={narrow}
                 hrefOf={(r) => depsHref(r.slug)} onPrefetch={(r) => { void prefetch(r.slug); }} onClose={closeLineage} />
             </Card>
           </div>

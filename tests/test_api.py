@@ -815,6 +815,8 @@ async def _deps_on_the_task_payload(api, _path):
             "topic": 48,
             "title": tasks()[PREREQ]["title"],
             "tags": tasks()[PREREQ]["tags"],
+            "difficulty": tasks()[PREREQ]["difficulty"],
+            "status": "new",
             "state": "blocked",
             "box": 0,
         }
@@ -829,6 +831,8 @@ async def _deps_on_the_task_payload(api, _path):
             "topic": 49,
             "title": tasks()[GATED]["title"],
             "tags": tasks()[GATED]["tags"],
+            "difficulty": tasks()[GATED]["difficulty"],
+            "status": "new",
             "also": [],
         }
     ]

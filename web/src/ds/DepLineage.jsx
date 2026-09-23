@@ -1,21 +1,19 @@
 import React from "react";
 import { Icon } from "./Icon.jsx";
 import css from "./DepLineage.module.css";
-import { StatusBadge } from "./StatusBadge.jsx";
-import { TagChip } from "./TagChip.jsx";
 
 /** Fixed geometry, so the wires are arithmetic rather than a measured layout: every node is
  *  the same height, the title clamps to two lines, and the whole board scrolls sideways
  *  rather than reflowing. A dependency graph that reflows is a graph whose lines lie. */
-const NODE_W = 216, NODE_H = 96, GAP = 16;
-const BIG_W = 272, BIG_H = 118;
-const WIRE = 96;                                  // the gutter the lines are drawn in
+const NODE_W = 280, NODE_H = 108, GAP = 18;
+const BIG_W = 280, BIG_H = 160;
+const WIRE = 80;                                  // the gutter the lines are drawn in
 const BOARD_W = NODE_W * 2 + BIG_W + WIRE * 2;
 /** Spacing between the centre card's anchors. At 9px two prereqs arrived under a single
- *  arrowhead and read as one edge; it opens up to this and closes again only once the
- *  column is deep enough to need the card's whole edge. */
+ *  dot and read as one edge; it opens up to this and closes again only once the column is
+ *  deep enough to need the card's whole edge. */
 const FAN = 26;
-const EDGE = BIG_H - 28;                           // the run of that edge the anchors may use
+const EDGE = BIG_H - 40;                           // the run of that edge the anchors may use
 /** A task can unlock twenty others. Past this the column is a wall rather than a graph, so
  *  it folds — and says how many it folded, with the way back open. */
 const FOLD = 8;
@@ -32,43 +30,55 @@ const wire = (x1, y1, x2, y2) => {
   return "M" + x1 + "," + y1 + " C" + (x1 + dx) + "," + y1 + " " + (x2 - dx) + "," + y2 + " " + x2 + "," + y2;
 };
 
-function Node({ node, x, y, w, tone, href, footer, onPrefetch, children }) {
+/** The stroke of each kind of edge: a prereq passed, one still needed, and what this opens. */
+const STROKE = {
+  passed: { stroke: "var(--pass)" },
+  blocked: { stroke: "var(--warn)", strokeDasharray: "5 4" },
+  opens: { stroke: "var(--control-edge)", strokeDasharray: "5 4" },
+};
+
+const MARK = {
+  passed: <span className={css.mark} data-tone="passed"><Icon name="Checkmark" size={12} />passed</span>,
+  blocked: <span className={css.mark} data-tone="blocked"><Icon name="Pending" size={12} />not passed yet</span>,
+};
+
+function Node({ node, tone, href, onPrefetch, style, also }) {
   const As = href ? "a" : "div";
-  const tag = node.tags && node.tags.length ? node.tags[0] : null;
   return (
     <As href={href} className={css.node} data-tone={tone} data-link={href ? "" : undefined}
       onMouseEnter={href && onPrefetch ? () => onPrefetch(node) : undefined}
-      onFocus={href && onPrefetch ? () => onPrefetch(node) : undefined}
-      style={{ left: x, top: y, width: w, height: tone === "this" ? BIG_H : NODE_H }}>
-      <div className={css.num + " tabular"}>{numL(node.topic)}</div>
-      <div title={node.title} className={css.title}>{node.title}</div>
-      <div className={css.foot}>
-        {children}
-        {tag ? <TagChip label={tag} small className={css.chip} /> : null}
-        {footer && tone !== "this" ? <span className={css.footText}>{footer}</span> : null}
-      </div>
-      {footer && tone === "this" ? <div className={css.footText}>{footer}</div> : null}
+      onFocus={href && onPrefetch ? () => onPrefetch(node) : undefined} style={style}>
+      <span className={css.num + " tabular"}>{numL(node.topic)}<span className={css.spacer}></span>{MARK[tone] || null}</span>
+      <span title={node.title} className={css.title}>{node.title}</span>
+      <span className={css.foot}>
+        <span>{[node.difficulty, node.status].filter(Boolean).join(" · ")}</span>
+        {also && also.length ? <span className={css.also}>also needs {also.map(numL).join(", ")}</span> : null}
+      </span>
     </As>
   );
 }
 
-/** One task's lineage as the graph it is: what gates it on the left, what it gates on the
- *  right, wired to the task in the middle. A solid line is a prereq you have passed, a
- *  dashed one is what is still blocking. Nothing here refuses a task — a blocked prereq is
- *  information and a shorter way in. */
-export function DepLineage({ task, requires = [], unlocks = [], hrefOf, onPrefetch, shortestPath, graphHref, onClose, className, style }) {
+function Centre({ task, style }) {
+  return (
+    <div className={css.node} data-tone="this" style={style}>
+      <span className={css.num + " tabular"}>{numL(task.topic)} · this task</span>
+      <span title={task.title} className={css.title}>{task.title}</span>
+      <span className={css.foot}>{task.aside}</span>
+    </div>
+  );
+}
+
+/** One task's lineage as the graph it is: what it needs on the left, what it opens on the
+ *  right, wired to the task in the middle. A solid pass line is a prereq you have passed, a
+ *  dashed warn one is still needed, a dashed grey one is what this opens. Nothing here
+ *  refuses a task: a prereq is information and a shorter way in. `stacked` drops the curves
+ *  for three lists under plain headings, for a screen too narrow for the board. */
+export function DepLineage({ task, requires = [], unlocks = [], hrefOf, onPrefetch, shortestPath, graphHref, onClose, stacked = false, className, style }) {
   const [unfolded, setUnfolded] = React.useState({});
   const fold = (list, key) => (unfolded[key] || list.length <= FOLD ? list : list.slice(0, FOLD));
   const req = fold(requires, "requires");
   const unl = fold(unlocks, "unlocks");
-
-  const rows = Math.max(req.length, unl.length, 1);
-  const H = Math.max(rows * (NODE_H + GAP) - GAP, BIG_H) + 8;
-  const midY = H / 2;
-  const colX = [0, NODE_W + WIRE, NODE_W + WIRE + BIG_W + WIRE];
   const link = (r) => (hrefOf ? hrefOf(r) : undefined);
-  /** The centre card's anchors fan out, or a column of five leaves as one thick line. */
-  const fan = (i, n) => (n < 2 ? midY : midY + (i - (n - 1) / 2) * Math.min(FAN, EDGE / (n - 1)));
 
   /** What a folded column hides, and the way back. A column that silently drops twelve
    *  tasks is a one-way door. */
@@ -77,14 +87,80 @@ export function DepLineage({ task, requires = [], unlocks = [], hrefOf, onPrefet
     const open = !!unfolded[key];
     return (
       <button key={key} type="button" className={css.foldBtn} onClick={() => setUnfolded((u) => ({ ...u, [key]: !open }))}>
-        {open ? key + ": showing all " + all.length + " — show " + FOLD : key + ": showing " + shown.length + " of " + all.length + " — show all"}
+        {open ? key + ": showing all " + all.length + ", show " + FOLD : key + ": showing " + shown.length + " of " + all.length + ", show all"}
       </button>
     );
   };
+  const heads = ["Needs · " + requires.length, "This task", "Opens · " + unlocks.length];
+  const alone = "Nothing: this one stands on its own.";
+  const last = "Nothing waits on this one yet.";
 
-  const empty = (text, x) => (
-    <span className={css.empty} style={{ left: x, top: midY - 9, width: NODE_W }}>{text}</span>
-  );
+  let body;
+  if (stacked) {
+    body = (
+      <div className={css.stack}>
+        <section><h3 className={css.head}>{heads[0]}</h3>
+          {req.length ? req.map((r) => <Node key={r.topic} node={r} tone={r.state} href={link(r)} onPrefetch={onPrefetch} />) : <p className={css.empty}>{alone}</p>}
+        </section>
+        <section><h3 className={css.head}>{heads[1]}</h3><Centre task={task} /></section>
+        <section><h3 className={css.head}>{heads[2]}</h3>
+          {unl.length ? unl.map((u) => <Node key={u.topic} node={u} tone="opens" href={link(u)} onPrefetch={onPrefetch} also={u.also} />) : <p className={css.empty}>{last}</p>}
+        </section>
+      </div>
+    );
+  } else {
+    const rows = Math.max(req.length, unl.length, 1);
+    const H = Math.max(rows * (NODE_H + GAP) - GAP, BIG_H) + 8;
+    const midY = H / 2;
+    const colX = [0, NODE_W + WIRE, NODE_W + WIRE + BIG_W + WIRE];
+    /** The centre card's anchors fan out, or a column of five leaves as one thick line. */
+    const fan = (i, n) => (n < 2 ? midY : midY + (i - (n - 1) / 2) * Math.min(FAN, EDGE / (n - 1)));
+    const at = (x, y, h = NODE_H) => ({ position: "absolute", left: x, top: y, width: NODE_W, height: h });
+    body = (
+      // `overflow-x: auto` alone computes `overflow-y` to `auto` as well, and the entrance
+      // animation holds the nodes 6px low for two frames: a scrollbar that appears and
+      // vanishes. The board's height is exact arithmetic, so it never scrolls down.
+      <div className={css.scroll}>
+        <div className={css.heads} style={{ width: BOARD_W, gridTemplateColumns: `${NODE_W}px ${WIRE}px ${BIG_W}px ${WIRE}px ${NODE_W}px` }}>
+          <span className={css.head}>{heads[0]}</span><span></span><span className={css.head}>{heads[1]}</span><span></span><span className={css.head}>{heads[2]}</span>
+        </div>
+        <div key={task.topic} className={css.board + " m-stagger"} style={{ width: BOARD_W, height: H }}>
+          <svg className={css.wires + " m-fade"} width={BOARD_W} height={H} aria-hidden="true">
+            {req.map((r, i) => {
+              const y = fan(i, req.length);
+              return (
+                <g key={r.topic} fill="none" strokeWidth="1.5" {...STROKE[r.state === "passed" ? "passed" : "blocked"]}>
+                  <path d={wire(colX[0] + NODE_W, nodeMid(i, req.length, H), colX[1], y)}></path>
+                  <circle cx={colX[1]} cy={y} r="3.5" fill={STROKE[r.state === "passed" ? "passed" : "blocked"].stroke} stroke="none"></circle>
+                </g>
+              );
+            })}
+            {unl.map((u, i) => {
+              const y = nodeMid(i, unl.length, H);
+              return (
+                <g key={u.topic} fill="none" strokeWidth="1.5" {...STROKE.opens}>
+                  <path d={wire(colX[1] + BIG_W, fan(i, unl.length), colX[2], y)}></path>
+                  <circle cx={colX[2]} cy={y} r="3.5" fill={STROKE.opens.stroke} stroke="none"></circle>
+                </g>
+              );
+            })}
+          </svg>
+
+          {req.length
+            ? req.map((r, i) => <Node key={r.topic} node={r} tone={r.state} href={link(r)} onPrefetch={onPrefetch}
+                style={at(colX[0], stackTop(req.length, H) + i * (NODE_H + GAP))} />)
+            : <p className={css.empty} style={{ position: "absolute", left: colX[0], top: midY - 10, width: NODE_W }}>{alone}</p>}
+
+          <Centre task={task} style={{ ...at(colX[1], (H - BIG_H) / 2, BIG_H), width: BIG_W }} />
+
+          {unl.length
+            ? unl.map((u, i) => <Node key={u.topic} node={u} tone="opens" href={link(u)} onPrefetch={onPrefetch} also={u.also}
+                style={at(colX[2], stackTop(unl.length, H) + i * (NODE_H + GAP))} />)
+            : <p className={css.empty} style={{ position: "absolute", left: colX[2], top: midY - 10, width: NODE_W }}>{last}</p>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={[css.root, className].filter(Boolean).join(" ")} style={style}>
@@ -96,60 +172,7 @@ export function DepLineage({ task, requires = [], unlocks = [], hrefOf, onPrefet
         </div>
       ) : null}
 
-      {/* `overflow-x: auto` alone computes `overflow-y` to `auto` as well, and the entrance
-        * animation holds the nodes 6px low for two frames — which is a scrollbar that
-        * appears and vanishes. The board's height is exact arithmetic; it never needs to
-        * scroll down, so say so. */}
-      <div className={css.scroll}>
-        <div key={task.topic} className={css.board + " m-stagger"} style={{ width: BOARD_W, height: H }}>
-          <svg className={css.wires + " m-fade"} width={BOARD_W} height={H} aria-hidden="true">
-            <defs>
-              <marker id="dep-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-                <path d="M0,0 L8,4 L0,8 z" fill="var(--border-strong)"></path>
-              </marker>
-              <marker id="dep-arrow-blocked" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-                <path d="M0,0 L8,4 L0,8 z" fill="var(--text-faint)"></path>
-              </marker>
-            </defs>
-            {req.map((r, i) => {
-              const blocked = r.state === "blocked";
-              return (
-                <path key={r.topic} fill="none" strokeWidth="1.5"
-                  stroke={blocked ? "var(--text-faint)" : "var(--border-strong)"}
-                  strokeDasharray={blocked ? "5 4" : undefined}
-                  markerEnd={"url(#dep-arrow" + (blocked ? "-blocked" : "") + ")"}
-                  d={wire(colX[0] + NODE_W, nodeMid(i, req.length, H), colX[1] - 6, fan(i, req.length))}></path>
-              );
-            })}
-            {unl.map((u, i) => (
-              <path key={u.topic} fill="none" stroke="var(--border-strong)" strokeWidth="1.5" markerEnd="url(#dep-arrow)"
-                d={wire(colX[1] + BIG_W, fan(i, unl.length), colX[2] - 6, nodeMid(i, unl.length, H))}></path>
-            ))}
-          </svg>
-
-          {req.length
-            ? req.map((r, i) => (
-                <Node key={r.topic} node={r} x={colX[0]} y={stackTop(req.length, H) + i * (NODE_H + GAP)} w={NODE_W}
-                  tone={r.state} href={link(r)} onPrefetch={onPrefetch}
-                  footer={r.state === "passed" ? "passed" : "not passed yet"} />
-              ))
-            : empty("nothing — this one stands on its own", colX[0])}
-
-          <Node node={task} x={colX[1]} y={(H - BIG_H) / 2} w={BIG_W} tone="this" footer={task.aside}>
-            {task.strength ? <StatusBadge status={task.strength} /> : null}
-          </Node>
-
-          {unl.length
-            ? unl.map((u, i) => (
-                <Node key={u.topic} node={u} x={colX[2]} y={stackTop(unl.length, H) + i * (NODE_H + GAP)} w={NODE_W}
-                  href={link(u)} onPrefetch={onPrefetch}
-                  footer={u.also && u.also.length
-                    ? "also needs " + u.also.map(numL).join(", ")
-                    : "the only block"} />
-              ))
-            : empty("nothing waits on this one yet", colX[2])}
-        </div>
-      </div>
+      {body}
 
       {requires.length > FOLD || unlocks.length > FOLD ? (
         <div className={css.foldRow}>
@@ -171,15 +194,13 @@ export function DepLineage({ task, requires = [], unlocks = [], hrefOf, onPrefet
       ) : null}
 
       <div className={css.legend}>
-        <span className={css.legendItem}>
-          <svg width="22" height="4" aria-hidden="true"><line x1="0" y1="2" x2="22" y2="2" stroke="var(--border-strong)" strokeWidth="1.5"></line></svg>
-          passed
-        </span>
-        <span className={css.legendItem}>
-          <svg width="22" height="4" aria-hidden="true"><line x1="0" y1="2" x2="22" y2="2" stroke="var(--text-faint)" strokeWidth="1.5" strokeDasharray="5 4"></line></svg>
-          blocking
-        </span>
-        <span>left to right: what gates this task, the task, what it gates</span>
+        {stacked ? null : <>
+          <span className={css.legendItem}><svg width="28" height="6" aria-hidden="true"><path d="M0 3h28" strokeWidth="1.5" {...STROKE.passed}></path></svg>passed</span>
+          <span className={css.legendItem}><svg width="28" height="6" aria-hidden="true"><path d="M0 3h28" strokeWidth="1.5" {...STROKE.blocked}></path></svg>needed, not passed yet</span>
+          <span className={css.legendItem}><svg width="28" height="6" aria-hidden="true"><path d="M0 3h28" strokeWidth="1.5" {...STROKE.opens}></path></svg>opens once this one is passed</span>
+        </>}
+        <span className={css.spacer}></span>
+        <span>Each card opens its own lineage.</span>
       </div>
     </div>
   );

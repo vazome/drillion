@@ -69,7 +69,7 @@ export interface Progress {
 }
 /** One end of a prereq edge, already resolved server-side: the browser never maps a slug
  *  to a title itself. */
-export interface DepRef { slug: string; topic: number; title: string; tags: string[] }
+export interface DepRef { slug: string; topic: number; title: string; tags: string[]; difficulty: Meta["difficulty"]; status: Status }
 export interface Task {
   slug: string; meta: Meta;
   spec_md: string; code: string; etag: string; has_given: boolean;

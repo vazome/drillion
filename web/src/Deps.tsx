@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
-import { Button, Card, Icon, DepLineage, EmptyState } from "./ds/index.js";
+import { Icon, DepLineage, EmptyState, TaskPath } from "./ds/index.js";
 import { api, type Task as TaskData } from "./api";
 import { strength } from "./strength";
 import { topicNo } from "./format";
+import { Level } from "./Level";
+import { useNarrow } from "./narrow";
+import s from "./Deps.module.css";
 
 export const taskHref = (slug: string) => `#/task/${encodeURIComponent(slug)}`;
 /** Every prereq link goes to that task's own lineage, not to the task: you follow these to
@@ -39,6 +42,7 @@ export function Deps({ slug }: { slug: string }) {
   // straight out of the cache when a hover already paid for it: no loading state, no flash
   const [task, setTask] = useState<TaskData | null>(() => fresh(slug) ?? null);
   const [error, setError] = useState<string | null>(null);
+  const narrow = useNarrow();
 
   useEffect(() => {
     let live = true;
@@ -53,20 +57,30 @@ export function Deps({ slug }: { slug: string }) {
 
   const { topic, title } = task.meta;
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gap: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        <a href="#/" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, whiteSpace: "nowrap" }}><Icon name="ArrowLeft" />Catalogue</a>
-        <div style={{ flex: 1 }} />
-        <Button variant="secondary" onClick={() => { location.hash = taskHref(task.slug); }}>
-          Open {topicNo(topic)}<Icon name="ArrowRight" />
-        </Button>
-      </div>
-      <Card label={`Lineage · ${task.slug}`}>
-        <DepLineage
-          task={{ topic, title, tags: task.meta.tags, strength: strength(task.box, !!task.seen, task.ladder), aside: `${task.status} · ${task.seen ? `seen ${task.seen}×` : "never seen"}` }}
-          requires={task.requires} unlocks={task.unlocks}
+    <div className={s.page}>
+      <header className={s.head}>
+        <div className={s.headText}>
+          <a href="#/" className={s.back}><Icon name="ArrowLeft" size={14} />Back to the catalogue</a>
+          <h1 className={s.h1}><span className={s.num}>{topicNo(topic)}</span>{title}</h1>
+          <p className={s.muted}>What it needs, and what it opens. Prereqs are a shorter way in, never a gate: any task can be opened.</p>
+        </div>
+        <a href={taskHref(task.slug)} className={s.open}>Open {topicNo(topic)}<Icon name="ArrowRight" size={14} /></a>
+      </header>
+      <section aria-label={`Lineage of ${topicNo(topic)}`} className={s.card}>
+        <DepLineage task={{ topic, title, tags: task.meta.tags, aside: <Centre task={task} /> }}
+          requires={task.requires} unlocks={task.unlocks} stacked={narrow}
           hrefOf={(r) => depsHref(r.slug)} onPrefetch={(r) => { void prefetch(r.slug); }} />
-      </Card>
+      </section>
     </div>
   );
+}
+
+/** The foot of the centre card: where the task sits, how hard it is, and where it stands. */
+export function Centre({ task }: { task: TaskData }) {
+  const known = strength(task.box, !!task.seen, task.ladder);
+  return <>
+    <TaskPath tier={task.meta.tier} track={task.meta.track} tags={task.meta.tags} />
+    <span>{task.meta.difficulty}</span><span>{task.status}</span>
+    {known ? <Level of={known} /> : null}
+  </>;
 }

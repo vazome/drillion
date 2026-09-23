@@ -462,12 +462,14 @@ export interface DepLineageRef {
   state?: "passed" | "blocked";
   /** unlocks only: the task's *other* prereq numbers — "also needs 027" */
   also?: number[];
-  /** the concepts the task practises; the node wears the first as a chip */
   tags?: string[];
+  /** said under the title, `easy · new` */
+  difficulty?: string;
+  status?: string;
 }
 export interface DepLineageProps {
-  /** the task in the middle; `strength` is the badge on it, `aside` the faint line under the title */
-  task: { topic: number; title: string; tags?: string[]; strength?: "learning" | "familiar" | "solid" | null; aside?: string };
+  /** the task in the middle; `aside` is its foot line, what it is and where it stands */
+  task: { topic: number; title: string; tags?: string[]; aside?: React.ReactNode };
   /** prereqs — mark each `passed` or `blocked`; an empty column says so in words */
   requires?: DepLineageRef[];
   /** what passing this opens up */
@@ -482,6 +484,8 @@ export interface DepLineageProps {
   graphHref?: string;
   /** shown as `Close` — pass it in the panel case, leave it out on a screen */
   onClose?: () => void;
+  /** three lists under plain headings instead of the wired board, for a narrow screen */
+  stacked?: boolean;
   className?: string;
   style?: Style;
 }

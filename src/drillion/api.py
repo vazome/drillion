@@ -207,12 +207,14 @@ def _deps(st, all_tasks, meta):
     by_topic = {m["topic"]: (s, m) for s, m in all_tasks.items()}
 
     def ref(slug, m, **extra):
-        # `tags` so a node can say which corner of Python it is, the way a catalogue row does
+        # what a lineage card says under its title, the way a catalogue row does
         return {
             "slug": slug,
             "topic": m["topic"],
             "title": m["title"],
             "tags": m.get("tags", []),
+            "difficulty": m["difficulty"],
+            "status": _status(st, slug, card(st, slug)),
             **extra,
         }
 
