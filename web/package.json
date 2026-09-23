@@ -12,8 +12,8 @@
     "screens": "playwright test"
   },
   "dependencies": {
-    "@codingame/monaco-vscode-editor-api": "36.2.7",
-    "@codingame/monaco-vscode-standalone-languages": "36.2.7",
+    "@codingame/monaco-vscode-editor-api": "37.0.0",
+    "@codingame/monaco-vscode-standalone-languages": "37.0.0",
     "monaco-emacs": "^0.3.0",
     "monaco-languageclient": "11.0.0-next.1",
     "monaco-vim": "^0.4.4",
@@ -30,7 +30,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
-    "oxlint": "^1.82.0",
+    "oxlint": "^1.83.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.0"
   }
