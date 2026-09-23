@@ -1,5 +1,5 @@
 import { useId, useState, type ReactNode } from "react";
-import { FailedCase, FileTabs, ResultBanner } from "./ds/index.js";
+import { FailedCase, FileTabs } from "./ds/index.js";
 import type { ChartFile, Diagnostic, Meta } from "./api";
 import s from "./ManifestWorkspace.module.css";
 
@@ -15,7 +15,7 @@ export function ManifestFailure({ diagnostics, kind }: { diagnostics: Diagnostic
   const helm = kind === "helm";
   return (
     <div>
-      <ResultBanner state="failed" headline={fields.length ? "Check these manifest fields" : LOOK[kind] ?? "Your manifest needs another look"} />
+      <p className={s.what}>{fields.length ? "Check these manifest fields" : LOOK[kind] ?? "Your manifest needs another look"}</p>
       {fields.length ? <p className={s.aside}>kubeconform · Paths start at the top of {helm ? "the rendered manifest, under Rendered below" : "your YAML file"}.</p> : null}
       {general.map((d, i) => <p key={i} className={s.aside + " " + s.said}>{d.message}</p>)}
       {fields.map((d, i) => <div key={i}>

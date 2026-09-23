@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
-import { Button, Card, Icon, Collapsible, ConflictBanner, DepLineage, EmptyState, FailedCase, NoteField, GraceNotice, NoticeBanner, RequiresTag, ResultBanner, RowFlags, SpecText, StatusBadge, TaskPath, Timer, StuckNudge } from "./ds/index.js";
+import { Button, Card, Icon, Collapsible, ConflictBanner, DepLineage, EmptyState, FailedCase, Kbd, NoteField, GraceNotice, NoticeBanner, RequiresTag, RowFlags, SpecText, StatusBadge, TaskPath, Timer, StuckNudge } from "./ds/index.js";
 import { ApiError, api, post, type Task as TaskData, type RunResult, type Case, type Diagnostic } from "./api";
 import { depsHref, prefetch, taskHref } from "./Deps";
 import { plural, secs, topicNo } from "./format";
@@ -13,7 +13,6 @@ import { Crumbs } from "./Shell";
 import { Level } from "./Level";
 import css from "./Task.module.css";
 
-const ASIDE = { fontSize: 12.5, color: "var(--text-faint)" };
 const ATTEMPT_MS = 5000;    // reading the task is work: the clock starts once the page settles
 const HEARTBEAT_MS = 60_000;
 // long enough for `role="status"` to finish speaking the message before the node goes
@@ -58,6 +57,78 @@ export function stepLine(grade: string, box: number, fromBox: number, stepped: b
   if (box === 0) return "it is as close in as it goes and stays there";
   return `${grade} leaves it where it is`;
 }
+
+/** What the learner is checking, by kind: the idle and running lines name it. */
+const FILE: Record<TaskData["meta"]["kind"], string> = { python: "code", docker: "Dockerfile", manifest: "manifest", helm: "chart" };
+const CHECKS: Record<TaskData["meta"]["kind"], string> = {
+  python: "pytest, on freshly generated data.",
+  docker: "hadolint, then the build context, then the rules.",
+  manifest: "the Kubernetes schema, offline, then the rules.",
+  helm: "Helm renders the chart, then the schema and the rules.",
+};
+
+/** The first lines of the result panel: what happened, and what it cost. A Run never costs
+ *  an attempt or moves the card, and says so whichever way it went. */
+function Outcome({ result, kind, active, ladder, flagged, lapses }: {
+  result: Result; kind: TaskData["meta"]["kind"]; active: number; ladder: number[]; flagged: boolean; lapses: number;
+}) {
+  const rules = kind === "python" ? "test" : "rule";
+  switch (result.state) {
+    case "idle": return (
+      <div className={css.state}>
+        <strong>Nothing run yet.</strong>
+        <p className={css.aside}>Run checks your {FILE[kind]} and costs nothing. Submit is the one that grades it and moves the card.</p>
+        <p className={css.keys}><span>Run <Kbd>{MOD} ↵</Kbd></span><span>Submit <Kbd>{MOD} ⇧ ↵</Kbd></span></p>
+      </div>
+    );
+    case "running": return (
+      <div className={`${css.state} m-sweep`} data-running="">
+        <strong>Checking your {FILE[kind]}…</strong>
+        <p className={css.aside}>{cap(CHECKS[kind])}</p>
+      </div>
+    );
+    case "ran": return (
+      <div className={css.state}>
+        <strong className={css.ok}><Icon name="CheckmarkOutline" />Every {rules} {kind === "python" ? "passed" : "met"} on this Run</strong>
+        <p className={css.aside}>Nothing was graded and no attempt was used. Submit when you are ready to count it.</p>
+      </div>
+    );
+    case "failed": {
+      const n = result.diagnostics.length;
+      return (
+        <div className={css.state}>
+          <span className={css.verdict}>
+            <span className={css.fail}><Icon name="CloseOutline" size={14} />{result.graded ? "Not yet" : n ? `${plural(n, rules)} not met` : "Not passing yet"}</span>
+            <span className={css.aside}>{result.graded
+              ? `${result.attempts ? `Submit ${result.attempts} · ` : ""}the card has not moved`
+              : "Run, so no attempt used and nothing on the ladder moved."}</span>
+          </span>
+          {kind === "python" || !n ? <p className={css.headline}>{result.headline}</p> : null}
+        </div>
+      );
+    }
+    case "passed": {
+      const fell = result.stepped && result.box < result.fromBox;
+      const word = strength(result.box, true, ladder)!;
+      return (
+        <div className={css.passed} data-grade={result.grade}>
+          <p className={css.gradeLine}><span>PASSED · {result.grade.toUpperCase()}</span> · {secs(active)} · {plural(result.attempts, "attempt")} · back {inDays(result.dueIn)}</p>
+          <p className={css.climb}>
+            {/* the step animation would read as a promotion on a task that just fell back */}
+            {fell ? null : <span className={result.stepped ? "m-step" : undefined}><Level of={word} /></span>}
+            <span className={css.aside}>{fell ? "It comes back sooner, so it gets another look while it is fresh."
+              : cap(stepLine(result.grade, result.box, result.fromBox, result.stepped, ladder.length)) + "."}</span>
+          </p>
+          {flagged ? (
+            <p className={css.flag}><Icon name="WarningAlt" />You have struggled with this {plural(lapses, "time")}. The hints or the prereqs may be the problem, not you.</p>
+          ) : null}
+        </div>
+      );
+    }
+  }
+}
+
+const cap = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 /** The task's header: number, title and clock on the first line; what it is, what it needs
  *  and what it opens on the second. With no prereqs it all fits on one. Needs chips drop
@@ -243,7 +314,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
       if (r.graded) setNudge(false);       // a submission answers the nudge; a Run does not
       if (r.passed && r.graded) {
         setResult({ state: "passed", grade: r.grade, box: r.box, stepped: r.stepped, fromBox: r.from_box, reason: r.reason, dueIn: r.due_in, attempts: r.attempts, code: r.code });
-        setTask((p) => p && ({ ...p, reference: r.reference, lapses: r.lapses }));
+        setTask((p) => p && ({ ...p, reference: r.reference, lapses: r.lapses, status: "done", attempt: p.attempt && { ...p.attempt, attempts: r.attempts } }));
         setNextSlug(r.next);
       } else if (r.passed) {
         setResult({ state: "ran", output: r.output, printed: r.printed, rendered: r.rendered ?? "" });
@@ -348,7 +419,6 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
   // an ungraded Run cost no attempt, so the card must not number it as one
   const ungraded = result.state === "ran" || (result.state === "failed" && !result.graded);
   const resultNo = !ungraded && "attempts" in result ? result.attempts : 0;   // the attempt this result came from
-  const fell = passed && result.stepped && result.box < result.fromBox;
 
   const chart = !!meta.edits && task.chart.length > 0;
   const editor = <Editor kind={meta.kind} value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} problem={problem} height="100%" />;
@@ -520,27 +590,18 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
           <section aria-label={ungraded ? "Output of your run" : resultNo ? `Result of submit ${resultNo}` : "Result"} className={css.result}>
             {/* the region stays mounted and only the banner inside it is keyed: a live region
               * that arrives with its text already in place is never announced */}
+            {/* the region stays mounted and only the state inside it is keyed: a live region
+              * that arrives with its text already in place is never announced */}
             <div role="status">
-              <div className="m-rise" key={result.state}>
-                {meta.kind !== "python" && result.state === "failed" && result.diagnostics.length ? (
-                  <ManifestFailure diagnostics={result.diagnostics} kind={meta.kind} />
-                ) : result.state === "ran" ? (
-                  <div style={{ borderRadius: "var(--radius)", padding: "12px 16px", fontSize: 14, background: "var(--pass-bg)", borderLeft: "3px solid var(--pass)" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 600, color: "var(--pass)", letterSpacing: ".04em" }}><Icon name="CheckmarkOutline" />TESTS PASS</span>
-                    <span style={{ marginLeft: 10, fontSize: 13, color: "var(--text-muted)" }}>
-                      nothing graded and no attempt used — Submit when you want it to count
-                    </span>
-                  </div>
-                ) : (
-                  <ResultBanner
-                    state={result.state}
-                    headline={result.state === "failed" ? result.headline : undefined}
-                    gradeLine={passed ? `${result.grade.toUpperCase()} · ${secs(active)} · ${plural(result.attempts, "attempt")} · back ${inDays(result.dueIn)}` : undefined}
-                    backIn={passed ? plural(result.dueIn, "day") : undefined} />
-                )}
+              <div className={result.state === "running" ? undefined : "m-rise"} key={result.state}>
+                <Outcome result={result} kind={meta.kind} active={active} ladder={task.ladder}
+                  flagged={passed && flagged} lapses={task.lapses} />
               </div>
             </div>
 
+            {meta.kind !== "python" && result.state === "failed" && result.diagnostics.length ? (
+              <ManifestFailure diagnostics={result.diagnostics} kind={meta.kind} />
+            ) : null}
             {meta.kind === "python" && result.state === "failed" && result.case ? <FailedCase case={result.case} /> : null}
 
             {/* the learner's own print() first, open: it is the one line of the report they wrote */}
@@ -563,22 +624,14 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
               </Collapsible>
             ) : null}
 
-            {passed && result.reason ? (
-              <div style={{ ...ASIDE, marginTop: 8 }}>Why {result.grade}: {result.reason}.</div>
-            ) : null}
+            {passed && result.reason ? <p className={css.aside}>Why {result.grade}: {result.reason}.</p> : null}
 
             {passed ? (
-              <div style={{ marginTop: 10, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                {/* the step animation would read as a promotion on a task that just fell back */}
-                <span className={result.stepped ? (fell ? "m-fade" : "m-step") : undefined} style={{ display: "inline-flex" }}><StatusBadge status={strength(result.box, true, task.ladder)!} /></span>
-                <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                  {stepLine(result.grade, result.box, result.fromBox, result.stepped, task.ladder.length)} — code archived, stub restored for next time
-                </span>
-                <div style={{ flex: 1 }} />
+              <div className={css.actions}>
+                <span className={css.aside}>Your code is archived; the stub comes back when the task does.</span>
+                <span className={css.grow} />
                 <Button variant="quiet" onClick={() => { location.hash = "#/"; }}>Back to Today</Button>
-                {nextSlug ? (
-                  <Button variant="secondary" onClick={() => { location.hash = taskHref(nextSlug); }}>Next in Today<Icon name="ArrowRight" /></Button>
-                ) : null}
+                {nextSlug ? <Button onClick={() => { location.hash = taskHref(nextSlug); }}>Next in Today<Icon name="ArrowRight" /></Button> : null}
               </div>
             ) : null}
           </section>
