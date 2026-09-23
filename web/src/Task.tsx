@@ -7,7 +7,7 @@ import { inDays, strength } from "./strength";
 import { DiffView, Editor } from "./Editor";
 import { ChartFiles, ManifestFailure } from "./ManifestWorkspace";
 import { useDraft } from "./useDraft";
-import { usePrefs } from "./prefs";
+import { usePrefs, type Prefs } from "./prefs";
 import { TaskPanes } from "./TaskPanes";
 import { Crumbs } from "./Shell";
 import { Level } from "./Level";
@@ -56,6 +56,53 @@ export function stepLine(grade: string, box: number, fromBox: number, stepped: b
   if (box === boxes - 1) return "it is as far out as it goes and stays there";
   if (box === 0) return "it is as close in as it goes and stays there";
   return `${grade} leaves it where it is`;
+}
+
+/** After a pass the editor pane becomes this: yours against the reference. The changed lines
+ *  are marked in the accent, never red and green, because both versions passed. */
+function Review({ kind, mine, reference, dark, prefs, narrow, fresh }: {
+  kind: TaskData["meta"]["kind"]; mine: string; reference: string; dark: boolean; prefs: Prefs; narrow: boolean; fresh: boolean;
+}) {
+  const [view, setView] = useState<"compare" | "yours" | "reference">("compare");
+  const [inline, setInline] = useState(false);
+  const [changed, setChanged] = useState<number | null>(null);
+  const side = !inline && !narrow;       // side by side needs the width: below 1100px it is inline
+  const shown = view === "yours" ? mine : reference;
+  return (
+    <section aria-label="Review" className={css.review}>
+      <div className={css.reviewBar}>
+        <span className={css.label}>Review</span>
+        <div role="group" aria-label="Show" className={css.segment}>
+          {(["compare", "yours", "reference"] as const).map((k) => (
+            <button key={k} type="button" aria-pressed={view === k} onClick={() => setView(k)}>{cap(k)}</button>
+          ))}
+        </div>
+        {changed === null ? null : <span className={css.aside}>{changed ? `${changed} ${changed === 1 ? "line differs" : "lines differ"}` : "the same"} · both pass</span>}
+        <span className={css.grow} />
+        {view === "compare" && !narrow ? (
+          <div role="group" aria-label="Layout" className={css.segment}>
+            <button type="button" aria-pressed={!inline} onClick={() => setInline(false)}>Side by side</button>
+            <button type="button" aria-pressed={inline} onClick={() => setInline(true)}>Inline</button>
+          </div>
+        ) : null}
+      </div>
+      {view === "compare" && side ? (
+        <div className={css.sides}>
+          <span><strong>Yours</strong> · {fresh ? "the pass you just submitted" : "your last pass"}</span>
+          <span><strong>Reference</strong></span>
+        </div>
+      ) : null}
+      <div className={css.editorBox}>
+        <div className={css.fill}>
+          {view === "compare"
+            ? <DiffView kind={kind} mine={mine} reference={reference} dark={dark} maxHeight="100%" prefs={prefs} sideBySide={side} onChanges={setChanged} unframed />
+            : <pre tabIndex={0} aria-label={view === "yours" ? "Your passing code" : "The reference"} className={css.code}>
+                {shown.replace(/\n$/, "").split("\n").map((line, i) => <span key={i}>{line}{"\n"}</span>)}
+              </pre>}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 /** What the learner is checking, by kind: the idle and running lines name it. */
@@ -421,6 +468,8 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
   const resultNo = !ungraded && "attempts" in result ? result.attempts : 0;   // the attempt this result came from
 
   const chart = !!meta.edits && task.chart.length > 0;
+  // a pass, this sitting or the last, with the reference open: the editor gives way to Review
+  const review = !!reference && !!mine && !peeked;
   const editor = <Editor kind={meta.kind} value={code} onChange={edit} onRun={run} onSubmit={submit} readOnly={passed} dark={dark} prefs={prefs} problem={problem} height="100%" />;
   const rendered = result.state === "failed" || result.state === "ran" ? result.rendered : "";
   const submits = attempt?.attempts ?? 0;
@@ -450,12 +499,12 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
         </div>
       ) : null}
 
-      <TaskPanes narrow={narrow}>
+      <TaskPanes narrow={narrow} fixed={review ? 440 : undefined}>
         <div className={css.brief}>
           <div className={css.read}>
             <Spec text={task.spec_md} slug={slug} hideTitle />
 
-            {reference ? (
+            {reference && !review ? (
               <div className={css.after}>
                 <div className={css.label}>Solution</div>
                 {peeked
@@ -514,7 +563,11 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
           </div>
           {notice("hints")}
           {notice("solution")}
-          <div role="group" aria-label="Help with this task" className={css.stuck}>
+          {review ? (
+            <div className={css.stuck}>
+              <span className={css.aside}><Icon name="Unlocked" size={14} />Solution open: you passed this one. It closes again when the task comes back.</span>
+            </div>
+          ) : <div role="group" aria-label="Help with this task" className={css.stuck}>
             <span className={css.aside}>Stuck?</span>
             {hintsLeft ? (
               <button type="button" onClick={hint} disabled={busy || passed} className={css.help}>
@@ -534,7 +587,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
                 ].filter(Boolean).join(" and ")}</span>}
               </button>
             )}
-          </div>
+          </div>}
         </div>
 
         <div className={css.work}>
@@ -551,6 +604,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
           {notice("editor")}
           {task.has_given ? <NoticeBanner message="This task ships given code above solve(): read it, but leave it alone." actions={[]} /> : null}
 
+          {review ? <Review kind={meta.kind} mine={mine} reference={reference!} dark={dark} prefs={prefs} narrow={narrow} fresh={passed} /> : <>
           <div className={css.editorBox}>
             <div className={css.fill}>
               {chart && meta.edits ? (
@@ -586,8 +640,9 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
               <Icon name="Send" />{inflight === "submit" ? "Submitting…" : "Submit"}
             </Button>
           </div>
+          </>}
 
-          <section aria-label={ungraded ? "Output of your run" : resultNo ? `Result of submit ${resultNo}` : "Result"} className={css.result}>
+          {review && !passed ? null : <section aria-label={ungraded ? "Output of your run" : resultNo ? `Result of submit ${resultNo}` : "Result"} className={css.result}>
             {/* the region stays mounted and only the banner inside it is keyed: a live region
               * that arrives with its text already in place is never announced */}
             {/* the region stays mounted and only the state inside it is keyed: a live region
@@ -634,7 +689,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
                 {nextSlug ? <Button onClick={() => { location.hash = taskHref(nextSlug); }}>Next in Today<Icon name="ArrowRight" /></Button> : null}
               </div>
             ) : null}
-          </section>
+          </section>}
         </div>
       </TaskPanes>
 

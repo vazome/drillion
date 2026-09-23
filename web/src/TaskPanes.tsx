@@ -8,7 +8,8 @@ export function paneBounds(width: number) {
   return { min, max: Math.max(min, Math.min(70, (width - 440) / width * 100)) };
 }
 
-export function TaskPanes({ narrow, children }: { narrow: boolean; children: [ReactNode, ReactNode] }) {
+/** `fixed` pins the brief to a width in px, the way Review narrows it; the splitter goes. */
+export function TaskPanes({ narrow, fixed, children }: { narrow: boolean; fixed?: number; children: [ReactNode, ReactNode] }) {
   const { taskPanePercent } = usePrefs();
   const host = useRef<HTMLDivElement>(null);
   const drag = useRef<{ pointer: number; x: number; percent: number } | null>(null);
@@ -44,8 +45,8 @@ export function TaskPanes({ narrow, children }: { narrow: boolean; children: [Re
 
   return (
     <div ref={host} className={s.root} data-narrow={narrow || undefined}>
-      <div id={id} className={s.brief} style={narrow ? undefined : { width: `${percent}%` }}>{children[0]}</div>
-      {!narrow ? <div className={s.separator} role="separator" tabIndex={0}
+      <div id={id} className={s.brief} style={narrow ? undefined : fixed ? { width: fixed, minWidth: 0 } : { width: `${percent}%` }}>{children[0]}</div>
+      {!narrow && !fixed ? <div className={s.separator} role="separator" tabIndex={0}
         aria-label="Brief pane width" aria-controls={id} aria-orientation="vertical"
         aria-valuemin={min} aria-valuemax={max} aria-valuenow={percent}
         aria-valuetext={`${Math.round(percent)} percent`}
@@ -70,6 +71,7 @@ export function TaskPanes({ narrow, children }: { narrow: boolean; children: [Re
           event.preventDefault();
           setPrefs({ taskPanePercent: clamp(next) });
         }} /> : null}
+      {!narrow && fixed ? <div className={s.seam} /> : null}
       <div className={s.editor}>{children[1]}</div>
     </div>
   );

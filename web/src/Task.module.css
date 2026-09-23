@@ -74,3 +74,17 @@
 .flag svg{flex-shrink:0;color:var(--warn)}
 .actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:12px}
 .result > * + *{margin-top:10px}
+
+.review{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--editor)}
+.reviewBar{flex-shrink:0;display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--bg)}
+.segment{display:flex;gap:2px;padding:3px;border-radius:var(--radius-lg);background:var(--surface-2)}
+.segment button{height:28px;padding:0 12px;background:transparent;border:0;border-radius:var(--radius);font:inherit;font-size:13px;color:var(--text-muted);cursor:pointer}
+@media (hover:hover){.segment button:hover:not([aria-pressed="true"]){color:var(--text)}}
+.segment button[aria-pressed="true"]{background:var(--accent-tint);color:var(--accent);font-weight:500}
+.sides{flex-shrink:0;display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-muted)}
+.sides span{padding:8px 14px}
+.sides span + span{border-left:1px solid var(--border)}
+.sides strong{color:var(--text);font-weight:600}
+.code{margin:0;height:100%;box-sizing:border-box;overflow:auto;padding:14px 0;font-family:var(--font-mono);font-size:14px;line-height:1.55;color:var(--text);counter-reset:line;white-space:pre}
+.code span{display:block;padding-right:14px}
+.code span::before{counter-increment:line;content:counter(line);display:inline-block;width:40px;margin-right:18px;text-align:right;color:var(--text-muted)}

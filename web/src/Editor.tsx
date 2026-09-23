@@ -322,15 +322,23 @@ export function Editor({ kind, value, onChange, onRun, onSubmit, readOnly, dark,
 
 /** Two read-only panes with the changed lines marked: what the learner wrote on the left,
  *  the reference on the right. Shares the editor's theme, so the two read as one surface. */
-export function DiffView({ kind, mine, reference, dark, maxHeight, prefs = DEFAULTS }: {
+export function DiffView({ kind, mine, reference, dark, maxHeight, prefs = DEFAULTS, sideBySide = true, onChanges, unframed = false }: {
   kind: Meta["kind"]; mine: string; reference: string; dark: boolean; maxHeight: string; prefs?: Prefs;
+  /** false draws one pane with the changes inline */
+  sideBySide?: boolean;
+  /** told how many lines differ, each time the diff is worked out */
+  onChanges?: (lines: number) => void;
+  /** no frame of its own, for a pane that is already one */
+  unframed?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const app = useRef<EditorApp>(null);
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
   // built once per kind, as the editor is: the effects below carry every later change
-  const first = useRef({ mine, reference, dark, prefs });
+  const first = useRef({ mine, reference, dark, prefs, sideBySide });
+  const told = useRef(onChanges);
+  useEffect(() => { told.current = onChanges; }, [onChanges]);
 
   useEffect(() => {
     let live = true;
@@ -349,7 +357,7 @@ export function DiffView({ kind, mine, reference, dark, maxHeight, prefs = DEFAU
             modified: { text: at.reference, uri: `${WORKSPACE}/reference.${ext(kind)}` },
           },
           diffEditorOptions: {
-            ...editorOptions, ...looks(at.prefs), readOnly: true, renderSideBySide: true,
+            ...editorOptions, ...looks(at.prefs), readOnly: true, renderSideBySide: at.sideBySide,
             // Monaco drops to an inline diff below 900px and this pane is narrower than
             // that, which would contradict the "yours on the left, the reference on the
             // right" copy sitting directly above it
@@ -358,7 +366,15 @@ export function DiffView({ kind, mine, reference, dark, maxHeight, prefs = DEFAU
         });
         return started.start(host.current);
       })
-      .then(() => { if (live && started) setReady(true); })
+      .then(() => {
+        if (!live || !started) return;
+        const diff = started.getDiffEditor();
+        // a change spans the longer of its two sides: 3 lines replaced by 1 is 3 lines differing
+        diff?.onDidUpdateDiff(() => told.current?.((diff.getLineChanges() ?? []).reduce((n, c) =>
+          n + Math.max(c.originalEndLineNumber ? c.originalEndLineNumber - c.originalStartLineNumber + 1 : 0,
+            c.modifiedEndLineNumber ? c.modifiedEndLineNumber - c.modifiedStartLineNumber + 1 : 0), 0)));
+        setReady(true);
+      })
       .catch((err: unknown) => {
         console.error("diff failed to start", err);
         if (live) setFailed(true);
@@ -378,9 +394,9 @@ export function DiffView({ kind, mine, reference, dark, maxHeight, prefs = DEFAU
     if (models.modified?.getValue() !== reference) app.current?.updateCode({ modified: reference });
   }, [mine, reference, ready]);
 
-  useEffect(() => { app.current?.getDiffEditor()?.updateOptions(looks(prefs)); }, [prefs, ready]);
+  useEffect(() => { app.current?.getDiffEditor()?.updateOptions({ ...looks(prefs), renderSideBySide: sideBySide }); }, [prefs, sideBySide, ready]);
   useEffect(() => { void api?.then(() => applyTheme(dark)).catch(() => {}); }, [dark]);
 
   if (failed) return <Failed height={maxHeight} />;
-  return <div ref={host} style={{ height: maxHeight, fontSize: prefs.fontSize, ...frame }} />;
+  return <div ref={host} style={{ height: maxHeight, fontSize: prefs.fontSize, ...(unframed ? {} : frame) }} />;
 }
