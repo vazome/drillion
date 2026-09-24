@@ -23,6 +23,11 @@ updates:
     groups:
       web:
         patterns: ["*"]
+    # Monaco only works as one exact-version set that monaco-languageclient chooses, pinned
+    # again in web/pnpm-workspace.yaml overrides, which Dependabot does not edit. Bump by hand.
+    ignore:
+      - dependency-name: "@codingame/*"
+      - dependency-name: "monaco-languageclient"
 
   - package-ecosystem: docker
     directory: /

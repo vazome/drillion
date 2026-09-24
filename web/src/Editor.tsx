@@ -11,7 +11,7 @@ import "@codingame/monaco-vscode-standalone-languages/languages/definitions/yaml
 import "@codingame/monaco-vscode-standalone-languages/languages/definitions/dockerfile/register.js";
 import { EditorApp } from "monaco-languageclient/editorApp";
 import { MonacoVscodeApiWrapper } from "monaco-languageclient/vscodeApiWrapper";
-import { LanguageClientWrapper } from "monaco-languageclient/lcwrapper";
+import { LanguageClientWrapper, LcWebSocket } from "monaco-languageclient/lcwrapper";
 import { configureDefaultWorkerFactory } from "monaco-languageclient/workerFactory";
 import { initVimMode } from "monaco-vim";
 import { EmacsExtension } from "monaco-emacs";
@@ -68,7 +68,9 @@ let client: Promise<void> | undefined;
 function startLanguageClient() {
   client ??= new LanguageClientWrapper({
     languageId: "python",
-    connection: { options: { $type: "WebSocketUrl", url: socketUrl() } },
+    connection: {
+      options: { $family: "WebSocket", realization: () => new LcWebSocket(), webSocketUrl: socketUrl() },
+    },
     clientOptions: {
       documentSelector: ["python"],
       workspaceFolder: { index: 0, name: "workspace", uri: monaco.Uri.parse(WORKSPACE) },
