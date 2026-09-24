@@ -36,3 +36,7 @@
 }
 .root[open]::backdrop{opacity:1;transition-duration:var(--dur-base);transition-timing-function:var(--ease-out)}
 @starting-style{.root[open]::backdrop{opacity:0}}
+
+/* The page behind stays where it was: a wheel that runs past the end of the body, or lands on
+   the backdrop, would otherwise scroll it. The gutter keeps the page from shifting sideways. */
+:global(html):has(.root[open]){overflow:hidden;scrollbar-gutter:stable}
