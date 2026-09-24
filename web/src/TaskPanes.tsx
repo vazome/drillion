@@ -58,7 +58,8 @@ export function Splitter({ orientation, span, value, min, max, label, controls, 
       onPointerDown={(event) => {
         if (!event.isPrimary || event.button !== 0 || drag.current) return;
         event.preventDefault();
-        event.currentTarget.focus();
+        // focused so the arrow keys work next, without the keyboard ring: the grip already lights
+        event.currentTarget.focus({ focusVisible: false });
         event.currentTarget.setPointerCapture(event.pointerId);
         drag.current = { pointer: event.pointerId, at: at(event), percent: value };
         setDragging(true);
