@@ -314,9 +314,10 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
     landed, ensureOpen, current, pending, settle, takeDisk, keepMine, discard, restore, absorb } =
     useDraft(slug, onPayload, onSaveError);
 
-  /** A notice that says one thing and gets out of the way — the hint gate's whole UI. */
-  const flash = useCallback((message: string) => {
-    const mine: Gate = { at: "hints", message };
+  /** A notice that says one thing and gets out of the way: what a locked hint or solution
+   *  answers when pressed. */
+  const flash = useCallback((message: string, at: "hints" | "solution" = "hints") => {
+    const mine: Gate = { at, message };
     setGate(mine);
     clearTimeout(gateTimer.current);
     // nine other callers write this slot: the timer takes back only its own notice
@@ -440,9 +441,12 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
 
   const solution = () => spend("solution", (err) => {
     const d = err.detail ?? {};
-    setGate({ at: "solution", message: d.need_attempts || d.need_secs
-      ? `${err.message} — ${plural(d.need_attempts || 0, "more attempt")}, ${secs(d.need_secs || 0)} more work.`
-      : err.message });
+    const owed = [
+      d.need_attempts ? plural(d.need_attempts, "more submit") : null,
+      d.need_secs ? `${secs(d.need_secs)} more work` : null,
+    ].filter(Boolean);
+    if (owed.length) flash(`Not yet: the solution opens after ${owed.join(" and ")}.`, "solution");
+    else setGate({ at: "solution", message: err.message });
   });
 
   const abandon = async () => {
@@ -607,10 +611,6 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
               <button type="button" onClick={solution} disabled={busy} className={css.help}
                 title="Taking it means this pass won’t move the task further out">
                 <Icon name={gateState.unlocked ? "Unlocked" : "Locked"} size={14} />Solution
-                {gateState.unlocked ? null : <span className={css.small}>after {[
-                  gateState.need_attempts ? plural(gateState.need_attempts, "submit") : null,
-                  gateState.need_secs ? `${secs(gateState.need_secs)} more work` : null,
-                ].filter(Boolean).join(" and ")}</span>}
               </button>
             )}
           </div>}
