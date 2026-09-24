@@ -1,0 +1,38 @@
+name: tmp-arm-dryrun
+
+on:
+  pull_request:
+    paths: [".github/workflows/tmp-arm-dryrun.yml", ".github/workflows/release.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+            cache: buildkit
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            cache: arm64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          load: true
+          tags: drillion:ci
+          cache-from: type=gha,scope=${{ matrix.cache }}
+          no-cache-filters: runtime
+          provenance: false
+      - run: docker run --rm --entrypoint uname drillion:ci -m
+      - run: bash .github/scripts/image-smoke.sh
