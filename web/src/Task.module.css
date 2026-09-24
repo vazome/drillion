@@ -43,7 +43,8 @@
 .marker{flex:1;min-width:0;overflow:hidden;text-align:right;white-space:nowrap}
 .marker span{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-muted)}
 .marker span[data-syntax]{color:var(--warn)}
-.result{order:2;flex-shrink:0;max-height:40%;min-height:120px;overflow-y:auto;box-sizing:border-box;padding:16px 20px;border-top:1px solid var(--border);background:var(--surface)}
+.resultSplit{order:2}
+.result{order:3;flex-shrink:0;max-height:40%;min-height:120px;overflow-y:auto;box-sizing:border-box;padding:16px 20px;border-top:1px solid var(--border);background:var(--surface)}
 .corner{position:fixed;right:24px;bottom:24px;z-index:30}
 
 @media (max-width:1099px){

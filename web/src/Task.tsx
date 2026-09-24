@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
+import { memo, useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Button, Card, Icon, Collapsible, ConflictBanner, DepLineage, EmptyState, FailedCase, Kbd, NoteField, GraceNotice, NoticeBanner, RequiresTag, RowFlags, SpecText, StatusBadge, TaskPath, Timer, StuckNudge } from "./ds/index.js";
 import { ApiError, api, post, type Task as TaskData, type RunResult, type Case, type Diagnostic } from "./api";
 import { Centre, depsHref, prefetch, taskHref } from "./Deps";
@@ -7,8 +7,8 @@ import { inDays, strength } from "./strength";
 import { DiffView, Editor } from "./Editor";
 import { ChartFiles, ManifestFailure } from "./ManifestWorkspace";
 import { useDraft } from "./useDraft";
-import { usePrefs, type Prefs } from "./prefs";
-import { TaskPanes } from "./TaskPanes";
+import { setPrefs, usePrefs, type Prefs } from "./prefs";
+import { resultBounds, Splitter, TaskPanes } from "./TaskPanes";
 import { Crumbs } from "./Shell";
 import { useNarrow } from "./narrow";
 import { Level } from "./Level";
@@ -234,6 +234,41 @@ function TaskHeader({ task, active, showTimer, paused, passed, onLineage, lineag
         {clock}
       </div>
     </section>
+  );
+}
+
+/** The output under the editor. Until its splitter is dragged it fits what it shows, up to 40%
+ *  of the column; a drag fixes its height, and a double-click or Enter lets it fit again. */
+function ResultPane({ narrow, label, children }: { narrow: boolean; label: string; children: ReactNode }) {
+  const { resultPanePercent } = usePrefs();
+  const box = useRef<HTMLElement>(null);
+  const id = useId();
+  const [size, setSize] = useState({ column: 800, own: 0 });
+  const [live, setLive] = useState<number | null>(null);
+  useEffect(() => {
+    const own = box.current;
+    const column = own?.parentElement;
+    if (!own || !column) return;
+    const observer = new ResizeObserver(() => setSize({ column: column.clientHeight, own: own.offsetHeight }));
+    observer.observe(column);
+    observer.observe(own);
+    return () => observer.disconnect();
+  }, []);
+  const { min, max } = resultBounds(size.column);
+  const chosen = live ?? resultPanePercent;
+  const value = Math.max(min, Math.min(max, chosen ?? size.own / size.column * 100));
+  return (
+    <>
+      {narrow ? null : <Splitter orientation="horizontal" className={css.resultSplit} span={size.column}
+        value={value} min={min} max={max} label="Output height" controls={id}
+        title="Drag to resize. Double-click to fit the output again."
+        onDrag={setLive} onCommit={(next) => setPrefs({ resultPanePercent: next })}
+        onReset={() => setPrefs({ resultPanePercent: null })} />}
+      <section id={id} ref={box} aria-label={label} className={css.result}
+        style={narrow || chosen === null ? undefined : { flex: `0 1 ${value}%`, maxHeight: "none" }}>
+        {children}
+      </section>
+    </>
   );
 }
 
@@ -635,7 +670,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
           </div>
           </>}
 
-          {review && !passed ? null : <section aria-label={ungraded ? "Output of your run" : resultNo ? `Result of submit ${resultNo}` : "Result"} className={css.result}>
+          {review && !passed ? null : <ResultPane narrow={narrow} label={ungraded ? "Output of your run" : resultNo ? `Result of submit ${resultNo}` : "Result"}>
             {/* the region stays mounted and only the state inside it is keyed: a live region
               * that arrives with its text already in place is never announced */}
             <div role="status">
@@ -680,7 +715,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
                 {nextSlug ? <Button onClick={() => { location.hash = taskHref(nextSlug); }}>Next in Today<Icon name="ArrowRight" /></Button> : null}
               </div>
             ) : null}
-          </section>}
+          </ResultPane>}
         </div>
       </TaskPanes>
 
