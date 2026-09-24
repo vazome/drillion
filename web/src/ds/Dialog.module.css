@@ -5,7 +5,7 @@
 @media (hover:hover){.close:hover{background:var(--surface-2)}}
 .title{margin:0;font-size:20px;font-weight:600}
 .spacer{flex:1}
-.body{flex:1;min-height:0;overflow:auto;padding:24px 28px 28px}
+.body{position:relative;flex:1;min-height:0;overflow:auto;padding:24px 28px 28px}
 
 /* A dialog lays its header and body out as a column, but only while it is open: the browser
    hides a closed one with display:none, and setting display inline would override that and
