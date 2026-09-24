@@ -36,17 +36,33 @@ test("the output height follows its splitter, survives a reload, and fits again 
   await expect.poll(() => height(output)).toBeCloseTo(fitted, -1);
 });
 
-test("the brief pane width follows its splitter", async ({ page }) => {
+test("the brief pane width follows its splitter without the page ever overflowing", async ({ page }) => {
   await page.goto("/#/task/012_sortkey");
   const splitter = page.getByRole("separator", { name: "Brief pane width" });
   const brief = page.locator(`[id="${await splitter.getAttribute("aria-controls")}"]`);
   const before = (await brief.boundingBox())!.width;
+  // Monaco keeps its old width for a frame after its pane narrows; that frame must not widen
+  // the page, or scrollbars flicker at the window's edges while dragging
+  await page.evaluate(() => {
+    const w = window as unknown as { overflow: number };
+    w.overflow = 0;
+    const tick = () => {
+      const d = document.documentElement;
+      w.overflow = Math.max(w.overflow, d.scrollWidth - d.clientWidth, d.scrollHeight - d.clientHeight);
+      requestAnimationFrame(tick);
+    };
+    tick();
+  });
   const box = (await splitter.boundingBox())!;
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  await page.mouse.move(x, y);
   await page.mouse.down();
-  await page.mouse.move(box.x + box.width / 2 + 100, box.y + box.height / 2, { steps: 10 });
+  for (const dx of [250, -250, 250, -250]) await page.mouse.move(x + dx, y, { steps: 4 });
+  await page.mouse.move(x + 100, y, { steps: 10 });
   await page.mouse.up();
   await expect.poll(async () => (await brief.boundingBox())!.width).toBeCloseTo(before + 100, -1);
+  expect(await page.evaluate(() => (window as unknown as { overflow: number }).overflow)).toBe(0);
   await splitter.focus();
   await page.keyboard.press("Home");
   await expect.poll(async () => (await brief.boundingBox())!.width).toBeCloseTo(340, -1);
