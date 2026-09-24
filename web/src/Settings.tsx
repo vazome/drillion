@@ -160,7 +160,7 @@ function EditorSettings() {
       </Row>
       {untouched ? null : (
         <div className={s.defaults}>
-          <Button variant="quiet" onClick={() => setPrefs({ ...DEFAULTS, taskPanePercent: prefs.taskPanePercent })}><Icon name="Reset" />Put these back to their defaults</Button>
+          <Button variant="quiet" onClick={() => setPrefs({ ...DEFAULTS, taskPanePercent: prefs.taskPanePercent })}><Icon name="Reset" />Restore to defaults</Button>
         </div>
       )}
     </Section>

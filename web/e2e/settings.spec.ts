@@ -17,7 +17,7 @@ test("Settings preferences persist, reset, and stay reachable on a narrow screen
   const prefs = await page.evaluate(() => JSON.parse(localStorage.getItem("drillion-prefs")!));
   expect(prefs).toMatchObject({ font: "fira", fontSize: 18, keys: "emacs", tabSize: 8,
     ligatures: true, wordWrap: false, relativeLines: true, showTimer: false });
-  await dialog.getByRole("button", { name: "Put these back to their defaults" }).click();
+  await dialog.getByRole("button", { name: "Restore to defaults" }).click();
   await expect(font).toHaveValue("shipped");
   await expect(dialog.getByRole("button", { name: "Standard", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(dialog.getByRole("button", { name: "Shown", exact: true })).toHaveAttribute("aria-pressed", "true");
