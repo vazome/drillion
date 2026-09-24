@@ -155,7 +155,7 @@ function Ladder({ stats }: { stats: Payload["stats"] }) {
       </div>
       <p className={s.muted}>{stats.seen
         ? "Each rung is how long until a task comes back. A pass moves it up a rung; a struggle moves it back down."
-        : "Empty for now. Pass a task and it lands on the first rung; each rung is how long until it comes back."}</p>
+        : "Pass a task and it lands on the first rung."}</p>
       <div className={s.week}>
         <div className={s.between}>
           <span className={s.muted}>Days practised</span>

@@ -77,7 +77,6 @@ export function Sidebar({ route, head, dark, setDark, onSettings }: Chrome & { r
               );
             })}
           </div>
-          <p className={s.note}>Reviews still come from every track.</p>
           {stuck ? (
             <p className={s.note}>
               You keep struggling with <TagChip label={stuck.tag} small active={focus === stuck.tag}
