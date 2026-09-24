@@ -4,6 +4,24 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.11.1 — 2026-09-24
+
+Polish on the 0.10 client, a Monaco upgrade, and completions that survive a dropped language
+server.
+
+- **Completions come back** after the language server drops: the next Python task you open
+  reconnects, where before the page needed a reload.
+- **Monaco 37.1** with monaco-languageclient 11, the editor and its languages on one version.
+- **Plainer words.** The ladder is explained without "rung", par and sailing passes are gone (a
+  quick pass is fast, on the first try), the lineage is called connections, and notes that
+  restated what the screen already shows are gone. The Settings reset is "Restore to defaults".
+- **Settings** scrolls once, not twice, and the page behind it stays put while it is open.
+- **Larger track marks,** and a Helm mark you can see in dark mode.
+- **Themed scrollbars and select lists** in both themes.
+- **The favicon** replaces the one browsers cached before 0.10.
+- There is no 0.11.0. It was tagged before this entry reached `main`, the release gate refused
+  to publish it, and version tags here are immutable, so this is 0.11.1.
+
 ## 0.10.0 — 2026-09-24
 
 A redesigned client: a sidebar, Today above the catalogue, and a task page that says what every
