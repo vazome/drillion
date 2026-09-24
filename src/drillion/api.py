@@ -207,12 +207,14 @@ def _deps(st, all_tasks, meta):
     by_topic = {m["topic"]: (s, m) for s, m in all_tasks.items()}
 
     def ref(slug, m, **extra):
-        # `tags` so a node can say which corner of Python it is, the way a catalogue row does
+        # what a lineage card says under its title, the way a catalogue row does
         return {
             "slug": slug,
             "topic": m["topic"],
             "title": m["title"],
             "tags": m.get("tags", []),
+            "difficulty": m["difficulty"],
+            "status": _status(st, slug, card(st, slug)),
             **extra,
         }
 
@@ -424,6 +426,7 @@ def progress():
             "today": today(),
             "forecast": forecast(st, all_tasks),
             "cap": REVIEWS_PER_DAY,
+            "lapse_limit": LAPSE_LIMIT,
             "days": dict(Counter(e["date"] for e in st["log"])),
             "log": st["log"][-30:],
             "per_tag": by_tag(st, all_tasks),
@@ -613,6 +616,20 @@ def asset(slug: str, name: str):
     if not path.is_file() or not path.resolve().is_relative_to(assets.resolve()):
         raise HTTPException(404, f"no asset {name!r}")
     return FileResponse(path)
+
+
+@app.get("/api/picks")
+def picks():
+    """What new picks are drawn from, for the sidebar every screen shows: the focus, each
+    track's size, and the tag worth focusing on."""
+    with reading() as st:
+        all_tasks = tasks()
+        sizes = Counter(t for m in all_tasks.values() if (t := m.get("track")))
+        return {
+            "focus": st["focus"],
+            "tracks": dict(sorted(sizes.items())),
+            "stuck": stuck(st, all_tasks),
+        }
 
 
 @app.post("/api/focus")

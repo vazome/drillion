@@ -279,6 +279,8 @@ def test_the_practice_count_is_a_rolling_window_not_a_streak():
     st["archive"]["c"] = [{"date": day(scheduler.WINDOW)}]  # one day past the edge
     assert scheduler.practised(st) == 3
     assert scheduler.practised({"archive": {}}) == 0
+    # the strip Today draws: oldest first, today last
+    assert scheduler.week(st) == [True, False, False, False, True, False, True]
 
 
 def test_the_stuck_tag_needs_two_flagged_tasks():

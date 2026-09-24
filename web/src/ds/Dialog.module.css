@@ -1,8 +1,11 @@
-.root{width:min(760px,calc(100vw - 32px));max-height:calc(100vh - 64px);padding:0;border:none;border-radius:var(--radius);background:var(--bg);color:var(--text);box-shadow:var(--shadow-card);box-sizing:border-box}
-.head{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);flex:none}
-.title{margin:0;font-size:var(--fs-h);font-weight:600}
+.root{width:min(760px,calc(100vw - 32px));max-height:calc(100vh - 64px);padding:0;border:none;border-radius:12px;background:var(--surface);color:var(--text);box-shadow:var(--shadow-pop);box-sizing:border-box}
+.head{display:flex;align-items:center;gap:12px;height:64px;box-sizing:border-box;padding:0 16px 0 28px;border-bottom:1px solid var(--border);flex:none}
+.esc{font-size:12px;color:var(--text-muted)}
+.close{display:flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;background:transparent;border:0;border-radius:var(--radius);color:var(--text);cursor:pointer}
+@media (hover:hover){.close:hover{background:var(--surface-2)}}
+.title{margin:0;font-size:20px;font-weight:600}
 .spacer{flex:1}
-.body{flex:1;min-height:0;overflow:auto;padding:20px}
+.body{flex:1;min-height:0;overflow:auto;padding:24px 28px 28px}
 
 /* A dialog lays its header and body out as a column, but only while it is open: the browser
    hides a closed one with display:none, and setting display inline would override that and
@@ -27,7 +30,7 @@
 /* Blurred rather than merely dimmed, so the dialog reads as being in front of the page
    instead of on it; the dim alone keeps it legible where the browser has no backdrop-filter. */
 .root::backdrop{
-  background:rgb(0 0 0 / .38);backdrop-filter:blur(3px);opacity:0;
+  background:var(--scrim);backdrop-filter:blur(3px);opacity:0;
   transition:opacity var(--dur-fast) var(--ease-in),
     overlay var(--dur-fast) allow-discrete,display var(--dur-fast) allow-discrete;
 }

@@ -15,10 +15,12 @@ function Location({ label, icon, path }: { label: string; icon: IconName; path: 
     }, () => {});
   };
   return (
-    <Row label={<span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Icon name={icon} />{label}</span>}>
+    <div className={s.place}>
+      <Icon name={icon} />
+      <span className={s.placeLabel}>{label}</span>
       <code className={s.path}>{path}</code>
-      <Button variant="quiet" onClick={copy}><Icon name="Copy" />{copied ? "Copied" : "Copy"}</Button>
-    </Row>
+      <button type="button" onClick={copy} className={s.small} aria-label={`Copy the ${label.toLowerCase()} path`}><Icon name="Copy" size={14} />{copied ? "Copied" : "Copy"}</button>
+    </div>
   );
 }
 
@@ -30,72 +32,58 @@ const PHRASE = "erase progress";
  *  Settings: red frame, red heading, and a confirmation that has to be typed rather than
  *  clicked through. */
 function DangerZone() {
-  const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Erased | null>(null);
+  const id = useId();
 
-  const close = () => { setOpen(false); setTyped(""); setError(null); };
   const erase = async () => {
     setBusy(true);
     try {
       setDone(await api<Erased>("/reset", { method: "POST", body: JSON.stringify({ confirm: typed }) }));
-      close();
+      setTyped(""); setError(null);
     } catch (e) { setError((e as Error).message); }
     setBusy(false);
   };
 
   return (
-    <div className={s.dangerZone}>
-      <div className={s.dangerHead}>
-        <div className={s.dangerText}>
-          <div className={s.dangerTitle}>Erase all progress</div>
-          <p className={s.dangerDescription}>
-            Deletes the progress database itself, so your schedule, your history and your
-            notes are gone rather than emptied, and puts every task back to a{" "}
-            <code>solve()</code> that raises, the way Abandon does for one. A backup of
-            everything is written first, so a restore can undo it. Nothing else can.
-          </p>
-        </div>
-        {open ? null : (
-          <Button variant="secondary" className={s.dangerButton} onClick={() => setOpen(true)}>
-            <Icon name="TrashCan" />Erase all progress
-          </Button>
-        )}
-      </div>
-
-      {open ? (
-        <div className={s.confirmation}>
-          <div>
-            To confirm, type <code className={s.phrase}>{PHRASE}</code> below.
-          </div>
-          <Input
-            value={typed} onChange={setTyped} mono placeholder={PHRASE}
-            ariaLabel={`Type ${PHRASE} to confirm`} className={s.confirmInput}
-          />
-          {error ? <NoticeBanner message={error} /> : null}
-          <div className={s.actions}>
-            <Button
-              variant="secondary" disabled={busy || typed.trim() !== PHRASE} onClick={erase}
-              className={s.confirmButton}>
-              {busy ? "Erasing…" : "I understand, erase everything"}
-            </Button>
-            <Button variant="quiet" disabled={busy} onClick={close}>Cancel</Button>
-          </div>
-        </div>
-      ) : null}
-
+    <section aria-labelledby={id} className={s.danger}>
+      <h3 id={id} className={s.title}>Danger zone</h3>
+      <p className={s.text}>
+        Erases your progress and puts every task back to its stub. A backup is written first; it is
+        the only way back, and you will be told where it is.
+      </p>
       {done ? (
         <div className={s.result}>
           <div>Erased. {done.cleared} task files went back to their stub.</div>
           {done.failed.length ? <NoticeBanner message={`The code could not be cleared for: ${done.failed.join(", ")}`} /> : null}
-          <div className={s.kept}>
-            <Icon name="Archive" style={{ marginRight: 6 }} />What you had is at <code>{done.kept}</code>.
-          </div>
+          <div className={s.kept}><Icon name="Archive" />What you had is at <code>{done.kept}</code>.</div>
           <div><Button onClick={() => { location.hash = "#/"; location.reload(); }}><Icon name="ArrowLeft" />Back to the catalogue</Button></div>
         </div>
-      ) : null}
+      ) : <>
+        <p className={s.text}>Type <code className={s.phrase}>{PHRASE}</code> to confirm</p>
+        <div className={s.confirm}>
+          <Input value={typed} onChange={setTyped} mono ariaLabel={`Type ${PHRASE} to confirm`} className={s.confirmInput} />
+          <button type="button" disabled={busy || typed.trim() !== PHRASE} onClick={erase} className={s.erase}>
+            <Icon name="TrashCan" size={14} />{busy ? "Erasing…" : "Erase all progress"}
+          </button>
+        </div>
+        {error ? <NoticeBanner message={error} /> : null}
+      </>}
+    </section>
+  );
+}
+
+/** One of a few choices, all in view: the key binding, the tab size, whether the clock shows. */
+function Choice<T extends string | number>({ label, value, options, onChange, mono = false }: {
+  label: string; value: T; options: { value: T; label: string }[]; onChange: (v: T) => void; mono?: boolean;
+}) {
+  return (
+    <div role="group" aria-label={label} className={s.segment} data-mono={mono || undefined}>
+      {options.map((o) => (
+        <button key={String(o.value)} type="button" aria-pressed={o.value === value} onClick={() => onChange(o.value)}>{o.label}</button>
+      ))}
     </div>
   );
 }
@@ -105,31 +93,28 @@ function Row({ label, hint, children }: { label: ReactNode; hint?: ReactNode; ch
   const id = useId();
   return (
     <div className={s.row} role="group" aria-labelledby={id}>
-      <div className={s.rowLabel}>
-        <div id={id}>{label}</div>
-        {hint ? <div className={s.hint}>{hint}</div> : null}
-      </div>
-      <div className={s.control}>{children}</div>
+      <div id={id} className={s.rowLabel}>{label}</div>
+      <div className={s.control}>{children}{hint ? <span className={s.hint}>{hint}</span> : null}</div>
     </div>
   );
 }
 
-/** Headings share the sheet's one scroll area; sections do not add another card or scroller. */
-function Section({ title, note, children }: {
-  title: string; note?: string; children: ReactNode;
-}) {
+/** One card of the sheet: a heading, a line on what it holds, then its rows. */
+function Section({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
   const id = useId();
   return (
-    <section aria-labelledby={id}>
-      <h3 id={id} className={s.sectionTitle}>{title}</h3>
-      {note ? <p className={s.sectionNote}>{note}</p> : null}
-      <div className={s.sectionBody}>{children}</div>
+    <section aria-labelledby={id} className={s.card}>
+      <div className={s.cardHead}>
+        <h3 id={id} className={s.title}>{title}</h3>
+        {note ? <span className={s.note}>{note}</span> : null}
+      </div>
+      {children}
     </section>
   );
 }
 
 const SIZES = ["12", "13", "14", "16", "18"];
-const TABS = ["2", "4", "8"];
+const TABS = [2, 4, 8].map((n) => ({ value: n, label: String(n) }));
 
 /** How the editor is set, and whether the clock is on screen. Every row is a preference of
  *  this browser: none of it is in your progress, and none of it travels in a backup. */
@@ -139,28 +124,26 @@ function EditorSettings() {
   const untouched = JSON.stringify({ ...prefs, taskPanePercent: 0 }) === JSON.stringify({ ...DEFAULTS, taskPanePercent: 0 });
   return (
     <Section title="Editor" note="These live in this browser, so they are not part of a backup.">
-      <div>
-      <Row label="Font">
+      <Row label="Font" hint={prefs.font === DEFAULTS.font ? "default" : null}>
         <Select value={prefs.font} ariaLabel="Editor font" className={s.fontSelect}
           options={FONTS.map((f) => ({ value: f.value, label: f.label }))}
           onChange={(v) => setPrefs({ font: v as typeof prefs.font })} />
       </Row>
       <Row label="Font size">
-        <Select value={String(prefs.fontSize)} options={SIZES} ariaLabel="Editor font size"
+        <Select value={String(prefs.fontSize)} options={SIZES.map((n) => ({ value: n, label: `${n} px` }))} ariaLabel="Editor font size"
           onChange={(v) => setPrefs({ fontSize: Number(v) })} className={s.numberSelect} />
       </Row>
-      <Row label="Font ligatures" hint="== and -> as one glyph.">
+      <Row label="Font ligatures">
         <Toggle checked={prefs.ligatures} label={prefs.ligatures ? "On" : "Off"}
           onChange={(on) => setPrefs({ ligatures: on })} />
       </Row>
-      <Row label="Key binding" hint={<span>Ctrl+Enter runs and Ctrl+Shift+Enter submits whichever you pick, and <code>C-g</code> always gets you out of a half-typed Emacs chord.</span>}>
-        <Select value={prefs.keys} ariaLabel="Key binding" className={s.keySelect}
+      <Row label="Key binding" hint={<span>Ctrl+Enter runs and Ctrl+Shift+Enter submits whichever you pick, and <kbd>C-g</kbd> always gets you out of a half-typed Emacs chord.</span>}>
+        <Choice label="Key binding" value={prefs.keys}
           options={[{ value: "regular", label: "Standard" }, { value: "vim", label: "Vim" }, { value: "emacs", label: "Emacs" }]}
-          onChange={(keys) => setPrefs({ keys: keys as typeof prefs.keys })} />
+          onChange={(keys) => setPrefs({ keys })} />
       </Row>
       <Row label="Tab size">
-        <Select value={String(prefs.tabSize)} options={TABS} ariaLabel="Tab size"
-          onChange={(v) => setPrefs({ tabSize: Number(v) })} className={s.numberSelect} />
+        <Choice label="Tab size" value={prefs.tabSize} options={TABS} mono onChange={(tabSize) => setPrefs({ tabSize })} />
       </Row>
       <Row label="Word wrap" hint="Off puts long lines behind a horizontal scrollbar.">
         <Toggle checked={prefs.wordWrap} label={prefs.wordWrap ? "On" : "Off"}
@@ -170,11 +153,11 @@ function EditorSettings() {
         <Toggle checked={prefs.relativeLines} label={prefs.relativeLines ? "On" : "Off"}
           onChange={(on) => setPrefs({ relativeLines: on })} />
       </Row>
-      <Row label="Practice timer" hint="Hiding it changes nothing about the time: it is still counted, and it still grades.">
-        <Toggle checked={prefs.showTimer} label={prefs.showTimer ? "Shown" : "Hidden"}
-          onChange={(on) => setPrefs({ showTimer: on })} />
+      <Row label="Practice timer" hint="Hidden or not, the time is still counted.">
+        <Choice label="Practice timer" value={prefs.showTimer ? "shown" : "hidden"}
+          options={[{ value: "shown", label: "Shown" }, { value: "hidden", label: "Hidden" }]}
+          onChange={(v) => setPrefs({ showTimer: v === "shown" })} />
       </Row>
-      </div>
       {untouched ? null : (
         <div className={s.defaults}>
           <Button variant="quiet" onClick={() => setPrefs({ ...DEFAULTS, taskPanePercent: prefs.taskPanePercent })}><Icon name="Reset" />Put these back to their defaults</Button>
@@ -232,62 +215,58 @@ export function Settings() {
     <div className={s.sheet}>
       <EditorSettings />
 
-      <Section title="Your data" note="Everything drillion knows about your practice lives on this machine, in these places.">
+      <Section title="Your data">
         {pathError ? <EmptyState message={`Could not load settings: ${pathError}`} /> : paths ? (
-          <>
+          <div className={s.places}>
             <Location label="Data folder" icon="Folder" path={paths.root} />
             <Location label="Progress" icon="DataBase" path={paths.progress} />
             <Location label="Tasks" icon="Folder" path={paths.tasks} />
-          </>
+          </div>
         ) : <EmptyState message="Loading…" align="left" />}
       </Section>
 
-      <Section title="Back up" note="One file holding your schedule, your history and the code you have written. Keep it anywhere. Restoring it on another machine, or after a reinstall, picks up where you left off.">
-        <a href="/api/backup" download data-variant="primary" className={s.download}><Icon name="Download" />Download a backup</a>
-      </Section>
+      <div className={s.pair}>
+        <Section title="Back up">
+          <p className={s.text}>One file holding your cards, notes, log, archive and the code saved in every task.</p>
+          <a href="/api/backup" download className={s.small} data-big=""><Icon name="Download" size={14} />Download a backup</a>
+        </Section>
 
-      <Section title="Restore" note="Restoring replaces your current progress and the code saved in every task. It happens completely or not at all, and what it replaces is written to a backup of its own first, so you can undo it.">
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <Icon name="Upload" style={{ color: "var(--text-muted)" }} />
-          <input
-            ref={picker} type="file" accept=".zip,application/zip" disabled={busy}
-            aria-label="Choose a backup file to restore"
-            onChange={(e) => choose(e.target.files?.[0] ?? null)}
-            className={s.picker}
-          />
-        </span>
-        {error ? <NoticeBanner message={error} className={s.error} /> : null}
-        {preview ? (
-          <div className={s.result}>
-            <div>
-              Taken {preview.created?.replace("T", " at ") ?? "at an unknown time"} on drillion v{preview.drillion}.
+        <Section title="Restore">
+          <p className={s.text}>You see what the file brings and what it replaces before anything is touched.</p>
+          <label className={s.small} data-big="" data-busy={busy || undefined}>
+            <Icon name="Upload" size={14} />Choose a backup file
+            <input ref={picker} type="file" accept=".zip,application/zip" disabled={busy} aria-label="Choose a backup file to restore"
+              onChange={(e) => choose(e.target.files?.[0] ?? null)} className={s.picker} />
+          </label>
+          {error ? <NoticeBanner message={error} /> : null}
+          {preview ? (
+            <div className={s.result}>
+              <div>Taken {preview.created?.replace("T", " at ") ?? "at an unknown time"} on drillion v{preview.drillion}.</div>
+              <div>Brings back {counts(preview.brings)}.</div>
+              <div className={s.text}>
+                Replaces {preview.replaces.cards} cards, {preview.replaces.archive} solved tasks
+                and {preview.replaces.notes} notes you have now. What it replaces is written to a backup of its own first.
+              </div>
+              {preview.unknown.length ? (
+                <NoticeBanner message={`${preview.unknown.length} task${preview.unknown.length > 1 ? "s" : ""} in this backup are not in this version of drillion, so their saved code stays in the file: ${preview.unknown.join(", ")}`} />
+              ) : null}
+              <div className={s.actions}>
+                <Button variant="primary" disabled={busy} onClick={apply}>Replace my data</Button>
+                <Button variant="quiet" disabled={busy} onClick={() => choose(null)}>Cancel</Button>
+              </div>
             </div>
-            <div>Brings back {counts(preview.brings)}.</div>
-            <div className={s.muted}>
-              Replaces {preview.replaces.cards} cards, {preview.replaces.archive} solved tasks
-              and {preview.replaces.notes} notes you have now.
+          ) : null}
+          {done ? (
+            <div className={s.result}>
+              <div><Icon name="CheckmarkOutline" />Restored {counts(done.brings)}.</div>
+              <div className={s.kept}><Icon name="Archive" />What you had before is at <code>{done.kept}</code>.</div>
+              <div><Button onClick={() => { location.hash = "#/"; location.reload(); }}><Icon name="ArrowLeft" />Back to the catalogue</Button></div>
             </div>
-            {preview.unknown.length ? (
-              <NoticeBanner message={`${preview.unknown.length} task${preview.unknown.length > 1 ? "s" : ""} in this backup are not in this version of drillion, so their saved code stays in the file: ${preview.unknown.join(", ")}`} />
-            ) : null}
-            <div className={s.restoreActions}>
-              <Button variant="primary" disabled={busy} onClick={apply}>Replace my data</Button>
-              <Button variant="quiet" disabled={busy} onClick={() => choose(null)}>Cancel</Button>
-            </div>
-          </div>
-        ) : null}
-        {done ? (
-          <div className={s.result}>
-            <div><Icon name="CheckmarkOutline" style={{ marginRight: 6 }} />Restored {counts(done.brings)}.</div>
-            <div className={s.kept}>
-              <Icon name="Archive" style={{ marginRight: 6 }} />What you had before is at <code>{done.kept}</code>.
-            </div>
-            <div><Button onClick={() => { location.hash = "#/"; location.reload(); }}><Icon name="ArrowLeft" />Back to the catalogue</Button></div>
-          </div>
-        ) : null}
-      </Section>
+          ) : null}
+        </Section>
+      </div>
 
-      <Section title="Danger zone"><DangerZone /></Section>
+      <DangerZone />
     </div>
   );
 }

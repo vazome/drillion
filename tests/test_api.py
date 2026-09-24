@@ -240,6 +240,11 @@ async def _guards(api, path):
     assert (await api.get("/api/catalogue")).json()[
         "focus"
     ] == "core"  # a tier, not a tag
+    assert (await api.get("/api/picks")).json() == {
+        "focus": "core",
+        "tracks": {"python": 1},
+        "stuck": None,
+    }
     assert (await api.get("/api/progress")).json()["per_tag"] == {
         "f-strings": {
             "seen": 0,
@@ -810,6 +815,8 @@ async def _deps_on_the_task_payload(api, _path):
             "topic": 48,
             "title": tasks()[PREREQ]["title"],
             "tags": tasks()[PREREQ]["tags"],
+            "difficulty": tasks()[PREREQ]["difficulty"],
+            "status": "new",
             "state": "blocked",
             "box": 0,
         }
@@ -824,6 +831,8 @@ async def _deps_on_the_task_payload(api, _path):
             "topic": 49,
             "title": tasks()[GATED]["title"],
             "tags": tasks()[GATED]["tags"],
+            "difficulty": tasks()[GATED]["difficulty"],
+            "status": "new",
             "also": [],
         }
     ]

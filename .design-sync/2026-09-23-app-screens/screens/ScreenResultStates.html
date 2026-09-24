@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>ScreenResultStates — Task: every result panel state and notice</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="_base.css">
+<script>document.documentElement.dataset.theme=new URLSearchParams(location.search).get('theme')||'light'</script>
+</head>
+<body><!-- Reference screen, 1180px tall, 1440px wide. Open with ?theme=dark or ?theme=light. -->
+<div style="width: 1440px; height: 1180px; box-sizing: border-box; padding: 48px 56px; background: var(--bg); color: var(--text); font-family: var(--font-sans); display: flex; flex-direction: column; gap: 28px;">
+<header style="display: flex; flex-direction: column; gap: 8px;">
+<h1 style="margin: 0; font-size: 28px; font-weight: 500; letter-spacing: -0.02em;">Task page · result panel and notices</h1>
+<p style="margin: 0; font-size: 14px; color: var(--text-muted);">Every state the panel under the editor can be in, plus the notices that sit above it.</p>
+</header>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 32px;">
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">idle · never run</figcaption>
+<div style="height: 150px; box-sizing: border-box; padding: 18px 20px; border-radius: 8px; background: var(--surface); box-shadow: 0 0 0 1px var(--border); display: flex; flex-direction: column; gap: 10px; justify-content: center;">
+<span style="font-size: 15px; font-weight: 500;">Nothing run yet.</span>
+<span style="font-size: 13px; line-height: 1.5; color: var(--text-muted);">Run checks your file and costs nothing. Submit is the one that grades it and moves the card.</span>
+<span style="display: flex; gap: 16px; font-size: 12px; color: var(--text-muted);"><span>Run <kbd style="font-family: 'Spline Sans Mono', monospace; font-size: 11px; padding: 0 5px; border: 1px solid var(--border-strong); border-radius: 4px;">Ctrl ↵</kbd></span><span>Submit <kbd style="font-family: 'Spline Sans Mono', monospace; font-size: 11px; padding: 0 5px; border: 1px solid var(--border-strong); border-radius: 4px;">Ctrl ⇧ ↵</kbd></span></span>
+</div>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">running</figcaption>
+<div style="position: relative; overflow: hidden; height: 150px; box-sizing: border-box; padding: 18px 20px; border-radius: 8px; background: var(--surface); box-shadow: 0 0 0 1px var(--border); display: flex; flex-direction: column; gap: 10px; justify-content: center;">
+<span aria-hidden="true" style="position: absolute; left: 0; top: 0; height: 2px; width: 38%; background: var(--accent);"></span>
+<span style="font-size: 15px; font-weight: 500;">Checking your Dockerfile…</span>
+<span style="font-size: 13px; color: var(--text-muted);">hadolint, then the build context, then the rules.</span>
+</div>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">ran · a green Run, ungraded</figcaption>
+<div style="height: 150px; box-sizing: border-box; padding: 18px 20px; border-radius: 8px; background: var(--surface); box-shadow: 0 0 0 1px var(--border); display: flex; flex-direction: column; gap: 10px; justify-content: center;">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; color: var(--pass);"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="6"></circle><path d="M5.2 8.2l2 2 3.6-3.8"></path></svg>Every rule met on this Run</span>
+<span style="font-size: 13px; line-height: 1.5; color: var(--text-muted);">Nothing was graded and no attempt was used. Submit when you are ready to count it.</span>
+</div>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">failed · a Submit that did not pass</figcaption>
+<div style="height: 150px; box-sizing: border-box; padding: 18px 20px; border-radius: 8px; background: var(--surface); box-shadow: 0 0 0 1px var(--border); display: flex; flex-direction: column; gap: 10px; justify-content: center;">
+<span style="display: flex; align-items: center; gap: 10px;"><span style="display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 10px; border-radius: 6px; background: var(--fail-bg); color: var(--fail); font-size: 13px; font-weight: 600;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="6"></circle><path d="M5.8 5.8l4.4 4.4M10.2 5.8l-4.4 4.4"></path></svg>Not yet</span><span style="font-size: 13px; color: var(--text-muted);">Submit 2 · the card has not moved</span></span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 13px; line-height: 1.5;">EXPOSE the one port the app listens on, 8080; this file exposes <span style="color: var(--fail);">['8000']</span></span>
+</div>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">passed · the card climbs</figcaption>
+<div style="height: 170px; box-sizing: border-box; padding: 18px 20px; border-radius: 8px; background: var(--surface); box-shadow: inset 0 3px 0 var(--pass), 0 0 0 1px var(--border); display: flex; flex-direction: column; gap: 12px;">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 13px; letter-spacing: .02em;"><span style="color: var(--pass); font-weight: 500;">PASSED · QUICK</span><span style="color: var(--text-muted);"> · 6m58s · 1 attempt · back in 4 days</span></span>
+<span style="display: flex; align-items: center; gap: 12px; font-size: 14px;"><span style="display: flex; align-items: center; gap: 6px; color: var(--warn);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 3px; height: 10px; border-radius: 1px; background: var(--warn);"></span><span style="width: 3px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span><span style="width: 3px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span></span>learning</span><span style="color: var(--text-muted);">It comes back later than last time.</span></span>
+<span style="flex-grow: 1;"></span>
+<span style="display: flex; gap: 10px;"><a href="#" style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; background: var(--accent); color: var(--on-accent); border-radius: 6px; font-size: 14px; font-weight: 600; text-decoration: none;">Next in Today<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a><button type="button" style="height: 36px; padding: 0 14px; background: transparent; border: 1px solid var(--control-edge); border-radius: 6px; font: inherit; font-size: 14px; color: var(--text); cursor: pointer;">See the passing code</button></span>
+</div>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">passed · struggled, the card steps back</figcaption>
+<div style="height: 170px; box-sizing: border-box; padding: 18px 20px; border-radius: 8px; background: var(--surface); box-shadow: inset 0 3px 0 var(--warn), 0 0 0 1px var(--border); display: flex; flex-direction: column; gap: 12px;">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 13px; letter-spacing: .02em;"><span style="color: var(--warn); font-weight: 500;">PASSED · STRUGGLED</span><span style="color: var(--text-muted);"> · 31m · 4 attempts · back in 2 days</span></span>
+<span style="font-size: 14px; color: var(--text-muted);">It comes back sooner, so it gets another look while it is fresh.</span>
+<div style="display: flex; gap: 10px; padding: 10px 12px; border-radius: 6px; background: var(--warn-bg);"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--warn)" stroke-width="1.5" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px;"><path d="M8 2 15 14H1z"></path><path d="M8 6.5v3.5M8 11.8v.4"></path></svg><span style="font-size: 13px; line-height: 1.45; color: var(--text);">You have struggled with this 4 times. The hints or the prereqs may be the problem, not you.</span></div>
+</div>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">hint revealed · levels stack</figcaption>
+<div style="box-sizing: border-box; padding: 16px 18px; border-radius: 8px; background: var(--surface); box-shadow: 0 0 0 1px var(--border); display: flex; flex-direction: column; gap: 8px;">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--accent);"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M6 12.5h4M6.5 14.5h3M8 1.5a4.5 4.5 0 0 0-2.5 8.2V11h5V9.7A4.5 4.5 0 0 0 8 1.5z"></path></svg>Hint 1 of 3</span>
+<span style="font-size: 13.5px; line-height: 1.6;">Five instructions do all of it, in this order: <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">FROM</code>, <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">WORKDIR</code>, <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">COPY</code>, <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">ENV</code> and <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">EXPOSE</code>, then <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">CMD</code> last.</span>
+<span style="font-size: 12px; color: var(--text-muted);">Hint 2 in 1:30 of active time</span>
+</div>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">solution shown</figcaption>
+<div style="box-sizing: border-box; padding: 14px 16px; border-radius: 8px; background: var(--surface); box-shadow: 0 0 0 1px var(--border); display: flex; align-items: center; gap: 10px;">
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--text-muted)" stroke-width="1.5" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1"></rect><path d="M5 7V5a3 3 0 0 1 5.6-1.5"></path></svg>
+<span style="font-size: 13.5px;">Solution shown: this pass won't move the card further out.</span>
+</div>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">conflict · above the editor</figcaption>
+<div role="alert" style="box-sizing: border-box; padding: 12px 16px; border-radius: 8px; background: var(--warn-bg); display: flex; align-items: center; gap: 12px;">
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--warn)" stroke-width="1.5" aria-hidden="true"><path d="M8 2 15 14H1z"></path><path d="M8 6.5v3.5M8 11.8v.4"></path></svg>
+<span style="flex-grow: 1; font-size: 13.5px;">This task changed on disk.</span>
+<button type="button" style="height: 32px; padding: 0 12px; background: var(--surface); border: 1px solid var(--control-edge); border-radius: 6px; font: inherit; font-size: 13px; color: var(--text); cursor: pointer;">Reload from disk</button>
+<button type="button" style="height: 32px; padding: 0 12px; background: transparent; border: 0; font: inherit; font-size: 13px; color: var(--text); text-decoration: underline; text-underline-offset: 3px; cursor: pointer;">Keep mine</button>
+</div>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">stuck nudge · after 30 minutes of active time</figcaption>
+<div role="status" style="box-sizing: border-box; padding: 12px 12px 12px 16px; border-radius: 8px; background: var(--surface); box-shadow: var(--shadow-pop); display: flex; align-items: center; gap: 12px;">
+<span style="flex-grow: 1; font-size: 13.5px; line-height: 1.45;">Half an hour in. A hint might unstick it, or go back to the material.</span>
+<button type="button" style="height: 32px; padding: 0 12px; background: transparent; border: 1px solid var(--control-edge); border-radius: 6px; font: inherit; font-size: 13px; color: var(--text); cursor: pointer;">Show hint 1</button>
+<button type="button" aria-label="Dismiss" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; background: transparent; border: 0; border-radius: 6px; color: var(--text-muted); cursor: pointer;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button>
+</div>
+</figure>
+</div>
+</div>
+<script>/* A static screen: nothing to mount. Until the page regenerates tokens.css with the tokens this screen uses, define them here; once tokens.css has them, this does nothing. */
+(function(){if(getComputedStyle(document.documentElement).getPropertyValue("--control-edge").trim())return;var s=document.createElement("style");s.textContent=':root,[data-theme="light"]{--control-edge:#8a959d;--strength-learning:var(--warn);--strength-familiar:var(--accent);--strength-solid:var(--pass);--heat-0:var(--surface-2);--heat-1:#d3e0f6;--heat-2:var(--accent-line);--heat-3:#6f95d9;--heat-4:var(--accent-hover);--danger-surface:#fff8f8;--danger-edge:var(--fail);--scrim:rgba(28,34,38,.32);}[data-theme="dark"]{--control-edge:#6b7883;--heat-1:#2e4466;--heat-3:#5a86cc;--danger-surface:#221c1f;--scrim:rgba(10,13,16,.62);}';document.head.appendChild(s);})();
+</script>
+
+</body></html>

@@ -1,24 +1,13 @@
 import React from "react";
 import s from "./PracticeHeatmap.module.css";
 import { Tip } from "./Tip.jsx";
-/* Practice heatmap — 53 weeks × 7 days, four intensity steps off the accent (the steps
-   themselves live in the module, as [data-heat] on a square). */
-const heatLevel = (n) => (!n ? 0 : n <= 3 ? 1 : n <= 8 ? 2 : 3);
+/* Practice heatmap — 53 weeks × 7 days on the heat-0…heat-4 steps (the steps live in the
+   module, as [data-heat] on a square). Fixed squares: past its box the year scrolls inside
+   it, never the page. */
+const heatLevel = (n) => (!n ? 0 : n === 1 ? 1 : n <= 3 ? 2 : n <= 6 ? 3 : 4);
 
-export function PracticeHeatmap({ days = {}, today, className, style, cell, gap = 4 }) {
-  /* No `cell` given: measure the card and size the squares to fill its width. */
-  const box = React.useRef(null);
-  const [auto, setAuto] = React.useState(cell || 11);
-  React.useEffect(() => {
-    if (cell || !box.current || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(([e]) => {
-      const w = e.contentRect.width - 28 - 52 * gap;   // 20px weekday column + 8px gutter
-      setAuto(Math.max(8, Math.floor(w / 53)));
-    });
-    ro.observe(box.current);
-    return () => ro.disconnect();
-  }, [cell, gap]);
-  const cellSize = cell || auto;
+export function PracticeHeatmap({ days = {}, today, className, style, cell = 14, gap = 3 }) {
+  const cellSize = cell;
   const iso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   const end = new Date((today || new Date().toISOString().slice(0, 10)) + "T00:00:00");
   const last = new Date(end); last.setDate(last.getDate() + (6 - end.getDay()));   // fill to the end of this week
@@ -44,13 +33,10 @@ export function PracticeHeatmap({ days = {}, today, className, style, cell, gap 
   const show = (e, text) => setTip({ text, x: e.currentTarget.offsetLeft + e.currentTarget.offsetWidth / 2, y: e.currentTarget.offsetTop });
 
   return (
-    <div className={className} style={style} ref={box}>
-      <div role="img" aria-label={aria} className={s.plot} onMouseLeave={() => setTip(null)}>
+    <div className={className} style={style}>
+      <div role="img" aria-label={aria} tabIndex={0} className={s.plot} onMouseLeave={() => setTip(null)}>
         {tip ? <Tip text={tip.text} x={tip.x} y={tip.y} /> : null}
-        <div className={s.weekdays} style={{ gridTemplateRows: "14px repeat(7, " + cellSize + "px)", gap: gap + "px" }}>
-          <div /><div /><div>M</div><div /><div>W</div><div /><div>F</div><div />
-        </div>
-        <div className={s.grid}>
+        <div className={s.grid} style={{ "--cols": "repeat(53, " + cellSize + "px)" }}>
           <div className={s.months} style={{ gap: gap + "px" }}>
             {months.map(({ c, m }) => <div key={c} style={{ gridRow: 1, gridColumn: c + 1 + " / span 4" }}>{MON[m]}</div>)}
           </div>
@@ -67,13 +53,9 @@ export function PracticeHeatmap({ days = {}, today, className, style, cell, gap 
         </div>
       </div>
       <div className={s.foot}>
-        <span className={s.note}>
-          {passes === 0 ? "No passes yet. Every square fills in as you practise." : practised + " days practised in the last year"}
-        </span>
-        <div className={s.spacer} />
         <span className={s.scaleLabel}>less</span>
         <div className={s.scale}>
-          {[0, 1, 2, 3].map((i) => <div key={i} className={s.swatch} data-heat={i} />)}
+          {[0, 1, 2, 3, 4].map((i) => <div key={i} className={s.swatch} data-heat={i} />)}
         </div>
         <span className={s.scaleLabel}>more</span>
       </div>

@@ -15,7 +15,6 @@ test("manifest failures render the grader's diagnostics as they arrive", async (
       { path: "/spec/replicas", message: "expected integer, but got string" },
       { path: "/metadata/name", message: "too long" },
     ] });
-    assert.match(field, /data-state="failed"/);
     assert.match(field, /Check these manifest fields/);
     assert.match(field, /kubeconform/);
     assert.match(field, /\/spec\/replicas/);

@@ -1,80 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
-import { Band, Button, Card, EmptyState, Icon, Input, Kbd, NoticeBanner, RowFlags, Select, SortReset, StatusBadge, TagChip, TaskPath, TrackRail } from "./ds/index.js";
-import { api, post, type Catalogue as Payload, type Row } from "./api";
-import { Stats } from "./Stats";
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { Button, EmptyState, Icon, Input, Kbd, NoticeBanner, RowFlags, SortReset, TagChip, TaskPath } from "./ds/index.js";
+import { api, FOCUS_SAVED, setFocus as saveFocus, type Catalogue as Payload, type Row } from "./api";
+import { FIRST_RUN, Today } from "./Today";
+import { Level } from "./Level";
 import css from "./Catalogue.module.css";
-import { inDays, strength } from "./strength";
+import { strength } from "./strength";
 import { depsHref, taskHref } from "./Deps";
-import { plural, topicNo } from "./format";
+import { topicNo } from "./format";
 
-const LABEL = { fontSize: "var(--fs-label)", fontWeight: 600, letterSpacing: "var(--ls-label)", textTransform: "uppercase" as const, color: "var(--text-muted)", whiteSpace: "nowrap" as const };
-const FAINT = { fontSize: 12.5, color: "var(--text-faint)", whiteSpace: "nowrap" as const };
-const MONO = { fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)", fontVariantNumeric: "tabular-nums" as const };
-const STATUSES = ["new", "due", "open", "done"];
-const DIFFICULTY = ["easy", "medium", "hard"];     // the order the word means, not the alphabet
-const DAY = 86400000;
-// one column geometry for the header and the rows; the uppercase labels set the widths
-const COL = { num: 30, path: 230, difficulty: 104, strength: 92, status: 78, reset: 28 };
-// below this the list card scrolls sideways rather than squeezing the columns
-const LIST_MIN = 840;
-const FIRST_RUN = "drillion-first-run";
-const HOW_IT_WORKS = "https://github.com/vazome/drillion/blob/main/docs/how-it-works.md";
-
-// the tracks with a logo in web/public/tracks/; any other track wears its first letter
-const TRACK_ICONS = new Set(["python", "kubernetes", "helm", "docker"]);
-
-/** Today as a LOCAL YYYY-MM-DD, which parses back to the same UTC midnight `due` does. */
-const localToday = () => new Date().toLocaleDateString("en-CA");
+const STATUSES = ["new", "due", "open", "done"] as const;
+const DIFFICULTY = ["easy", "medium", "hard"];
+// about two rows of chips; the rest wait behind "+N more", and the search box finds them too
+const TAGS_SHOWN = 12;     // the order the word means, not the alphabet
 
 /** Everything `focus` may name — tier, track and tags alike, as `_facets()` in scheduler.py.
  * All three, or the screen disagrees with the scheduler. */
 const facets = (row: Row) => [row.tier, row.track, ...row.tags].filter(Boolean) as string[];
-
-/** The copy for `today.no_new`: the one reason New picks is empty, and the way back out. */
-function noPicks(no: NonNullable<Payload["today"]["no_new"]>, today: Payload["today"],
-                 focus: string | null, by: Map<string, Row>) {
-  const link = (slug: string) => {
-    const r = by.get(slug);
-    return r ? <a href={href(r)}>#{topicNo(r.topic)} {r.title}</a> : null;
-  };
-  switch (no.why) {
-    case "cap": return {
-      act: null,
-      message: <>That is today's new material — {plural(today.done_today, "new task")} done.
-        {" "}{plural(no.ready, "task")} unlocked and waiting for tomorrow.</>,
-    };
-    case "prereqs": return {
-      act: null,
-      message: <>Every unseen task{focus ? <> under “{focus}”</> : null} is waiting on a prereq.
-        The nearest is {link(no.nearest)} — pass {(by.get(no.nearest)?.blocked ?? [])
-          .map((s, i) => <span key={s}>{i ? ", " : ""}{link(s)}</span>)} first.</>,
-    };
-    case "focus": return {
-      act: "focus" as const,
-      message: <>Nothing unseen is left under the focus “{focus}” — every task it covers is already started.</>,
-    };
-    case "done": return {
-      act: null,
-      message: <>Nothing unseen is left: you have opened every task in the catalogue. Reviews are the work now.</>,
-    };
-  }
-  return no satisfies never;
-}
-
-/** "4 days overdue" / "due today" / "due in 3 days" / "never seen". */
-function dueText(row: Row) {
-  if (!row.seen) return "never seen";
-  const days = Math.round((Date.parse(row.due) - Date.parse(localToday())) / DAY);
-  if (days === 0) return "due today";
-  return days < 0 ? `${plural(-days, "day")} overdue` : `due in ${plural(days, "day")}`;
-}
-
-// how well the row is known, or nothing at all: an unpractised task already reads NEW in
-// the status column, and a second grey badge saying the same is noise
-const Known = ({ row, ladder }: { row: Row; ladder: number[] }) => {
-  const s = strength(row.box, !!row.seen, ladder);
-  return s ? <StatusBadge status={s} /> : null;
-};
 
 type SortKey = "topic" | "title" | "path" | "difficulty" | "strength" | "status";
 type Sort = { key: SortKey; dir: "asc" | "desc" };
@@ -103,54 +44,32 @@ export function sortRows(rows: Row[], { key, dir }: Sort): Row[] {
 
 const href = (row: Row) => taskHref(row.slug);
 
-/** A row of the Today card: when it is due, how well you know it, and one way in. */
-function TodayRow({ row, ladder, limit }: { row: Row; ladder: number[]; limit: number }) {
+/** A row of the list: one line, the path in its own column, and `needs 289` in words. */
+function ListRow({ row, blocked, ladder, limit, next }: { row: Row; blocked: Row[]; ladder: number[]; limit: number; next: boolean }) {
+  const known = strength(row.box, !!row.seen, ladder);
   return (
-    <div className={css.row}
-      style={{ display: "flex", alignItems: "center", borderTop: "1px solid var(--border)", margin: "0 -18px", padding: "0 18px" }}>
-      <a href={href(row)} className="m-tint"
-        style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0, textDecoration: "none", color: "inherit", padding: "9px 0" }}>
-        <span style={{ ...FAINT, width: 110, color: "var(--text-muted)" }}>{dueText(row)}</span>
-        <span style={{ width: COL.strength }}><Known row={row} ladder={ladder} /></span>
-        <span style={{ ...MONO, width: 30, textAlign: "right" }}>{topicNo(row.topic)}</span>
-        <span style={{ fontSize: 14.5, fontWeight: 500, flex: 1, display: "flex", alignItems: "baseline", gap: 10 }}>
-          {/* nothing in this card is blocked: a new pick is offered only once its prereqs clear */}
-          {row.title}<RowFlags lapses={row.lapses} lapseLimit={limit} />
-        </span>
-        {/* the whole row is the link; the button is the affordance, so it takes no focus of its own */}
-        <span inert aria-hidden="true"><Button variant="secondary" style={{ padding: "6px 12px", fontSize: 13 }}>Open</Button></span>
-      </a>
-    </div>
-  );
-}
-
-/** A row of the list. The trailing spacer holds the reset control's column, so the header
- * stays aligned. */
-function ListRow({ row, blocked, ladder, limit, first = false }: { row: Row; blocked: Row[]; ladder: number[]; limit: number; first?: boolean }) {
-  return (
-    <a href={href(row)} className={`m-tint ${css.row}`}
-      style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 44, minWidth: LIST_MIN, boxSizing: "border-box", borderTop: first ? "none" : "1px solid var(--border)", textDecoration: "none", color: "inherit" }}>
-      <span style={{ ...MONO, width: COL.num, textAlign: "right" }}>{topicNo(row.topic)}</span>
-      <span style={{ flex: 1, display: "flex", alignItems: "baseline", gap: 10, overflow: "hidden" }}>
-        <span style={{ fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.title}</span>
+    <a href={href(row)} className={`m-tint ${css.row}`}>
+      <span className={css.num}>{topicNo(row.topic)}</span>
+      <span className={css.task}>
+        <span className={css.title}>{row.title}</span>
+        {next ? <span className={css.next}>up next</span> : null}
         {/* the flag is the second way into the lineage; the rest of the row still opens the task */}
         <RowFlags needs={blocked} onNeedsClick={() => { location.hash = depsHref(row.slug); }}
           lapses={row.lapses} lapseLimit={limit} />
       </span>
-      <span style={{ width: COL.path, display: "flex", overflow: "hidden" }}><TaskPath tier={row.tier} track={row.track} tags={row.tags} /></span>
-      <span style={{ width: COL.difficulty }}><StatusBadge status={row.difficulty} /></span>
-      <span style={{ width: COL.strength, height: 16, display: "flex", alignItems: "center" }}><Known row={row} ladder={ladder} /></span>
-      <span style={{ width: COL.status }}><StatusBadge status={row.status} /></span>
-      <span style={{ width: COL.reset }} />
+      <span className={css.cell}><TaskPath tier={row.tier} track={row.track} tags={row.tags} /></span>
+      <span><Level of={row.difficulty} /></span>
+      {/* an unpractised task already says NEW under Status; a second word saying so is noise */}
+      <span>{known ? <Level of={known} /> : null}</span>
+      <span className={css.status}>{row.status}</span>
+      <span />
     </a>
   );
 }
 
 /** A column header that sorts. The list is anchors rather than a `<table>`, so the state
  * goes in the button's own name — `aria-sort` needs table semantics to mean anything. */
-function SortHead({ label, col, align, sort, onSort, style }: {
-  label: string; col: SortKey; align?: "right"; sort: Sort; onSort: (s: Sort) => void; style: CSSProperties;
-}) {
+function SortHead({ label, col, sort, onSort }: { label: string; col: SortKey; sort: Sort; onSort: (s: Sort) => void }) {
   const active = sort.key === col;
   const next: Sort = { key: col, dir: active && sort.dir === "asc" ? "desc" : "asc" };
   // an inactive column's arrow is always drawn, and shown only under the pointer
@@ -158,10 +77,9 @@ function SortHead({ label, col, align, sort, onSort, style }: {
   const way = (d: string) => (d === "asc" ? "ascending" : "descending");
   return (
     <button type="button" onClick={() => onSort(next)} className={css.sort} data-active={active || undefined}
-      aria-label={active ? `${label}, sorted ${way(sort.dir)}. Sort ${way(next.dir)}` : `Sort by ${label} ${way(next.dir)}`}
-      style={{ ...style, display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, whiteSpace: "nowrap", justifyContent: align === "right" ? "flex-end" : "flex-start", height: 32, padding: 0, background: "transparent", border: "none", font: "inherit", letterSpacing: "inherit", textTransform: "inherit", cursor: "pointer" }}>
+      aria-label={active ? `${label}, sorted ${way(sort.dir)}. Sort ${way(next.dir)}` : `Sort by ${label} ${way(next.dir)}`}>
       <span>{label}</span>
-      <span aria-hidden="true" className={active ? undefined : css.ghost} style={{ display: "inline-flex", width: 12, height: 12, color: active ? "var(--accent)" : "var(--text-faint)" }}><Icon name={arrow} size={12} /></span>
+      <span aria-hidden="true" className={css.arrow}><Icon name={arrow} size={12} /></span>
     </button>
   );
 }
@@ -177,12 +95,18 @@ export function Catalogue() {
   const [activeTags, setActiveTags] = useState<string[]>(() => inbox().getAll("tag"));
   const [notice, setNotice] = useState<string | null>(null);
   const [sort, setSort] = useState<Sort>(DEFAULT_SORT);
+  const [allTags, setAllTags] = useState(false);
   const [firstRun, setFirstRun] = useState(() => !localStorage.getItem(FIRST_RUN));
   const searchBox = useRef<HTMLSpanElement>(null);
+  const listHead = useRef<HTMLDivElement>(null);
   const wantSearch = useRef(inbox().has("q"));
 
   const load = useCallback(() => api<Payload>("/catalogue").then(setData).catch((e) => setError(e.message)), []);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    addEventListener(FOCUS_SAVED, load);
+    return () => removeEventListener(FOCUS_SAVED, load);
+  }, [load]);
 
   // the box exists only once the payload has rendered, so a `/` from another route waits
   const focusSearch = () => {
@@ -216,20 +140,22 @@ export function Catalogue() {
   // focus decides what the scheduler may pick next, so the whole payload is stale after it changes
   const setFocus = (tag: string | null) => {
     setNotice(null);
-    post("/focus", { tag }).then(load).catch((e) => setNotice(`Focus is still “${focus ?? "any"}” — the change did not save: ${e.message}`));
+    saveFocus(tag).catch((e) => setNotice(`Focus is still “${focus ?? "any"}” — the change did not save: ${e.message}`));
   };
 
   const by = useMemo(() => new Map((data?.tasks ?? []).map((e) => [e.slug, e])), [data]);
-  const rows = useMemo(() => {
+  // every filter but status, so the status toggle can count what each choice would show
+  const matching = useMemo(() => {
     const needle = q.trim().toLowerCase();
     // `text` is the spec, already flattened and lowercased by the server
     return (data?.tasks ?? []).filter((e) =>
       (!needle || e.title.toLowerCase().includes(needle) || e.slug.includes(needle)
-        || topicNo(e.topic).includes(needle) || e.text.includes(needle)) &&
-      (!status || e.status === status) &&
+        || topicNo(e.topic).includes(needle) || e.text.includes(needle) || e.tags.some((t) => t.includes(needle))) &&
       (!focus || facets(e).includes(focus)) &&
       activeTags.every((t) => e.tags.includes(t)));
-  }, [data, q, status, focus, activeTags]);
+  }, [data, q, focus, activeTags]);
+  const counts = useMemo(() => Object.fromEntries(STATUSES.map((k) => [k, matching.filter((e) => e.status === k).length])), [matching]);
+  const rows = useMemo(() => matching.filter((e) => !status || e.status === status), [matching, status]);
   const sorted = useMemo(() => sortRows(rows, sort), [rows, sort]);
 
   if (error) return <EmptyState message={`Could not load the catalogue: ${error}`} />;
@@ -237,139 +163,105 @@ export function Catalogue() {
 
   const { today, stats } = data;
   const pick = (slugs: string[]) => slugs.map((s) => by.get(s)).filter(Boolean) as Row[];
-  const review = pick(today.review), fresh = pick(today.new), recent = pick(today.recent);
-  const filtered = !!(q || status || activeTags.length || focus);
+  const head = today.review[0] ?? today.new[0];
+  const filtered = !!(q || status || activeTags.length);
   const unsorted = sort.key === DEFAULT_SORT.key && sort.dir === DEFAULT_SORT.dir;
-  const clear = () => { setQ(""); setStatus(""); setActiveTags([]); if (focus) setFocus(null); };
+  const clear = () => { setQ(""); setStatus(""); setActiveTags([]); };
   // a focus may name a tag, and then that chip is the only thing that explains the filter
   const tagOn = (t: string) => activeTags.includes(t) || focus === t;
   const toggleTag = (t: string) => {
     if (focus === t) return setFocus(null);
     setActiveTags((a) => a.includes(t) ? a.filter((x) => x !== t) : [...a, t]);
   };
-  const here = new Set(rows.flatMap((e) => e.tags).concat(activeTags));
-  const tagsHere = data.tags.filter((t) => here.has(t));
+  // The tags of what is listed, the ones covering the most tasks first. A chip that is on, or
+  // that the search names, always makes the cut; the full list is alphabetical, for scanning.
+  const cover = new Map<string, number>(activeTags.map((t) => [t, 0]));
+  for (const t of rows.flatMap((e) => e.tags)) cover.set(t, (cover.get(t) ?? 0) + 1);
+  const needle = q.trim().toLowerCase();
+  const first = (t: string) => (tagOn(t) ? 2 : 0) + (needle && t.includes(needle) ? 1 : 0);
+  const ranked = [...cover.keys()].sort((a, b) => first(b) - first(a) || cover.get(b)! - cover.get(a)! || a.localeCompare(b));
+  const cut = Math.max(TAGS_SHOWN, ranked.filter((t) => first(t)).length);
+  const folded = !allTags && ranked.length > cut + 4;
+  const tagsHere = folded ? ranked.slice(0, cut) : data.tags.filter((t) => cover.has(t));
   const tiersHere = rows.some((e) => e.tier) || data.tiers.includes(focus ?? "");
-  // `today.review` is capped, so its length is not the backlog — say both numbers out loud
-  const dueLine = !today.due_total ? "nothing due"
-    : review.length < today.due_total ? `showing ${review.length} of ${today.due_total} due`
-    : plural(today.due_total, "review");
-  const todayLine = [
-    dueLine,
-    fresh.length ? `${fresh.length} new ${fresh.length === 1 ? "pick" : "picks"}` : null,
-    `${today.done_today} done today`,
-  ].filter(Boolean).join(" · ");
-  // nothing passed and nothing open: the scheduling has never shown itself, so say what it is
-  const showFirstRun = firstRun && stats.seen === 0 && today.recent.length === 0;
-  const dismissFirstRun = () => { localStorage.setItem(FIRST_RUN, "1"); setFirstRun(false); };
-  const stuck = stats.stuck;
   // Enter in the search box takes the top row of what is on screen — an IME commit is not one
   const onSearchKey = (e: KeyboardEvent) => {
     if (e.key === "Enter" && !e.nativeEvent.isComposing && sorted.length) location.hash = href(sorted[0]);
   };
-  const empty = today.no_new ? noPicks(today.no_new, today, focus, by) : null;
-  const tracks = data.tracks.map((name) => {
-    const all = data.tasks.filter((e) => e.track === name);
-    return { name, total: all.length, seen: all.filter((e) => e.seen > 0).length,
-      icon: TRACK_ICONS.has(name) ? `tracks/${name}.svg` : undefined };
-  });
-  const unseen = focus ? data.tasks.filter((e) => !e.seen && facets(e).includes(focus)).length : 0;
-  const act = empty?.act === "focus" ? { label: "Clear focus", run: () => setFocus(null) } : null;
+  const tracks = data.tracks.map((name) => ({ name, total: data.tasks.filter((e) => e.track === name).length }));
+  const allDue = () => {
+    setStatus("due");
+    listHead.current?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  };
 
   return (
-    <div style={{ maxWidth: 1180, margin: "0 auto", display: "grid", gap: 18 }}>
-      {tracks.length ? <TrackRail tracks={tracks} active={focus} onPick={setFocus} allTotal={stats.total} allSeen={stats.seen}
-        readout={focus ? <>New picks come from <strong>{focus}</strong>, {unseen} unseen left.</> : "New picks come from every track."}
-        aside={focus ? "Reviews still come from everywhere; the list below is filtered to match." : null} /> : null}
-      <Stats boxes={stats.boxes} ladder={stats.ladder} due={stats.due} seen={stats.seen} total={stats.total} practised={stats.practised} outOf={stats.window} progressHref="#/progress" />
-
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <span style={LABEL}>Today</span>
-        <span className="tabular" style={FAINT}>{todayLine}</span>
-      </div>
-
+    <div className={css.page}>
       {notice ? <div className="m-drop"><NoticeBanner message={notice} actions={[{ label: "Dismiss", onClick: () => setNotice(null) }]} /></div> : null}
+      <Today data={data} by={by} focus={focus} onFocus={setFocus} onAllDue={allDue} tracks={tracks}
+        firstRun={firstRun} onFirstRunDone={() => setFirstRun(false)} />
 
-      {/* a welcome, not a warning: NoticeBanner's own `--warn-bg` is what a save failure uses */}
-      {showFirstRun ? <div className="m-drop"><NoticeBanner
-        style={{ background: "var(--surface-2)" }}
-        message={<>Every task you pass comes back later than the last time — {inDays(stats.ladder[0])} at
-          first, {inDays(stats.ladder.at(-1)!)} once it is solid — and a sitting you struggle
-          through brings it back sooner instead. Reviews come first and a day holds only so
-          many of them, so a backlog cannot bury you. Two new tasks are offered a day
-          whatever the backlog looks like.</>}
-        actions={[
-          { label: "How it works", onClick: () => window.open(HOW_IT_WORKS, "_blank", "noopener") },
-          { label: "Got it", onClick: dismissFirstRun },
-        ]} /></div> : null}
-
-      <Card padding="0 18px" style={{ overflow: "hidden" }}>
-        <div className="m-stagger">
-          <Band label="Recent activity" aside={`last ${stats.window} days`} first />
-          {recent.length
-            ? recent.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} />)
-            : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
-                message="Nothing yet this week. Whatever you open collects here, passed or not." />}
-          <Band label="New picks" aside={focus ? `from ${focus}` : "any"} />
-          {fresh.length
-            ? fresh.map((e) => <TodayRow key={e.slug} row={e} ladder={stats.ladder} limit={stats.lapse_limit} />)
-            : <EmptyState align="left" style={{ padding: "4px 0 10px" }}
-                message={empty!.message} actionLabel={act?.label} onAction={act?.run} />}
-          {stuck ? <>
-            <Band label="Worth a focus" />
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 14, padding: "0 0 12px" }}>
-              <span>You keep struggling with</span>
-              <TagChip label={stuck.tag} active={focus === stuck.tag} onClick={() => setFocus(focus === stuck.tag ? null : stuck.tag)} />
-              {/* the chip clears the focus once it is on, so the offer to set it goes away */}
-              <span>— {plural(stuck.flagged, "task")} are flagged.
-                {focus === stuck.tag ? null : " Focusing on it puts its unstarted tasks first."}</span>
-            </div>
-          </> : null}
-        </div>
-      </Card>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6, flexWrap: "wrap" }}>
-        <span ref={searchBox} onKeyDown={onSearchKey} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-          <span style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
-            <Icon name="Search" style={{ position: "absolute", left: 10, color: "var(--text-faint)", pointerEvents: "none" }} />
-            <Input value={q} onChange={setQ} placeholder="search tasks and specs…" ariaLabel="Search tasks by title, number or what the spec says — Enter opens the first match" style={{ width: 260, paddingLeft: 32 }} />
+      <section aria-labelledby="cat-h" className={css.section}>
+        <div ref={listHead} className={css.heading}>
+          <h2 id="cat-h" className={css.h2}>Catalogue</h2>
+          {focus ? (
+            <span className={css.focus}>{focus} · {rows.length} of {stats.total}
+              <button type="button" onClick={() => setFocus(null)} aria-label={`Clear the focus on ${focus} and show every track`}><Icon name="Close" size={12} /></button>
+            </span>
+          ) : filtered ? <span className={css.count}>{rows.length} of {stats.total} tasks{activeTags.length > 1 ? " · tags matched with AND" : ""}</span> : null}
+          {filtered ? <Button variant="quiet" onClick={clear}>Clear</Button> : null}
+          <span className={css.grow} />
+          <span ref={searchBox} onKeyDown={onSearchKey} className={css.search}>
+            <Icon name="Search" className={css.searchIcon} />
+            <Input value={q} onChange={setQ} placeholder="Search titles, specs and tags" ariaLabel="Search tasks by title, number or what the spec says — Enter opens the first match" style={{ width: "100%", paddingLeft: 34, paddingRight: 36 }} />
+            <Kbd className={css.slash}>/</Kbd>
           </span>
-          <Kbd>/</Kbd>
-        </span>
-        <Select value={status} onChange={setStatus} options={STATUSES} placeholder="any status" ariaLabel="Filter by status" style={{ width: 150 }} />
-        {/* a tier is Python depth, so its chips go when nothing listed is Python; a tier that
-          * is the focus stays, since its chip is the way back out */}
-        {tiersHere ? <>
-          <div style={{ width: 1, height: 24, background: "var(--border)" }} />
-          <span style={FAINT}>python</span>
-          {data.tiers.map((t) => <TagChip key={t} label={t} active={focus === t} onClick={() => setFocus(focus === t ? null : t)} />)}
-        </> : null}
-        <div style={{ flex: 1 }} />
-        <span style={FAINT}>{rows.length} of {stats.total} tasks{activeTags.length > 1 ? " · tags matched with AND" : ""}</span>
-        {filtered ? <Button variant="quiet" onClick={clear}>Clear</Button> : null}
-      </div>
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        {tagsHere.map((t) => <TagChip key={t} label={t} active={tagOn(t)} onClick={() => toggleTag(t)} />)}
-      </div>
+        </div>
 
-      {/* narrower than the columns need, the card scrolls sideways; the page body never does */}
-      <Card padding={0} style={{ overflowX: "auto" }}>
-        {sorted.length === 0
-          ? <EmptyState message="No task matches those filters. Loosen a tag or clear the search." actionLabel="Clear filters" onAction={clear} />
-          : <>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 16px", height: 34, minWidth: LIST_MIN, boxSizing: "border-box", borderBottom: "1px solid var(--border-strong)", background: "var(--surface)", ...LABEL }}>
-                <SortHead label="#" col="topic" align="right" sort={sort} onSort={setSort} style={{ width: COL.num }} />
-                <SortHead label="Task" col="title" sort={sort} onSort={setSort} style={{ flex: 1 }} />
-                <SortHead label="tier/tag" col="path" sort={sort} onSort={setSort} style={{ width: COL.path }} />
-                <SortHead label="Difficulty" col="difficulty" sort={sort} onSort={setSort} style={{ width: COL.difficulty }} />
-                <SortHead label="Known" col="strength" sort={sort} onSort={setSort} style={{ width: COL.strength }} />
-                <SortHead label="Status" col="status" sort={sort} onSort={setSort} style={{ width: COL.status }} />
-                <SortReset disabled={unsorted} onClick={() => setSort(DEFAULT_SORT)} style={{ width: COL.reset }} />
-              </div>
-              <div style={{ minWidth: LIST_MIN }}>{sorted.map((row, i) => <ListRow key={row.slug} row={row} first={i === 0}
-                blocked={pick(row.blocked)} ladder={stats.ladder} limit={stats.lapse_limit} />)}</div>
-            </>}
-      </Card>
+        <div className={css.filters}>
+          <div role="group" aria-label="Status" className={css.segment}>
+            <button type="button" aria-pressed={!status} onClick={() => setStatus("")}>Any</button>
+            {STATUSES.map((k) => (
+              <button key={k} type="button" aria-pressed={status === k} onClick={() => setStatus(status === k ? "" : k)}>
+                {k} <span className={css.segCount}>{counts[k]}</span>
+              </button>
+            ))}
+          </div>
+          <div className={css.tags}>
+            {/* a tier is Python depth, so its chips go when nothing listed is Python; a tier that
+              * is the focus stays, since its chip is the way back out */}
+            {tiersHere ? <>
+              <span className={css.count}>python</span>
+              {data.tiers.map((t) => <TagChip key={t} label={t} active={focus === t} onClick={() => setFocus(focus === t ? null : t)} />)}
+              <span className={css.rule} />
+            </> : null}
+            {tagsHere.map((t) => <TagChip key={t} label={t} active={tagOn(t)} onClick={() => toggleTag(t)} />)}
+            {folded || (allTags && ranked.length > TAGS_SHOWN + 4) ? (
+              <button type="button" aria-expanded={!folded} onClick={() => setAllTags(folded)} className={css.more}>
+                {folded ? `+${ranked.length - cut} more` : "Fewer"}
+              </button>
+            ) : null}
+          </div>
+        </div>
+
+        {/* narrower than the columns need, the card scrolls sideways; the page body never does */}
+        <div className={css.list}>
+          {sorted.length === 0
+            ? <EmptyState message="No task matches those filters. Loosen a tag or clear the search." actionLabel="Clear filters" onAction={() => { clear(); if (focus) setFocus(null); }} />
+            : <>
+                <div className={css.header}>
+                  <SortHead label="#" col="topic" sort={sort} onSort={setSort} />
+                  <SortHead label="Task" col="title" sort={sort} onSort={setSort} />
+                  <SortHead label="Path" col="path" sort={sort} onSort={setSort} />
+                  <SortHead label="Difficulty" col="difficulty" sort={sort} onSort={setSort} />
+                  <SortHead label="Known" col="strength" sort={sort} onSort={setSort} />
+                  <SortHead label="Status" col="status" sort={sort} onSort={setSort} />
+                  <SortReset disabled={unsorted} onClick={() => setSort(DEFAULT_SORT)} />
+                </div>
+                {sorted.map((row) => <ListRow key={row.slug} row={row} next={row.slug === head}
+                  blocked={pick(row.blocked)} ladder={stats.ladder} limit={stats.lapse_limit} />)}
+              </>}
+        </div>
+      </section>
     </div>
   );
 }

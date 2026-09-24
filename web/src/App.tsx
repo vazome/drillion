@@ -1,10 +1,12 @@
-import { lazy, Suspense, useEffect, useState } from "react";
-import { Dialog, EmptyState, Icon, Toggle } from "./ds/index.js";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+import { Dialog, EmptyState } from "./ds/index.js";
 import { api, type Health } from "./api";
 import { Catalogue } from "./Catalogue";
 import { Progress } from "./Progress";
 import { Deps } from "./Deps";
 import { Settings } from "./Settings";
+import { Sidebar, TopBar, type Head } from "./Shell";
+import s from "./Shell.module.css";
 
 // the editor bundle is most of the app, and only the task screen needs it
 const Task = lazy(() => import("./Task").then((m) => ({ default: m.Task })));
@@ -57,46 +59,14 @@ function useTheme(): [boolean, (v: boolean) => void] {
 
 /** `#/settings` stays a link anyone can keep, though Settings is no longer a screen of its
  *  own: it opens the dialog, over the catalogue, since a link arrives with no screen to be
- *  over. The header opens the same dialog without touching the route at all, which is what
+ *  over. The sidebar and the top bar open the same dialog without touching the route at all, which is what
  *  keeps the task you had open underneath it. */
 const SETTINGS = "#/settings";
-
-function Header({ route, dark, setDark, total, version, python, onSettings }: {
-  route: string; dark: boolean; setDark: (v: boolean) => void; total: number; version: string;
-  python: string; onSettings: () => void;
-}) {
-  const link = (href: string, text: string) => (
-    <a href={href} style={{ fontSize: 14, fontWeight: route === href.slice(1) ? 600 : 400, color: route === href.slice(1) ? "var(--text)" : "var(--text-muted)" }}>{text}</a>
-  );
-  return (
-    <header style={{ height: 56, display: "flex", alignItems: "center", gap: 20, padding: "0 24px", borderBottom: "1px solid var(--border)", background: "var(--bg)", boxSizing: "border-box", position: "sticky", top: 0, zIndex: 10 }}>
-      <a href="#/" style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-        <span style={{ fontSize: 17, fontWeight: 600, color: "var(--text)" }}>drillion</span>
-        {total ? <span style={{ fontSize: 13, color: "var(--text-faint)" }}>{total} tasks</span> : null}
-        {version ? <span style={{ fontSize: 13, color: "var(--text-faint)" }}>v{version}</span> : null}
-        {python ? (
-          <span style={{ fontSize: 13, color: "var(--text-faint)" }} title="every task is graded on this interpreter">
-            Python {python}
-          </span>
-        ) : null}
-      </a>
-      <div style={{ flex: 1 }} />
-      {link("#/", "Catalogue")}
-      {link("#/progress", "Progress")}
-      {/* a dialog, not a route: a preference is wanted while looking at the code it changes,
-        * and coming back from a screen of its own is a second navigation */}
-      <button type="button" onClick={onSettings} style={{ font: "inherit", fontSize: 14, color: "var(--text-muted)", background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
-        <Icon name="Settings" />Settings
-      </button>
-      <Toggle checked={dark} onChange={setDark} label={<span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Icon name={dark ? "Asleep" : "Sun"} />{dark ? "Dark" : "Light"}</span>} />
-    </header>
-  );
-}
 
 export function App() {
   const route = useHash();
   const [dark, setDark] = useTheme();
-  const [head, setHead] = useState({ total: 0, version: "", python: "" });
+  const [head, setHead] = useState<Head>({ total: 0, version: "", python: "" });
   const [settings, setSettings] = useState(location.hash === SETTINGS);
   useSlashToSearch();
   // any navigation closes it, and the link opens it: a modal that outlives the screen it
@@ -120,17 +90,24 @@ export function App() {
   const tail = route.startsWith("/task/") ? route.slice(6) : null;
   const deps = !!tail?.endsWith("/deps");
   const slug = tail ? decodeURIComponent(deps ? tail.slice(0, -"/deps".length) : tail) : null;
+  const chrome = { route, dark, setDark, onSettings: () => setSettings(true) };
+  const bar = (crumbs: ReactNode) => <TopBar {...chrome} crumbs={crumbs} />;
   return (
-    <>
-      <Header route={route} dark={dark} setDark={setDark} {...head} onSettings={() => setSettings(true)} />
-      <main style={{ padding: "24px" }}>
-        {slug ? (deps ? <Deps key={slug} slug={slug} /> : <Suspense fallback={<EmptyState message="Loading…" />}><Task key={slug} slug={slug} dark={dark} /></Suspense>)
-          : route === "/progress" ? <Progress />
-          : <Catalogue />}
-      </main>
+    <div className={s.app} data-layout={slug && !deps ? "bar" : undefined}>
+      {slug && !deps ? (
+        <Suspense fallback={<>{bar(null)}<EmptyState message="Loading…" /></>}>
+          <Task key={slug} slug={slug} dark={dark} bar={bar} />
+        </Suspense>
+      ) : <>
+        <Sidebar {...chrome} head={head} />
+        <TopBar {...chrome} className={s.narrow} />
+        <main className={s.main}>
+          {slug ? <Deps key={slug} slug={slug} /> : route === "/progress" ? <Progress /> : <Catalogue />}
+        </main>
+      </>}
       <Dialog open={settings} onClose={closeSettings} label="Settings">
         <Settings />
       </Dialog>
-    </>
+    </div>
   );
 }

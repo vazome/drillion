@@ -4,7 +4,7 @@
 .message{font-family:var(--font-sans);font-size:14px;color:var(--text)}
 .detail{font-family:var(--font-mono);font-size:12.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .action{font-family:var(--font-sans);font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;border-radius:var(--radius-sm);transition:background var(--dur-press) var(--ease-out);padding:5px 4px;border:none;background:transparent;color:var(--accent);text-decoration:none}
-.action[data-strong]{padding:5px 10px;border:1px solid var(--border-strong);background:transparent;color:var(--text)}
+.action[data-strong]{padding:5px 10px;border:1px solid var(--control-edge);background:transparent;color:var(--text)}
 @media (hover:hover){.action:hover:not(:disabled){text-decoration:underline}.action[data-strong]:hover:not(:disabled){background:var(--surface);text-decoration:none}}
 .action:disabled{color:var(--text-faint);cursor:default;text-decoration:none}
 .action[data-strong]:disabled{border-color:var(--border);background:transparent}

@@ -12,6 +12,8 @@ export interface Meta {
   /** a Helm task's one hole: the chart path the learner's file stands in for */
   edits?: string;
   tags: string[]; source?: string;
+  /** the task numbers this one builds on; information, never a gate */
+  prereqs?: number[];
 }
 /** A catalogue row: the task's facts plus this learner's card. */
 export interface Row extends Meta {
@@ -23,6 +25,13 @@ export interface Row extends Meta {
   text: string;
   /** prereqs not yet passed, so the task is not offered as a new pick */
   blocked: string[];
+}
+/** GET /api/picks — what new picks are drawn from, for the sidebar on every screen. */
+export interface Picks {
+  focus: string | null;
+  /** each track's size, by name */
+  tracks: Record<string, number>;
+  stuck: { tag: string; flagged: number } | null;
 }
 /** GET /api/health — the version the header shows; never hardcode it here. */
 export interface Health { version: string; tasks: number; python: string }
@@ -42,16 +51,19 @@ export interface Catalogue {
   };
   /** `due` is the whole backlog, not `review.length` — the two differ once it is over the cap.
    *  `stuck` is the tag with the most flagged tasks, or null when none stands out. */
-  stats: { boxes: number[]; ladder: number[]; due: number; seen: number; total: number; practised: number; window: number; lapse_limit: number; stuck: { tag: string; flagged: number } | null };
+  /** `week` is which of the last `window` days were worked, oldest first; `practised` counts them. */
+  stats: { boxes: number[]; ladder: number[]; due: number; seen: number; total: number; practised: number; week: boolean[]; window: number; lapse_limit: number; stuck: { tag: string; flagged: number } | null };
   tasks: Row[];
 }
 export interface Progress {
-  boxes: number[]; ladder: number[]; due: number; seen: number; total: number; practised: number; window: number;
+  boxes: number[]; ladder: number[]; due: number; seen: number; total: number; practised: number; week: boolean[]; window: number;
   today: string;
   /** cards due per day for the next 14, [0] today with everything overdue folded in */
   forecast: number[];
   /** reviews served a day — the line the forecast draws */
   cap: number;
+  /** struggles at which a topic says so under its name */
+  lapse_limit: number;
   /** passes per calendar day, all history */
   days: Record<string, number>;
   per_tag: Record<string, { seen: number; total: number; boxes: number[]; lapses: number; due7: number }>;
@@ -59,7 +71,7 @@ export interface Progress {
 }
 /** One end of a prereq edge, already resolved server-side: the browser never maps a slug
  *  to a title itself. */
-export interface DepRef { slug: string; topic: number; title: string; tags: string[] }
+export interface DepRef { slug: string; topic: number; title: string; tags: string[]; difficulty: Meta["difficulty"]; status: Status }
 export interface Task {
   slug: string; meta: Meta;
   spec_md: string; code: string; etag: string; has_given: boolean;
@@ -184,3 +196,10 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const post = <T,>(path: string, body?: unknown) =>
   api<T>(path, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
+
+/** Fired once a new focus is saved: the sidebar and the catalogue both redraw from it. */
+export const FOCUS_SAVED = "drillion-focus";
+
+/** Set the one focus new picks come from, or clear it with null. */
+export const setFocus = (tag: string | null) =>
+  post("/focus", { tag }).then(() => { dispatchEvent(new Event(FOCUS_SAVED)); });

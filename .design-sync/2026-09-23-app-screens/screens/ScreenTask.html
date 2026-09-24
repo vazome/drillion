@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>ScreenTask — Task: spec, editor, grading bar, a failed Run</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="_base.css">
+<script>document.documentElement.dataset.theme=new URLSearchParams(location.search).get('theme')||'light'</script>
+</head>
+<body><!-- Reference screen, 980px tall, 1440px wide. Open with ?theme=dark or ?theme=light. -->
+<div style="width: 1440px; height: 980px; box-sizing: border-box; background: var(--bg); color: var(--text); font-family: var(--font-sans); display: flex; flex-direction: column; overflow: hidden;">
+
+<header style="height: 48px; flex-shrink: 0; box-sizing: border-box; padding: 0 20px; display: flex; align-items: center; gap: 20px; border-bottom: 1px solid var(--border);">
+<span style="font-size: 16px; font-weight: 600;">drillion</span>
+<nav aria-label="Breadcrumb" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">
+<a href="#" style="display: flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M13 8H3M7 4 3 8l4 4"></path></svg>Catalogue</a>
+<span aria-hidden="true">/</span><span>docker</span><span aria-hidden="true">/</span><span style="font-family: 'Spline Sans Mono', monospace; color: var(--text);">289</span>
+</nav>
+<span style="flex-grow: 1;"></span>
+<a href="#" style="font-size: 13px; font-weight: 500; color: var(--text-muted); text-decoration: none;">Progress</a>
+<button type="button" style="display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 8px; background: transparent; border: 0; border-radius: 6px; font: inherit; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="8" cy="8" r="2.2"></circle><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"></path></svg>Settings</button>
+</header>
+
+<section aria-label="Task" style="flex-shrink: 0; box-sizing: border-box; padding: 18px 24px; display: flex; align-items: center; gap: 20px; border-bottom: 1px solid var(--border);">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 15px; color: var(--text-muted);">289</span>
+<h1 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">your first Dockerfile</h1>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span></span>easy</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">docker/<span style="color: var(--text);">cmd</span></span>
+<span style="height: 22px; display: inline-flex; align-items: center; padding: 0 8px; border-radius: 999px; background: var(--accent-tint); font-size: 12px; font-weight: 500; color: var(--accent);">open</span>
+<span style="flex-grow: 1;"></span>
+<span style="font-size: 13px; color: var(--text-muted);">No prereqs</span>
+<a href="#" style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; text-decoration: none;">Opens 4 tasks<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a>
+<span aria-hidden="true" style="width: 1px; height: 24px; background: var(--border);"></span>
+<div role="timer" aria-label="Active time 6 minutes 42 seconds" style="display: flex; align-items: baseline; gap: 6px;"><span style="font-family: 'Spline Sans Mono', monospace; font-size: 17px; font-variant-numeric: tabular-nums;">6:42</span><span style="font-size: 12px; color: var(--text-muted);">active</span></div>
+<button type="button" style="height: 32px; padding: 0 4px; background: transparent; border: 0; font: inherit; font-size: 13px; color: var(--text-muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer;">Abandon</button>
+</section>
+
+<div style="flex-grow: 1; min-height: 0; display: grid; grid-template-columns: 600px 8px minmax(0, 1fr);">
+
+<article aria-label="Spec" style="position: relative; min-height: 0; overflow: hidden; box-sizing: border-box; padding: 24px 28px 0 24px; display: flex; flex-direction: column; gap: 18px; font-size: 13.5px; line-height: 1.6; color: var(--text);">
+<p style="margin: 0; font-size: 15px; font-style: italic; line-height: 1.55; color: var(--text-muted);">An image is a filesystem and a command. A Dockerfile is the recipe for both, one instruction at a time.</p>
+
+<section style="display: flex; flex-direction: column; gap: 8px;">
+<h2 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent);">Read first</h2>
+<ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
+<li><a href="#">Dockerfile reference</a>: every instruction, and what it adds to the image</li>
+<li><a href="#">Shell and exec form</a>: why <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">CMD</code> takes a JSON array</li>
+</ul>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px;">
+<h2 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent);">Why</h2>
+<p style="margin: 0;">Every image starts <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">FROM</code> another one. For a Python app that is an official <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">python</code> image, and the tag says which Python and how much else comes with it: the <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">-slim</code> variants leave out compilers and manuals nobody needs at runtime, and are a fraction of the size.</p>
+<p style="margin: 0;">After <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">FROM</code>, each instruction adds a layer. <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">WORKDIR</code> makes a directory and moves into it, so everything after it has a place to land. <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">COPY</code> brings files in from the build context, the folder the build was started in.</p>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px;">
+<h2 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent);">You get</h2>
+<p style="margin: 0;">A build context holding <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">app.py</code>, open in the tabs above the editor, and an empty <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">Dockerfile</code>. The app is a small web server that reads the port to listen on from the <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">PORT</code> variable.</p>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px;">
+<h2 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent);">You return</h2>
+<p style="margin: 0;">A Dockerfile for the app on Python <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">3.13</code>, listening on port <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">8080</code>.</p>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px;">
+<h2 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent);">Rules</h2>
+<ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
+<li>one stage, <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">FROM python:3.13-slim</code></li>
+<li><code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">WORKDIR /app</code>, before anything is copied</li>
+<li>copy <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">app.py</code> alone, not the whole context</li>
+<li><code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">PORT</code> is set to <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">8080</code> with <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">ENV</code>, and the same port is the one <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">EXPOSE</code> names</li>
+<li>one <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">CMD</code>, in exec form, running <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">app.py</code> with <code style="font-family: 'Spline Sans Mono', monospace; font-size: 12.5px; padding: 1px 5px; border-radius: 4px; background: var(--surface-2);">python</code></li>
+</ul>
+</section>
+
+
+
+
+
+<div aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 60px; height: 64px; background: linear-gradient(180deg, transparent, var(--bg));"></div>
+<div role="group" aria-label="Help with this task" style="position: absolute; left: 0; right: 0; bottom: 0; height: 60px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 12px; background: var(--bg); border-top: 1px solid var(--border);">
+<span style="font-size: 13px; color: var(--text-muted);">Stuck?</span>
+<button type="button" disabled="" style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; background: transparent; border: 1px solid var(--border-strong); border-radius: 6px; font: inherit; font-size: 13px; color: var(--text-muted); cursor: not-allowed;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M6 12.5h4M6.5 14.5h3M8 1.5a4.5 4.5 0 0 0-2.5 8.2V11h5V9.7A4.5 4.5 0 0 0 8 1.5z"></path></svg>Hint 1 <span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px;">in 0:48</span></button>
+<button type="button" disabled="" style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; background: transparent; border: 1px solid var(--border-strong); border-radius: 6px; font: inherit; font-size: 13px; color: var(--text-muted); cursor: not-allowed;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1"></rect><path d="M5 7V5a3 3 0 0 1 6 0v2"></path></svg>Solution <span style="font-size: 12px;">after 2 submits</span></button>
+</div>
+<div aria-hidden="true" style="position: absolute; right: 6px; top: 24px; width: 4px; height: 220px; border-radius: 999px; background: var(--border-strong);"></div>
+</article>
+
+<div role="separator" aria-orientation="vertical" aria-label="Resize panes" tabindex="0" style="display: flex; align-items: center; justify-content: center; border-left: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--editor); cursor: col-resize;"><span aria-hidden="true" style="width: 2px; height: 28px; border-radius: 999px; background: var(--border-strong);"></span></div>
+
+<section aria-label="Editor and results" style="min-width: 0; min-height: 0; display: flex; flex-direction: column;">
+<div role="tablist" aria-label="Files" style="height: 40px; flex-shrink: 0; display: flex; align-items: stretch; background: var(--editor); border-bottom: 1px solid var(--border);">
+<button type="button" role="tab" aria-selected="true" style="display: flex; align-items: center; gap: 8px; padding: 0 16px; background: var(--editor); border: 0; box-shadow: inset 0 2px 0 var(--accent); border-right: 1px solid var(--border); font: inherit; font-family: 'Spline Sans Mono', monospace; font-size: 13px; color: var(--text); cursor: pointer;">Dockerfile<span style="height: 18px; display: inline-flex; align-items: center; padding: 0 7px; border-radius: 999px; background: var(--accent-tint); font-family: 'IBM Plex Sans', sans-serif; font-size: 11px; font-weight: 500; color: var(--accent);">yours</span><span aria-label="unsaved changes" style="width: 7px; height: 7px; border-radius: 999px; background: var(--text-muted);"></span></button>
+<button type="button" role="tab" aria-selected="false" style="display: flex; align-items: center; gap: 8px; padding: 0 16px; background: var(--bg); border: 0; border-right: 1px solid var(--border); font: inherit; font-family: 'Spline Sans Mono', monospace; font-size: 13px; color: var(--text-muted); cursor: pointer;">app.py<span style="display: flex; align-items: center; gap: 4px; font-family: 'IBM Plex Sans', sans-serif; font-size: 11px;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1"></rect><path d="M5 7V5a3 3 0 0 1 6 0v2"></path></svg>read-only</span></button>
+<span style="flex-grow: 1; background: var(--bg);"></span>
+</div>
+
+<div style="flex-grow: 1; min-height: 0; display: grid; grid-template-columns: 52px minmax(0, 1fr); background: var(--editor); font-family: 'Spline Sans Mono', monospace; font-size: 14px; line-height: 1.55;">
+<div aria-hidden="true" style="box-sizing: border-box; padding: 14px 12px 0 0; background: var(--gutter); color: var(--text-faint); text-align: right; display: flex; flex-direction: column;">
+<span>1</span><span>2</span><span>3</span><span style="color: var(--text);">4</span><span>5</span><span>6</span>
+</div>
+<pre aria-label="Dockerfile editor" style="margin: 0; box-sizing: border-box; padding: 14px 16px 0; color: var(--text); font: inherit; white-space: pre;"><span style="color: var(--accent);">FROM</span> python:3.13-slim
+<span style="color: var(--accent);">WORKDIR</span> /app
+<span style="color: var(--accent);">COPY</span> app.py .
+<span style="display: inline-block; width: 100%; background: var(--accent-tint);"><span style="color: var(--accent);">EXPOSE</span> <span style="color: var(--syn-number);">8080</span><span style="display: inline-block; width: 2px; height: 18px; vertical-align: -3px; background: var(--text);"></span></span>
+<span style="color: var(--accent);">CMD</span> [<span style="color: var(--pass);">"python"</span>, <span style="color: var(--pass);">"app.py"</span>]
+</pre>
+</div>
+
+<div role="toolbar" aria-label="Grade your file" style="height: 60px; flex-shrink: 0; box-sizing: border-box; padding: 0 20px; display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--border); background: var(--bg);">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">0 submits · seed 4812</span>
+<span style="flex-grow: 1;"></span>
+<button type="button" style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 14px; background: var(--surface); border: 1px solid var(--control-edge); border-radius: 6px; font: inherit; font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer;"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z"></path></svg>Run<kbd style="font-family: 'Spline Sans Mono', monospace; font-size: 11px; padding: 0 5px; border: 1px solid var(--border-strong); border-radius: 4px; color: var(--text-muted);">Ctrl ↵</kbd></button>
+<button type="button" style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 14px; background: var(--accent); border: 0; border-radius: 6px; font: inherit; font-size: 14px; font-weight: 600; color: var(--on-accent); cursor: pointer;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 8 14 2l-3 12-3-5z"></path></svg>Submit<kbd style="font-family: 'Spline Sans Mono', monospace; font-size: 11px; padding: 0 5px; border: 1px solid color-mix(in srgb, var(--on-accent) 40%, transparent); border-radius: 4px; color: var(--on-accent);">Ctrl ⇧ ↵</kbd></button>
+</div>
+
+<section aria-label="Result" role="status" style="height: 250px; flex-shrink: 0; box-sizing: border-box; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--border); background: var(--surface);">
+<div style="display: flex; align-items: center; gap: 10px;">
+<span style="display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 10px; border-radius: 6px; background: var(--fail-bg); color: var(--fail); font-size: 13px; font-weight: 600;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="6"></circle><path d="M5.8 5.8l4.4 4.4M10.2 5.8l-4.4 4.4"></path></svg>1 rule not met</span>
+<span style="font-size: 13px; color: var(--text-muted);">Run, so no attempt used and nothing on the ladder moved.</span>
+</div>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+<li style="display: flex; align-items: center; gap: 8px; color: var(--text-muted);"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--pass)" stroke-width="1.8" aria-hidden="true"><path d="M3 8.5l3 3 7-7"></path></svg>hadolint found nothing to fix</li>
+<li style="display: flex; align-items: center; gap: 8px; color: var(--text-muted);"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--pass)" stroke-width="1.8" aria-hidden="true"><path d="M3 8.5l3 3 7-7"></path></svg>every COPY source is in the build context</li>
+</ul>
+<div style="padding: 12px 14px; border-radius: 6px; background: var(--bg); box-shadow: 0 0 0 1px var(--border); display: flex; flex-direction: column; gap: 6px;">
+<span style="font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">What failed</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 13px; line-height: 1.5; color: var(--text);">the app reads its port from PORT, which is <span style="color: var(--fail);">None</span> here and should be <span style="color: var(--pass);">8080</span></span>
+</div>
+<button type="button" aria-expanded="false" style="align-self: flex-start; display: flex; align-items: center; gap: 6px; padding: 0; background: transparent; border: 0; font: inherit; font-size: 13px; color: var(--text-muted); cursor: pointer;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"></path></svg>Full output</button>
+</section>
+</section>
+</div>
+</div>
+<script>/* A static screen: nothing to mount. Until the page regenerates tokens.css with the tokens this screen uses, define them here; once tokens.css has them, this does nothing. */
+(function(){if(getComputedStyle(document.documentElement).getPropertyValue("--control-edge").trim())return;var s=document.createElement("style");s.textContent=':root,[data-theme="light"]{--control-edge:#8a959d;--strength-learning:var(--warn);--strength-familiar:var(--accent);--strength-solid:var(--pass);--heat-0:var(--surface-2);--heat-1:#d3e0f6;--heat-2:var(--accent-line);--heat-3:#6f95d9;--heat-4:var(--accent-hover);--danger-surface:#fff8f8;--danger-edge:var(--fail);--scrim:rgba(28,34,38,.32);}[data-theme="dark"]{--control-edge:#6b7883;--heat-1:#2e4466;--heat-3:#5a86cc;--danger-surface:#221c1f;--scrim:rgba(10,13,16,.62);}';document.head.appendChild(s);})();
+</script>
+
+</body></html>

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>ScreenLineage — Lineage: what a task needs and what it opens</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="_base.css">
+<script>document.documentElement.dataset.theme=new URLSearchParams(location.search).get('theme')||'light'</script>
+</head>
+<body><!-- Reference screen, 900px tall, 1440px wide. Open with ?theme=dark or ?theme=light. -->
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: var(--bg); color: var(--text); font-family: var(--font-sans); display: flex;">
+
+<aside style="width: 248px; flex-shrink: 0; box-sizing: border-box; padding: 28px 16px 24px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 28px;">
+<div style="display: flex; align-items: baseline; gap: 10px; padding: 0 10px;">
+<span style="font-size: 17px; font-weight: 600;">drillion</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">323 tasks</span>
+</div>
+
+<nav aria-label="Main" style="display: flex; flex-direction: column; gap: 2px;">
+<a href="#" aria-current="page" style="display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: 6px; background: var(--surface-2); color: var(--text); font-size: 14px; font-weight: 600; text-decoration: none;">
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="1.5"></rect><path d="M5 6h6M5 9h6M5 12h3"></path></svg>
+Catalogue</a>
+<a href="#" style="display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: 6px; color: var(--text-muted); font-size: 14px; font-weight: 500; text-decoration: none;">
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M2 13.5h12M4 11V8M7 11V5.5M10 11V7M13 11V3"></path></svg>
+Progress</a>
+</nav>
+
+<section aria-labelledby="tracks-h" style="display: flex; flex-direction: column; gap: 10px;">
+<h2 id="tracks-h" style="margin: 0; padding: 0 10px; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">New picks from</h2>
+<div role="radiogroup" aria-label="Track" style="display: flex; flex-direction: column; gap: 2px;">
+
+<button type="button" role="radio" aria-checked="false" style="display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: transparent; border: 0; border-radius: 6px; font: inherit; color: var(--text); cursor: pointer; text-align: left;">
+<span style="display: flex; align-items: center; gap: 10px; width: 100%;">
+<span aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: 4px; color: var(--text-muted);"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5"></rect><rect x="9" y="2" width="5" height="5"></rect><rect x="2" y="9" width="5" height="5"></rect><rect x="9" y="9" width="5" height="5"></rect></svg></span>
+<span style="flex-grow: 1; font-size: 14px; font-weight: 500;">All tracks</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">323</span></span>
+<span aria-hidden="true" style="margin-left: 32px; width: calc(100% - 32px); height: 3px; border-radius: 999px; background: var(--border);"></span>
+</button>
+
+<button type="button" role="radio" aria-checked="true" style="display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: var(--accent-tint); border: 0; border-radius: 6px; font: inherit; color: var(--text); cursor: pointer; text-align: left;">
+<span style="display: flex; align-items: center; gap: 10px; width: 100%;">
+<span aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; box-sizing: border-box; border: 1px solid var(--accent-line); border-radius: 4px; font-family: 'Spline Sans Mono', monospace; font-size: 11px; color: var(--accent);">d</span>
+<span style="flex-grow: 1; font-size: 14px; font-weight: 600; color: var(--accent);">docker</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">15</span></span>
+<span aria-hidden="true" style="margin-left: 32px; width: calc((100% - 32px) * 0.046); min-width: 6px; height: 3px; border-radius: 999px; background: var(--accent-line);"></span>
+</button>
+
+<button type="button" role="radio" aria-checked="false" style="display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: transparent; border: 0; border-radius: 6px; font: inherit; color: var(--text); cursor: pointer; text-align: left;">
+<span style="display: flex; align-items: center; gap: 10px; width: 100%;">
+<span aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: 4px; font-family: 'Spline Sans Mono', monospace; font-size: 11px; color: var(--text-muted);">h</span>
+<span style="flex-grow: 1; font-size: 14px; font-weight: 500;">helm</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">15</span></span>
+<span aria-hidden="true" style="margin-left: 32px; width: calc((100% - 32px) * 0.046); min-width: 6px; height: 3px; border-radius: 999px; background: var(--border);"></span>
+</button>
+
+<button type="button" role="radio" aria-checked="false" style="display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: transparent; border: 0; border-radius: 6px; font: inherit; color: var(--text); cursor: pointer; text-align: left;">
+<span style="display: flex; align-items: center; gap: 10px; width: 100%;">
+<span aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: 4px; font-family: 'Spline Sans Mono', monospace; font-size: 11px; color: var(--text-muted);">k</span>
+<span style="flex-grow: 1; font-size: 14px; font-weight: 500;">kubernetes</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">26</span></span>
+<span aria-hidden="true" style="margin-left: 32px; width: calc((100% - 32px) * 0.08); height: 3px; border-radius: 999px; background: var(--border);"></span>
+</button>
+
+<button type="button" role="radio" aria-checked="false" style="display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: transparent; border: 0; border-radius: 6px; font: inherit; color: var(--text); cursor: pointer; text-align: left;">
+<span style="display: flex; align-items: center; gap: 10px; width: 100%;">
+<span aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: 4px; font-family: 'Spline Sans Mono', monospace; font-size: 11px; color: var(--text-muted);">p</span>
+<span style="flex-grow: 1; font-size: 14px; font-weight: 500;">python</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">267</span></span>
+<span aria-hidden="true" style="margin-left: 32px; width: calc((100% - 32px) * 0.827); height: 3px; border-radius: 999px; background: var(--border);"></span>
+</button>
+</div>
+<p style="margin: 0; padding: 0 10px; font-size: 12px; line-height: 1.45; color: var(--text-muted);">Reviews still come from every track.</p>
+</section>
+
+<div style="flex-grow: 1;"></div>
+
+<div style="display: flex; flex-direction: column; gap: 4px; padding-top: 16px; border-top: 1px solid var(--border);">
+<button type="button" style="display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; background: transparent; border: 0; border-radius: 6px; font: inherit; font-size: 14px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-align: left;">
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="8" cy="8" r="2.2"></circle><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"></path></svg>
+Settings</button>
+<button type="button" role="switch" aria-checked="true" style="display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; background: transparent; border: 0; border-radius: 6px; font: inherit; font-size: 14px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-align: left;">
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M13 9.5A5.5 5.5 0 0 1 6.5 3a5.5 5.5 0 1 0 6.5 6.5z"></path></svg>
+<span style="flex-grow: 1;">Dark</span>
+<span aria-hidden="true" style="position: relative; width: 30px; height: 18px; border-radius: 999px; background: var(--accent);"><span style="position: absolute; top: 2px; left: 14px; width: 14px; height: 14px; border-radius: 999px; background: var(--bg);"></span></span>
+</button>
+<span style="padding: 8px 10px 0; font-family: 'Spline Sans Mono', monospace; font-size: 11px; color: var(--text-muted);">v0.9.5 · Python 3.14.7</span>
+</div>
+</aside>
+
+<main style="flex-grow: 1; min-width: 0; box-sizing: border-box; padding: 40px 56px 48px; display: flex; flex-direction: column; gap: 32px;">
+
+<header style="display: flex; align-items: flex-end; gap: 24px;">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px;">
+<a href="#" style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--text-muted); text-decoration: none;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M13 8H3M7 4 3 8l4 4"></path></svg>Back to the catalogue</a>
+<h1 style="margin: 0; font-size: 32px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.2;"><span style="font-family: 'Spline Sans Mono', monospace; font-weight: 400; font-size: 22px; color: var(--text-muted); margin-right: 12px;">290</span>the layer cache, and why requirements.txt goes first</h1>
+<p style="margin: 0; font-size: 14px; color: var(--text-muted);">What it needs, and what it opens. Prereqs are a shorter way in, never a gate: any task can be opened.</p>
+</div>
+<a href="#" style="flex-shrink: 0; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 16px 0 18px; background: var(--accent); color: var(--on-accent); border-radius: 6px; font-size: 14px; font-weight: 600; text-decoration: none;">Open 290<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a>
+</header>
+
+<section aria-label="Lineage of 290" style="position: relative; background: var(--surface); border-radius: 8px; box-shadow: 0 0 0 1px var(--border); padding: 28px 40px 32px;">
+<div style="display: grid; grid-template-columns: 280px 1fr 280px 1fr 280px; margin-bottom: 16px; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);">
+<span>Needs · 1</span><span></span><span>This task</span><span></span><span>Opens · 4</span>
+</div>
+
+<div style="position: relative; height: 480px;">
+<svg aria-hidden="true" width="1000" height="480" viewBox="0 0 1000 480" style="position: absolute; left: 0; top: 0; overflow: visible;">
+<path d="M280 240 C340 240 300 240 360 240" fill="none" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="5 4"></path>
+<path d="M640 240 C690 240 670 52 720 52" fill="none" stroke="var(--control-edge)" stroke-width="1.5" stroke-dasharray="5 4"></path>
+<path d="M640 240 C690 240 670 177 720 177" fill="none" stroke="var(--control-edge)" stroke-width="1.5" stroke-dasharray="5 4"></path>
+<path d="M640 240 C690 240 670 302 720 302" fill="none" stroke="var(--control-edge)" stroke-width="1.5" stroke-dasharray="5 4"></path>
+<path d="M640 240 C690 240 670 427 720 427" fill="none" stroke="var(--control-edge)" stroke-width="1.5" stroke-dasharray="5 4"></path>
+<circle cx="360" cy="240" r="3.5" fill="var(--warn)"></circle>
+<circle cx="720" cy="52" r="3.5" fill="var(--control-edge)"></circle>
+<circle cx="720" cy="177" r="3.5" fill="var(--control-edge)"></circle>
+<circle cx="720" cy="302" r="3.5" fill="var(--control-edge)"></circle>
+<circle cx="720" cy="427" r="3.5" fill="var(--control-edge)"></circle>
+</svg>
+
+<a href="#" style="position: absolute; left: 0; top: 180px; width: 280px; height: 120px; box-sizing: border-box; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; background: var(--bg); border-radius: 8px; box-shadow: 0 0 0 1px var(--border); color: var(--text); text-decoration: none;">
+<span style="display: flex; align-items: center; gap: 8px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">289<span style="flex-grow: 1;"></span><span style="display: inline-flex; align-items: center; gap: 4px; color: var(--warn);"><svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 2 15 14H1z"></path></svg>not passed yet</span></span>
+<span style="font-size: 15px; font-weight: 500; line-height: 1.35;">your first Dockerfile</span>
+<span style="flex-grow: 1;"></span>
+<span style="font-size: 12px; color: var(--text-muted);">easy · up next in Today</span>
+</a>
+
+<div style="position: absolute; left: 360px; top: 160px; width: 280px; height: 160px; box-sizing: border-box; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; background: var(--accent-tint); border-radius: 8px; box-shadow: 0 0 0 1px var(--accent-line);">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--accent);">290 · this task</span>
+<span style="font-size: 16px; font-weight: 600; line-height: 1.35;">the layer cache, and why requirements.txt goes first</span>
+<span style="flex-grow: 1;"></span>
+<span style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-muted);"><span style="font-family: 'Spline Sans Mono', monospace;">docker/layer-cache · pip</span><span>easy</span><span>new</span></span>
+</div>
+
+<a href="#" style="position: absolute; left: 720px; top: 0px; width: 280px; height: 105px; box-sizing: border-box; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; background: var(--bg); border-radius: 8px; box-shadow: 0 0 0 1px var(--border); color: var(--text); text-decoration: none;">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">293</span>
+<span style="font-size: 14px; font-weight: 500; line-height: 1.35;">apt-get in one RUN: update, install, clean up</span>
+<span style="flex-grow: 1;"></span>
+<span style="font-size: 12px; color: var(--text-muted);">easy · new</span>
+</a>
+<a href="#" style="position: absolute; left: 720px; top: 125px; width: 280px; height: 105px; box-sizing: border-box; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; background: var(--bg); border-radius: 8px; box-shadow: 0 0 0 1px var(--border); color: var(--text); text-decoration: none;">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">297</span>
+<span style="font-size: 14px; font-weight: 500; line-height: 1.35;">multi-stage Python: build a virtualenv, ship it</span>
+<span style="flex-grow: 1;"></span>
+<span style="display: flex; gap: 10px; font-size: 12px; color: var(--text-muted);"><span>hard · new</span><span style="font-family: 'Spline Sans Mono', monospace; color: var(--warn);">also needs 296</span></span>
+</a>
+<a href="#" style="position: absolute; left: 720px; top: 250px; width: 280px; height: 105px; box-sizing: border-box; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; background: var(--bg); border-radius: 8px; box-shadow: 0 0 0 1px var(--border); color: var(--text); text-decoration: none;">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">319</span>
+<span style="font-size: 14px; font-weight: 500; line-height: 1.35;">a HEALTHCHECK with no curl in the image</span>
+<span style="flex-grow: 1;"></span>
+<span style="font-size: 12px; color: var(--text-muted);">easy · new</span>
+</a>
+<a href="#" style="position: absolute; left: 720px; top: 375px; width: 280px; height: 105px; box-sizing: border-box; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; background: var(--bg); border-radius: 8px; box-shadow: 0 0 0 1px var(--border); color: var(--text); text-decoration: none;">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">321</span>
+<span style="font-size: 14px; font-weight: 500; line-height: 1.35;">a cache mount, so pip stops downloading the same wheels</span>
+<span style="flex-grow: 1;"></span>
+<span style="font-size: 12px; color: var(--text-muted);">medium · new</span>
+</a>
+</div>
+
+<div style="display: flex; align-items: center; gap: 24px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted);">
+<span style="display: flex; align-items: center; gap: 8px;"><svg width="28" height="6" aria-hidden="true"><path d="M0 3h28" stroke="var(--pass)" stroke-width="1.5"></path></svg>passed</span>
+<span style="display: flex; align-items: center; gap: 8px;"><svg width="28" height="6" aria-hidden="true"><path d="M0 3h28" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="5 4"></path></svg>needed, not passed yet</span>
+<span style="display: flex; align-items: center; gap: 8px;"><svg width="28" height="6" aria-hidden="true"><path d="M0 3h28" stroke="var(--control-edge)" stroke-width="1.5" stroke-dasharray="5 4"></path></svg>opens once this one is passed</span>
+<span style="flex-grow: 1;"></span>
+<span>Each card opens its own lineage.</span>
+</div>
+</section>
+</main>
+
+</div>
+<script>/* A static screen: nothing to mount. Until the page regenerates tokens.css with the tokens this screen uses, define them here; once tokens.css has them, this does nothing. */
+(function(){if(getComputedStyle(document.documentElement).getPropertyValue("--control-edge").trim())return;var s=document.createElement("style");s.textContent=':root,[data-theme="light"]{--control-edge:#8a959d;--strength-learning:var(--warn);--strength-familiar:var(--accent);--strength-solid:var(--pass);--heat-0:var(--surface-2);--heat-1:#d3e0f6;--heat-2:var(--accent-line);--heat-3:#6f95d9;--heat-4:var(--accent-hover);--danger-surface:#fff8f8;--danger-edge:var(--fail);--scrim:rgba(28,34,38,.32);}[data-theme="dark"]{--control-edge:#6b7883;--heat-1:#2e4466;--heat-3:#5a86cc;--danger-surface:#221c1f;--scrim:rgba(10,13,16,.62);}';document.head.appendChild(s);})();
+</script>
+
+</body></html>

@@ -1,23 +1,34 @@
 import { useEffect, useState } from "react";
-import { Card, DueForecast, EmptyState, PracticeHeatmap, StatusBadge, Table, TopicStrips } from "./ds/index.js";
+import { DueForecast, EmptyState, PracticeHeatmap, StatusBadge, Table, TopicStrips } from "./ds/index.js";
 import { api, type Progress as Payload } from "./api";
-import { Stats } from "./Stats";
 import { taskHref } from "./Deps";
-import { secs } from "./format";
-import { bands, tally } from "./strength";
+import { Level } from "./Level";
+import { bands, strength, tally } from "./strength";
+import s from "./Progress.module.css";
 
 /** "2026-08-26" → "26 Aug". Parsed at local midnight so the day never slips a timezone. */
 const day = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+const WORDS = ["learning", "familiar", "solid"] as const;
 
 const LOG_COLS = [
-  { key: "date", label: "Date", width: "76px", mono: true, muted: true, render: (r: LogRow) => day(r.date) },
-  { key: "slug", label: "Task", mono: true, render: (r: LogRow) => <a href={taskHref(r.slug)}>{r.slug}</a> },
+  { key: "date", label: "Date", width: "52px", mono: true, muted: true, render: (r: LogRow) => day(r.date) },
+  { key: "slug", label: "Task", mono: true, render: (r: LogRow) => <a href={taskHref(r.slug)} title={r.slug} className={s.clip}>{r.slug}</a> },
   { key: "grade", label: "Grade", width: "96px", render: (r: LogRow) => <StatusBadge status={r.grade} /> },
-  { key: "attempts", label: "Attempts", align: "right" as const, mono: true, width: "84px", muted: true },
-  { key: "time", label: "Active", align: "right" as const, mono: true, width: "76px" },
-  { key: "kind", label: "Kind", width: "62px", small: true, muted: true },
+  { key: "attempts", label: "Tries", align: "right" as const, mono: true, width: "44px", muted: true },
+  { key: "time", label: "Active", align: "right" as const, mono: true, width: "52px" },
 ];
 type LogRow = Payload["log"][number];
+
+/** "Started early August", from the first day anything passed; nothing when it is older
+ *  than the year the grid shows. */
+function started(days: Payload["days"], today: string) {
+  const first = Object.keys(days).filter((d) => days[d] > 0).sort()[0];
+  if (!first) return "No passes yet. Every square fills in as you practise.";
+  const at = new Date(`${first}T00:00:00`);
+  if (Date.parse(`${today}T00:00:00`) - at.getTime() > 365 * 86400000) return "Passes per day.";
+  const part = at.getDate() <= 10 ? "early" : at.getDate() <= 20 ? "mid" : "late";
+  return `Passes per day. Started ${part} ${at.toLocaleDateString(undefined, { month: "long" })}.`;
+}
 
 export function Progress() {
   const [data, setData] = useState<Payload | null>(null);
@@ -30,43 +41,71 @@ export function Progress() {
   const tags = Object.entries(data.per_tag).map(([tag, t]) => ({ tag, ...t }));
   const known = tally(data.boxes, data.ladder);
   const band = bands(data.ladder);
-  const logRows = [...data.log].reverse().map((row, i) => ({ ...row, id: i, time: secs(row.secs), kind: row.new ? "new" : "review" }));
+  // whole minutes: the log is a record of sittings, not a stopwatch
+  const logRows = [...data.log].reverse().map((row, i) => ({ ...row, id: i, time: `${Math.max(1, Math.round(row.secs / 60))}m` }));
 
   return (
-    <div style={{ maxWidth: 1180, margin: "0 auto", display: "grid", gap: 18 }}>
-      <Stats boxes={data.boxes} ladder={data.ladder} due={data.due} seen={data.seen} total={data.total} practised={data.practised} outOf={data.window} />
+    <div className={s.page}>
+      <header className={s.head}>
+        <div className={s.headText}>
+          <span className={s.eyebrow}>{new Date(`${data.today}T00:00:00`).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</span>
+          <h1 className={s.h1}>Where you are on the ladder.</h1>
+        </div>
+        <dl className={s.stats}>
+          <div><dt>days practised</dt><dd>{data.practised}<span> of {data.window}</span></dd></div>
+          <div><dt>due today</dt><dd>{data.due}</dd></div>
+          <div><dt>practised</dt><dd>{data.seen}<span> / {data.total}</span></dd></div>
+        </dl>
+      </header>
 
-      <Card label="How well you know them">
-        <div style={{ display: "flex", gap: 8 }}>
-          {(["learning", "familiar", "solid"] as const).map((k) => (
-            <div key={k} style={{ flex: 1, background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "10px 12px" }}>
-              <StatusBadge status={k} />
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 15, margin: "6px 0 2px" }}>{known[k]} {known[k] === 1 ? "task" : "tasks"}</div>
-              <div style={{ fontSize: 11, color: "var(--text-faint)" }}>{band[k]}</div>
+      <section aria-labelledby="known-h" className={s.card}>
+        <div className={s.between}>
+          <h2 id="known-h" className={s.eyebrow}>How well you know them</h2>
+          <span className={s.mono}>{data.seen} practised · {data.total - data.seen} not started</span>
+        </div>
+        <div aria-hidden="true" className={s.spread}>
+          {WORDS.map((k) => known[k] ? <span key={k} data-of={k} style={{ width: `${(known[k] / data.total) * 100}%` }} /> : null)}
+        </div>
+        <div className={s.words}>
+          {WORDS.map((k) => (
+            <div key={k} data-of={k} className={s.word}>
+              <Level of={k} />
+              <span className={s.big}>{known[k]} <span>{known[k] === 1 ? "task" : "tasks"}</span></span>
+              <span className={s.small}>{band[k]}</span>
             </div>
           ))}
         </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 12 }}>
-          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Every task you pass moves further out, so it comes back later; one you struggle through moves back in and returns sooner. A sailing pass counts double.</span>
-          <div style={{ flex: 1 }} />
-          <span className="tabular" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--text-faint)" }}>
-            {data.seen} practised · {data.total - data.seen} not started
-          </span>
-        </div>
-      </Card>
+        <p className={s.muted}>Every task you pass moves further out, so it comes back later; one you struggle through moves back in and returns sooner. A sailing pass counts double.</p>
+      </section>
 
-      <Card label="Due load · next 14 days"><DueForecast forecast={data.forecast} cap={data.cap} today={data.today} /></Card>
-      <Card label="Practice"><PracticeHeatmap days={data.days} today={data.today} /></Card>
-      <Card label="Topic depth" padding={16}><TopicStrips tags={tags} /></Card>
+      <section aria-labelledby="due-h" className={s.card}>
+        <div className={s.band}>
+          <h2 id="due-h" className={s.eyebrow}>Due load · next 14 days</h2>
+          <span className={s.muted}>The line is the daily cap of {data.cap}; a day above it spills into the next.</span>
+        </div>
+        <DueForecast forecast={data.forecast} cap={data.cap} today={data.today} />
+      </section>
 
-      <Card label="Last 30 sessions" padding={16}>
-        <div style={{ maxHeight: 420, overflow: "auto", paddingRight: 10 }}>
-          <Table columns={LOG_COLS} rows={logRows} emptyMessage="No passes logged yet. The first one lands here." />
+      <section aria-labelledby="hm-h" className={s.card}>
+        <div className={s.band}>
+          <h2 id="hm-h" className={s.eyebrow}>Practice · last 12 months</h2>
+          <span className={s.muted}>{started(data.days, data.today)}</span>
         </div>
-        <div style={{ display: "flex", gap: 8, marginTop: 10, fontSize: 12.5, color: "var(--text-faint)" }}>
-          <span>QUICK · first try, under par</span><span>·</span><span>PASS</span><span>·</span><span>STRUGGLED</span><span>·</span><span>abandoned</span>
-        </div>
-      </Card>
+        <PracticeHeatmap days={data.days} today={data.today} />
+      </section>
+
+      <div className={s.pair}>
+        <section className={s.card} data-tight="">
+          <TopicStrips tags={tags} label="Topic depth" lapseLimit={data.lapse_limit} bands={data.ladder.map((_, i) => strength(i, true, data.ladder)!)} />
+        </section>
+        <section aria-labelledby="log-h" className={s.card} data-tight="">
+          <h2 id="log-h" className={s.eyebrow}>Last 30 sessions</h2>
+          <div className={s.log}>
+            <Table columns={LOG_COLS} rows={logRows} emptyMessage="No passes logged yet. The first one lands here." />
+          </div>
+          <p className={s.small}>QUICK · first try, under par · PASS · STRUGGLED · abandoned</p>
+        </section>
+      </div>
     </div>
   );
 }

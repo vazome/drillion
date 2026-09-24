@@ -6,11 +6,12 @@ test("Settings preferences persist, reset, and stay reachable on a narrow screen
   const font = dialog.getByRole("combobox", { name: "Editor font", exact: true });
   await font.selectOption("fira");
   await dialog.getByRole("combobox", { name: "Editor font size" }).selectOption("18");
-  await dialog.getByRole("combobox", { name: "Key binding" }).selectOption("emacs");
-  await dialog.getByRole("combobox", { name: "Tab size" }).selectOption("8");
-  for (const label of ["Font ligatures", "Word wrap", "Relative line numbers", "Practice timer"]) {
+  await dialog.getByRole("button", { name: "Emacs", exact: true }).click();
+  await dialog.getByRole("button", { name: "8", exact: true }).click();
+  for (const label of ["Font ligatures", "Word wrap", "Relative line numbers"]) {
     await dialog.getByRole("group", { name: label, exact: true }).getByRole("switch").click();
   }
+  await dialog.getByRole("button", { name: "Hidden", exact: true }).click();
   await page.reload();
   await expect(font).toHaveValue("fira");
   const prefs = await page.evaluate(() => JSON.parse(localStorage.getItem("drillion-prefs")!));
@@ -18,20 +19,20 @@ test("Settings preferences persist, reset, and stay reachable on a narrow screen
     ligatures: true, wordWrap: false, relativeLines: true, showTimer: false });
   await dialog.getByRole("button", { name: "Put these back to their defaults" }).click();
   await expect(font).toHaveValue("shipped");
-  await expect(dialog.getByRole("combobox", { name: "Key binding" })).toHaveValue("regular");
-  await expect(dialog.getByRole("group", { name: "Practice timer" }).getByRole("switch")).toBeChecked();
+  await expect(dialog.getByRole("button", { name: "Standard", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(dialog.getByRole("button", { name: "Shown", exact: true })).toHaveAttribute("aria-pressed", "true");
 
-  await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  await dialog.getByRole("button", { name: "Close settings", exact: true }).click();
   await expect(dialog).toBeHidden();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(dialog).toBeVisible();
   await page.setViewportSize({ width: 360, height: 640 });
-  await dialog.getByRole("button", { name: "Erase all progress", exact: true }).click();
-  await dialog.getByRole("textbox", { name: "Type erase progress to confirm" }).fill("erase progress");
-  await expect(dialog.getByRole("button", { name: "I understand, erase everything" })).toBeEnabled();
+  const phrase = dialog.getByRole("textbox", { name: "Type erase progress to confirm" });
+  await phrase.fill("erase progress");
+  await expect(dialog.getByRole("button", { name: "Erase all progress", exact: true })).toBeEnabled();
   const spill = await dialog.evaluate((el) => el.scrollWidth - el.clientWidth);
   expect(spill).toBeLessThanOrEqual(1);
-  await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+  await phrase.fill("");
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
 });
@@ -54,7 +55,8 @@ test("Settings downloads, previews, cancels and restores a real backup", async (
   await picker.setInputFiles(path!);
   await expect(replace).toBeEnabled();
   await replace.click();
-  await expect(page.getByText(/^Restored \d+ cards/)).toBeVisible();
+  // the restore fsyncs every saved task file, a few seconds for the whole catalogue
+  await expect(page.getByText(/^Restored \d+ cards/)).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(/What you had before is at/)).toBeVisible();
   await expect(picker).toHaveValue("");
 });

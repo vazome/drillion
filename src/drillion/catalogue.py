@@ -36,6 +36,7 @@ BROWSER = (
     "source",
     "kind",
     "edits",
+    "prereqs",
 )
 # `minutes` is deliberately absent: par time is grade_of()'s input, not the learner's to see.
 HINT = re.compile(r"^### Hint \d+[ \t]*$", re.MULTILINE)

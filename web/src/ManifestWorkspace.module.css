@@ -2,8 +2,10 @@
 /* Helm's own messages keep their line breaks: a schema error lists one path per line */
 .said{white-space:pre-wrap}
 /* the strip's tabs never size the page: past its width it scrolls inside itself */
-.chart{contain:inline-size;min-width:0}
-.panel{position:relative}
+.chart{contain:inline-size;min-width:0;height:100%;display:flex;flex-direction:column}
+.panel{position:relative;flex:1;min-height:0}
+.fill{position:absolute;inset:0}
 /* a chart file, read-only, laid exactly over the editor it hides */
 .chartFile{position:absolute;inset:0;margin:0;overflow:auto;padding:10px 14px;background:var(--editor);color:var(--text);border:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);font-family:var(--font-mono);font-size:13px;line-height:1.55;white-space:pre}
 .chartFile:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.what{margin:0;font-size:var(--fs-label);font-weight:500;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--text-muted)}

@@ -1,0 +1,12 @@
+.page{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:32px}
+.head{display:flex;align-items:flex-end;flex-wrap:wrap;gap:16px 24px}
+.headText{flex-grow:1;display:flex;flex-direction:column;gap:10px;min-width:0}
+.back{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--text-muted)}
+.back:hover{color:var(--text)}
+.h1{margin:0;font-size:32px;font-weight:500;letter-spacing:-.02em;line-height:1.2}
+.num{margin-right:12px;font-family:var(--font-mono);font-weight:400;font-size:22px;color:var(--text-muted)}
+.muted{margin:0;font-size:14px;color:var(--text-muted)}
+.open{flex-shrink:0;display:flex;align-items:center;gap:10px;height:40px;padding:0 16px 0 18px;background:var(--accent);color:var(--on-accent);border-radius:var(--radius);font-size:14px;font-weight:600}
+.open:hover{background:var(--accent-hover);color:var(--on-accent);text-decoration:none}
+.card{background:var(--surface);border-radius:var(--radius-lg);box-shadow:0 0 0 1px var(--border);padding:28px 32px 32px}
+@media (max-width:1099px){.h1{font-size:24px}.card{padding:20px}}
