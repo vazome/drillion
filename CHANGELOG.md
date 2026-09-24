@@ -4,6 +4,39 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.10.0 — 2026-09-24
+
+A redesigned client: a sidebar, Today above the catalogue, and a task page that says what every
+result cost.
+
+- **Today** opens on the head of your queue: reviews first, most overdue first, then new picks.
+  A sentence says what is due ("12 reviews and 2 new picks."), the ladder shows how many tasks
+  sit on each rung, and a strip marks the days you practised this week. Over the daily cap, a
+  line says how many stay due. Enter starts the task Up next.
+- **A sidebar** holds the catalogue, Progress, Settings and the theme, and picks the track new
+  tasks come from. When a tag keeps beating you it says so there, and the tag's chip focuses it.
+  Below 1100px the sidebar becomes a top bar, and nothing scrolls sideways at 720px.
+- **Strength is a word beside a 1, 2 or 3-bar mark** (learning, familiar, solid) everywhere it
+  appears, never colour alone.
+- **The task header** says what a task needs and what it opens. Prereqs are information and never
+  lock a task; the lineage is three columns, what it needs, the task, and what it opens.
+- **The result panel** names the cost of each outcome: a Run uses no attempt and moves nothing, a
+  failed Submit says the card has not moved, and a pass gives the grade, the time, the attempts
+  and when the task comes back.
+- **Review after a pass.** The editor turns into your code against the reference, side by side
+  or inline, with how many lines differ.
+- **Progress** shows how well you know the tasks, the next fourteen days of reviews against the
+  daily cap, a year of practice, topic depth by strength, and the last 30 sessions.
+- **Settings** is five cards, and erasing progress is one step: type the phrase, press Erase.
+- **The catalogue** shows the twelve tags that cover the most listed tasks, the rest behind
+  "+N more", and a search puts the tags it names first.
+- **A favicon** that follows the theme, with PNG sizes and an Apple touch icon.
+- **Keyboard.** Tab reaches Run and Submit before the editor, and the practice year scrolls by
+  keyboard.
+- **API additions:** `GET /api/picks` (focus, track sizes and the tag you keep struggling
+  with), `stats.week` in the catalogue, `prereqs` on catalogue rows, `difficulty` and `status`
+  on lineage entries, and `lapse_limit` in progress.
+
 ## 0.9.5 — 2026-09-22
 
 Helm and Dockerfile tracks, a second round of Kubernetes tasks, and a faster server.
