@@ -65,14 +65,14 @@ export function Sidebar({ route, head, dark, setDark, onSettings }: Chrome & { r
               return (
                 <button key={name} type="button" aria-pressed={on} data-on={on || undefined} onClick={() => pick(key)} className={s.track}>
                   <span className={s.trackHead}>
-                    {icon ? <img src={icon} alt="" width={22} height={22} className={s.mark} data-image="" />
+                    {icon ? <img src={icon} alt="" width={28} height={28} className={s.mark} data-image="" />
                       : <span aria-hidden="true" className={s.mark} data-all={key ? undefined : ""}>
                           {key ? key.charAt(0) : <><i /><i /><i /><i /></>}
                         </span>}
                     <span className={s.trackName}>{name}</span>
                     <span className={s.count}>{size}</span>
                   </span>
-                  <span aria-hidden="true" className={s.size} style={{ width: `calc((100% - 32px) * ${head.total ? size / head.total : 0})` }} />
+                  <span aria-hidden="true" className={s.size} style={{ width: `calc((100% - 38px) * ${head.total ? size / head.total : 0})` }} />
                 </button>
               );
             })}
