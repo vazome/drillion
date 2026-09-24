@@ -195,7 +195,7 @@ function TaskHeader({ task, active, showTimer, paused, passed, onLineage, lineag
   // the lineage opens over the page: the editor, the run and the clock all survive it
   const opens = (
     <button type="button" ref={lineageBtn} onClick={onLineage} aria-expanded={lineageOpen} className={css.opens}>
-      {unlocks.length ? `Opens ${plural(unlocks.length, "task")}` : "Lineage"}<Icon name="ArrowRight" size={14} />
+      {unlocks.length ? `Opens ${plural(unlocks.length, "task")}` : "Connections"}<Icon name="ArrowRight" size={14} />
     </button>
   );
   // hidden by preference only: the clock behind it keeps running, and the grade is the same
@@ -473,7 +473,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
         onAbandon={hasAttempt && !passed ? abandon : undefined} />
 
       {lineage ? (
-        <div role="dialog" aria-label={`Lineage of ${meta.title}`} onClick={closeLineage} className="m-fade"
+        <div role="dialog" aria-label={`Connections of ${meta.title}`} onClick={closeLineage} className="m-fade"
           style={{ position: "fixed", inset: 0, zIndex: 40, background: "var(--scrim)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "72px 24px", overflow: "hidden" }}>
           {/* the scroll lives on the animated element, not around it: `m-rise` starts the
             * panel 6px low, and inside a scrolling parent those 6px are overflow — one frame
@@ -481,7 +481,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
             * scroll content, so putting the two on one box makes the flash impossible. */}
           <div ref={panel} tabIndex={-1} onClick={(e) => e.stopPropagation()} className="m-rise"
             style={{ width: "min(1080px, 100%)", maxHeight: "100%", overflowY: "auto", outline: "none" }}>
-            <Card label={`Lineage · ${task.slug}`} style={{ boxShadow: "var(--shadow-pop)" }}>
+            <Card label={`Connections · ${task.slug}`} style={{ boxShadow: "var(--shadow-pop)" }}>
               <DepLineage task={{ topic: meta.topic, title: meta.title, tags: meta.tags, aside: <><Centre task={task} /><span>attempt still open behind this</span></> }}
                 requires={task.requires} unlocks={task.unlocks} stacked={narrow}
                 hrefOf={(r) => depsHref(r.slug)} onPrefetch={(r) => { void prefetch(r.slug); }} onClose={closeLineage} />

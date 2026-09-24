@@ -75,7 +75,7 @@ export function Progress() {
             </div>
           ))}
         </div>
-        <p className={s.muted}>Every task you pass moves further out, so it comes back later; one you struggle through moves back in and returns sooner. A sailing pass counts double.</p>
+        <p className={s.muted}>Every task you pass moves further out, so it comes back later; one you struggle through moves back in and returns sooner. A quick pass counts double.</p>
       </section>
 
       <section aria-labelledby="due-h" className={s.card}>
@@ -103,7 +103,7 @@ export function Progress() {
           <div className={s.log}>
             <Table columns={LOG_COLS} rows={logRows} emptyMessage="No passes logged yet. The first one lands here." />
           </div>
-          <p className={s.small}>QUICK · first try, under par · PASS · STRUGGLED · abandoned</p>
+          <p className={s.small}>QUICK · fast, first try · PASS · STRUGGLED · abandoned</p>
         </section>
       </div>
     </div>
