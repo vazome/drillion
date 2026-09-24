@@ -168,7 +168,7 @@ export function DepLineage({ task, requires = [], unlocks = [], hrefOf, onPrefet
         <div className={css.toolbar}>
           <span className={css.spacer}></span>
           {graphHref ? <a href={graphHref} className={css.graphLink}>whole graph<Icon name="ArrowRight" size={14} /></a> : null}
-          {onClose ? <button type="button" onClick={onClose} aria-label="Close lineage" className={css.closeBtn}>Close</button> : null}
+          {onClose ? <button type="button" onClick={onClose} aria-label="Close connections" className={css.closeBtn}>Close</button> : null}
         </div>
       ) : null}
 
@@ -200,7 +200,7 @@ export function DepLineage({ task, requires = [], unlocks = [], hrefOf, onPrefet
           <span className={css.legendItem}><svg width="28" height="6" aria-hidden="true"><path d="M0 3h28" strokeWidth="1.5" {...STROKE.opens}></path></svg>opens once this one is passed</span>
         </>}
         <span className={css.spacer}></span>
-        <span>Each card opens its own lineage.</span>
+        <span>Each card opens its own connections.</span>
       </div>
     </div>
   );

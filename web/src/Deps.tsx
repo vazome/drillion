@@ -62,11 +62,11 @@ export function Deps({ slug }: { slug: string }) {
         <div className={s.headText}>
           <a href="#/" className={s.back}><Icon name="ArrowLeft" size={14} />Back to the catalogue</a>
           <h1 className={s.h1}><span className={s.num}>{topicNo(topic)}</span>{title}</h1>
-          <p className={s.muted}>What it needs, and what it opens. Prereqs are a shorter way in, never a gate: any task can be opened.</p>
+          <p className={s.muted}>What it needs, and what it opens. Any task can be opened, whatever it builds on.</p>
         </div>
         <a href={taskHref(task.slug)} className={s.open}>Open {topicNo(topic)}<Icon name="ArrowRight" size={14} /></a>
       </header>
-      <section aria-label={`Lineage of ${topicNo(topic)}`} className={s.card}>
+      <section aria-label={`Connections of ${topicNo(topic)}`} className={s.card}>
         <DepLineage task={{ topic, title, tags: task.meta.tags, aside: <Centre task={task} /> }}
           requires={task.requires} unlocks={task.unlocks} stacked={narrow}
           hrefOf={(r) => depsHref(r.slug)} onPrefetch={(r) => { void prefetch(r.slug); }} />

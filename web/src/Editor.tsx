@@ -11,7 +11,7 @@ import "@codingame/monaco-vscode-standalone-languages/languages/definitions/yaml
 import "@codingame/monaco-vscode-standalone-languages/languages/definitions/dockerfile/register.js";
 import { EditorApp } from "monaco-languageclient/editorApp";
 import { MonacoVscodeApiWrapper } from "monaco-languageclient/vscodeApiWrapper";
-import { LanguageClientWrapper } from "monaco-languageclient/lcwrapper";
+import { LanguageClientWrapper, LcWebSocket } from "monaco-languageclient/lcwrapper";
 import { configureDefaultWorkerFactory } from "monaco-languageclient/workerFactory";
 import { initVimMode } from "monaco-vim";
 import { EmacsExtension } from "monaco-emacs";
@@ -63,21 +63,33 @@ function startApi() {
 
 /** Completions are a bonus, never a gate: a language server that is down, slow or missing
  *  must still leave a working editor behind, so this is started beside the editor rather
- *  than in front of it. */
+ *  than in front of it. A client that fails or stops is forgotten, so the next Python editor
+ *  to open reconnects: the library's own `retryConfig.retries` is never read. */
 let client: Promise<void> | undefined;
 function startLanguageClient() {
-  client ??= new LanguageClientWrapper({
+  if (client) return;
+  const wrapper = new LanguageClientWrapper({
     languageId: "python",
-    connection: { options: { $type: "WebSocketUrl", url: socketUrl() } },
+    connection: {
+      options: { $family: "WebSocket", realization: () => new LcWebSocket(), webSocketUrl: socketUrl() },
+    },
     clientOptions: {
       documentSelector: ["python"],
       workspaceFolder: { index: 0, name: "workspace", uri: monaco.Uri.parse(WORKSPACE) },
     },
-  })
+  });
+  const mine = (client = wrapper
     .start()
+    .then(() => {
+      const lc = wrapper.getLanguageClient();
+      lc?.onDidChangeState(() => {
+        if (!lc.isRunning() && client === mine) client = undefined;
+      });
+    })
     .catch((err: unknown) => {
+      if (client === mine) client = undefined;
       console.error("no language server; editing still works", err);
-    });
+    }));
 }
 
 /** One theme, redefined per mode: Monaco themes are global and named, so the dark toggle

@@ -6,3 +6,11 @@ a:hover{color:var(--accent-hover);text-decoration:underline}
 kbd{font-family:var(--font-mono);font-size:11px;padding:1px 5px;border:1px solid var(--border-strong);border-bottom-width:2px;border-radius:4px;background:var(--surface-2);color:var(--text-muted)}
 code,pre{font-family:var(--font-mono)}
 .tabular{font-variant-numeric:tabular-nums}
+*{scrollbar-width:thin;scrollbar-color:var(--control-edge) transparent}
+/* a select's list is drawn from the tokens where the browser allows it (Chromium's customizable
+   select); anywhere else the native list still takes the theme's colours from the options */
+::picker(select){appearance:base-select;margin-block:4px;padding:4px;border:0;border-radius:var(--radius);background:var(--surface);color:var(--text);box-shadow:var(--shadow-pop)}
+select::picker-icon{display:none}
+option{padding:6px 10px;border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-family:var(--font-sans);font-size:14px}
+option:hover,option:focus-visible{background:var(--surface-2);box-shadow:none}
+option:checked{color:var(--accent);font-weight:600}

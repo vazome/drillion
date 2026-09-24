@@ -9,7 +9,7 @@ export function RowFlags({ needs = [], onNeedsClick, lapses = 0, lapseLimit = 0,
     const label = "needs " + refs.map((r) => numFlag(r.topic)).join(" ");
     const why = "Not offered as a new pick until these are passed: " + refs.map((r) => numFlag(r.topic) + (r.title ? " " + r.title : "")).join(", ");
     marks.push(onNeedsClick
-      ? <button key="needs" type="button" title={why + " — opens the lineage"} className={s.needs + " " + s.needsBtn}
+      ? <button key="needs" type="button" title={why + " — opens its connections"} className={s.needs + " " + s.needsBtn}
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNeedsClick(e); }}>{label}</button>
       : <span key="needs" title={why} className={s.needs}>{label}</span>);
   }

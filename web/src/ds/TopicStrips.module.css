@@ -1,7 +1,7 @@
 .head{display:flex;align-items:baseline;gap:12px;margin-bottom:12px}
 .label{margin:0;font-size:var(--fs-label);font-weight:500;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--text-muted)}
 .sort{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:13px;color:var(--text)}
-.sort select{appearance:none;-webkit-appearance:none;padding:2px 20px 2px 4px;margin-right:-18px;background:transparent;border:0;border-radius:var(--radius-sm);font:inherit;color:inherit;cursor:pointer}
+.sort select{appearance:none;-webkit-appearance:none;appearance:base-select;padding:2px 20px 2px 4px;margin-right:-18px;background:transparent;border:0;border-radius:var(--radius-sm);font:inherit;color:inherit;cursor:pointer}
 .sort svg{pointer-events:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .row{display:grid;grid-template-columns:110px minmax(0,1fr) 54px 56px;gap:12px;align-items:center}

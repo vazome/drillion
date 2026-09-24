@@ -51,8 +51,43 @@ for (const unavailable of [false, true]) {
       await expect(editor).toHaveAttribute("data-uri", manifest ? /\.yaml$/ : /\.py$/);
       await expect(editor.locator(".view-lines")).toContainText(manifest ? "apiVersion" : slug);
     }
-    // the client is a per-page singleton, so python asks for it once however often it is shown
-    expect(connections).toBe(1);
+    // a live client is a per-page singleton, so python asks for it once however often it is
+    // shown; a refused one is only given up on after the library's 5s connect timeout
+    if (!unavailable) expect(connections).toBe(1);
     expect(errors).toEqual([]);
   });
 }
+
+/** A language server that goes away mid-session (the bridge dies, the container restarts)
+ *  must not cost completions for the rest of the page: the next python task asks again. */
+test("a dropped language server reconnects on the next python task", async ({ page, request }) => {
+  const template = await (await request.get("/api/task/008_slicing")).json();
+  let connections = 0;
+  await page.routeWebSocket("**/lsp", (socket) => {
+    const first = ++connections === 1;
+    socket.onMessage((message) => {
+      const rpc = JSON.parse(String(message));
+      if (rpc.id === undefined) return;
+      socket.send(JSON.stringify({ jsonrpc: "2.0", id: rpc.id, result: rpc.method === "initialize" ? { capabilities: {} } : null }));
+      if (first && rpc.method === "initialize") setTimeout(() => socket.close(), 500);
+    });
+  });
+  await page.route("**/api/task/kind-*", (route) => {
+    const slug = route.request().url().split("/").at(-1)!;
+    return route.fulfill({ json: {
+      ...template, slug, attempt: null, reference: null,
+      meta: { ...template.meta, kind: "python", tier: "core" },
+      code: `def solve():\n    return "${slug}"\n`,
+    } });
+  });
+
+  await page.goto("/#/task/kind-first");
+  const editor = page.locator(".monaco-editor[data-uri]").first();
+  await expect(editor.locator(".view-lines")).toContainText("kind-first");
+  await expect.poll(() => connections).toBe(1);
+  // the drop lands, then a python task opens
+  await page.waitForTimeout(1500);
+  await page.evaluate(() => { location.hash = "#/task/kind-second"; });
+  await expect(editor.locator(".view-lines")).toContainText("kind-second");
+  await expect.poll(() => connections).toBe(2);
+});

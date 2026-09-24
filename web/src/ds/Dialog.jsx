@@ -21,7 +21,6 @@ export function Dialog({ open = false, onClose, label, children, className, styl
       <div className={s.head}>
         <h2 className={s.title}>{label}</h2>
         <div className={s.spacer}></div>
-        <span className={s.esc}>Esc closes</span>
         <button type="button" aria-label={"Close " + String(label).toLowerCase()} onClick={() => ref.current?.close()} className={s.close}><Icon name="Close" /></button>
       </div>
       <div className={s.body}>{children}</div>

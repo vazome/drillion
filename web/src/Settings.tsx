@@ -100,13 +100,12 @@ function Row({ label, hint, children }: { label: ReactNode; hint?: ReactNode; ch
 }
 
 /** One card of the sheet: a heading, a line on what it holds, then its rows. */
-function Section({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   const id = useId();
   return (
     <section aria-labelledby={id} className={s.card}>
       <div className={s.cardHead}>
         <h3 id={id} className={s.title}>{title}</h3>
-        {note ? <span className={s.note}>{note}</span> : null}
       </div>
       {children}
     </section>
@@ -123,8 +122,8 @@ function EditorSettings() {
   // the pane width belongs to the task screen's drag handle, so it is no editor setting
   const untouched = JSON.stringify({ ...prefs, taskPanePercent: 0 }) === JSON.stringify({ ...DEFAULTS, taskPanePercent: 0 });
   return (
-    <Section title="Editor" note="These live in this browser, so they are not part of a backup.">
-      <Row label="Font" hint={prefs.font === DEFAULTS.font ? "default" : null}>
+    <Section title="Editor">
+      <Row label="Font">
         <Select value={prefs.font} ariaLabel="Editor font" className={s.fontSelect}
           options={FONTS.map((f) => ({ value: f.value, label: f.label }))}
           onChange={(v) => setPrefs({ font: v as typeof prefs.font })} />
@@ -160,7 +159,7 @@ function EditorSettings() {
       </Row>
       {untouched ? null : (
         <div className={s.defaults}>
-          <Button variant="quiet" onClick={() => setPrefs({ ...DEFAULTS, taskPanePercent: prefs.taskPanePercent })}><Icon name="Reset" />Put these back to their defaults</Button>
+          <Button variant="quiet" onClick={() => setPrefs({ ...DEFAULTS, taskPanePercent: prefs.taskPanePercent })}><Icon name="Reset" />Restore to defaults</Button>
         </div>
       )}
     </Section>

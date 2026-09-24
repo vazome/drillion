@@ -18,12 +18,14 @@
 .trackHead{display:flex;align-items:center;gap:10px;width:100%}
 .trackName{flex-grow:1;font-size:14px;font-weight:500}
 .track[data-on] .trackName{font-weight:600;color:var(--accent)}
-.mark{display:flex;align-items:center;justify-content:center;width:22px;height:22px;flex-shrink:0;box-sizing:border-box;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:11px;color:var(--text-muted)}
+.mark{display:flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0;box-sizing:border-box;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:13px;color:var(--text-muted)}
 .track[data-on] .mark{border-color:var(--accent-line);color:var(--accent)}
 .mark[data-image]{border-color:transparent;object-fit:contain}
-.mark[data-all]{display:grid;grid-template-columns:5px 5px;gap:2px;place-content:center}
-.mark[data-all] i{width:5px;height:5px;box-sizing:border-box;border:1px solid currentColor}
-.size{margin-left:32px;min-width:6px;height:3px;border-radius:var(--radius-pill);background:var(--border)}
+/* helm's mark is one navy, which vanishes on the dark surface; white is how Helm draws it on dark */
+:global(.dark) .mark[src$="helm.svg"]{filter:brightness(0) invert(1)}
+.mark[data-all]{display:grid;grid-template-columns:6px 6px;gap:2px;place-content:center}
+.mark[data-all] i{width:6px;height:6px;box-sizing:border-box;border:1px solid currentColor}
+.size{margin-left:38px;min-width:6px;height:3px;border-radius:var(--radius-pill);background:var(--border)}
 .track[data-on] .size{background:var(--accent-line)}
 .note{margin:0;padding:0 10px;font-size:var(--fs-label);line-height:1.45;color:var(--text-muted)}
 .note[data-error]{color:var(--fail)}
