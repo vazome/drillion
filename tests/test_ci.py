@@ -145,7 +145,7 @@ def test_release_publishes_only_the_attested_container_image():
     release = yaml.safe_load(RELEASE_WORKFLOW.read_text())
     jobs = release["jobs"]
 
-    assert set(jobs) == {"gate", "image", "sbom", "image-scan", "notes"}
+    assert set(jobs) == {"gate", "build", "image", "sbom", "image-scan", "notes"}
     assert jobs["notes"]["needs"] == ["image", "sbom"]
     assert jobs["notes"]["permissions"] == {"contents": "write"}
 
@@ -153,10 +153,31 @@ def test_release_publishes_only_the_attested_container_image():
     assert image["meta"]["with"]["tags"] == "type=pep440,pattern={{version}}"
     assert image["meta"]["with"]["flavor"] == "latest=auto"
     assert jobs["image"]["outputs"]["digest"] == "${{ steps.digest.outputs.value }}"
+    assert "imagetools create" in image["digest"]["run"]
 
     # a published version is never rebuilt: a retry reuses its digest
-    assert image["push"]["if"] == "steps.existing.outputs.digest == ''"
-    assert "imagetools inspect" in image["existing"]["run"]
+    gate = {step.get("id"): step for step in jobs["gate"]["steps"]}
+    assert "imagetools inspect" in gate["published"]["run"]
+    assert jobs["build"]["if"] == "needs.gate.outputs.published == ''"
+    assert image["digest"]["env"]["PUBLISHED"] == "${{ needs.gate.outputs.published }}"
+    # a skipped build skips everything below it unless each job says otherwise
+    for job in ("image", "sbom", "image-scan", "notes"):
+        assert "!cancelled()" in jobs[job]["if"]
+
+    # each platform builds natively, never under QEMU
+    legs = jobs["build"]["strategy"]["matrix"]["include"]
+    assert {leg["arch"]: leg["runner"] for leg in legs} == {
+        "amd64": "ubuntu-latest",
+        "arm64": "ubuntu-24.04-arm",
+    }
+    build = {step.get("id"): step for step in jobs["build"]["steps"]}
+    assert build["push"]["with"]["platforms"] == "linux/${{ matrix.arch }}"
+    assert "push-by-digest=true" in build["push"]["with"]["outputs"]
+    assert not any(
+        "setup-qemu" in s.get("uses", "")
+        for j in jobs.values()
+        for s in j.get("steps", [])
+    )
 
     def attested(steps):
         return [s for s in steps if s.get("uses", "").startswith("actions/attest@")]
@@ -166,9 +187,9 @@ def test_release_publishes_only_the_attested_container_image():
     assert "sbom-path" not in provenance["with"]
 
     # every platform the image is built for gets an SBOM of its own filesystem
-    platforms = image["push"]["with"]["platforms"].split(",")
     arches = jobs["sbom"]["strategy"]["matrix"]["arch"]
-    assert [f"linux/{a}" for a in arches] == platforms
+    assert sorted(arches) == sorted(leg["arch"] for leg in legs)
+    platforms = [f"linux/{a}" for a in arches]
     [sbom] = attested(jobs["sbom"]["steps"])
     assert sbom["with"]["subject-digest"] == "${{ steps.platform.outputs.digest }}"
     assert sbom["with"]["sbom-path"] == "sbom.spdx.json"
