@@ -4,6 +4,23 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.11.2 — 2026-09-24
+
+A resizable output pane, a quieter Solution button, and a faster release build.
+
+- **The output under the editor resizes.** Drag the splitter between Run and the output, or
+  focus it and use the arrow keys. The height is kept in this browser; a double-click or Enter
+  lets the output fit what it shows again, as it did before.
+- **The Solution button no longer lists what it still needs.** Pressed while locked, it says so
+  in a notice that clears itself, the way a hint that is not ready does.
+- **Dragging the brief pane** no longer flashes scrollbars at the window's edges, and the
+  splitters' focus ring is even and only shows from the keyboard.
+- **Today** tells a new learner that a passed task comes back later, rather than naming a day
+  count.
+- **The arm64 image is built on arm64.** Releases no longer emulate it, which took most of a
+  ten-minute build.
+- The README's provenance check verifies `latest` rather than a pinned 0.8.0.
+
 ## 0.11.1 — 2026-09-24
 
 Polish on the 0.10 client, a Monaco upgrade, and completions that survive a dropped language
