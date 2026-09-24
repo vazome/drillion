@@ -133,7 +133,7 @@ drillion runs Python on your computer: the code you write, and the code that shi
   that built it:
 
   ```bash
-  gh attestation verify oci://ghcr.io/vazome/drillion:0.8.0 --repo vazome/drillion
+  gh attestation verify oci://ghcr.io/vazome/drillion:latest --repo vazome/drillion
   ```
 
 [SECURITY.md](SECURITY.md) is the whole picture and explains how to report something.
