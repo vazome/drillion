@@ -119,8 +119,9 @@ const TABS = [2, 4, 8].map((n) => ({ value: n, label: String(n) }));
  *  this browser: none of it is in your progress, and none of it travels in a backup. */
 function EditorSettings() {
   const prefs = usePrefs();
-  // the pane width belongs to the task screen's drag handle, so it is no editor setting
-  const untouched = JSON.stringify({ ...prefs, taskPanePercent: 0 }) === JSON.stringify({ ...DEFAULTS, taskPanePercent: 0 });
+  // the pane sizes belong to the task screen's drag handles, so they are no editor setting
+  const layout = { taskPanePercent: prefs.taskPanePercent, resultPanePercent: prefs.resultPanePercent };
+  const untouched = JSON.stringify({ ...prefs, ...layout }) === JSON.stringify({ ...DEFAULTS, ...layout });
   return (
     <Section title="Editor">
       <Row label="Font">
@@ -159,7 +160,7 @@ function EditorSettings() {
       </Row>
       {untouched ? null : (
         <div className={s.defaults}>
-          <Button variant="quiet" onClick={() => setPrefs({ ...DEFAULTS, taskPanePercent: prefs.taskPanePercent })}><Icon name="Reset" />Restore to defaults</Button>
+          <Button variant="quiet" onClick={() => setPrefs({ ...DEFAULTS, ...layout })}><Icon name="Reset" />Restore to defaults</Button>
         </div>
       )}
     </Section>

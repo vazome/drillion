@@ -155,7 +155,7 @@ function Ladder({ stats }: { stats: Payload["stats"] }) {
       </div>
       <p className={s.muted}>{stats.seen
         ? "A pass sends a task further out, so it comes back later; a struggle brings it back sooner."
-        : `Pass a task and it comes back in ${stats.ladder[0]} days.`}</p>
+        : "Pass a task and it comes back later."}</p>
       <div className={s.week}>
         <div className={s.between}>
           <span className={s.muted}>Days practised</span>

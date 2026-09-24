@@ -19,6 +19,8 @@ export type Prefs = {
   relativeLines: boolean;
   showTimer: boolean;
   taskPanePercent: number;
+  /** null: the output fits what it shows, up to 40% of the column */
+  resultPanePercent: number | null;
 };
 
 /** Every default is what drillion did before there was a setting, so a first visit after an
@@ -33,6 +35,7 @@ export const DEFAULTS: Prefs = {
   relativeLines: false,
   showTimer: true,
   taskPanePercent: 42,
+  resultPanePercent: null,
 };
 
 /** Only what a self-hosted install already has on disk: the faces drillion ships, and
