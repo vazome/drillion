@@ -4,7 +4,7 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
-## 0.11.0 — 2026-09-24
+## 0.11.1 — 2026-09-24
 
 Polish on the 0.10 client, a Monaco upgrade, and completions that survive a dropped language
 server.
@@ -19,6 +19,8 @@ server.
 - **Larger track marks,** and a Helm mark you can see in dark mode.
 - **Themed scrollbars and select lists** in both themes.
 - **The favicon** replaces the one browsers cached before 0.10.
+- There is no 0.11.0. It was tagged before this entry reached `main`, the release gate refused
+  to publish it, and version tags here are immutable, so this is 0.11.1.
 
 ## 0.10.0 — 2026-09-24
 
