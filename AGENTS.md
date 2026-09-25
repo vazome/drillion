@@ -110,19 +110,10 @@ Remind the user to:
 
 ### Do not tag individuals
 
-AI agents MUST NOT mention or tag individual contributors, committers,
-PMC members, or maintainers using GitHub usernames (e.g. `@user`) unless
-explicitly instructed by a human reviewer. When suggesting who might be
-relevant to a discussion, refer to roles, teams, code ownership
-information, labels, or components instead of individuals. This keeps
-notification noise down and avoids pulling people into threads they have
-not chosen to join.
-
-The only exceptions are mentions a human has explicitly authorized —
-including the `@<github-handle>` in the `Drafted-by: … reviewed by
-@<handle>` footer above, which names the reviewer who approved the
-message — and replying within a thread to people already actively
-participating in that same PR/issue discussion.
+Don't @-mention contributors or maintainers by GitHub username unless a human asks you to.
+Refer to roles, code ownership, labels or components instead: a mention notifies someone
+who didn't choose to join the thread. Replying to people already in the same PR or issue
+thread is fine.
 
 ## Additional tips
 
