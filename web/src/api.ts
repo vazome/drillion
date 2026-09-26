@@ -8,7 +8,7 @@ export type Grade = "quick" | "pass" | "struggled" | "abandoned";
 export interface Meta {
   topic: number; title: string;
   difficulty: "easy" | "medium" | "hard"; tier?: "core" | "advanced" | "packages"; track?: string;
-  kind: "python" | "manifest" | "helm" | "docker";
+  kind: "python" | "manifest" | "helm" | "docker" | "sql";
   /** a Helm task's one hole: the chart path the learner's file stands in for */
   edits?: string;
   tags: string[]; source?: string;

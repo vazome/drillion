@@ -9,6 +9,7 @@ import type { Meta } from "./api";
 import "@codingame/monaco-vscode-standalone-languages/languages/definitions/python/register.js";
 import "@codingame/monaco-vscode-standalone-languages/languages/definitions/yaml/register.js";
 import "@codingame/monaco-vscode-standalone-languages/languages/definitions/dockerfile/register.js";
+import "@codingame/monaco-vscode-standalone-languages/languages/definitions/pgsql/register.js";
 import { EditorApp } from "monaco-languageclient/editorApp";
 import { MonacoVscodeApiWrapper } from "monaco-languageclient/vscodeApiWrapper";
 import { LanguageClientWrapper, LcWebSocket } from "monaco-languageclient/lcwrapper";
@@ -31,9 +32,11 @@ const bare = (name: string) => token(name).replace("#", "");
  *  browser has no business knowing filesystem paths. */
 const WORKSPACE = "file:///workspace";
 // Monaco reads the language off the extension, so naming the file is choosing the mode.
-const EXT: Partial<Record<Meta["kind"], string>> = { python: "py", docker: "dockerfile" };
+const EXT: Partial<Record<Meta["kind"], string>> = { python: "py", docker: "dockerfile", sql: "sql" };
 const ext = (kind: Meta["kind"]) => EXT[kind] ?? "yaml";
 const fileFor = (kind: Meta["kind"]) => `${WORKSPACE}/${kind === "python" ? "solve" : "task"}.${ext(kind)}`;
+// Monaco's pgsql claims no file extension, so a .sql model has to be told its language
+const language = (kind: Meta["kind"]) => (kind === "sql" ? { enforceLanguageId: "pgsql" } : {});
 
 /** wss on a served-over-TLS page: a tunnel or a reverse proxy in front of drillion makes a
  *  plain ws:// socket mixed content, which the browser blocks outright. */
@@ -224,7 +227,7 @@ export function Editor({ kind, value, onChange, onRun, onSubmit, readOnly, dark,
         if (kind === "python") startLanguageClient();
         started = app.current = new EditorApp({
           id: "solve",
-          codeResources: { modified: { text: value, uri: fileFor(kind) } },
+          codeResources: { modified: { text: value, uri: fileFor(kind), ...language(kind) } },
           editorOptions: { ...editorOptions, ...looks(first.current) },
         });
         started.registerOnTextChangedCallback((t) => latest.current.onChange(t.modified ?? ""));
@@ -377,8 +380,8 @@ export function DiffView({ kind, mine, reference, dark, maxHeight, prefs = DEFAU
           useDiffEditor: true,
           readOnly: true,
           codeResources: {
-            original: { text: at.mine, uri: `${WORKSPACE}/mine.${ext(kind)}` },
-            modified: { text: at.reference, uri: `${WORKSPACE}/reference.${ext(kind)}` },
+            original: { text: at.mine, uri: `${WORKSPACE}/mine.${ext(kind)}`, ...language(kind) },
+            modified: { text: at.reference, uri: `${WORKSPACE}/reference.${ext(kind)}`, ...language(kind) },
           },
           diffEditorOptions: {
             ...editorOptions, ...looks(at.prefs), readOnly: true, renderSideBySide: at.sideBySide, renderOverviewRuler: false,

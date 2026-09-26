@@ -5,7 +5,7 @@ import { topicNo } from "./format";
 import s from "./Shell.module.css";
 
 /** The tracks that ship a mark in web/public/tracks/; any other wears its first letter. */
-const MARKS = new Set(["python", "kubernetes", "helm", "docker"]);
+const MARKS = new Set(["python", "kubernetes", "helm", "docker", "sql"]);
 export const trackIcon = (name: string) => (MARKS.has(name) ? `tracks/${name}.svg` : undefined);
 
 export interface Head { total: number; version: string; python: string }

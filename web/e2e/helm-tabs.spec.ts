@@ -78,3 +78,17 @@ test("a Dockerfile task's build context opens read-only beside the Dockerfile", 
   await tabs.getByRole("tab", { name: /^package\.json, part of the build context, read-only/ }).click();
   await expect(page.getByRole("tabpanel").locator("pre")).toContainText('"build": "node build.mjs"');
 });
+
+/** A SQL task shows its database the same way, and is edited as Postgres: the model says
+ *  `.sql`, which Monaco maps to no language, so the keyword being bold is the proof. */
+test("a SQL task's database opens read-only beside task.sql", async ({ page }) => {
+  await page.goto("/#/task/324_sql_first_select");
+  const tabs = page.getByRole("tablist", { name: "Database files" });
+  await expect(tabs.getByRole("tab", { name: /^task\.sql, yours/ })).toHaveAttribute("aria-selected", "true");
+  const editor = page.locator(".monaco-editor[data-uri]").first();
+  await editor.locator(".view-lines").click();
+  await page.keyboard.insertText("SELECT name FROM customers");
+  await expect(editor.locator(".view-lines span.mtkb", { hasText: "SELECT" })).toBeVisible();
+  await tabs.getByRole("tab", { name: /^schema\.sql, part of the database, read-only/ }).click();
+  await expect(page.getByRole("tabpanel").locator("pre")).toContainText("CREATE TABLE customers");
+});
