@@ -98,6 +98,48 @@ BREAKS = {
         ("\n  AND (attrs ->> 'stock')::int > 0", ""),
         ('"color": "{color}"', '"color": "none"'),
     ],
+    "335_sql_upsert_settings": [
+        ("settings.prefs || excluded.prefs", "excluded.prefs"),
+        (
+            "DO UPDATE\nSET prefs = settings.prefs || excluded.prefs,\n"
+            "    updated_on = excluded.updated_on",
+            "DO NOTHING",
+        ),
+        ("updated_on = excluded.updated_on", "updated_on = settings.updated_on"),
+        (
+            "\nON CONFLICT (user_id) DO UPDATE\n"
+            "SET prefs = settings.prefs || excluded.prefs,\n"
+            "    updated_on = excluded.updated_on",
+            "",
+        ),
+    ],
+    "336_sql_first_schema": [
+        ("name text NOT NULL UNIQUE", "name text NOT NULL"),
+        (" ON DELETE CASCADE", ""),
+        (" DEFAULT '{role}'", ""),
+        (" CHECK (role IN ('owner', '{role}'))", ""),
+        ("email text NOT NULL UNIQUE", "email text UNIQUE"),
+        ("name text NOT NULL UNIQUE", "name varchar(100) NOT NULL UNIQUE"),
+    ],
+    "337_sql_safe_migration": [
+        ("\n  ALTER COLUMN plan SET DEFAULT 'free',", ""),
+        ("  ALTER COLUMN plan SET NOT NULL,\n", ""),
+        (
+            ",\n  ADD CONSTRAINT accounts_plan_known CHECK (plan IN ('free', '{paid}'))",
+            "",
+        ),
+        ("THEN '{paid}'", "THEN 'free'"),
+        ("ADD COLUMN plan text;", "ADD COLUMN plan text NOT NULL;"),
+    ],
+    "338_sql_updated_at_trigger": [
+        ("\nWHEN (OLD.{watched} IS DISTINCT FROM NEW.{watched})", ""),
+        ("BEFORE UPDATE", "AFTER UPDATE"),
+        ("FOR EACH ROW", "FOR EACH STATEMENT"),
+        (
+            "OLD.{watched} IS DISTINCT FROM NEW.{watched}",
+            "OLD.{other} IS DISTINCT FROM NEW.{other}",
+        ),
+    ],
 }
 
 
@@ -152,7 +194,9 @@ def test_a_position_is_a_line_in_the_learners_file():
 
 
 def _sql_tasks():
-    return {s: m for s, m in catalogue.tasks().items() if m.get("kind") == catalogue.SQL}
+    return {
+        s: m for s, m in catalogue.tasks().items() if m.get("kind") == catalogue.SQL
+    }
 
 
 def _grade(meta, brief, text, seed=0):
@@ -270,3 +314,22 @@ def test_what_the_learner_drops_is_back_for_the_next_pass():
     brief = manifest.generate_brief(meta, 0)
     key = kinds.of(meta).answer_key(meta, brief)
     assert _grade(meta, brief, key + "\nDROP TABLE customers;") == (True, [])
+
+
+@needs_pglite
+def test_selfcheck_fails_a_key_that_cannot_tell_a_hard_coded_answer():
+    """A key returning the same rows on both datasets would let a copied answer pass."""
+    meta = _sql_tasks()["324_sql_first_select"]
+    brief = manifest.generate_brief(meta, 0)
+    constant = "SELECT 'Ada' AS name, DATE '2026-01-01' AS joined"
+    extra = kinds.of(meta).extra(meta, brief, 0, selfcheck=True)
+    extra["sql"]["key"] = constant
+    path = meta["dir"] / f"_test_{uuid.uuid4().hex}.sql"
+    path.write_text(constant, encoding="utf-8")
+    try:
+        passed, diagnostics, *_ = runner.run_manifest(
+            meta, brief, learner=path, **extra
+        )
+    finally:
+        path.unlink()
+    assert not passed and "same rows on both datasets" in diagnostics[0]["message"]
