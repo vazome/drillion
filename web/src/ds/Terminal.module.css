@@ -1,0 +1,36 @@
+/* The frame fills the box the editor had: head strip, the shell, a foot that speaks only
+   when something needs saying. Flush like FileTabs: no card, no radius, hairlines only. */
+.root{display:flex;flex-direction:column;height:100%;min-height:0;background:var(--surface);color:var(--text)}
+
+.head{flex-shrink:0;height:40px;box-sizing:border-box;padding:0 12px 0 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);background:var(--bg);font-size:13px;white-space:nowrap}
+.title{display:inline-flex;align-items:center;gap:8px;font-weight:500}
+.title svg{color:var(--text-muted)}
+.where{font-weight:400;color:var(--text-muted)}
+.state{font-family:var(--font-mono);font-size:12px;color:var(--text-muted)}
+.root[data-state="live"] .state{color:var(--pass)}
+.grow{flex:1}
+/* said only while the shell has the keys; the space is kept so nothing shifts on focus */
+.leave{font-size:12px;color:var(--text-muted);opacity:0;transition:opacity var(--dur-fast) var(--ease-out)}
+.root:has(.screen:focus-within) .leave{opacity:1}
+.leave kbd{margin-right:4px}
+
+.screen{position:relative;flex:1;min-height:0;padding:10px 4px 4px 14px;background:var(--surface)}
+.root[data-state]:not([data-state="live"]):not([data-state="connecting"]):not([data-state="reset"]) .screen{background:var(--surface-2)}
+.host{width:100%;height:100%}
+/* the focus ring, drawn over the shell: xterm paints its own opaque background, so a ring on
+   the box itself would sit underneath it. Inset, because the box is flush with the pane. */
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:2px}
+.screen:focus-within::after{box-shadow:inset 0 0 0 2px var(--accent)}
+
+.foot{flex-shrink:0;display:flex;align-items:center;gap:10px;box-sizing:border-box;padding:0 12px 0 16px;background:var(--bg);font-size:13px;color:var(--text)}
+.foot:not(:empty){min-height:52px;border-top:1px solid var(--border)}
+.footIcon{flex-shrink:0;color:var(--text-muted)}
+.root[data-state="full"] .footIcon,.root[data-state="failed"] .footIcon,.root[data-state="offline"] .footIcon{color:var(--warn)}
+.footText{flex:1;min-width:0;line-height:1.4}
+
+/* xterm's own scrollbar and padding, in drillion's terms */
+.host :global(.xterm){height:100%}
+.host :global(.xterm-viewport){background:transparent !important}
+
+@media (prefers-reduced-motion:reduce){.leave{transition:none}}
+@media (max-width:720px){.where,.leave{display:none}}
