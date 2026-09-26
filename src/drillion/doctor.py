@@ -5,7 +5,7 @@ import re
 
 import yaml
 
-from . import kinds, manifest, sandbox, tools
+from . import kinds, manifest, pglite, sandbox, tools
 from .catalogue import DOCKER, HELM, MANIFEST, PYTHON, SECTION, SLUG, scan, solution
 
 TAG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -286,7 +286,12 @@ def _graders(fetch):
                     tools.acquire(name)
             except (tools.Unsupported, tools.Rejected, OSError) as exc:
                 print(f"{name}: {exc}")
-    for name, status in tools.report():
+        try:
+            if pglite.installed() is None:
+                pglite.acquire()
+        except (tools.Rejected, OSError) as exc:
+            print(f"{pglite.NAME}: {exc}")
+    for name, status in [*tools.report(), (pglite.NAME, pglite.status())]:
         print(f"{name}: {status}")
 
 
