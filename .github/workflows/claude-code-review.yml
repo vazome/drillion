@@ -31,6 +31,9 @@ jobs:
           persist-credentials: false
 
       - id: review
+        env:
+          # a background subagent is lost when the run ends its turn waiting for it
+          CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: "1"
         uses: anthropics/claude-code-action@756cc22e19660d20e8cc9496b4f242475a7f7790 # v1.0.235
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
