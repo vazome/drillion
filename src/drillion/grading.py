@@ -669,7 +669,7 @@ def _run_passes(s, passes):
         encoding="utf-8",
     )
     try:
-        done = subprocess.run(
+        subprocess.run(
             [s["node"], *s["flags"], "sqlrun.mjs", "sqljob.json", "sqlout.json"],
             capture_output=True,
             text=True,
@@ -687,11 +687,13 @@ def _run_passes(s, passes):
     try:
         return json.loads(Path("sqlout.json").read_text(encoding="utf-8"))["passes"]
     except OSError, ValueError:
-        said = (done.stderr.strip().splitlines() or ["no reason given"])[-1]
-        answer(
-            False,
-            [(None, f"PGlite stopped while running your SQL: {said}", "task.sql")],
+        # Node's own dying words are a V8 stack, and the sandbox's memory cap is the cause
+        said = (
+            "your SQL stopped PGlite, most likely by running out of memory: look for a "
+            "query that returns or builds millions of rows, such as a join with no "
+            "condition"
         )
+        answer(False, [(None, said, "task.sql")])
 
 
 def _hidden_rules(s, key, mine):
@@ -777,6 +779,12 @@ def grade_sql(grade):
         )
     if mine["result"] is not None:
         CURRENT["rendered"] = table(mine["result"])
+    if s["explain"] and mine["result"] is not None and mine["plan"] is None:
+        said = (
+            "task.sql must hold your query alone for the grader to read its plan: "
+            "remove the other statements"
+        )
+        answer(False, [(None, said, "task.sql")])
     if key["result"] is not None and (
         found := differ(key["result"], mine["result"], s["ordered"])
     ):
@@ -791,7 +799,9 @@ def grade_sql(grade):
             answer(
                 False,
                 [(None, f"{name}: {said}")],
-                table(got) if got and "error" not in got else "",
+                ""
+                if "error" in want
+                else f"Expected, after the answer key:\n{table(want)}",
             )
     _hidden_rules(s, key_hidden, mine_hidden)
     if s["selfcheck"]:

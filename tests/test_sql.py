@@ -207,17 +207,21 @@ def _sql_tasks():
     }
 
 
-def _grade(meta, brief, text, seed=0):
+def _graded(meta, brief, text, seed=0):
     """The real child, grading `text` as the learner's task.sql. It sits under tasks/, the
     one tree the sandbox reads, under a unique name so parallel workers stay apart."""
     path = meta["dir"] / f"_test_{uuid.uuid4().hex}.sql"
     path.write_text(text, encoding="utf-8")
     try:
-        passed, diagnostics, *_ = runner.run_manifest(
+        return runner.run_manifest(
             meta, brief, learner=path, **kinds.of(meta).extra(meta, brief, seed)
         )
     finally:
         path.unlink()
+
+
+def _grade(meta, brief, text, seed=0):
+    passed, diagnostics, *_ = _graded(meta, brief, text, seed)
     return passed, diagnostics
 
 
@@ -341,3 +345,34 @@ def test_selfcheck_fails_a_key_that_cannot_tell_a_hard_coded_answer():
     finally:
         path.unlink()
     assert not passed and "same rows on both datasets" in diagnostics[0]["message"]
+
+
+@needs_pglite
+def test_a_failed_probe_shows_the_answer_keys_table():
+    meta = _sql_tasks()["335_sql_upsert_settings"]
+    brief = manifest.generate_brief(meta, 0)
+    passed, _, report, _ = _graded(meta, brief, "SELECT 1")
+    assert not passed
+    assert report.startswith("Expected, after the answer key:")
+    assert "(26 rows" in report
+
+
+@needs_pglite
+def test_a_query_that_runs_out_of_memory_says_so():
+    meta = _sql_tasks()["324_sql_first_select"]
+    brief = manifest.generate_brief(meta, 0)
+    huge = "SELECT g, repeat('x', 1000) FROM generate_series(1, 5000000) AS g"
+    passed, diagnostics = _grade(meta, brief, huge)
+    assert not passed and "memory" in diagnostics[0]["message"]
+    assert "node" not in diagnostics[0]["message"]
+
+
+@needs_pglite
+def test_a_plan_task_says_its_query_must_stand_alone():
+    """EXPLAIN reads one statement, so an exploring query left above the answer on 331
+    is named as the reason, never as a missing window function."""
+    meta = _sql_tasks()["331_sql_running_total"]
+    brief = manifest.generate_brief(meta, 0)
+    key = kinds.of(meta).answer_key(meta, brief)
+    passed, diagnostics = _grade(meta, brief, "SELECT * FROM orders LIMIT 3;\n" + key)
+    assert not passed and "alone" in diagnostics[0]["message"]
