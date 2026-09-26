@@ -30,7 +30,7 @@ def orders(r, ids, n, months=(3, 4, 5, 6)):
         {
             "id": i,
             "customer_id": r.choice(ids),
-            "placed_at": dt.datetime(
+            "placed_at": dt.datetime(  # noqa: DTZ001 - a timestamp without time zone
                 2026,
                 r.choice(months),
                 r.randint(1, 28),
