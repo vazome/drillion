@@ -11,14 +11,15 @@ belong to a later track if one is wanted.
 
 ## What the learner does
 
-A SQL task is a database with a question about it. The task ships `schema.sql`, shown
+A SQL task is a database with a question about it. The task ships `db/schema.sql`, shown
 read-only in the same `FileTabs` strip a Helm chart or a build context uses. The learner
-writes `task.sql`, the whole file, with no machinery marker.
+writes `task.sql`, the whole file, with no machinery marker, and the frontmatter says
+`edits: task.sql` as a Dockerfile task's says `edits: Dockerfile`.
 
 ```
 tasks/324_sql_first_select/
-  README.md      kind: sql, track: sql, tags, prereqs; spec with {placeholders}
-  schema.sql     read-only, the tables this sitting's data lives in
+  README.md      kind: sql, track: sql, edits: task.sql, tags, prereqs; spec with {placeholders}
+  db/schema.sql  read-only, the tables this sitting's data lives in
   task.sql       the learner's file
   solution.sql   the answer key, with the same {placeholders}
   grade.py       brief(r), rows(r, b), and optionally probes(b), check(result, b)
@@ -61,9 +62,11 @@ says only that the query passes on the shown data and not on other data, and whi
 differed (row count, a column, a value), never the hidden rows.
 
 **Comparison.** Column names must match, since the spec names every column to return and
-aliasing is part of the lesson. Values compare by their JSON value, with numbers compared as
-decimals so `2.50` and `2.5` are equal; a column's type is not compared, so `count(*)` as
-`bigint` and a learner's `int` agree. Unordered results compare as multisets. The first
+aliasing is part of the lesson. Every value comes back as Postgres's own text (every type's
+parser in PGlite is replaced by the identity, which also keeps a `bigint` whole and a
+`timestamp` free of JavaScript's time zone). Two values are equal when their text is, or
+when both parse as numbers and are equal as decimals, so `2.50` and `2.5` agree; a column's
+type is not compared, so `count(*)` as `bigint` and a learner's `int` agree. Unordered results compare as multisets. The first
 difference found is the message: a missing column, a row count, or row N with the expected
 and actual values side by side, for the visible dataset.
 
@@ -71,8 +74,7 @@ and actual values side by side, for the visible dataset.
 `task.sql` and returns it as a diagnostic, so the editor draws it through the same diagnostics
 channel a parser error already uses, with the SQLSTATE in the message.
 
-**Verdict fingerprint** `s1:`: the grader's files, `schema.sql`, the PGlite pin and
-`sqlrun.mjs`.
+**Verdict fingerprint** `s1:`: the grader's files, `db/`, the PGlite pin and `sqlrun.mjs`.
 
 ## Engine
 
@@ -99,7 +101,7 @@ package. One Node process starts **one** PGlite instance and runs four passes on
 key on the visible dataset, answer key on the hidden one, then the learner's on each. Before
 every pass the instance is reset: `DISCARD ALL`, then every schema that is not a system
 schema dropped and `public` created again (16 ms). Each pass loads `schema.sql`, inserts the
-rows, runs its SQL, then its probes, and the process prints JSON: rows with column names, or
+rows, runs its SQL, then its probes (each in a transaction rolled back after it), and the process prints JSON: rows with column names, or
 an error with SQLSTATE and position. Python compares and runs `check()`, so every rule a task
 author writes stays in Python, as in every other kind.
 
@@ -126,7 +128,7 @@ not finish within Ns".
 
 - **Editor.** Monaco's built-in `pgsql` language, registered beside python, yaml and
   dockerfile. No SQL language server.
-- **You get.** `schema.sql` in the file tabs, through `kind.chart()`. There is no data tab:
+- **You get.** `db/schema.sql` in the file tabs, through `kind.chart()`. There is no data tab:
   the learner explores with `SELECT * FROM orders` and Run, which is free.
 - **Result panel.** A result grid: the learner's rows under their column names and, on a
   mismatch, the expected rows beside them with the first difference marked. This is a new
@@ -145,9 +147,12 @@ not finish within Ns".
 ## Proof
 
 - **selfcheck** runs `solution.sql` as the learner's file, on both datasets.
-- **doctor** rejects a SQL task whose `schema.sql` does not load, whose answer key fails on
-  the self-check seed, whose query returns no rows on either dataset, or whose result is the
-  same on both datasets (a task that cannot tell a hard-coded answer from a real one).
+- **doctor** rejects a SQL task with a tier, with `edits` other than `task.sql`, or with a
+  `db/task.sql`, and checks its placeholders as for the other kinds.
+- **selfcheck** also fails a query task whose answer key returns no rows on either dataset,
+  or the same rows on both (a task that cannot tell a hard-coded answer from a real one).
+  This runs only in the self-check, on its fixed seed, so random data that happens to repeat
+  can never block a learner.
 - **pytest** for the comparison (ordered and multiset, decimals, missing columns), for mapping
   an error position to a line, and for the pin's directory digest.
 - **screens**: one SQL task added to the Playwright set, light and dark.
@@ -158,7 +163,7 @@ not finish within Ns".
   with a supervised server, and emulation on sqlite. Emulation was rejected because a wrong
   dialect teaches wrong answers; a server was rejected for this scope because nothing here
   needs a second session.
-- `CONTEXT.md`: `schema.sql` as the SQL kind's **chart** analogue, **probe**, **dataset**
+- `CONTEXT.md`: `db/` as the SQL kind's **chart** analogue, **probe**, **dataset**
   (visible and hidden); the task counts.
 - `docs/authoring-tasks.md`: a SQL section (the three shapes, `rows`, `probes`, `ordered`).
 
