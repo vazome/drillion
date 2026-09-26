@@ -79,6 +79,8 @@ def test_a_read_only_repository_is_still_replaced(sitting):
     for base, dirs, _files in os.walk(where / "repo"):
         for d in dirs:
             os.chmod(os.path.join(base, d), 0o500)
+    # unreadable, not just unwritable: `os.open`/`os.scandir` can't even enter it
+    os.chmod(where / "repo" / ".git" / "objects", 0o000)
     gitrepo.discard(meta["dir"].name)
     assert not where.exists()
 

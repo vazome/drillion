@@ -142,16 +142,30 @@ def discard(slug):
 
 
 def _remove(path):
-    """rmtree that gives a directory its write bit back and tries again, so a learner's
-    `chmod -R a-w` never pins a sitting in place."""
+    """rmtree that gives a directory its permissions back and tries again, so a learner's
+    `chmod -R a-w` or `chmod 000` never pins a sitting in place. The stamp goes first: a
+    removal that fails partway must never leave one that still matches a half-deleted tree."""
 
     def retry(func, name, _exc):
+        # `os.open`/`os.scandir` failing means `name` itself cannot be entered (0o000 or
+        # missing execute); fix `name` and redo it whole. Anything else failing is the
+        # parent's write bit blocking removal of an entry from it, as usual.
+        if func in (os.open, os.scandir) and os.path.isdir(name):
+            mode = os.stat(name).st_mode
+            os.chmod(name, mode | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+            shutil.rmtree(name, onexc=retry)
+            return
         parent = os.path.dirname(name)
         os.chmod(parent, os.stat(parent).st_mode | stat.S_IWUSR | stat.S_IXUSR)
         func(name)
 
-    if path.exists():
-        shutil.rmtree(path, onexc=retry)
+    if not path.exists():
+        return
+    try:
+        (path / STAMP).unlink()
+    except OSError:
+        pass
+    shutil.rmtree(path, onexc=retry)
 
 
 def _setup(meta, brief, where):
