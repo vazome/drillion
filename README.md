@@ -14,8 +14,8 @@ TL;DR: self-hosted Python practice with a UI that stays out of your way. No stre
 no leaderboard nonsense, no badges and no engagement bait. Made by a neurodivergent
 engineer. It is simple, and it runs your code in a sandbox.
 
-Longer: drillion is a local web app with 323 short tasks, 267 in Python, 26 Kubernetes
-manifests, 15 Helm charts and 15 Dockerfiles, each tagged with the
+Longer: drillion is a local web app with 338 short tasks, 267 in Python, 26 Kubernetes
+manifests, 15 Helm charts, 15 Dockerfiles and 15 in Postgres SQL, each tagged with the
 concept it drills so you can go straight at whatever you're worst at. No login, no
 account, no server except the one on your laptop. Tasks are folders of Markdown, Python and
 YAML. Your progress is a single SQLite file you can copy, back up and carry.
@@ -62,7 +62,8 @@ Core ideas I'm keeping in mind during the development:
   drillion suggests taking one as you cannot brute-force something you are unaware of.
 - **Grading is real.** A Python answer is spliced into the task's own pytest file and run; a
   manifest is validated by kubeconform, a Helm chart by `helm template` and `helm lint --strict`,
-  and a Dockerfile by hadolint, then each is checked against the task's own rules.
+  a Dockerfile by hadolint, and SQL runs on Postgres (PGlite) beside the answer key, then each
+  is checked against the task's own rules.
 - **YOUR progress.** One SQLite file on your disk, stamped with a schema version, and a
   build refuses to rewrite a file a newer one wrote rather than quietly mangling it. Settings
   turns it into a backup you can carry, and can erase the lot if you want to start over.
@@ -117,7 +118,7 @@ docker exec drillion drillion doctor     # report why a task folder would be ski
 ## What running it does to your machine
 
 drillion runs Python on your computer: the code you write, and the code that ships inside the
-323 tasks. So it is worth saying plainly what that costs you.
+338 tasks. So it is worth saying plainly what that costs you.
 
 - **Your submissions are confined by the Linux kernel, where it allows.** The image runs them with
   Landlock: they read only the interpreter, system libraries and tasks, and write only to a scratch
@@ -158,7 +159,7 @@ against, and [AGENTS.md](AGENTS.md) for how the project decides things. Bugs and
 
 ## License
 
-MIT. See [LICENSE](LICENSE). 89 of the 323 tasks adapt a problem from Exercism's Python track
+MIT. See [LICENSE](LICENSE). 89 of the 338 tasks adapt a problem from Exercism's Python track
 (also MIT), 13 adapt reference code from Fluent Python's examples and six from
 TheAlgorithms/Python (both MIT), and one restates a problem from MBPP (CC-BY-4.0); each
 names its origin in a `source:` field and an
