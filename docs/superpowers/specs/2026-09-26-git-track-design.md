@@ -65,10 +65,12 @@ stored brief and seed.
 
 ## How it is graded
 
-Run and Submit copy `.sittings/<slug>/` into the grading scratch directory and grade the
-copy, because even `git status` rewrites the index. In the same sandboxed child, the answer
-key is built: `setup()` into a second directory from the sitting's seed, then `solution.sh`
-run in it with `GIT_EDITOR=true`. The same probes then read both.
+Run and Submit grade `.sittings/<slug>/` where it lies. The grading child gets it as a
+read-only Landlock root and runs every git in it with `GIT_OPTIONAL_LOCKS=0`, which git
+provides so that `status` never takes the index lock. Nothing is copied, so a FIFO or a
+huge file the learner made costs the grader nothing. In the same sandboxed child, the
+answer key is built in scratch: `setup()` from the sitting's seed, then `solution.sh` run
+in it with `GIT_EDITOR=true`. The same probes then read both.
 
 **Commit identity without dates.** The learner's commits carry today's date and the key's
 carry another, so SHAs never agree. Each commit is compared by a **content id**: the hash of
@@ -98,12 +100,14 @@ the point (a reworded message, a hand-merged paragraph), the task skips the ref 
 asks in `check()` instead: the subject starts with the ticket number, both sides' lines are
 present and no marker is left.
 
-**What a task adds.** `probes(b)` returns a list of `(name, argv)` git commands to run in
-both repositories and compare, or `{"skip": [...]}` to drop a default probe (a task about
-`stash` may not care what `HEAD` is). `check(repo, b)` is optional, for rules a comparison
+**What a task adds.** `SKIP`, a tuple in `grade.py`, drops default probes by name (`refs`,
+`deleted`, `head`, `status`, `operation`, `stash`): a task about `stash` may not care what
+`HEAD` is. `probes(b)` returns `{sentence: argv}`, git commands run in both repositories
+and compared, the sentence being what the learner reads when they differ ("the files git
+ignores"). `check(repo, b)` is optional, for rules a comparison
 cannot express, githug-style: "the commit lost to `reset --hard` is reachable from `main`
-again", "the tag points at the first bad commit". It gets a small read-only `Repo` view over
-the graded copy with `log`, `show`, `ref` and `status`, and fails with `AssertionError`.
+again", "the tag points at the first bad commit". It gets the `_git.Repo` helper over
+the graded repository, with `git(...)`, `log(ref)` and `ref(name)`, and fails with `AssertionError`.
 
 **The failure message** is the first difference, in the learner's words, and in full: there
 is no hidden dataset, so nothing needs hiding. `main is 4 commits ahead of where it should
@@ -115,7 +119,7 @@ main`. `a merge is still in progress: finish it with git commit or back out with
 config can run commands (`core.fsmonitor`, `diff.external`) or change output (`log.*`,
 `format.*`). Probes use plumbing with explicit formats (`for-each-ref`, `rev-list`,
 `cat-file`, `rev-parse`, `status --porcelain`) and run with `GIT_CONFIG_NOSYSTEM=1`,
-`GIT_CONFIG_GLOBAL=/dev/null` and `-c core.fsmonitor= -c core.hooksPath=/dev/null`. The copy
+`GIT_CONFIG_GLOBAL=/dev/null` and `-c core.fsmonitor= -c core.hooksPath=/dev/null`, and `GIT_NO_REPLACE_OBJECTS=1` so `git replace` cannot rewrite history for the grader. The repository
 is graded inside the same sandbox as every other grade, so whatever config is left runs
 confined.
 
@@ -135,7 +139,8 @@ started through `subprocess.Popen` with the sandbox's `preexec` plus `setsid()` 
 dependency: stdlib `pty`, `fcntl`, `termios`, with the read side on the event loop through
 `loop.add_reader`. The rc file sets a prompt with the branch (`__git_ps1` from
 `/usr/lib/git-core/git-sh-prompt`), loads git's bash completion, and sets `HISTFILE`,
-`PROMPT_COMMAND`, `EDITOR=nano` and `VISUAL=nano`. `vim` is one `export EDITOR=vim` away.
+`PROMPT_COMMAND`, `EDITOR=nano` and `VISUAL=nano`. Debian's `vim-tiny` installs only `vi`, so the rc file aliases `vim` to it,
+and `export EDITOR=vi` switches git's editor.
 
 **The sandbox.** The shell is a sandboxed child like any grade, with the sitting directory
 as its scratch (read, write, execute) and `history.sh` added as the one writable file
@@ -195,7 +200,7 @@ so and names the install, as a manifest task with kubeconform absent names `doct
   `history.sh`, highlighted with Monaco's `shell` language.
 - **Catalogue.** Track `git`, logo from devicon like the others. Tags follow the tag rule:
   `staging`, `commits`, `branches`, `merging`, `conflicts`, `rebase`, `history-rewriting`,
-  `reflog`, `stash`, `remotes`, `bisect`, `log-search`.
+  `undo`, `stash`, `remotes`, `history-search`, `tagging`. Each is on at least two tasks.
 - **Entry points.** Catalogue, task page, lineage panel, a review and a new pick all open the
   same page; none needs its own path. Backup carries `history.sh` through the kinds'
   artifact set; a restored sitting gets a fresh repository on its next connect.
@@ -206,9 +211,10 @@ so and names the install, as a manifest task with kubeconform absent names `doct
 - **selfcheck** runs `solution.sh` as the learner in a fresh `setup()` and requires a pass,
   and grades the untouched `setup()` repository and requires a fail, so no task is solved
   by doing nothing.
-- **doctor** rejects a git task with a tier or `edits`, without `solution.sh` or a `setup`
-  in `grade.py`, or with a non-empty `history.sh`, and checks placeholders as for the other
-  kinds.
+- **doctor** rejects a git task with a tier or `edits`, or without `solution.sh`,
+  `history.sh` or a `setup` in `grade.py`, checks placeholders as for the other kinds, and
+  prints the git version. It does not ask that `history.sh` be empty: doctor reads the
+  learner's own root, where an open sitting has filled it.
 - **pytest**: content ids (same content on other dates agree; swapped merge parents do not),
   each default probe on a hand-built pair of repositories, the failure messages, a repo whose
   config sets `core.fsmonitor` graded without running it, and the terminal bridge (spawn,
@@ -234,23 +240,23 @@ it takes the numbers from 324 and SQL moves up.
 | # | Task | Area | What it drills |
 |---|------|------|----------------|
 | 339 | first commit | local | `status`, staging two of three files, `.gitignore` for the third |
-| 340 | stage part of a file | local | `add -p`, splitting one file's changes into two commits |
+| 340 | stage part of a file | local | `add -p`, one file's changes split into two commits |
 | 341 | fix the last commit | local | `--amend` with a forgotten file and a better message |
 | 342 | undo changes | local | `restore` a file, `restore --staged` another |
 | 343 | stash and switch | local | `stash -u`, a fix on another branch, `stash pop` |
 | 344 | find the commit | local | `log -S`, `--author`, a pathspec; tag what was found |
-| 345 | merge a branch | merging | fast-forward, then `--no-ff` for the next branch |
+| 345 | merge a branch | merging | fast-forward, then a merge commit for the next branch |
 | 346 | resolve a conflict | merging | a conflict fixed in an editor, `add`, `commit` |
 | 347 | backport a fix | merging | `cherry-pick` onto a release branch |
-| 348 | tidy a branch | rewriting | `rebase -i`: squash, reword, drop |
+| 348 | tidy a branch | rewriting | `rebase -i`: fixup, reword, drop |
 | 349 | fixup commits | rewriting | `commit --fixup`, `rebase -i --autosquash` |
-| 350 | rebase onto main | rewriting | `rebase`, then a fast-forward merge |
-| 351 | undo commits | rewriting | `reset --soft` against `--mixed` against `--hard` |
-| 352 | rescue with reflog | rescue | a branch deleted and a `reset --hard` undone |
-| 353 | revert, do not rewrite | rescue | `revert` a commit that is already on `origin` |
-| 354 | bisect | rescue | `bisect run` with a check script the repo ships |
-| 355 | first push | remotes | `push -u`, tracking, `fetch` and a behind branch |
-| 356 | a teammate pushed first | remotes | `pull --rebase`, then `push --force-with-lease` on your own branch |
+| 350 | rebase onto main | rewriting | `rebase` through a conflict, then a fast-forward merge |
+| 351 | undo commits | rewriting | `reset --soft` to recommit, `reset --hard` to throw away |
+| 352 | rescue with reflog | rescue | a deleted branch and a `reset --hard` undone |
+| 353 | first push | remotes | `push -u`, tracking, a new branch pushed |
+| 354 | revert, do not rewrite | rescue | `revert` a commit that is already on `origin` |
+| 355 | bisect | rescue | `bisect run` with a check script the repo ships; tag the culprit |
+| 356 | a teammate pushed first | remotes | `pull --rebase --autostash`, `push --force-with-lease` on your own branch |
 
 ## Not now
 
