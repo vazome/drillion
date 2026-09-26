@@ -87,28 +87,40 @@ one executable out of an archive; this one is a directory (`pglite.wasm`, `initd
 digest, reusing the length-prefixed set digest the schema set already has. The image fetches
 it at build time beside kubeconform, so a learner never downloads anything.
 
+**Snapshot.** `doctor --fetch` also starts PGlite once, runs `CREATE EXTENSION plpgsql`, and
+saves the data directory with `dumpDataDir("gzip")` as `tools/pglite-<version>/datadir.tar.gz`
+(4.5 MB), with its sha256 beside it, checked before every run like the tree. Every grade
+starts from it with `loadDataDir`, which skips `initdb`: measured at 1.1 s to a ready instance
+against 3.5 s with `initdb`.
+
 **Runner.** `kind.grade` → `runner.run_manifest` → the sandboxed `grading.py` →
 `grade_sql(job)`, which spawns `node sqlrun.mjs job.json`. `sqlrun.mjs` ships inside the
-package. One Node process runs a fresh in-memory PGlite instance per side per dataset: learner
-and answer key, visible and hidden. Each instance loads `schema.sql`, inserts the rows, runs
-its SQL, then its probes, and the process prints JSON: rows with column names, or an error
-with SQLSTATE and position. Python compares and runs `check()`, so every rule a task author
-writes stays in Python, as in every other kind. A separate instance per side means the
-learner's SQL cannot touch the answer key's database, `DROP TABLE` included.
+package. One Node process starts **one** PGlite instance and runs four passes on it: answer
+key on the visible dataset, answer key on the hidden one, then the learner's on each. Before
+every pass the instance is reset: `DISCARD ALL`, then every schema that is not a system
+schema dropped and `public` created again (16 ms). Each pass loads `schema.sql`, inserts the
+rows, runs its SQL, then its probes, and the process prints JSON: rows with column names, or
+an error with SQLSTATE and position. Python compares and runs `check()`, so every rule a task
+author writes stays in Python, as in every other kind.
+
+The answer key always runs before the learner, and its results leave the database as soon as
+they are read, so nothing the learner's SQL does can reach them. What a learner's pass leaves
+behind outside a schema (a role, a setting `DISCARD` does not clear) can only reach their own
+second pass, which runs the same SQL on other data.
+
+One instance, and never two, because a second one in the same process does not fit the
+sandbox's address-space cap (measured: "Array buffer allocation failed").
 
 **Sandbox.** The Node child inherits the grading child's Landlock ruleset, widened to read the
 Node directory and the PGlite directory. TCP stays denied. The sandbox's `RLIMIT_AS` is 4 GB,
-and V8 reserves about 10 GB of address space per WASM memory; Node's
-`--disable-wasm-trap-handler` trades that reservation for explicit bounds checks and is the
-intended fix. If it fails, the cap is raised for this job alone.
+and V8 compiling a WASM module of this size dies under it ("Fatal process out of memory:
+Zone") unless Node runs with `--disable-wasm-trap-handler --liftoff-only`: no 10 GB bounds
+reservation, and the baseline compiler only. Measured to start and query under 4 GB; the cap
+is not raised.
 
 **Limits.** `statement_timeout` relies on signals WASM does not have. The existing wall-clock
 kill on the grading child is the limit, and a runaway `WITH RECURSIVE` ends as "grading did
 not finish within Ns".
-
-**Speed.** Each instance runs `initdb` on start. If that dominates a grade, `doctor --fetch`
-builds one data directory with `dumpDataDir` and every instance starts from it with
-`loadDataDir`. Measured before it is built.
 
 ## Surfaces
 
