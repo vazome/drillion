@@ -101,11 +101,11 @@ export interface Task {
   hints: { total: number; shown: string[]; next_in: number | null };
   solution: { unlocked: boolean; need_attempts: number; need_secs: number };
   /** `code` is the answer you wrote that day, null while the server keeps it closed.
-   *  `seed`, `revision` and `python`, `hadolint` or `validator`/`kubernetes` say what produced
+   *  `seed`, `revision` and `python`, `hadolint`, `pglite` or `validator`/`kubernetes` say what produced
    *  the grade, and are absent on a pass archived before a run recorded it. */
   archive: {
     date: string; grade: Grade; code: string | null;
-    python?: string; validator?: string; kubernetes?: string; helm?: string; hadolint?: string; seed?: number; revision?: string;
+    python?: string; validator?: string; kubernetes?: string; helm?: string; hadolint?: string; pglite?: string; seed?: number; revision?: string;
   }[];
   /** The learner's one note on the task, `""` when there is none — `PUT /api/task/{slug}/note`. */
   note: string;

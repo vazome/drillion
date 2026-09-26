@@ -288,6 +288,7 @@ def _payload(st, slug, meta, src):
                         "kubernetes",
                         "helm",
                         "hadolint",
+                        "pglite",
                         "seed",
                         "revision",
                     )

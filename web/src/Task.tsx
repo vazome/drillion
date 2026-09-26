@@ -564,7 +564,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
                     </div>
                     {a.revision ? (
                       <div className="tabular" style={{ fontSize: 12.5, color: "var(--text-faint)", fontFamily: "var(--font-mono)" }}>
-                        {a.python ? `Python ${a.python}` : a.hadolint ? `hadolint ${a.hadolint}` : `kubeconform ${a.validator} · Kubernetes ${a.kubernetes}`} · seed {a.seed} · grader {a.revision}
+                        {a.python ? `Python ${a.python}` : a.hadolint ? `hadolint ${a.hadolint}` : a.pglite ? `PGlite ${a.pglite}` : `kubeconform ${a.validator} · Kubernetes ${a.kubernetes}`} · seed {a.seed} · grader {a.revision}
                       </div>
                     ) : null}
                     {a.code ? <pre style={{ margin: "6px 0 0", fontSize: 12.5, whiteSpace: "pre-wrap", color: "var(--text-muted)" }}>{a.code}</pre> : null}

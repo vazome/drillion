@@ -374,7 +374,12 @@ async def _your_own_answer_is_an_answer(api, _path):
     st = state.load()
     st["cards"][SLUG] = {"box": 2, "due": state.today(), "seen": 2, "lapses": 0}
     st["archive"][SLUG] = [
-        {"date": "2026-01-01", "grade": "pass", "code": "return LAST_TIME"}
+        {
+            "date": "2026-01-01",
+            "grade": "pass",
+            "code": "return LAST_TIME",
+            "pglite": "0.5.8",
+        }
     ]
     st["open"][SLUG].update(attempts=3, active=600)  # the whole price, unspent
     state.save(st)
@@ -382,6 +387,7 @@ async def _your_own_answer_is_an_answer(api, _path):
     task = (await api.get(f"/api/task/{SLUG}")).json()
     assert task["solution"]["unlocked"] is True  # afforded...
     assert task["archive"][0]["code"] is None  # ...and still not handed over
+    assert task["archive"][0]["pglite"] == "0.5.8"  # what graded it is no secret
     assert "LAST_TIME" not in str(task)
 
     await api.post(f"/api/task/{SLUG}/solution")  # asking is what opens it
