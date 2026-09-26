@@ -1,7 +1,6 @@
 name: Claude Code Review
 
-# The action only runs when this file matches main, so the PR that adds or edits it fails
-# its own review. Fork and Dependabot PRs get no secrets, so they are skipped, not failed.
+# Fork and Dependabot PRs get no secrets, so they are skipped, not failed.
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
@@ -30,10 +29,20 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - uses: anthropics/claude-code-action@756cc22e19660d20e8cc9496b4f242475a7f7790 # v1.0.235
+      - id: review
+        uses: anthropics/claude-code-action@756cc22e19660d20e8cc9496b4f242475a7f7790 # v1.0.235
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           plugin_marketplaces: https://github.com/anthropics/claude-code.git
           plugins: code-review@claude-code-plugins
           prompt: /code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}
-          claude_args: --allowedTools "mcp__github_inline_comment__create_inline_comment"
+          claude_args: --allowedTools "Agent,Read,Glob,Grep,Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*),mcp__github_inline_comment__create_inline_comment"
+
+      - name: Check review permissions
+        env:
+          CLAUDE_EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
+        run: |
+          if ! jq -e 'map(select(.type == "result") | .permission_denials_count) == [0]' "$CLAUDE_EXECUTION_FILE" > /dev/null; then
+            echo '::error::Claude review did not finish without permission denials; inspect its result and tool allowlist.'
+            exit 1
+          fi
