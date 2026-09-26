@@ -102,10 +102,11 @@ def run_python(meta, seed):
     return r.returncode == 0, r.stdout, case
 
 
-def run_manifest(meta, brief, learner=None, helm=None, docker=None):
+def run_manifest(meta, brief, learner=None, helm=None, docker=None, sql=None):
     """A manifest sitting: the validator and the task's `check()`, in one sandboxed child.
     A Helm sitting is the same child with `helm` set: it renders the chart first. A
-    Dockerfile sitting sets `docker`, and hadolint stands in for the validator.
+    Dockerfile sitting sets `docker`, and hadolint stands in for the validator. A SQL sitting
+    sets `sql`, and PGlite stands in for it.
 
     Returns `(passed, diagnostics, validator report, what Helm rendered)`. No pytest: a manifest run is one
     file, one validator call and one `check()`, and a test framework in the middle only
@@ -113,7 +114,7 @@ def run_manifest(meta, brief, learner=None, helm=None, docker=None):
 
     Paired with `run_python`, which grades the other kind. Neither dispatches: the caller
     already holds a kind, and `kind.grade` picks the one that fits."""
-    job = manifest.job(meta, brief, learner, helm, docker)
+    job = manifest.job(meta, brief, learner, helm, docker, sql)
     with tempfile.TemporaryDirectory(
         dir=sandbox.scratch_root(), ignore_cleanup_errors=True
     ) as scratch:

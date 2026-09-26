@@ -79,3 +79,19 @@ def test_manifest_validate_accepts_a_draft_and_rejects_broken_yaml():
         assert err.line
         return
     raise AssertionError("broken YAML must be rejected on save")
+
+
+SQL_META = {"kind": "sql", "dir": None}
+
+
+def test_sql_is_a_whole_file_kind_in_pgsql():
+    k = kinds.of(SQL_META)
+    assert (k.name, k.filename, k.language, k.suffix) == (
+        "sql",
+        "task.sql",
+        "pgsql",
+        ".sql",
+    )
+    assert k.body("SELECT 1;\n") == "SELECT 1;\n"
+    assert k.empty("SELECT 1;\n") == ""
+    assert k.validate("SELEC oops", "") == "SELEC oops", "Postgres says it on the run"

@@ -16,8 +16,8 @@ from pathlib import Path
 
 import yaml
 
-from . import sandbox, tools
-from .catalogue import DOCKER, MANIFEST, solution
+from . import pglite, sandbox, tools
+from .catalogue import DOCKER, MANIFEST, SQL, solution
 
 MAX_BRIEF_BYTES = 8192
 MAX_RESULT_BYTES = 64 << 10
@@ -89,10 +89,13 @@ def grader_revision(meta):
     return digest.hexdigest()[:12]
 
 
+SHIPPED = {DOCKER: "context", SQL: "db"}
+
+
 def shipped(meta):
-    """The folder a task ships around the learner's file: a Helm chart, or the build
-    context a Dockerfile is written for."""
-    return meta["dir"] / ("context" if meta.get("kind") == DOCKER else "chart")
+    """The folder a task ships around the learner's file: a Helm chart, the build context a
+    Dockerfile is written for, or the database a SQL task asks about."""
+    return meta["dir"] / SHIPPED.get(meta.get("kind"), "chart")
 
 
 def chart_files(meta):
@@ -289,20 +292,47 @@ def docker_job(meta):
     }
 
 
-def job(meta, brief, learner=None, helm=None, docker=None):
+# `sqlrun.mjs` as text, like GRADE_SOURCE: the child writes it into scratch, since a kernel
+# tier may deny reading the drillion package
+SQL_RUNNER = pglite.RUNNER.read_text(encoding="utf-8")
+
+
+def sql_job(meta, brief, seed, selfcheck=False):
+    """What the child needs to run a SQL sitting on PGlite: where it is, the database, the
+    answer key rendered for this brief, and the seed both datasets grow from."""
+    home = pglite.installed()
+    if home is None:
+        raise ToolMissing("PGlite is not installed: run `drillion doctor --fetch`")
+    return {
+        "pglite": str(home),
+        "node": str(pglite.node()),
+        "flags": list(pglite.NODE_FLAGS),
+        "runner": SQL_RUNNER,
+        "schema": (shipped(meta) / "schema.sql").read_text(encoding="utf-8"),
+        "key": render(solution(meta).read_text(encoding="utf-8"), brief),
+        "seed": seed,
+        "ordered": bool(meta.get("ordered")),
+        "explain": bool(meta.get("explain")),
+        "selfcheck": selfcheck,
+    }
+
+
+def job(meta, brief, learner=None, helm=None, docker=None, sql=None):
     """Everything the child needs to grade one sitting, as plain data.
 
     `learner` is the file to grade, and defaults to the learner's own. A self-check grades
     the answer key instead, and passes the path it rendered it to. `helm` is `helm_job`'s
     answer for a Helm task and `docker` is `docker_job`'s for a Dockerfile task; a manifest
-    has neither. A Dockerfile needs no kubeconform, so it is not asked for one."""
+    has neither. `sql` is `sql_job`'s answer for a SQL task. Neither a Dockerfile nor SQL
+    needs kubeconform, so they are not asked for one."""
     tool = tools.installed(tools.KUBECONFORM)
-    if tool is None and docker is None:
+    if tool is None and docker is None and sql is None:
         raise ToolMissing("kubeconform is not installed: run `drillion doctor --fetch`")
     return {
         "kind": meta.get("kind", MANIFEST),
         "helm": helm,
         "docker": docker,
+        "sql": sql,
         "learner": str(learner or meta["path"]),
         "grader": str(meta["dir"] / "grade.py"),
         "module": module_name(meta["dir"].name),
@@ -364,6 +394,22 @@ def docker_fingerprint(meta):
             pin.version,
             pin.binary_sha256,
             json.dumps(HADOLINT_CONFIG, sort_keys=True),
+        ),
+    )
+
+
+def sql_fingerprint(meta):
+    """What decided a SQL verdict: the grader and its database, PGlite, and the runner."""
+    return _fingerprint(
+        "s1:",
+        (
+            grader_revision(meta),
+            pglite.VERSION,
+            pglite.TREE_SHA256,
+            hashlib.sha256(SQL_RUNNER.encode()).hexdigest(),
+            json.dumps(
+                {k: bool(meta.get(k)) for k in ("ordered", "explain")}, sort_keys=True
+            ),
         ),
     )
 

@@ -16,7 +16,8 @@ PYTHON = "python"
 MANIFEST = "manifest"
 HELM = "helm"
 DOCKER = "docker"
-KINDS = (PYTHON, MANIFEST, HELM, DOCKER)
+SQL = "sql"
+KINDS = (PYTHON, MANIFEST, HELM, DOCKER, SQL)
 # what every task needs, then what each kind adds. `tier` is Python depth and a manifest
 # reaches nowhere into the language, so it is not asked of one.
 REQUIRED = ("title", "difficulty", "minutes", "tags")
@@ -25,6 +26,7 @@ REQUIRED_BY_KIND = {
     MANIFEST: (),
     HELM: ("edits",),
     DOCKER: ("edits",),
+    SQL: ("edits",),
 }
 BROWSER = (
     "topic",
@@ -185,11 +187,25 @@ def _check_docker(folder):
     return out
 
 
+def _check_sql(folder):
+    """A SQL task is the learner's file, the grader, its answer key, and the database the
+    question is asked of."""
+    out = [
+        f"{name}: missing"
+        for name in ("task.sql", "grade.py", "solution.sql")
+        if not (folder / name).is_file()
+    ]
+    if not (folder / "db" / "schema.sql").is_file():
+        out.append("db/schema.sql: missing")
+    return out
+
+
 CHECKS = {
     PYTHON: _check_python,
     MANIFEST: _check_manifest,
     HELM: _check_helm,
     DOCKER: _check_docker,
+    SQL: _check_sql,
 }
 # the learner's own file per kind — what a browser tab opens and `path` points at
 FILENAMES = {
@@ -197,9 +213,10 @@ FILENAMES = {
     MANIFEST: "task.yaml",
     HELM: "task.yaml",
     DOCKER: "Dockerfile",
+    SQL: "task.sql",
 }
 # the answer key, for the kinds that render one from a brief
-SOLUTIONS = {DOCKER: "solution.Dockerfile"}
+SOLUTIONS = {DOCKER: "solution.Dockerfile", SQL: "solution.sql"}
 
 
 def solution(meta):

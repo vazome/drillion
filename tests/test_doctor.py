@@ -437,3 +437,44 @@ def test_a_dockerfile_task_without_its_context_or_key_is_skipped():
     assert _reasons(**{"045_docker": files}) == {
         "045_docker": ["solution.Dockerfile: missing", "context/: missing"]
     }
+
+
+_SQL_README = README.replace("tier: core\n", "").replace(
+    "difficulty: easy", "kind: sql\nedits: task.sql\ndifficulty: easy"
+)
+_SQL_FILES = {
+    "task.sql": "",
+    "grade.py": _GRADER,
+    "solution.sql": "SELECT 1;\n",
+    "db/schema.sql": "CREATE TABLE t (id integer);\n",
+}
+
+
+def test_a_sql_task_with_its_files_has_nothing_said_about_it():
+    assert _reasons(**{"044_sql": {"README.md": _SQL_README, **_SQL_FILES}}) == {}
+
+
+def test_a_sql_task_names_every_file_it_lacks_and_its_edits():
+    readme = _SQL_README.replace("edits: task.sql\n", "")
+    reasons = _reasons(**{"044_sql": {"README.md": readme}})["044_sql"]
+    for why in (
+        "README.md: frontmatter is missing `edits`",
+        "task.sql: missing",
+        "grade.py: missing",
+        "solution.sql: missing",
+        "db/schema.sql: missing",
+    ):
+        assert why in reasons
+
+
+def test_a_sql_task_has_no_tier_and_edits_only_task_sql():
+    readme = README.replace(
+        "difficulty: easy", "kind: sql\nedits: query.sql\ndifficulty: easy"
+    )
+    reasons = _reasons(**{"044_sql": {"README.md": readme, **_SQL_FILES}})
+    assert reasons == {
+        "044_sql": [
+            "README.md: tier belongs to a python task, not a SQL task",
+            "README.md: edits 'query.sql' is not task.sql",
+        ]
+    }
