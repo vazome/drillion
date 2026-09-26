@@ -16,7 +16,6 @@ import { configureDefaultWorkerFactory } from "monaco-languageclient/workerFacto
 import { initVimMode } from "monaco-vim";
 import { EmacsExtension } from "monaco-emacs";
 import { DEFAULTS, fontStack, type Prefs } from "./prefs";
-import "./Editor.css";
 
 // Every mono face is `font-display: swap`, and Monaco measures the character advance once
 // at construction: an editor built before the woff2 lands keeps drawing the caret and the
@@ -115,9 +114,22 @@ function applyTheme(dark: boolean) {
       "editorLineNumber.foreground": token("--text-faint"),
       "editorLineNumber.activeForeground": token("--text-muted"),
       "editorGutter.background": token("--gutter"),
-      "editorHoverWidget.background": token("--surface"),
-      "editorHoverWidget.foreground": token("--text"),
-      "editorHoverWidget.border": token("--border-strong"),
+      // hover, suggest, signature help and find all inherit these
+      "editorWidget.background": token("--surface"),
+      "editorWidget.foreground": token("--text"),
+      "editorWidget.border": token("--border-strong"),
+      // the defaults pair white text with VS Code's blue row, invisible on the pale tint
+      "editorSuggestWidget.selectedBackground": token("--accent-tint"),
+      "editorSuggestWidget.selectedForeground": token("--text"),
+      "editorSuggestWidget.selectedIconForeground": token("--text"),
+      "editorSuggestWidget.focusHighlightForeground": token("--accent"),
+      "editorHoverWidget.statusBarBackground": token("--surface-2"),
+      // the Quick Fix menu draws from the menu and list colours, not the widget ones
+      "menu.background": token("--surface"),
+      "menu.foreground": token("--text"),
+      "list.hoverBackground": token("--accent-tint"),
+      "list.hoverForeground": token("--text"),
+      "focusBorder": token("--accent"),
       // accent on both sides: pass/fail already mean the tests, and the left pane is code
       // that passed
       "diffEditor.insertedLineBackground": token("--accent-tint"),
