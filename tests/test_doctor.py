@@ -7,9 +7,26 @@ import pytest
 from drillion import cli, doctor
 from drillion.settings import settings
 from tests.fixtures import README, TASK, tasks_root
+from tests.fixtures_git import fixture_task as git_task
 
 # shares the fixture README's tag, so a one-task root is not told its tag stands alone
 PEER = "999_peer"
+
+
+@pytest.fixture
+def root_with():
+    """A throwaway tasks/ root of one folder, as `doctor.problems()` sees it."""
+
+    def _build(slug, files):
+        tmp, keep = tasks_root(**{slug: files}), settings.root
+        try:
+            settings.root = tmp
+            return doctor.problems()
+        finally:
+            settings.root = keep
+            shutil.rmtree(tmp)
+
+    return _build
 
 
 def _reasons(**folders):
@@ -478,3 +495,28 @@ def test_a_sql_task_has_no_tier_and_edits_only_task_sql():
             "README.md: edits 'query.sql' is not task.sql",
         ]
     }
+
+
+def test_a_git_task_with_a_tier_or_edits_is_refused(root_with):
+    files = git_task()
+    files["README.md"] = files["README.md"].replace(
+        "kind: git", "kind: git\ntier: core\nedits: x"
+    )
+    out = root_with("900_git_fixture", files)
+    assert any("tier belongs to a python task" in r for _, r in out)
+    assert any("a git task has no edits" in r for _, r in out)
+
+
+def test_a_git_task_needs_a_setup(root_with):
+    files = git_task()
+    files["grade.py"] = files["grade.py"].replace("def setup(", "def build(")
+    out = root_with("900_git_fixture", files)
+    assert ("900_git_fixture", "grade.py: has no `def setup(`") in out
+
+
+def test_a_git_task_needs_its_three_files(root_with):
+    files = git_task()
+    del files["solution.sh"], files["history.sh"]
+    out = root_with("900_git_fixture", files)
+    assert ("900_git_fixture", "solution.sh: missing") in out
+    assert ("900_git_fixture", "history.sh: missing") in out

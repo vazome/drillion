@@ -52,8 +52,9 @@ for _ in $(seq 30); do
   esac
   sleep 2
 done
-# Count learner artifacts rather than Python files: task.py, task.yaml, Dockerfile and task.sql are tasks.
-task_count="$(find tasks -mindepth 2 -maxdepth 2 -type f \( -name task.py -o -name task.yaml -o -name Dockerfile -o -name task.sql \) | wc -l | tr -d ' ')"
+# Count learner artifacts rather than Python files: task.py, task.yaml, Dockerfile, task.sql
+# and history.sh are tasks.
+task_count="$(find tasks -mindepth 2 -maxdepth 2 -type f \( -name task.py -o -name task.yaml -o -name Dockerfile -o -name task.sql -o -name history.sh \) | wc -l | tr -d ' ')"
 test "$(curl -fsS http://127.0.0.1:8765/api/health | jq .tasks)" = "$task_count"
 curl -fsS -o /dev/null http://127.0.0.1:8765/
 curl -fsS -o /dev/null -X POST http://127.0.0.1:8765/api/task/009_fstrings/open

@@ -10,8 +10,8 @@ import logging
 
 import yaml
 
-from . import manifest, pglite, region, sandbox, tools
-from .catalogue import DOCKER, FILENAMES, HELM, MANIFEST, PYTHON, SQL, solution
+from . import gitrepo, manifest, pglite, region, sandbox, tools
+from .catalogue import DOCKER, FILENAMES, GIT, HELM, MANIFEST, PYTHON, SQL, solution
 from .region import Invalid, _solve
 
 __all__ = ["Invalid", "of"]
@@ -371,12 +371,39 @@ class _Sql(_Manifest):
         return {"sql": manifest.sql_job(meta, brief, seed, selfcheck)}
 
 
+class _Git(_Manifest):
+    """A repository in a real terminal: the learner's artifact is the history bash writes,
+    and the repository they leave behind is what is graded. See `gitrepo` and `grade_git`
+    in `grading.py`."""
+
+    name = GIT
+    filename = FILENAMES[GIT]
+    language = "shell"
+    suffix = ".sh"
+
+    def validate(self, edited, src):
+        """The page never writes this file: bash appends to it, so what is on disk stands."""
+        return src
+
+    def etag(self, src):
+        # constant, so a Run from a page that last read an older history is never a conflict
+        return "history"
+
+    def answer_key(self, meta, brief):
+        """`solution.sh` with its placeholders filled in; a brace bash needs is doubled."""
+        return manifest.render(solution(meta).read_text(encoding="utf-8"), brief)
+
+    def judges(self):
+        return {"git": gitrepo.version()}
+
+
 KINDS = {
     PYTHON: _Python(),
     MANIFEST: _Manifest(),
     HELM: _Helm(),
     DOCKER: _Docker(),
     SQL: _Sql(),
+    GIT: _Git(),
 }
 
 

@@ -17,7 +17,8 @@ MANIFEST = "manifest"
 HELM = "helm"
 DOCKER = "docker"
 SQL = "sql"
-KINDS = (PYTHON, MANIFEST, HELM, DOCKER, SQL)
+GIT = "git"
+KINDS = (PYTHON, MANIFEST, HELM, DOCKER, SQL, GIT)
 # what every task needs, then what each kind adds. `tier` is Python depth and a manifest
 # reaches nowhere into the language, so it is not asked of one.
 REQUIRED = ("title", "difficulty", "minutes", "tags")
@@ -27,6 +28,7 @@ REQUIRED_BY_KIND = {
     HELM: ("edits",),
     DOCKER: ("edits",),
     SQL: ("edits",),
+    GIT: (),
 }
 BROWSER = (
     "topic",
@@ -200,12 +202,23 @@ def _check_sql(folder):
     return out
 
 
+def _check_git(folder):
+    """A git task is the learner's shell history, the grader that builds and judges the
+    repository it is typed into, and the answer key's commands."""
+    return [
+        f"{name}: missing"
+        for name in ("history.sh", "grade.py", "solution.sh")
+        if not (folder / name).is_file()
+    ]
+
+
 CHECKS = {
     PYTHON: _check_python,
     MANIFEST: _check_manifest,
     HELM: _check_helm,
     DOCKER: _check_docker,
     SQL: _check_sql,
+    GIT: _check_git,
 }
 # the learner's own file per kind — what a browser tab opens and `path` points at
 FILENAMES = {
@@ -214,9 +227,10 @@ FILENAMES = {
     HELM: "task.yaml",
     DOCKER: "Dockerfile",
     SQL: "task.sql",
+    GIT: "history.sh",
 }
 # the answer key, for the kinds that render one from a brief
-SOLUTIONS = {DOCKER: "solution.Dockerfile", SQL: "solution.sql"}
+SOLUTIONS = {DOCKER: "solution.Dockerfile", SQL: "solution.sql", GIT: "solution.sh"}
 
 
 def solution(meta):

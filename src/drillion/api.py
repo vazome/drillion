@@ -289,6 +289,7 @@ def _payload(st, slug, meta, src):
                         "helm",
                         "hadolint",
                         "pglite",
+                        "git",
                         "seed",
                         "revision",
                     )

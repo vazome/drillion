@@ -95,3 +95,12 @@ def test_sql_is_a_whole_file_kind_in_pgsql():
     assert k.body("SELECT 1;\n") == "SELECT 1;\n"
     assert k.empty("SELECT 1;\n") == ""
     assert k.validate("SELEC oops", "") == "SELEC oops", "Postgres says it on the run"
+
+
+def test_a_git_task_is_its_history():
+    kind = kinds.KINDS["git"]
+    assert kind.filename == "history.sh"
+    # the page never writes a git task's file: bash does
+    assert kind.validate("typed by the page", "git status\n") == "git status\n"
+    assert kind.etag("git status\n") == kind.etag("") == "history"
+    assert kind.empty("git status\n") == ""

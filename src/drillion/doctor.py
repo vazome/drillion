@@ -5,9 +5,10 @@ import re
 
 import yaml
 
-from . import kinds, manifest, pglite, sandbox, tools
+from . import gitrepo, kinds, manifest, pglite, sandbox, tools
 from .catalogue import (
     DOCKER,
+    GIT,
     HELM,
     MANIFEST,
     PYTHON,
@@ -174,6 +175,28 @@ def _sql_rules(meta):
     return out + _placeholder_rules(meta.get("spec_md", "")) + _render_rules(meta)
 
 
+SETUP = re.compile(r"^def setup\(", re.MULTILINE)
+
+
+def _git_rules(meta):
+    """A git task is typed into a repository its `setup()` builds, in a terminal, so it has
+    no `edits`. Whether the answer key's commands pass, and whether the untouched repository
+    fails, is `selfcheck`'s question, since only git can answer it."""
+    out = _no_tier(meta, "a git task")
+    if meta.get("edits") is not None:
+        out.append(
+            "README.md: a git task has no edits: the learner works in a terminal"
+        )
+    grader = meta["dir"] / "grade.py" if "dir" in meta else None
+    if (
+        grader
+        and grader.is_file()
+        and not SETUP.search(grader.read_text(encoding="utf-8"))
+    ):
+        out.append("grade.py: has no `def setup(`")
+    return out + _placeholder_rules(meta.get("spec_md", "")) + _render_rules(meta)
+
+
 # One row per kind, as `catalogue.CHECKS` is: a new kind adds a row rather than a branch.
 KIND_RULES = {
     PYTHON: _python_rules,
@@ -181,6 +204,7 @@ KIND_RULES = {
     HELM: _helm_rules,
     DOCKER: _docker_rules,
     SQL: _sql_rules,
+    GIT: _git_rules,
 }
 
 
@@ -316,6 +340,7 @@ def _graders(fetch):
             print(f"{pglite.NAME}: {exc}")
     for name, status in [*tools.report(), (pglite.NAME, pglite.status())]:
         print(f"{name}: {status}")
+    print(f"git: {gitrepo.version() or 'not installed, git tasks cannot be opened'}")
 
 
 def doctor(fetch=False):
