@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from drillion.cli import LEARNER_FILES
+
 WORKFLOW = Path(__file__).parents[1] / ".github/workflows/ci.yml"
 RELEASE_WORKFLOW = Path(__file__).parents[1] / ".github/workflows/release.yml"
 ROOT = Path(__file__).parents[1]
@@ -109,12 +111,10 @@ def test_smoke_reaches_volume_check_and_propagates_failures(tmp_path, failure):
         'if [[ "$1" == inspect ]]; then echo healthy; fi\n'
         'if [[ "$*" == *"$FAIL_ON"* && -n "$FAIL_ON" ]]; then exit 7; fi\n'
     )
-    # the script checks the served count against the checkout, so the fake has to agree
+    # the script checks the served count against the checkout, so the fake serves what
+    # every kind's learner file adds up to, and a kind the script forgot fails here
     task_dir = WORKFLOW.parents[2] / "tasks"
-    served = sum(
-        len(list(task_dir.glob(pattern)))
-        for pattern in ("*/task.py", "*/task.yaml", "*/Dockerfile")
-    )
+    served = sum(len(list(task_dir.glob(f"*/{name}"))) for name in LEARNER_FILES)
     curl = tmp_path / "curl"
     curl.write_text(
         f'#!/usr/bin/env bash\necho "$*" >> "$CALLS"\necho \'{{"tasks":{served}}}\'\n'
