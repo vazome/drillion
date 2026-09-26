@@ -1,4 +1,5 @@
-"""The grading child for every kind but python: a manifest, a Helm chart, a Dockerfile or SQL.
+"""The grading child for every kind but python: a manifest, a Helm chart, a Dockerfile, SQL
+or a git repository.
 
 `runner.run_manifest` copies this file into the sandbox's scratch directory and runs it with
 two paths: the job to do, and the file to answer in. Everything it needs arrives as JSON,
@@ -8,6 +9,7 @@ import it tries, and on such a tier it goes without."""
 import hashlib
 import importlib.util
 import json
+import os
 import random
 import re
 import shutil
@@ -1012,7 +1014,78 @@ def git_extra(_git, grade, brief, mine_root, key_root):
     return None
 
 
-GRADERS = {"helm": grade_helm, "docker": grade_docker, "sql": grade_sql}
+def _typed(script, where):
+    """Run commands in a repository as bash would, stopping at the first that fails:
+    (whether they all ran, what the failing one said)."""
+    try:
+        done = subprocess.run(
+            ["bash", "-e", "-c", script],
+            cwd=where,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=job["validator_seconds"],
+        )
+    except subprocess.TimeoutExpired:
+        return False, "the commands did not finish"
+    return done.returncode == 0, (done.stderr or done.stdout).strip()[-500:]
+
+
+def _graph(_git, root):
+    return _git.Repo(Path(root) / "repo").git(
+        "log", "--graph", "--all", "--format=%s", "--", check=False
+    )
+
+
+def grade_git(grade):
+    """A git sitting: the answer key built in scratch from `setup()` and `solution.sh`,
+    then the learner's repository read in place and compared with it, probe by probe,
+    then the task's own probes and `check()`."""
+    g, brief = job["git"], job["brief"]
+    sys.path.insert(0, g["tasks"])
+    import _git
+
+    sitting = Path(g["sitting"]) if g["sitting"] else None
+    os.environ.update(g["env"])
+    ceilings = {str(Path.cwd().parent)} | ({str(sitting.parent)} if sitting else set())
+    os.environ["GIT_CEILING_DIRECTORIES"] = ":".join(sorted(ceilings))
+    skip = set(getattr(grade, "SKIP", ()))
+    key = _git.build(Path("key"), grade.setup, brief)
+    start = git_state(_git, key)
+    ran, said = _typed(g["key"], key / "repo")
+    if not ran:
+        answer(False, broken=f"solution.sh stopped: {said}")
+    if sitting is None:
+        sitting = _git.build(Path("mine"), grade.setup, brief)
+        if g["script"] is not None:
+            ran, said = _typed(g["script"], sitting / "repo")
+            if not ran:
+                answer(False, [(None, f"the commands stopped: {said}")])
+    report = _graph(_git, sitting)
+    theirs, keys = git_state(_git, sitting), git_state(_git, key)
+    for where in keys:
+        why = git_difference(theirs.get(where), keys[where], start[where], skip, where)
+        if why:
+            answer(False, [(None, why)], report)
+    why = git_extra(_git, grade, brief, sitting, key)
+    if why:
+        answer(False, [(None, why)], report)
+    if hasattr(grade, "check"):
+        try:
+            grade.check(_git.Repo(sitting / "repo"), brief)
+        except AssertionError as exc:
+            answer(
+                False, [(None, str(exc) or "a rule of this task is not met")], report
+            )
+    answer(True, report=report)
+
+
+GRADERS = {
+    "helm": grade_helm,
+    "docker": grade_docker,
+    "sql": grade_sql,
+    "git": grade_git,
+}
 
 
 if __name__ == "__main__":

@@ -396,6 +396,54 @@ class _Git(_Manifest):
     def judges(self):
         return {"git": gitrepo.version()}
 
+    def revision(self, meta, src):
+        return gitrepo.fingerprint(meta)
+
+    def extra(self, meta, brief, seed, selfcheck=False):
+        return {"git": gitrepo.job(meta, brief, sitting=gitrepo.home(meta["dir"].name))}
+
+    def grade(self, meta, o, src):
+        """The sitting's repository as it stands. One the task changed under is rebuilt
+        and refused: grading it against the new task's answer key would fail work that was
+        right for the task it was typed into."""
+        if "brief" not in o:
+            raise manifest.Rejected(
+                "this sitting opened before git grading: abandon it and start again"
+            )
+        _, replaced = gitrepo.ensure(meta, o)
+        if replaced:
+            raise manifest.Rejected(
+                "this task changed since you started, so its repository was rebuilt: "
+                "do your steps again, nothing was spent"
+            )
+        return super().grade(meta, o, src)
+
+    def selfcheck(self, meta):
+        """The answer key's commands typed into a fresh repository must pass, and the
+        untouched repository must fail: a task that passes with nothing done asks nothing."""
+        from . import runner
+
+        brief = manifest.generate_brief(meta, SELFCHECK_SEED)
+
+        def graded(script):
+            passed, diagnostics, *_ = runner.run_manifest(
+                meta, brief, git=gitrepo.job(meta, brief, script=script)
+            )
+            return passed, diagnostics[0]["message"] if diagnostics else ""
+
+        def judge():
+            passed, why = graded(self.answer_key(meta, brief))
+            if not passed:
+                return False, why
+            if graded(None)[0]:
+                return (
+                    False,
+                    "the untouched repository passes: the task asks for nothing",
+                )
+            return True, ""
+
+        return {}, judge
+
 
 KINDS = {
     PYTHON: _Python(),

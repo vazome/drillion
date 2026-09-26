@@ -1,11 +1,19 @@
 """How two repositories are compared: content ids, the default probes, the messages."""
 
 import importlib.util
+import os
+import shutil
+import subprocess
+from datetime import datetime
 
 import pytest
 
-from drillion import grading
+from drillion import gitrepo, grading, kinds, manifest
 from drillion.settings import settings
+from tests.fixtures import tasks_root
+from tests.fixtures_git import fixture_task
+
+SLUG = "900_git_fixture"
 
 
 @pytest.fixture
@@ -165,3 +173,78 @@ def test_origin_is_compared_by_its_refs(git, tmp_path):
     assert grading.git_difference(
         m[" on origin"], kk[" on origin"], start[" on origin"], set(), " on origin"
     ) == ('main on origin is missing 1 commit, starting with "add b"')
+
+
+@pytest.fixture
+def task(monkeypatch):
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", "/dev/null")
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    root, keep = tasks_root(**{SLUG: fixture_task()}), settings.root
+    shutil.copy(keep / "tasks" / "_git.py", root / "tasks" / "_git.py")
+    settings.root = root
+    meta = {
+        "dir": root / "tasks" / SLUG,
+        "path": root / "tasks" / SLUG / "history.sh",
+        "kind": "git",
+        "spec_md": "",
+    }
+    o = {
+        "started": datetime.now().isoformat(),  # noqa: DTZ005
+        "seed": 7,
+        **kinds.KINDS["git"].opening(meta, 7),
+    }
+    yield meta, o
+    settings.root = keep
+    shutil.rmtree(root, ignore_errors=True)
+
+
+def test_the_untouched_sitting_fails_and_the_answer_passes(task):
+    meta, o = task
+    kind = kinds.KINDS["git"]
+    passed, detail = kind.grade(meta, o, "")
+    name = o["brief"]["name"]
+    assert not passed
+    assert detail["headline"] == [
+        f'main is missing 1 commit, starting with "add {name}"'
+    ]
+    repo = gitrepo.home(SLUG) / "repo"
+    env = {**os.environ, **gitrepo.environ(gitrepo.home(SLUG))}
+    subprocess.run(["git", "add", f"{name}.md"], cwd=repo, env=env, check=True)
+    subprocess.run(
+        ["git", "commit", "-qm", f"add {name}"], cwd=repo, env=env, check=True
+    )
+    assert kind.grade(meta, o, "")[0]
+
+
+def test_the_fixture_self_checks(task):
+    meta, _ = task
+    files, judge = kinds.KINDS["git"].selfcheck(meta)
+    assert files == {} and judge() == (True, "")
+
+
+def test_a_task_whose_untouched_repository_passes_fails_its_self_check(task):
+    meta, _ = task
+    (meta["dir"] / "solution.sh").write_text("true\n")
+    passed, why = kinds.KINDS["git"].selfcheck(meta)[1]()
+    assert not passed and "untouched" in why
+
+
+def test_a_task_changed_under_a_sitting_is_refused_and_rebuilt(task):
+    meta, o = task
+    gitrepo.ensure(meta, o)
+    grader = meta["dir"] / "grade.py"
+    grader.write_text(grader.read_text() + "\n# changed\n")
+    with pytest.raises(manifest.Rejected, match="changed since you started"):
+        kinds.KINDS["git"].grade(meta, o, "")
+    assert (
+        gitrepo.ensure(meta, o)[1] is False
+    )  # already rebuilt: the next grade is fair
+
+
+def test_a_verdict_is_fingerprinted_by_git_and_moves_with_the_helper(task):
+    meta, _ = task
+    before = kinds.KINDS["git"].revision(meta, "")
+    assert before.startswith("g1:")
+    helper = settings.tasks_dir / "_git.py"
+    helper.write_text(helper.read_text() + "\n# changed\n")
+    assert kinds.KINDS["git"].revision(meta, "") != before

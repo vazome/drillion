@@ -3,6 +3,7 @@ git in it runs with, the learner's shell, its setup and its grader alike."""
 
 import collections
 import functools
+import hashlib
 import json
 import os
 import re
@@ -13,6 +14,7 @@ import threading
 from pathlib import Path
 
 from . import manifest, sandbox
+from .catalogue import solution
 from .settings import settings
 
 MIN_VERSION = (2, 40)
@@ -26,6 +28,21 @@ GITCONFIG = """\
 [init]
 \tdefaultBranch = main
 """
+# what a grader's git runs with, on top of `environ`: nothing global, no lock the learner's
+# editor could be holding, no `git replace`, and an identity for the answer key's commits
+GRADE_ENV = {
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "GIT_NO_REPLACE_OBJECTS": "1",
+    "GIT_ALLOW_PROTOCOL": "file",
+    "GIT_TERMINAL_PROMPT": "0",
+    "GIT_EDITOR": "true",
+    "GIT_AUTHOR_NAME": "drillion",
+    "GIT_AUTHOR_EMAIL": "key@drillion.invalid",
+    "GIT_COMMITTER_NAME": "drillion",
+    "GIT_COMMITTER_EMAIL": "key@drillion.invalid",
+}
 # ponytail: one lock per slug ever opened, never pruned; a few hundred at most
 _locks = collections.defaultdict(threading.Lock)
 
@@ -97,6 +114,35 @@ def environ(sitting):
         "GIT_ALLOW_PROTOCOL": "file",
         "GIT_TERMINAL_PROMPT": "0",
     }
+
+
+def job(meta, brief, sitting=None, script=None):
+    """What the grading child needs for a git sitting: the answer key's commands for this
+    brief, and either the sitting to read in place or, for a self-check, the commands to
+    type into a fresh one (None types nothing)."""
+    require()
+    return {
+        "tasks": str(settings.tasks_dir),
+        "key": manifest.render(solution(meta).read_text(encoding="utf-8"), brief),
+        "sitting": str(sitting) if sitting else None,
+        "script": script,
+        "env": GRADE_ENV,
+    }
+
+
+def fingerprint(meta):
+    """What decided a git verdict: the grader and its answer key, `_git.py`, git, and the
+    environment every grading git runs in."""
+    helper = hashlib.sha256((settings.tasks_dir / "_git.py").read_bytes()).hexdigest()
+    return manifest._fingerprint(
+        "g1:",
+        (
+            manifest.grader_revision(meta),
+            helper,
+            version() or "",
+            json.dumps(GRADE_ENV, sort_keys=True),
+        ),
+    )
 
 
 def stamp(meta, o):

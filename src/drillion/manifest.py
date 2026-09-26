@@ -317,22 +317,24 @@ def sql_job(meta, brief, seed, selfcheck=False):
     }
 
 
-def job(meta, brief, learner=None, helm=None, docker=None, sql=None):
+def job(meta, brief, learner=None, helm=None, docker=None, sql=None, git=None):
     """Everything the child needs to grade one sitting, as plain data.
 
     `learner` is the file to grade, and defaults to the learner's own. A self-check grades
     the answer key instead, and passes the path it rendered it to. `helm` is `helm_job`'s
     answer for a Helm task and `docker` is `docker_job`'s for a Dockerfile task; a manifest
     has neither. `sql` is `sql_job`'s answer for a SQL task. Neither a Dockerfile nor SQL
-    needs kubeconform, so they are not asked for one."""
+    needs kubeconform, so they are not asked for one. `git` is `gitrepo.job`'s answer for
+    a git task, which needs no kubeconform either."""
     tool = tools.installed(tools.KUBECONFORM)
-    if tool is None and docker is None and sql is None:
+    if tool is None and docker is None and sql is None and git is None:
         raise ToolMissing("kubeconform is not installed: run `drillion doctor --fetch`")
     return {
         "kind": meta.get("kind", MANIFEST),
         "helm": helm,
         "docker": docker,
         "sql": sql,
+        "git": git,
         "learner": str(learner or meta["path"]),
         "grader": str(meta["dir"] / "grade.py"),
         "module": module_name(meta["dir"].name),
