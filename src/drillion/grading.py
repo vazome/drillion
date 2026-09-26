@@ -5,6 +5,7 @@ two paths: the job to do, and the file to answer in. Everything it needs arrives
 since a kernel tier may deny reading the drillion package; `drillion.guard` is the one
 import it tries, and on such a tier it goes without."""
 
+import hashlib
 import importlib.util
 import json
 import random
@@ -820,6 +821,195 @@ def grade_sql(grade):
         except Exception as exc:
             answer(False, broken=f"{type(exc).__name__}: {exc}")
     answer(True)
+
+
+GIT_PROBES = ("operation", "refs", "deleted", "head", "status", "stash")
+_REBASING = (
+    "a rebase is still in progress: git rebase --continue, or git rebase --abort"
+)
+IN_PROGRESS = {
+    "MERGE_HEAD": "a merge is still in progress: finish it with git commit, or back out with git merge --abort",
+    "CHERRY_PICK_HEAD": "a cherry-pick is still in progress: git cherry-pick --continue, or --abort",
+    "REVERT_HEAD": "a revert is still in progress: git revert --continue, or --abort",
+    "rebase-merge": _REBASING,
+    "rebase-apply": _REBASING,
+    "BISECT_LOG": "a bisect is still in progress: end it with git bisect reset",
+}
+
+
+def _commits(repo, tips):
+    """{sha: (content id, parents, tree, subject)} for every commit reachable from `tips`.
+    A content id hashes the subject, the tree and the parents' content ids in order, so the
+    same history made on another day, by someone else, has the same ids."""
+    out = {}
+    if not tips:
+        return out
+    text = repo.git(
+        "log",
+        "--topo-order",
+        "--reverse",
+        "--format=%H%x01%P%x01%T%x01%s%x00",
+        *tips,
+        "--",
+    )
+    for record in text.split("\0"):
+        record = record.lstrip("\n")
+        if not record:
+            continue
+        sha, parents, tree, subject = record.split("\x01", 3)
+        parents = parents.split()
+        h = hashlib.sha256(f"{subject}\0{tree}".encode())
+        for p in parents:
+            h.update(b"\0" + out[p][0].encode())
+        out[sha] = (h.hexdigest()[:16], parents, tree, subject)
+    return out
+
+
+def git_snapshot(repo, bare=False):
+    """What the default probes read from one repository, as plain data."""
+    refs = {}
+    listing = repo.git(
+        "for-each-ref",
+        "--format=%(refname)%00%(objectname)%00%(objecttype)%00%(*objectname)%00%(*objecttype)",
+    )
+    for line in listing.splitlines():
+        name, obj, kind, peeled, peeled_kind = line.split("\0")
+        target, kind = (peeled, peeled_kind) if peeled else (obj, kind)
+        if name != "refs/stash" and kind == "commit":
+            refs[name] = target
+    shot = {"refs": refs, "commits": _commits(repo, sorted(set(refs.values())))}
+    if bare:
+        return shot
+    gitdir = Path(repo.git("rev-parse", "--absolute-git-dir").strip())
+    status = repo.git(
+        "status", "--porcelain=v1", "-z", "--no-renames", "--untracked-files=all"
+    )
+    return shot | {
+        "head": repo.git("symbolic-ref", "-q", "HEAD", check=False).strip() or None,
+        "status": sorted(e for e in status.split("\0") if e),
+        "operation": next(
+            (m for f, m in IN_PROGRESS.items() if (gitdir / f).exists()), None
+        ),
+        "stash": len(
+            repo.git(
+                "log", "--walk-reflogs", "--format=%H", "refs/stash", "--", check=False
+            ).split()
+        ),
+    }
+
+
+def git_state(_git, root):
+    """{"": the repository, " on origin": its server, when it has one} under `root`."""
+    root = Path(root)
+    out = {"": git_snapshot(_git.Repo(root / "repo"))}
+    if (root / "origin.git").is_dir():
+        out[" on origin"] = git_snapshot(_git.Repo(root / "origin.git"), bare=True)
+    return out
+
+
+def _label(name, where):
+    for prefix, said in (
+        ("refs/heads/", ""),
+        ("refs/tags/", "tag "),
+        ("refs/remotes/", ""),
+    ):
+        if name.startswith(prefix):
+            return f"{said}{name[len(prefix) :]}{where}"
+    return f"{name}{where}"
+
+
+def _ordinal(n):
+    return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
+
+
+def _line(shot, name):
+    """`name`'s first-parent line, oldest first, as (content id, parents, tree, subject)."""
+    out, sha = [], shot["refs"][name]
+    while sha:
+        entry = shot["commits"][sha]
+        out.append(entry)
+        sha = entry[1][0] if entry[1] else None
+    return out[::-1]
+
+
+def _ref_difference(name, mine, key, where):
+    label = _label(name, where)
+    if name not in mine["refs"]:
+        return f"{label} is missing"
+    a, b = _line(mine, name), _line(key, name)
+    for i, (x, y) in enumerate(zip(a, b)):
+        if x[0] == y[0]:
+            continue
+        if x[3] != y[3]:
+            return (
+                f'{label}: its {_ordinal(i + 1)} commit is "{x[3]}", expected "{y[3]}"'
+            )
+        if x[2] != y[2]:
+            return f'{label}: "{x[3]}" does not hold the files it should'
+        if len(x[1]) != len(y[1]):
+            return f'{label}: "{x[3]}" should {"be" if len(y[1]) > 1 else "not be"} a merge commit'
+        return f'{label}: "{x[3]}" merges a different history than it should'
+    n = abs(len(a) - len(b))
+    commits = f"{n} commit{'s' if n != 1 else ''}"
+    if len(a) > len(b):
+        return f'{label} has {commits} too many, starting with "{a[len(b)][3]}"'
+    return f'{label} is missing {commits}, starting with "{b[len(a)][3]}"'
+
+
+def _cid(shot, name):
+    sha = shot["refs"].get(name)
+    return shot["commits"][sha][0] if sha else None
+
+
+def git_difference(mine, key, start, skip, where=""):
+    """The first way `mine` is not the answer key's repository, in the learner's words, or
+    None. `start` is the key's repository before its commands ran, for the refs they
+    deleted. A server has only refs to compare."""
+    if mine is None:
+        return f"there is no origin{where}" if where else "there is no repository"
+    local = not where
+    if local and "operation" not in skip and mine["operation"] and not key["operation"]:
+        return mine["operation"]
+    if "refs" not in skip:
+        for name in sorted(key["refs"]):
+            if _cid(mine, name) != _cid(key, name):
+                return _ref_difference(name, mine, key, where)
+    if "deleted" not in skip:
+        for name in sorted(set(start["refs"]) - set(key["refs"])):
+            if name in mine["refs"]:
+                return f"{_label(name, where)} should be gone"
+    if not local:
+        return None
+    if "head" not in skip and mine["head"] != key["head"]:
+
+        def on(head):
+            return _label(head, "") if head else "a detached commit"
+
+        return f"HEAD is on {on(mine['head'])}, expected {on(key['head'])}"
+    if "status" not in skip and mine["status"] != key["status"]:
+
+        def listed(entries):
+            return ", ".join(entries) or "nothing to commit"
+
+        return (
+            "the working tree or the staging area is not as it should be: "
+            f"expected {listed(key['status'])}, found {listed(mine['status'])}"
+        )
+    if "stash" not in skip and mine["stash"] != key["stash"]:
+        n = mine["stash"]
+        return f"the stash holds {n} entr{'y' if n == 1 else 'ies'}, expected {key['stash']}"
+    return None
+
+
+def git_extra(_git, grade, brief, mine_root, key_root):
+    """The task's own probes, `{sentence: argv}`, run in both repositories: the sentence of
+    the first that differs, or None."""
+    probes = grade.probes(brief) if hasattr(grade, "probes") else {}
+    mine, key = _git.Repo(Path(mine_root) / "repo"), _git.Repo(Path(key_root) / "repo")
+    for sentence, argv in probes.items():
+        if mine.git(*argv, check=False) != key.git(*argv, check=False):
+            return f"{sentence} is not as it should be"
+    return None
 
 
 GRADERS = {"helm": grade_helm, "docker": grade_docker, "sql": grade_sql}
