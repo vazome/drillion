@@ -74,12 +74,16 @@ BREAKS = {
         ("lag(revenue)", "lead(revenue)"),
         ("WHERE status <> 'refunded'\n    AND ", "WHERE "),
         (
-            "sum(revenue) OVER (ORDER BY day) AS running_total,\n"
-            "       revenue - lag(revenue) OVER (ORDER BY day) AS change",
-            "(SELECT sum(d.revenue) FROM daily AS d WHERE d.day <= daily.day)"
-            " AS running_total,\n"
-            "       revenue - (SELECT d.revenue FROM daily AS d WHERE d.day < daily.day"
-            " ORDER BY d.day DESC LIMIT 1) AS change",
+            (
+                "sum(revenue) OVER (ORDER BY day) AS running_total,\n"
+                "       revenue - lag(revenue) OVER (ORDER BY day) AS change"
+            ),
+            (
+                "(SELECT sum(d.revenue) FROM daily AS d WHERE d.day <= daily.day)"
+                " AS running_total,\n"
+                "       revenue - (SELECT d.revenue FROM daily AS d WHERE d.day < daily.day"
+                " ORDER BY d.day DESC LIMIT 1) AS change"
+            ),
         ),
     ],
     "332_sql_days_without_orders": [
@@ -101,15 +105,19 @@ BREAKS = {
     "335_sql_upsert_settings": [
         ("settings.prefs || excluded.prefs", "excluded.prefs"),
         (
-            "DO UPDATE\nSET prefs = settings.prefs || excluded.prefs,\n"
-            "    updated_on = excluded.updated_on",
+            (
+                "DO UPDATE\nSET prefs = settings.prefs || excluded.prefs,\n"
+                "    updated_on = excluded.updated_on"
+            ),
             "DO NOTHING",
         ),
         ("updated_on = excluded.updated_on", "updated_on = settings.updated_on"),
         (
-            "\nON CONFLICT (user_id) DO UPDATE\n"
-            "SET prefs = settings.prefs || excluded.prefs,\n"
-            "    updated_on = excluded.updated_on",
+            (
+                "\nON CONFLICT (user_id) DO UPDATE\n"
+                "SET prefs = settings.prefs || excluded.prefs,\n"
+                "    updated_on = excluded.updated_on"
+            ),
             "",
         ),
     ],
