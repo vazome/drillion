@@ -55,6 +55,49 @@ BREAKS = {
         ("c.city = '{city}'\n  AND ", ""),
         ("NOT EXISTS", "EXISTS"),
     ],
+    "329_sql_cte_above_average": [
+        ("(SELECT avg(spent) FROM spend)", "(SELECT avg(total) FROM orders)"),
+        ("  WHERE status = '{status}'\n", ""),
+        ("spent DESC, customer_id", "customer_id"),
+    ],
+    "330_sql_top_n_per_city": [
+        (
+            "row_number() OVER (PARTITION BY c.city ORDER BY o.total DESC, o.id)",
+            "rank() OVER (PARTITION BY c.city ORDER BY o.total DESC)",
+        ),
+        ("PARTITION BY c.city ", ""),
+        ("place <= {n}", "place < {n}"),
+        ("o.total DESC", "o.total"),
+    ],
+    "331_sql_running_total": [
+        ("sum(revenue) OVER (ORDER BY day)", "sum(revenue) OVER ()"),
+        ("lag(revenue)", "lead(revenue)"),
+        ("WHERE status <> 'refunded'\n    AND ", "WHERE "),
+        (
+            "sum(revenue) OVER (ORDER BY day) AS running_total,\n"
+            "       revenue - lag(revenue) OVER (ORDER BY day) AS change",
+            "(SELECT sum(d.revenue) FROM daily AS d WHERE d.day <= daily.day)"
+            " AS running_total,\n"
+            "       revenue - (SELECT d.revenue FROM daily AS d WHERE d.day < daily.day"
+            " ORDER BY d.day DESC LIMIT 1) AS change",
+        ),
+    ],
+    "332_sql_days_without_orders": [
+        ("LEFT JOIN", "JOIN"),
+        ("count(o.id)", "count(*)"),
+        (" - INTERVAL '1 day'", ""),
+    ],
+    "333_sql_latest_per_customer": [
+        ("placed_at DESC, id DESC", "placed_at, id"),
+        ("DISTINCT ON (customer_id) ", ""),
+        ("WHERE status = '{status}'\n", ""),
+        ("id AS order_id", "id"),
+    ],
+    "334_sql_jsonb_attributes": [
+        ("attrs ->> 'size'", "attrs -> 'size'"),
+        ("\n  AND (attrs ->> 'stock')::int > 0", ""),
+        ('"color": "{color}"', '"color": "none"'),
+    ],
 }
 
 
