@@ -15,7 +15,7 @@ import pytest
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
-from drillion import backup, gitrepo, terminal
+from drillion import backup, gitrepo, sandbox, terminal
 from drillion.api import app
 from drillion.catalogue import tasks
 from drillion.settings import settings
@@ -386,3 +386,58 @@ def test_a_reset_during_setup_leaves_no_shell_behind(client, monkeypatch):
     assert [proc.poll() is not None for proc, _ in spawned] == [True]
     assert not terminal._live
     assert not gitrepo.home(SLUG).exists()
+
+
+# ── the sitting is the learner's: the server never writes or trusts a file in it
+
+
+def _shell(client, *lines):
+    """Open a terminal, type each `line` (ending in `echo <needle>`) and wait for its
+    needle, then hang up. Returns what the first screen said before `confined by`."""
+    with client.websocket_connect(f"{WS}/{SLUG}", headers={"Origin": SAME}) as ws:
+        first = _until(ws, "confined by")
+        for line, needle in lines:
+            _type(ws, line)
+            _until(ws, needle)
+    # the shell is gone before the next socket, or a test ending first leaves bash behind
+    while terminal._releasing:
+        time.sleep(0.05)
+    return first
+
+
+def test_a_symlinked_rc_never_reaches_a_file_outside_the_sitting(client):
+    victim = settings.root / "progress.sqlite3"
+    before = victim.read_bytes()
+    _shell(client, (f"ln -sf {victim} ~/.drillionrc; echo ok-$((2*3))\r", "ok-6"))
+    _shell(client)
+    assert victim.read_bytes() == before
+
+
+def test_a_symlinked_home_is_harmless(client):
+    victim = settings.root / "progress.sqlite3"
+    before = victim.read_bytes()
+    _shell(
+        client,
+        (
+            f"cd .. && rm -rf home && ln -s {settings.root} home; echo ok-$((2*3))\r",
+            "ok-6",
+        ),
+    )
+    with client.websocket_connect(f"{WS}/{SLUG}", headers={"Origin": SAME}) as ws:
+        _until(ws, "confined by")
+        _type(ws, "git log --format=%s; echo done-$((1+1))\r")
+        assert "start" in _until(ws, "done-2")
+    assert victim.read_bytes() == before
+
+
+@pytest.mark.skipif(
+    shutil.which("bash") is None or sandbox.status()[0] != "landlock",
+    reason="needs Landlock",
+)
+def test_the_shell_reads_its_rc_and_cannot_write_it(client):
+    with client.websocket_connect(f"{WS}/{SLUG}", headers={"Origin": SAME}) as ws:
+        _until(ws, "confined by")
+        rc = settings.root / gitrepo.SITTINGS / ".drillionrc"
+        _type(ws, f"echo pwned >> {rc}; echo hs=$HISTSIZE=$((4*4))\r")
+        assert "hs=-1=16" in _until(ws, "=16")
+    assert rc.read_text() == terminal.RC

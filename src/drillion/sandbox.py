@@ -165,6 +165,8 @@ _READ = ("read_file", "read_dir")
 _EXEC = ("read_file", "read_dir", "execute")
 _DEV = ("read_file", "write_file", "read_dir", "ioctl_dev")
 _FILE_RW = ("read_file", "write_file", "truncate")
+# what a rule on a single file may carry; a directory right on one makes the kernel refuse it
+_ON_A_FILE = {"execute", "write_file", "read_file", "truncate", "ioctl_dev"}
 
 
 class _PathBeneath(ctypes.Structure):
@@ -278,6 +280,7 @@ def _roots(scratch, targets, writes=()):
     for path, rights in roots:
         real = Path(path).resolve()
         if real.exists():
+            rights = rights if real.is_dir() else _ON_A_FILE.intersection(rights)
             merged.setdefault(os.fsencode(str(real)), set()).update(rights)
     return list(merged.items())
 

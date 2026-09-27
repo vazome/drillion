@@ -150,6 +150,11 @@ def stamp(meta, o):
     return f"{o['started']} {manifest.grader_revision(meta)}"
 
 
+def _started(slug):
+    """The stamp: beside the sitting and never in it, since the shell owns everything in it."""
+    return home(slug).with_name(f"{slug}{STAMP}")
+
+
 def ensure(meta, o):
     """(the sitting's directory, whether a repository was replaced because the task
     changed). Built from the sitting's stored brief unless the one on disk is already this
@@ -159,9 +164,9 @@ def ensure(meta, o):
     slug = meta["dir"].name
     want = stamp(meta, o)
     with _locks[slug]:
-        where = home(slug)
+        where, started = home(slug), _started(slug)
         try:
-            had = (where / STAMP).read_text(encoding="utf-8")
+            had = started.read_text(encoding="utf-8")
         except OSError:
             had = None
         if had == want:
@@ -175,49 +180,58 @@ def ensure(meta, o):
         except BaseException:
             _remove(fresh)
             raise
-        (fresh / STAMP).write_text(want, encoding="utf-8")
+        # the stamp goes before the tree and comes back after it: a crash between the two
+        # must never leave one that matches a half-deleted or half-renamed tree
+        started.unlink(missing_ok=True)
         _remove(where)
         fresh.rename(where)
+        started.write_text(want, encoding="utf-8")
         # the same sitting, a different task: what the learner did there is gone
-        return where, bool(had) and had.split()[0] == o["started"]
+        return where, bool(had) and had.partition(" ")[0] == o["started"]
 
 
 def discard(slug):
     with _locks[slug]:
+        _started(slug).unlink(missing_ok=True)
         _remove(home(slug))
 
 
 def discard_all():
     """Every sitting gone: after a restore or an erase none of them is the one the
-    progress describes."""
-    _remove(settings.root / SITTINGS)
+    progress describes. Every stamp goes before any tree."""
+    root = settings.root / SITTINGS
+    for started in root.glob(f"*{STAMP}"):
+        started.unlink(missing_ok=True)
+    _remove(root)
+
+
+def _unpin(func, name, _exc):
+    """`rmtree`'s retry: give a directory its permissions back and try again, so a
+    learner's `chmod -R a-w` or `chmod 000` never pins a sitting in place. Never through a
+    symlink: the learner's link must not make the server chmod what it points at."""
+    # `os.open`/`os.scandir` failing means `name` itself cannot be entered (0o000 or
+    # missing execute); fix `name` and redo it whole. Anything else failing is the
+    # parent's write bit blocking removal of an entry from it, as usual.
+    # ponytail: lstat then chmod races; only a job that outlived its shell could swap a
+    # link in between, to add u+rwx to a directory this user owns. An O_PATH fd if it matters
+    mode = os.lstat(name).st_mode
+    if func in (os.open, os.scandir):
+        if stat.S_ISDIR(mode):
+            os.chmod(name, mode | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+            shutil.rmtree(name, onexc=_unpin)
+            return
+        func = os.unlink  # a link swapped in mid-walk: the link goes, never its target
+    parent = os.path.dirname(name)
+    mode = os.lstat(parent).st_mode
+    if stat.S_ISDIR(mode):
+        os.chmod(parent, mode | stat.S_IWUSR | stat.S_IXUSR)
+    func(name)
 
 
 def _remove(path):
-    """rmtree that gives a directory its permissions back and tries again, so a learner's
-    `chmod -R a-w` or `chmod 000` never pins a sitting in place. The stamp goes first: a
-    removal that fails partway must never leave one that still matches a half-deleted tree."""
-
-    def retry(func, name, _exc):
-        # `os.open`/`os.scandir` failing means `name` itself cannot be entered (0o000 or
-        # missing execute); fix `name` and redo it whole. Anything else failing is the
-        # parent's write bit blocking removal of an entry from it, as usual.
-        if func in (os.open, os.scandir) and os.path.isdir(name):
-            mode = os.stat(name).st_mode
-            os.chmod(name, mode | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
-            shutil.rmtree(name, onexc=retry)
-            return
-        parent = os.path.dirname(name)
-        os.chmod(parent, os.stat(parent).st_mode | stat.S_IWUSR | stat.S_IXUSR)
-        func(name)
-
-    if not path.exists():
-        return
-    try:
-        (path / STAMP).unlink()
-    except OSError:
-        pass
-    shutil.rmtree(path, onexc=retry)
+    """rmtree that a learner's permissions never stop. See `_unpin`."""
+    if path.exists():
+        shutil.rmtree(path, onexc=_unpin)
 
 
 def _setup(meta, brief, where):

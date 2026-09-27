@@ -12,6 +12,7 @@ import os
 import signal
 import struct
 import subprocess
+import tempfile
 import termios
 
 from . import gitrepo, manifest, sandbox
@@ -92,11 +93,27 @@ async def turn(slug):
             del _locks[slug]
 
 
+def _rc(folder):
+    """`RC` as a file in `folder`, beside every sitting and inside none, so the shell can
+    read it and never write it. Replaced only when it differs: a shell starting on another
+    task holds a Landlock grant on the file that is there now."""
+    rc = folder / ".drillionrc"
+    try:
+        if rc.read_text(encoding="utf-8") == RC:
+            return rc
+    except OSError:
+        pass
+    fd, tmp = tempfile.mkstemp(dir=folder, prefix=".drillionrc.")
+    with os.fdopen(fd, "w", encoding="utf-8") as out:
+        out.write(RC)
+    os.replace(tmp, rc)
+    return rc
+
+
 def _spawn(meta, sitting):
     """bash on a fresh PTY in the sitting's repository, under the sandbox."""
     home = sitting / "home"
-    rc = home / ".drillionrc"
-    rc.write_text(RC, encoding="utf-8")
+    rc = _rc(sitting.parent)
     master, slave = os.openpty()
     env = sandbox.environ(
         sitting,
@@ -117,7 +134,7 @@ def _spawn(meta, sitting):
             start_new_session=True,
             # the child only makes syscalls, all planned in the parent: see `sandbox.preexec`
             preexec_fn=sandbox.preexec(  # noqa: PLW1509
-                sitting, [], CPU_SECONDS, writes=[meta["path"]], tty=True
+                sitting, [rc], CPU_SECONDS, writes=[meta["path"]], tty=True
             ),
         )
     except BaseException:
@@ -270,9 +287,9 @@ async def bridge(ws, slug, find):
         async with turn(slug):
             await end(slug, MOVED)
             try:
-                sitting, _ = await asyncio.to_thread(gitrepo.ensure, meta, o)
                 # ponytail: a bridge cancelled while this runs (a shutdown) loses its bash;
                 # spawn under shield if shutdowns ever leave shells behind
+                sitting, _ = await asyncio.to_thread(gitrepo.ensure, meta, o)
                 proc, fd = await asyncio.to_thread(_spawn, meta, sitting)
             except manifest.Rejected as err:
                 await ws.send_bytes(f"drillion: {err}\r\n".encode())

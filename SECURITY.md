@@ -91,8 +91,13 @@ any grade, and it reaches nowhere a grade does not.
 - **On `landlock`**, it can read and write the sitting directory
   (`<root>/.sittings/<slug>/`) and `history.sh`, added as the one writable file outside it,
   plus the same read-only roots every grade gets: the interpreter and its libraries, `/usr`,
-  `/lib`, `/etc`, `/dev`. Your home directory and the rest of the disk are as closed to it as
-  to any other sandboxed child, and TCP is refused the same way.
+  `/lib`, `/etc`, `/dev`, and its rc file, `<root>/.sittings/.drillionrc`. Your
+  home directory and the rest of the disk are as closed to it as to any other sandboxed
+  child, and TCP is refused the same way.
+- **The server never writes into a sitting once it is built**, and never trusts a file in
+  it: the shell may put a symlink or a fifo anywhere in it. The rc file and the stamp saying
+  which attempt a repository was built for (`<root>/.sittings/<slug>.started`) live beside
+  the sitting, where the shell cannot write.
 - **On `guard` and `floor`**, where Landlock is not there to confine it, the shell runs as the
   user who started drillion, unconfined, on their own machine: the same speed bump this file
   already describes for those tiers, never a boundary. The terminal's first line names the

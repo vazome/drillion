@@ -56,7 +56,8 @@ bash wrote.
 
 **The repository is work in progress, and never the artifact.** It lives in
 `<root>/.sittings/<slug>/` (`repo/`, `origin.git/`, `home/`), stamped with the sitting's
-`started`. It survives a reload and a restart. It is built when the terminal connects and
+`started` in `<root>/.sittings/<slug>.started`, beside it: the shell owns everything inside
+the sitting, so the server never writes a file there once it is built, nor trusts one. It survives a reload and a restart. It is built when the terminal connects and
 finds no directory, or one stamped for another sitting, which is how a pass, an abandon and an
 upgrade all end up with a fresh repo without a hook in any of them. A restore or an erase is
 not lazy about it: the route ends every open terminal and deletes `<root>/.sittings` outright
@@ -136,7 +137,7 @@ without an open attempt. Server to page: binary frames, the PTY's bytes as they 
 to server: JSON text frames, `{"i": "<keys>"}` for input and `{"r": [cols, rows]}` for a
 resize, applied with `TIOCSWINSZ`. Nothing else crosses: no file channel, no side protocol.
 
-**The shell.** `bash --noprofile --rcfile <drillion's rc>` on a PTY from `os.openpty`,
+**The shell.** `bash --noprofile --rcfile <root>/.sittings/.drillionrc` on a PTY from `os.openpty`,
 started through `subprocess.Popen` with the sandbox's `preexec` plus `setsid()` and
 `TIOCSCTTY`, so Ctrl-C reaches `git` and Ctrl-Z can suspend `vim`. No new Python
 dependency: stdlib `pty`, `fcntl`, `termios`, with the read side on the event loop through
@@ -146,8 +147,8 @@ dependency: stdlib `pty`, `fcntl`, `termios`, with the read side on the event lo
 and `export EDITOR=vi` switches git's editor.
 
 **The sandbox.** The shell is a sandboxed child like any grade, with the sitting directory
-as its scratch (read, write, execute) and `history.sh` added as the one writable file
-outside it. Landlock's existing roots already allow what `bash`, `git`, `nano` and `vim`
+as its scratch (read, write, execute), `history.sh` added as the one writable file
+outside it, and the rc file as one it may read. Landlock's existing roots already allow what `bash`, `git`, `nano` and `vim`
 read (`/usr`, `/etc`, `/lib`), and `/dev` already carries `ioctl_dev`, which a TTY needs
 for raw mode on ABI 5 and later. TCP stays denied. The environment is `sandbox.environ` with
 `HOME` at `home/`, plus `TERM=xterm-256color`, `LANG=C.UTF-8`, and git's own isolation:

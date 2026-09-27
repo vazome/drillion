@@ -2,6 +2,8 @@
 
 import os
 import shutil
+import stat
+import threading
 from datetime import datetime
 
 import pytest
@@ -94,3 +96,45 @@ def test_a_setup_that_fails_says_so(sitting):
     with pytest.raises(manifest.Rejected, match="setup\\(\\) failed.*boom"):
         gitrepo.ensure(meta, o)
     assert not gitrepo.home(SLUG).exists()
+
+
+def test_the_stamp_lives_beside_the_sitting_where_the_shell_cannot_reach(sitting):
+    meta, o = sitting
+    where, _ = gitrepo.ensure(meta, o)
+    assert (where.parent / f"{SLUG}.started").read_text() == gitrepo.stamp(meta, o)
+    assert not (where / ".started").exists()
+
+
+def test_a_fifo_or_garbage_in_the_sitting_never_blocks_or_breaks_ensure(sitting):
+    meta, o = sitting
+    where, _ = gitrepo.ensure(meta, o)
+    (where / ".started").unlink(missing_ok=True)
+    os.mkfifo(where / ".started")
+    done = []
+    worker = threading.Thread(target=lambda: done.append(gitrepo.ensure(meta, o)))
+    worker.start()
+    worker.join(5)
+    if worker.is_alive():  # let it go, or the test run hangs with it
+        os.close(os.open(where / ".started", os.O_WRONLY | os.O_NONBLOCK))
+        pytest.fail("ensure blocked on a fifo in the sitting")
+    assert done == [(where, False)]
+
+
+def test_a_rebuild_after_a_crash_reads_a_stamp_with_spaces(sitting):
+    meta, o = sitting
+    where, _ = gitrepo.ensure(meta, o)
+    (where.parent / f"{SLUG}.started").write_text("   ")
+    assert gitrepo.ensure(meta, o) == (where, False)
+
+
+def test_removing_a_sitting_never_chmods_through_a_symlink(tmp_path):
+    outside = tmp_path / "outside"
+    outside.mkdir(mode=0o000)
+    link = tmp_path / "link"
+    link.symlink_to(outside)
+    try:
+        gitrepo._unpin(os.open, str(link), None)
+        assert stat.S_IMODE(outside.stat().st_mode) == 0
+        assert not link.is_symlink()
+    finally:
+        outside.chmod(0o700)
