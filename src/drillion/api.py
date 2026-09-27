@@ -4,6 +4,7 @@ Every route is a plain `def` that touches progress inside a `state.writing()` or
 `state.reading()` block: an `async def` blocking on that lock would freeze the whole
 server, while FastAPI runs sync handlers in a threadpool."""
 
+import asyncio
 import logging
 from collections import Counter
 from datetime import date, timedelta
@@ -14,7 +15,7 @@ from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from . import __version__, backup, kinds, manifest, sandbox
+from . import __version__, backup, gitrepo, kinds, manifest, sandbox, terminal
 from .attempts import (
     Gated,
     NoAttempt,
@@ -28,7 +29,7 @@ from .attempts import (
     record_pass,
     unlock_solution,
 )
-from .catalogue import public, tasks
+from .catalogue import GIT, public, tasks
 from .lsp import bridge
 from .region import Invalid, write_region
 from .scheduler import (
@@ -364,21 +365,27 @@ def preview_restore(payload: bytes = Body(...)):
 
 
 @app.post(RESTORE)
-def apply_restore(payload: bytes = Body(...)):
-    """Replace progress and saved code from a bundle. The current data is kept first."""
-    summary = backup.restore(payload)
+async def apply_restore(payload: bytes = Body(...)):
+    """Replace progress and saved code from a bundle. The current data is kept first.
+    Every terminal ends first and every git sitting goes after: a restored attempt starts
+    its repository afresh."""
+    await terminal.end_all()
+    summary = await asyncio.to_thread(backup.restore, payload)
+    await asyncio.to_thread(gitrepo.discard_all)
     log.info("restored %s, kept %s", summary["brings"], summary["kept"])
     return summary
 
 
 @app.post("/api/reset")
-def erase_everything(want: Erase):
+async def erase_everything(want: Erase):
     """Everything back to a first run. The typed phrase is the guard: this route can be
     reached by a bookmark or a stray script, and it is the one route with nothing behind
     it to undo the damage except the backup it writes first."""
     if want.confirm.strip() != backup.PHRASE:
         raise backup.Rejected(f"Type {backup.PHRASE!r} to confirm.")
-    summary = backup.erase()
+    await terminal.end_all()
+    summary = await asyncio.to_thread(backup.erase)
+    await asyncio.to_thread(gitrepo.discard_all)
     log.info("erased everything, kept %s", summary["kept"])
     return summary
 
@@ -657,3 +664,44 @@ async def lsp(ws: WebSocket):
         return
     await ws.accept()
     await bridge(ws)
+
+
+def _git_sitting(slug):
+    """(meta, the open attempt) for a git task with a sitting open, else None."""
+    with reading() as st:
+        meta = tasks().get(slug)
+        o = st["open"].get(slug)
+        if meta is None or meta["kind"] != GIT or o is None:
+            return None
+        return meta, dict(o)
+
+
+@app.websocket("/terminal/{slug}")
+async def terminal_socket(ws: WebSocket, slug: str):
+    """A git task's shell, one per task. See `terminal.bridge`. The origin check is here
+    for the same reason as `/lsp`'s: middleware never runs for a websocket."""
+    if ws.headers.get("origin") not in _allowed_origins():
+        await ws.close(code=1008)
+        return
+    found = await asyncio.to_thread(_git_sitting, slug)
+    if found is None:
+        await ws.close(code=1008)
+        return
+    await ws.accept()
+    await terminal.bridge(ws, *found)
+
+
+@app.post("/api/task/{slug}/repo/reset")
+async def reset_repo(slug: str):
+    """Put a git sitting's repository back as the task set it up: the shell ends, the
+    repository goes, and the next terminal builds it again. The history stays, marked."""
+    found = await asyncio.to_thread(_git_sitting, slug)
+    if found is None:
+        raise HTTPException(404, f"no git sitting open on {slug!r}")
+    async with terminal.turn(slug):
+        await terminal.end(slug)
+        await asyncio.to_thread(gitrepo.discard, slug)
+    # an append keeps the inode, so a shell's Landlock grant on the file survives
+    with found[0]["path"].open("a", encoding="utf-8") as history:
+        history.write("# repository reset\n")
+    return {"reset": True}

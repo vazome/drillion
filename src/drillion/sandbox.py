@@ -24,6 +24,7 @@ Underneath all three sits the floor itself: an allowlisted environment, a `HOME`
 """
 
 import ctypes
+import fcntl
 import os
 import platform
 import resource
@@ -32,6 +33,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import termios
 import time
 from functools import cache
 from pathlib import Path
@@ -162,6 +164,7 @@ _READ = ("read_file", "read_dir")
 # exec'd, so the interpreter's own tree needs this too
 _EXEC = ("read_file", "read_dir", "execute")
 _DEV = ("read_file", "write_file", "read_dir", "ioctl_dev")
+_FILE_RW = ("read_file", "write_file", "truncate")
 
 
 class _PathBeneath(ctypes.Structure):
@@ -229,7 +232,7 @@ def scratch_root():
     return home
 
 
-def _roots(scratch, targets):
+def _roots(scratch, targets, writes=()):
     """(path, rights) for every place the graded process may reach; everything else is
     denied, `$HOME` above all.
 
@@ -258,6 +261,7 @@ def _roots(scratch, targets):
         (tools.tools_dir(), _EXEC),
         (tools.SCHEMAS, _READ),
         *((t, _READ) for t in targets),
+        *((w, _FILE_RW) for w in writes),
         ("/etc", _READ),
         # /usr/bin and /bin are executable on purpose: task 067 grades `subprocess.run` by
         # starting a child Python, and anything a task starts inherits this sandbox, so it is
@@ -278,13 +282,13 @@ def _roots(scratch, targets):
     return list(merged.items())
 
 
-def _plan(scratch, targets):
+def _plan(scratch, targets, writes=()):
     """Everything the child needs, packed in the parent: between fork and exec the only
     safe move is a syscall, not an allocation."""
     version = abi()
     return _ruleset(version), [
         (path, _PathBeneath(_mask(version, rights), 0))
-        for path, rights in _roots(scratch, targets)
+        for path, rights in _roots(scratch, targets, writes)
     ]
 
 
@@ -427,16 +431,21 @@ def status():
     )
 
 
-def preexec(scratch, targets, cpu):
+def preexec(scratch, targets, cpu, writes=(), tty=False):
     """The callable `subprocess` runs in the child between fork and exec.
 
     This is the only place Landlock may ever be applied. Applying it in the parent would
-    sandbox the server, the language server and every future request, irreversibly."""
+    sandbox the server, the language server and every future request, irreversibly.
+    `writes` are single files outside the scratch directory the child may append to: a
+    git sitting's history. `tty` makes stdin the child's controlling terminal, so Ctrl-C
+    and job control reach it; the caller starts it in a new session."""
 
     limits = _limits(cpu)
-    plan = _plan(scratch, targets) if _landlock_works() else None
+    plan = _plan(scratch, targets, writes) if _landlock_works() else None
 
     def child():
+        if tty:
+            fcntl.ioctl(0, termios.TIOCSCTTY, 0)
         for what, soft_hard in limits:
             try:
                 resource.setrlimit(what, soft_hard)

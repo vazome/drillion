@@ -187,6 +187,12 @@ def discard(slug):
         _remove(home(slug))
 
 
+def discard_all():
+    """Every sitting gone: after a restore or an erase none of them is the one the
+    progress describes."""
+    _remove(settings.root / SITTINGS)
+
+
 def _remove(path):
     """rmtree that gives a directory its permissions back and tries again, so a learner's
     `chmod -R a-w` or `chmod 000` never pins a sitting in place. The stamp goes first: a

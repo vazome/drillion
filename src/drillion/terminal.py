@@ -1,0 +1,224 @@
+"""The learner's shell for a git task: bash on a PTY, confined like a grade, piped to one
+page over a WebSocket. Page to server is JSON text, `{"i": keys}` or `{"r": [cols, rows]}`;
+server to page is the PTY's bytes, as binary frames."""
+
+import asyncio
+import collections
+import contextlib
+import fcntl
+import json
+import os
+import signal
+import struct
+import subprocess
+import termios
+
+from . import gitrepo, manifest, sandbox
+
+MAX_SHELLS = 4
+# per process: bounds a runaway command without timing out a shell someone is thinking in
+CPU_SECONDS = 600
+MOVED, RESET = 4000, 4001
+RC = r"""
+[ -r /usr/share/bash-completion/completions/git ] && . /usr/share/bash-completion/completions/git
+[ -r /usr/lib/git-core/git-sh-prompt ] && . /usr/lib/git-core/git-sh-prompt
+shopt -s histappend
+HISTSIZE=-1
+HISTFILESIZE=-1
+HISTCONTROL=
+PROMPT_COMMAND='history -a'
+PS1='\W$(type __git_ps1 >/dev/null 2>&1 && __git_ps1 " (%s)")\$ '
+command -v vim >/dev/null || alias vim=vi
+export EDITOR=nano VISUAL=nano
+"""
+_live = {}
+# slug -> sockets starting or running a shell on it; its length is the shells in use
+_claims = collections.Counter()
+# slug -> [holders and waiters, lock]; dropped when unused, since a lock binds to one loop
+_locks = {}
+
+
+class _Shell:
+    def __init__(self, proc, fd, ws):
+        self.proc, self.fd, self.ws = proc, fd, ws
+        self.done = False
+        self.ended = asyncio.Event()
+
+    async def end(self, code=1000):
+        """SIGHUP the shell's process group, SIGKILL it two seconds later, close the socket.
+        A second call waits for the first to finish."""
+        if self.done:
+            await self.ended.wait()
+            return
+        self.done = True
+        try:
+            with contextlib.suppress(ProcessLookupError):
+                os.killpg(self.proc.pid, signal.SIGHUP)
+            try:
+                await asyncio.wait_for(asyncio.to_thread(self.proc.wait), 2)
+            except TimeoutError:
+                with contextlib.suppress(ProcessLookupError):
+                    os.killpg(self.proc.pid, signal.SIGKILL)
+                await asyncio.to_thread(self.proc.wait)
+            # bash hands SIGHUP on to every job before it exits.
+            # ponytail: a job started with nohup or setsid outlives the shell; a cgroup per
+            # shell if that ever matters
+            with contextlib.suppress(Exception):
+                await self.ws.close(code)
+        finally:
+            self.ended.set()
+
+
+@contextlib.asynccontextmanager
+async def turn(slug):
+    """Hold `slug`'s lock: one shell starts, is replaced or is reset at a time per task."""
+    entry = _locks.setdefault(slug, [0, asyncio.Lock()])
+    entry[0] += 1
+    try:
+        async with entry[1]:
+            yield
+    finally:
+        entry[0] -= 1
+        if not entry[0]:
+            del _locks[slug]
+
+
+def _spawn(meta, sitting):
+    """bash on a fresh PTY in the sitting's repository, under the sandbox."""
+    home = sitting / "home"
+    rc = home / ".drillionrc"
+    rc.write_text(RC, encoding="utf-8")
+    master, slave = os.openpty()
+    env = sandbox.environ(
+        sitting,
+        HOME=home,
+        TERM="xterm-256color",
+        LANG="C.UTF-8",
+        HISTFILE=meta["path"],
+        **gitrepo.environ(sitting),
+    )
+    try:
+        proc = subprocess.Popen(
+            ["bash", "--noprofile", "--rcfile", str(rc), "-i"],
+            stdin=slave,
+            stdout=slave,
+            stderr=slave,
+            cwd=sitting / "repo",
+            env=env,
+            start_new_session=True,
+            # the child only makes syscalls, all planned in the parent: see `sandbox.preexec`
+            preexec_fn=sandbox.preexec(  # noqa: PLW1509
+                sitting, [], CPU_SECONDS, writes=[meta["path"]], tty=True
+            ),
+        )
+    except BaseException:
+        os.close(master)
+        raise
+    finally:
+        os.close(slave)
+    os.set_blocking(master, False)
+    return proc, master
+
+
+async def _write(fd, data):
+    view = memoryview(data)
+    while view:
+        try:
+            view = view[os.write(fd, view) :]
+        except BlockingIOError:
+            await asyncio.sleep(0.01)
+
+
+async def _out(shell):
+    """PTY to page, until the shell has gone."""
+    loop = asyncio.get_running_loop()
+    ready = asyncio.Event()
+    loop.add_reader(shell.fd, ready.set)
+    try:
+        while True:
+            await ready.wait()
+            ready.clear()
+            try:
+                data = os.read(shell.fd, 65536)
+            except BlockingIOError:
+                continue
+            except OSError:  # EIO: every holder of the other end has closed it
+                return
+            if not data:
+                return
+            await shell.ws.send_bytes(data)
+    finally:
+        loop.remove_reader(shell.fd)
+
+
+async def _in(shell):
+    """Page to PTY: keys, and the window's size."""
+    while True:
+        message = json.loads(await shell.ws.receive_text())
+        if "i" in message:
+            await _write(shell.fd, str(message["i"]).encode())
+        elif "r" in message:
+            cols, rows = (max(1, min(int(v), 1000)) for v in message["r"])
+            fcntl.ioctl(
+                shell.fd, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0)
+            )
+
+
+async def end(slug, code=RESET):
+    """End the shell open on `slug`, if there is one."""
+    shell = _live.pop(slug, None)
+    if shell:
+        await shell.end(code)
+
+
+async def end_all(code=RESET):
+    """End every open shell: a restore or an erase is about to change what they sit on."""
+    await asyncio.gather(*(end(slug, code) for slug in list(_live)))
+
+
+async def bridge(ws, meta, o):
+    """One page's terminal on one sitting, until either end goes. A second socket for the
+    same task ends the first: the newer tab wins."""
+    slug = meta["dir"].name
+    # claimed before the first await, so shells still starting count against the limit
+    if slug not in _claims and len(_claims) >= MAX_SHELLS:
+        await ws.close(code=1013)
+        return
+    _claims[slug] += 1
+    shell, pumps = None, []
+    try:
+        async with turn(slug):
+            await end(slug, MOVED)
+            try:
+                sitting, _ = await asyncio.to_thread(gitrepo.ensure, meta, o)
+                proc, fd = await asyncio.to_thread(_spawn, meta, sitting)
+            except manifest.Rejected as err:
+                await ws.send_bytes(f"drillion: {err}\r\n".encode())
+                await ws.close(code=1011)
+                return
+            shell = _live[slug] = _Shell(proc, fd, ws)
+        await ws.send_bytes(
+            f"drillion: this shell is confined by {sandbox.status()[0]}\r\n".encode()
+        )
+        pumps = [asyncio.create_task(_out(shell)), asyncio.create_task(_in(shell))]
+        await asyncio.wait(pumps, return_when=asyncio.FIRST_COMPLETED)
+    finally:
+        # shielded whole: a cancelled bridge, a server shutting down, still ends its shell
+        await asyncio.shield(_release(slug, shell, pumps))
+
+
+async def _release(slug, shell, pumps):
+    """Stop the pumps, end the shell, close its PTY, give the claim back."""
+    try:
+        for task in pumps:
+            task.cancel()
+        await asyncio.gather(*pumps, return_exceptions=True)
+        if shell:
+            if _live.get(slug) is shell:
+                del _live[slug]
+            await shell.end()
+            os.close(shell.fd)
+    finally:
+        _claims[slug] -= 1
+        if not _claims[slug]:
+            del _claims[slug]
