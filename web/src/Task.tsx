@@ -675,7 +675,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
               if (e.key === "Enter" && e.shiftKey && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); }
             }}>
               <Terminal key={slug} slug={slug} dark={dark} live={hasAttempt && !passed}
-                fontFamily={fontStack(prefs.font)} fontSize={prefs.fontSize}
+                fontFamily={fontStack(prefs.font)} fontSize={prefs.fontSize} screenReader={prefs.screenReader}
                 idleNote={passed ? "Passed. The shell is closed; your repository was graded as you left it."
                                  : "No attempt is open. The last output stays here; the shell starts with the next attempt."}
                 actions={hasAttempt && !passed
