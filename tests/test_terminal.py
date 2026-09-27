@@ -469,3 +469,26 @@ def test_a_run_without_git_in_the_repository_fails_with_the_way_back(client):
     assert r.json()["headline"] == [
         "there is no repository here any more: Reset repository builds it again"
     ]
+
+
+def test_two_shells_starting_at_once_share_one_rc(tmp_path, monkeypatch):
+    """A shell's Landlock rule holds the rc's inode; a second writer replacing it after the
+    first caller returned would leave that shell unable to read it."""
+    real = os.replace
+
+    def slow(src, dst):
+        time.sleep(0.2)
+        real(src, dst)
+
+    monkeypatch.setattr(terminal.os, "replace", slow)
+    seen = []
+
+    def start():
+        seen.append(terminal._rc(tmp_path).stat().st_ino)
+
+    threads = [threading.Thread(target=start) for _ in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert seen == [(tmp_path / ".drillionrc").stat().st_ino] * 2

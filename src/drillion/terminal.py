@@ -14,6 +14,7 @@ import struct
 import subprocess
 import tempfile
 import termios
+import threading
 
 from . import gitrepo, manifest, sandbox
 
@@ -93,21 +94,26 @@ async def turn(slug):
             del _locks[slug]
 
 
+_rc_lock = threading.Lock()
+
+
 def _rc(folder):
     """`RC` as a file in `folder`, beside every sitting and inside none, so the shell can
     read it and never write it. Replaced only when it differs: a shell starting on another
     task holds a Landlock grant on the file that is there now."""
     rc = folder / ".drillionrc"
-    try:
-        if rc.read_text(encoding="utf-8") == RC:
-            return rc
-    except OSError:
-        pass
-    fd, tmp = tempfile.mkstemp(dir=folder, prefix=".drillionrc.")
-    with os.fdopen(fd, "w", encoding="utf-8") as out:
-        out.write(RC)
-    os.replace(tmp, rc)
-    return rc
+    # two tasks' shells start on worker threads at once; the second must find the first's file
+    with _rc_lock:
+        try:
+            if rc.read_text(encoding="utf-8") == RC:
+                return rc
+        except OSError:
+            pass
+        fd, tmp = tempfile.mkstemp(dir=folder, prefix=".drillionrc.")
+        with os.fdopen(fd, "w", encoding="utf-8") as out:
+            out.write(RC)
+        os.replace(tmp, rc)
+        return rc
 
 
 def _spawn(meta, sitting):
