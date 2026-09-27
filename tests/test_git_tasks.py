@@ -60,6 +60,30 @@ BREAKS = {
         ("git rebase main || true", "git merge --no-edit main || true"),
         ("git branch -d feature/{feature}", "true"),
     ],
+    "351_git_undo_commits": [
+        ("--soft", "--mixed"),
+        ("--hard HEAD~1", "--hard HEAD~2"),
+    ],
+    "352_git_rescue_with_reflog": [
+        ("git branch feature/{feature} ", "git branch feature/{feature}-old "),
+        ("'commit: add {lost}'", "'commit: add {feature} tests'"),
+    ],
+    "353_git_first_push": [
+        ("git push -u origin main", "git push origin main"),
+        ("git push -u origin docs/{topic}", "true"),
+    ],
+    "354_git_revert_do_not_rewrite": [
+        ("git push", "true"),
+        ("git revert --no-edit", "git reset --hard"),
+    ],
+    "355_git_bisect": [
+        ("git bisect reset", "true"),
+        ("refs/bisect/bad", "refs/bisect/bad~1"),
+    ],
+    "356_git_a_teammate_pushed_first": [
+        ("git pull --rebase --autostash", "git pull --no-rebase --no-edit --autostash"),
+        ("git push --force-with-lease origin feature/{feature}", "true"),
+    ],
 }
 
 
