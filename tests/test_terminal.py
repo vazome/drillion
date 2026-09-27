@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import subprocess
+import threading
 import time
 from pathlib import Path
 
@@ -63,6 +64,23 @@ def _type(ws, text):
     ws.send_text(json.dumps({"i": text}))
 
 
+def _pid(ws, line):
+    """Type `line`, which echoes `pid=<n>=$((5*5))`, and read <n> back. The needle is
+    output only: the echoed command line holds `$((5*5))`, never `=25`."""
+    _type(ws, line)
+    return int(re.search(r"pid=(\d+)=25", _until(ws, "=25")).group(1))
+
+
+def _gone(pid):
+    for _ in range(50):
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return
+        time.sleep(0.1)
+    pytest.fail(f"{pid} outlived its terminal")
+
+
 def _closed_with(ws):
     with pytest.raises(WebSocketDisconnect) as closed:
         while True:
@@ -108,27 +126,25 @@ def test_a_newer_socket_ends_the_older(client):
 def test_closing_the_socket_ends_the_shell_and_its_jobs(client):
     with client.websocket_connect(f"{WS}/{SLUG}", headers={"Origin": SAME}) as ws:
         _until(ws, "confined by")
-        # the needle is output only: the echoed command line holds `$((5*5))`
-        _type(ws, "sleep 1000 & echo pid=$!=$((5*5))\r")
-        pid = int(re.search(r"pid=(\d+)=25", _until(ws, "=25")).group(1))
-    for _ in range(50):
-        try:
-            os.kill(pid, 0)
-        except ProcessLookupError:
-            return
-        time.sleep(0.1)
-    pytest.fail(f"sleep {pid} outlived its terminal")
+        pid = _pid(ws, "sleep 1000 & echo pid=$!=$((5*5))\r")
+    _gone(pid)
+
+
+def test_exit_ends_the_socket_and_the_shells_jobs(client):
+    with client.websocket_connect(f"{WS}/{SLUG}", headers={"Origin": SAME}) as ws:
+        _until(ws, "confined by")
+        pid = _pid(ws, "sleep 1000 & echo pid=$!=$((5*5))\r")
+        _type(ws, "exit\r")
+        assert _closed_with(ws) == 1000
+    _gone(pid)
 
 
 def test_no_attempt_no_terminal(client):
-    with (
-        pytest.raises(WebSocketDisconnect) as closed,
-        client.websocket_connect(
-            f"{WS}/001_guidos_gorgeous_lasagna", headers={"Origin": SAME}
-        ) as ws,
-    ):
-        ws.receive_bytes()
-    assert closed.value.code == 1008
+    # accepted, then closed: a close before accept reaches a browser as 1006, not 1008
+    with client.websocket_connect(
+        f"{WS}/001_guidos_gorgeous_lasagna", headers={"Origin": SAME}
+    ) as ws:
+        assert _closed_with(ws) == 1008
 
 
 def test_a_foreign_page_gets_no_terminal(client):
@@ -177,6 +193,54 @@ def test_a_restore_ends_every_terminal_and_every_sitting(client):
     assert not (settings.root / gitrepo.SITTINGS).exists()
 
 
+def test_a_failed_restore_still_ends_terminals_and_keeps_the_sittings(client):
+    with client.websocket_connect(f"{WS}/{SLUG}", headers={"Origin": SAME}) as ws:
+        _until(ws, "confined by")
+        r = client.post("/api/restore", content=b"not a zip", headers={"Origin": SAME})
+        assert r.status_code == 400
+        assert _closed_with(ws) == 4001
+    assert gitrepo.home(SLUG).exists()
+
+
+def test_a_socket_opened_during_a_restore_waits_for_a_fresh_sitting(
+    client, monkeypatch
+):
+    data, real = client.get("/api/backup").content, backup.restore
+    monkeypatch.setattr(backup, "restore", lambda d: (time.sleep(1), real(d))[1])
+    done = []
+    post = threading.Thread(
+        target=lambda: done.append(
+            client.post("/api/restore", content=data, headers={"Origin": SAME})
+        )
+    )
+    with client.websocket_connect(f"{WS}/{SLUG}", headers={"Origin": SAME}) as old:
+        _until(old, "confined by")
+        before = _pid(old, "touch marker; echo pid=$$=$((5*5))\r")
+        post.start()
+        assert _closed_with(old) == 4001
+    with client.websocket_connect(f"{WS}/{SLUG}", headers={"Origin": SAME}) as late:
+        assert not done  # the restore is still running
+        _until(late, "confined by")
+        _type(late, "ls marker; echo fin-$((6*7))\r")
+        assert "No such file" in _until(late, "fin-42")
+        post.join()
+        assert done[0].status_code == 200
+        assert list(terminal._live) == [SLUG]
+    _gone(before)
+
+
+def test_an_abandon_ends_the_terminal(client):
+    with client.websocket_connect(f"{WS}/{SLUG}", headers={"Origin": SAME}) as ws:
+        _until(ws, "confined by")
+        r = client.post(
+            f"/api/task/{SLUG}/abandon",
+            json={"etag": "history"},
+            headers={"Origin": SAME},
+        )
+        assert r.status_code == 200
+        assert _closed_with(ws) == 1000
+
+
 # ── overlapping connections, driven on `bridge` directly: a TestClient opens one at a time
 
 
@@ -223,6 +287,7 @@ def slow(monkeypatch, tmp_path):
     monkeypatch.setattr(terminal, "_spawn", _sleeper)
     yield
     assert not terminal._live and not terminal._claims and not terminal._locks
+    assert not terminal._starting
 
 
 async def _settle(*pages):
@@ -234,7 +299,10 @@ def test_two_sockets_at_once_for_one_task_leave_one_shell(slow):
     async def drive():
         meta = {"dir": Path("/tasks") / SLUG}
         pages = [_Page(), _Page()]
-        runs = [asyncio.create_task(terminal.bridge(p, meta, {})) for p in pages]
+        runs = [
+            asyncio.create_task(terminal.bridge(p, SLUG, lambda: (meta, {})))
+            for p in pages
+        ]
         while not (SLUG in terminal._live and any(p.code for p in pages)):
             await asyncio.sleep(0.05)
         assert [p.code for p in pages].count(4000) == 1
@@ -252,7 +320,11 @@ def test_a_fifth_task_at_once_is_refused(slow):
         pages = [_Page() for _ in range(5)]
         runs = [
             asyncio.create_task(
-                terminal.bridge(p, {"dir": Path("/tasks") / f"90{n}_git"}, {})
+                terminal.bridge(
+                    p,
+                    f"90{n}_git",
+                    lambda n=n: ({"dir": Path(f"/tasks/90{n}_git")}, {}),
+                )
             )
             for n, p in enumerate(pages)
         ]
@@ -284,7 +356,7 @@ def test_a_reset_during_setup_leaves_no_shell_behind(client, monkeypatch):
 
     async def drive():
         page = _Page()
-        run = asyncio.create_task(terminal.bridge(page, meta, o))
+        run = asyncio.create_task(terminal.bridge(page, SLUG, lambda: (meta, o)))
         await asyncio.sleep(0.1)  # inside the slow setup
         async with httpx.AsyncClient(
             transport=httpx.ASGITransport(app=app), base_url=SAME

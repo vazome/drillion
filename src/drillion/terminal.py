@@ -30,12 +30,19 @@ PROMPT_COMMAND='history -a'
 PS1='\W$(type __git_ps1 >/dev/null 2>&1 && __git_ps1 " (%s)")\$ '
 command -v vim >/dev/null || alias vim=vi
 export EDITOR=nano VISUAL=nano
+trap 'kill -HUP $(jobs -p) 2>/dev/null' EXIT
 """
 _live = {}
 # slug -> sockets starting or running a shell on it; its length is the shells in use
 _claims = collections.Counter()
 # slug -> [holders and waiters, lock]; dropped when unused, since a lock binds to one loop
 _locks = {}
+# set while a restore or an erase runs; see `quiet`
+_quiet = None
+# sockets between the gate and a registered shell (or a refusal)
+_starting = 0
+# `_release` tasks, held so none is collected while shielded
+_releasing = set()
 
 
 class _Shell:
@@ -172,42 +179,84 @@ async def end(slug, code=RESET):
 
 
 async def end_all(code=RESET):
-    """End every open shell: a restore or an erase is about to change what they sit on."""
+    """End every open shell."""
     await asyncio.gather(*(end(slug, code) for slug in list(_live)))
 
 
-async def bridge(ws, meta, o):
-    """One page's terminal on one sitting, until either end goes. A second socket for the
-    same task ends the first: the newer tab wins."""
-    slug = meta["dir"].name
-    # claimed before the first await, so shells still starting count against the limit
-    if slug not in _claims and len(_claims) >= MAX_SHELLS:
-        await ws.close(code=1013)
-        return
-    _claims[slug] += 1
-    shell, pumps = None, []
+@contextlib.asynccontextmanager
+async def quiet():
+    """Held across a restore or an erase: shells in setup finish, every shell ends, and a
+    new socket waits until it is released, so it reads the state that came after."""
+    global _quiet
+    while _quiet is not None:
+        await _quiet.wait()
+    _quiet = asyncio.Event()
     try:
+        while _starting:
+            await asyncio.sleep(0.05)
+        await end_all()
+        yield
+    finally:
+        _quiet.set()
+        _quiet = None
+
+
+async def bridge(ws, slug, find):
+    """One page's terminal on one sitting, until either end goes. `find()` gives (meta,
+    the open attempt), or None when there is no git sitting to open. A second socket for
+    the same task ends the first: the newer tab wins."""
+    global _starting
+    while _quiet is not None:
+        await _quiet.wait()
+    _starting += 1
+    starting, claimed, shell, pumps = True, False, None, []
+    try:
+        found = await asyncio.to_thread(find)
+        if found is None:
+            await ws.close(code=1008)
+            return
+        meta, o = found
+        # claimed before the next await, so shells still starting count against the limit
+        if slug not in _claims and len(_claims) >= MAX_SHELLS:
+            await ws.close(code=1013)
+            return
+        _claims[slug] += 1
+        claimed = True
         async with turn(slug):
             await end(slug, MOVED)
             try:
                 sitting, _ = await asyncio.to_thread(gitrepo.ensure, meta, o)
+                # ponytail: a bridge cancelled while this runs (a shutdown) loses its bash;
+                # spawn under shield if shutdowns ever leave shells behind
                 proc, fd = await asyncio.to_thread(_spawn, meta, sitting)
             except manifest.Rejected as err:
                 await ws.send_bytes(f"drillion: {err}\r\n".encode())
                 await ws.close(code=1011)
                 return
             shell = _live[slug] = _Shell(proc, fd, ws)
+            starting = False
+            _starting -= 1
         await ws.send_bytes(
             f"drillion: this shell is confined by {sandbox.status()[0]}\r\n".encode()
         )
-        pumps = [asyncio.create_task(_out(shell)), asyncio.create_task(_in(shell))]
+        pumps = [
+            asyncio.create_task(_out(shell)),
+            asyncio.create_task(_in(shell)),
+            # a job holding the PTY keeps `_out` reading after bash exits
+            asyncio.create_task(asyncio.to_thread(proc.wait)),
+        ]
         await asyncio.wait(pumps, return_when=asyncio.FIRST_COMPLETED)
     finally:
+        if starting:
+            _starting -= 1
         # shielded whole: a cancelled bridge, a server shutting down, still ends its shell
-        await asyncio.shield(_release(slug, shell, pumps))
+        release = asyncio.ensure_future(_release(slug, shell, pumps, claimed))
+        _releasing.add(release)
+        release.add_done_callback(_releasing.discard)
+        await asyncio.shield(release)
 
 
-async def _release(slug, shell, pumps):
+async def _release(slug, shell, pumps, claimed):
     """Stop the pumps, end the shell, close its PTY, give the claim back."""
     try:
         for task in pumps:
@@ -219,6 +268,7 @@ async def _release(slug, shell, pumps):
             await shell.end()
             os.close(shell.fd)
     finally:
-        _claims[slug] -= 1
-        if not _claims[slug]:
-            del _claims[slug]
+        if claimed:
+            _claims[slug] -= 1
+            if not _claims[slug]:
+                del _claims[slug]

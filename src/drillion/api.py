@@ -1,14 +1,18 @@
 """JSON API over the task core, and the built page that drives it.
 
-Every route is a plain `def` that touches progress inside a `state.writing()` or
-`state.reading()` block: an `async def` blocking on that lock would freeze the whole
-server, while FastAPI runs sync handlers in a threadpool."""
+Every route that touches progress is a plain `def` doing it inside a `state.writing()`
+or `state.reading()` block: an `async def` blocking on that lock would freeze the whole
+server, while FastAPI runs sync handlers in a threadpool. The async ones are the two
+websockets and the routes that end terminals (restore, erase, repository reset), which
+await `terminal` and push their blocking work to a thread."""
 
 import asyncio
+import functools
 import logging
 from collections import Counter
 from datetime import date, timedelta
 
+import anyio.from_thread
 from fastapi import Body, FastAPI, HTTPException, WebSocket
 from fastapi.responses import FileResponse, JSONResponse, Response
 from pydantic import BaseModel
@@ -175,6 +179,13 @@ def _task(slug):
     if slug not in all_tasks:
         raise HTTPException(404, f"no task {slug!r}")
     return all_tasks[slug]
+
+
+def _end_terminal(meta, slug):
+    """End a git task's shell once its attempt has closed, whichever page closed it. For a
+    sync route, after its state has committed."""
+    if meta["kind"] == GIT:
+        anyio.from_thread.run(terminal.end, slug, 1000)
 
 
 def _check_etag(kind, src, sent):
@@ -367,11 +378,11 @@ def preview_restore(payload: bytes = Body(...)):
 @app.post(RESTORE)
 async def apply_restore(payload: bytes = Body(...)):
     """Replace progress and saved code from a bundle. The current data is kept first.
-    Every terminal ends first and every git sitting goes after: a restored attempt starts
-    its repository afresh."""
-    await terminal.end_all()
-    summary = await asyncio.to_thread(backup.restore, payload)
-    await asyncio.to_thread(gitrepo.discard_all)
+    No terminal runs across it and every git sitting goes after: a restored attempt
+    starts its repository afresh. A failed restore keeps the sittings."""
+    async with terminal.quiet():
+        summary = await asyncio.to_thread(backup.restore, payload)
+        await asyncio.to_thread(gitrepo.discard_all)
     log.info("restored %s, kept %s", summary["brings"], summary["kept"])
     return summary
 
@@ -383,9 +394,9 @@ async def erase_everything(want: Erase):
     it to undo the damage except the backup it writes first."""
     if want.confirm.strip() != backup.PHRASE:
         raise backup.Rejected(f"Type {backup.PHRASE!r} to confirm.")
-    await terminal.end_all()
-    summary = await asyncio.to_thread(backup.erase)
-    await asyncio.to_thread(gitrepo.discard_all)
+    async with terminal.quiet():
+        summary = await asyncio.to_thread(backup.erase)
+        await asyncio.to_thread(gitrepo.discard_all)
     log.info("erased everything, kept %s", summary["kept"])
     return summary
 
@@ -537,7 +548,10 @@ def run_task(slug: str, edit: Edit):
                 "lapses": card(st, slug)["lapses"],
                 "next": pick(st, tasks())[0],
             }
-        return resp | {"etag": kind.etag(new_src)}
+        resp["etag"] = kind.etag(new_src)
+    if passed and edit.submit:
+        _end_terminal(meta, slug)
+    return resp
 
 
 @app.post("/api/task/{slug}/touch")
@@ -597,7 +611,9 @@ def abandon_task(slug: str, sent: Etag):
         new_src = abandon(st, slug, kind, src)
         log.info("%s abandoned", slug)
         reset_after_commit(st, meta, kind.path(meta), src, new_src)
-        return _payload(st, slug, meta, new_src)
+        payload = _payload(st, slug, meta, new_src)
+    _end_terminal(meta, slug)
+    return payload
 
 
 @app.put("/api/task/{slug}/note")
@@ -683,12 +699,9 @@ async def terminal_socket(ws: WebSocket, slug: str):
     if ws.headers.get("origin") not in _allowed_origins():
         await ws.close(code=1008)
         return
-    found = await asyncio.to_thread(_git_sitting, slug)
-    if found is None:
-        await ws.close(code=1008)
-        return
+    # accepted before "no sitting" is said: a close before accept reaches a browser as 1006
     await ws.accept()
-    await terminal.bridge(ws, *found)
+    await terminal.bridge(ws, slug, functools.partial(_git_sitting, slug))
 
 
 @app.post("/api/task/{slug}/repo/reset")
