@@ -39,7 +39,7 @@ comparison checks everything a task did not think to exempt, and the break harne
 
 ## Consequences
 
-- **The image grows by 34 Debian packages and about 100 MB**: git alone is 49 MB and pulls in
+- **The image grows by 34 Debian packages and about 110 MB** (the apt layer, measured): git alone is 49 MB and pulls in
   perl, another 49 MB, as a hard dependency, plus `libcurl-gnutls`, krb5, ldap and libssh2 that
   a `file://`-only setup never exercises. `nano`, `vim-tiny` and `less` (git's pager) add
   little beside it. trivy's count rises, and that is the price of the package, not a
