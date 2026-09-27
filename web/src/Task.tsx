@@ -123,7 +123,7 @@ function Outcome({ result, kind, active, ladder, flagged, lapses }: {
       <div className={css.state}>
         <strong>Nothing run yet.</strong>
         <p className={css.aside}>Run checks your {FILE[kind]} and costs nothing. Submit is the one that grades it and moves the card.</p>
-        <p className={css.keys}><span>Run <Kbd>{MOD} ↵</Kbd></span><span>Submit <Kbd>{MOD} ⇧ ↵</Kbd></span></p>
+        <p className={css.keys}>{kind !== "git" && <span>Run <Kbd>{MOD} ↵</Kbd></span>}<span>Submit <Kbd>{MOD} ⇧ ↵</Kbd></span></p>
       </div>
     );
     case "running": return (
