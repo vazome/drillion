@@ -18,8 +18,9 @@ grader that judges it. A Python task keeps the last two in one `task.py`; a mani
 them into `task.yaml` and `grade.py`; a Helm task does the same beside the **chart** its
 `task.yaml` completes, a Dockerfile task beside the **build context** its `Dockerfile` is
 written for, and a SQL task splits them into `task.sql` and `grade.py` beside the
-**database** it asks about. There are 338: 267 Python, 26 manifest, 15 Helm, 15 Dockerfile,
-15 SQL.
+**database** it asks about. A git task keeps `history.sh`, `grade.py` and `solution.sh`, and
+the learner works in the **sitting repository** its `setup()` builds. There are 356: 267
+Python, 26 manifest, 15 Helm, 15 Dockerfile, 15 SQL, 18 git.
 _Avoid_: exercise, drill, problem, kata, question
 
 **Slug**:
@@ -41,7 +42,8 @@ _Avoid_: complexity, hardness; and never `easy` as a **grade**
 
 **Track**:
 A themed run through the catalogue that cuts across tiers, one per task. A Python task that
-names none is on the `python` track; the others are `kubernetes`, `helm`, `docker` and `sql`.
+names none is on the `python` track; the others are `kubernetes`, `helm`, `docker`, `sql` and
+`git`.
 _Avoid_: course, path, series, curriculum
 
 **Tag**:
@@ -76,6 +78,12 @@ The files a SQL task ships under `db/`: `schema.sql`, which every pass of a grad
 anything else. Shown read-only beside the editor.
 _Avoid_: fixture, seed data, dump
 
+**Sitting repository**:
+The repository a git sitting's terminal opens in, under `.sittings/`. Built by the task's
+`setup()` from the sitting's stored brief, and rebuilt fresh for each sitting: a pass, an
+abandon, a restore and an upgrade all leave nothing of the last one behind.
+_Avoid_: workspace, sandbox, playground
+
 **Dataset**:
 The rows a SQL task's `rows(r, brief)` grows from a seed. Every SQL grade runs on two: the one
 the learner's results are shown for, and a hidden one, so an answer copied from the first
@@ -83,10 +91,21 @@ fails the second.
 _Avoid_: fixture, sample, test data
 
 **Probe**:
-A query a SQL task's grader runs after the learner's SQL, inside a transaction rolled back
-after it, and compares with the same probe run after the answer key. How a change to data
-or to the schema is judged, since it returns no rows of its own.
+A check a task's grader runs after the learner's own work and compares with the same check
+run after the answer key, never the learner's rows or commits themselves. A SQL task's probe
+is a query, run inside a transaction rolled back after it. A git task's probes are the fixed
+default set (every ref's **content id**, refs the key deleted, `HEAD`, the working tree and
+the index, an operation left in progress, the stash), plus any the task adds itself, each a
+git command run in both repositories and compared. How a change to data, to a schema, or to
+a repository is judged, since none of them returns rows of its own.
 _Avoid_: assertion, test query, check
+
+**Content id**:
+A commit's subject, tree and parents' content ids, hashed together. What a git grade compares
+instead of a SHA, since the learner's commits carry today's date and the answer key's carry
+another: the same history, made on another day by someone else, still gets the same content
+ids.
+_Avoid_: hash, fingerprint
 
 **Edits**:
 The path a Helm task's `task.yaml` stands in for in its chart: `values.yaml`, or one template.

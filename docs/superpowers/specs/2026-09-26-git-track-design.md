@@ -57,8 +57,11 @@ bash wrote.
 **The repository is work in progress, and never the artifact.** It lives in
 `<root>/.sittings/<slug>/` (`repo/`, `origin.git/`, `home/`), stamped with the sitting's
 `started`. It survives a reload and a restart. It is built when the terminal connects and
-finds no directory, or one stamped for another sitting, which is how a pass, an abandon, a
-restore and an upgrade all end up with a fresh repo without a hook in any of them.
+finds no directory, or one stamped for another sitting, which is how a pass, an abandon and an
+upgrade all end up with a fresh repo without a hook in any of them. A restore or an erase is
+not lazy about it: the route ends every open terminal and deletes `<root>/.sittings` outright
+before it returns, so the next connect still finds nothing and builds fresh, just already
+emptied rather than found stale.
 **Reset repository** (a button beside Submit) ends the shell, deletes the directory, and
 appends `# repository reset` to `history.sh`; the next connect builds it again from the
 stored brief and seed.
@@ -86,9 +89,9 @@ merging the wrong way round differs.
 | every ref the answer key ends with | its content id; tags included |
 | every ref `setup()` made that the key deleted | it must be gone |
 | `HEAD` | the branch checked out, or detached |
-| the index and working tree | `git status --porcelain=v1 -z --untracked-files=all` |
+| the index and working tree | `git status --porcelain=v1 -z --untracked-files=all`, and each changed path's staged and unstaged content by blob id (a non-regular file by its type, never opened) |
 | an operation in progress | `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `REVERT_HEAD`, `rebase-merge/`, `rebase-apply/`, `BISECT_LOG` |
-| `refs/stash` | how many entries |
+| `refs/stash` | each entry's contents (its tree, index and untracked blobs), not only the count |
 
 Refs the learner made that the key does not have are ignored: a backup branch before a
 rebase is good practice, and failing it would teach the opposite.
@@ -171,8 +174,9 @@ tier it runs under, from `sandbox.status()`.
 
 ## Engine and image
 
-Debian's `git` (2.47.3 in `python:3.14-slim` today), `nano` and `vim-tiny`, installed with
-`--no-install-recommends` in the runtime stage, before `useradd`. Measured: 34 packages and
+Debian's `git` (2.47.3 in `python:3.14-slim` today), `nano`, `vim-tiny` and `less` (git's
+pager), installed with `--no-install-recommends` in the runtime stage, before `useradd`.
+Measured: 34 packages and
 about 100 MB (git 49 MB, perl 49 MB as git's hard dependency), bringing `libcurl-gnutls`,
 krb5, ldap and libssh2 that a `file://`-only setup never exercises. The existing
 `apt-get upgrade` line keeps them current; trivy's count rises and the ADR says so. Not a
