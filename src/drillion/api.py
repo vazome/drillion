@@ -1,20 +1,25 @@
 """JSON API over the task core, and the built page that drives it.
 
-Every route is a plain `def` that touches progress inside a `state.writing()` or
-`state.reading()` block: an `async def` blocking on that lock would freeze the whole
-server, while FastAPI runs sync handlers in a threadpool."""
+Every route that touches progress is a plain `def` doing it inside a `state.writing()`
+or `state.reading()` block: an `async def` blocking on that lock would freeze the whole
+server, while FastAPI runs sync handlers in a threadpool. The async ones are those that
+await `terminal` directly (the terminal socket, restore, erase, repository reset) and the
+language server's socket; they push their blocking work to a thread."""
 
+import asyncio
+import functools
 import logging
 from collections import Counter
 from datetime import date, timedelta
 
+import anyio.from_thread
 from fastapi import Body, FastAPI, HTTPException, WebSocket
 from fastapi.responses import FileResponse, JSONResponse, Response
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from . import __version__, backup, kinds, manifest, sandbox
+from . import __version__, backup, gitrepo, kinds, manifest, sandbox, terminal
 from .attempts import (
     Gated,
     NoAttempt,
@@ -28,7 +33,7 @@ from .attempts import (
     record_pass,
     unlock_solution,
 )
-from .catalogue import public, tasks
+from .catalogue import GIT, public, tasks
 from .lsp import bridge
 from .region import Invalid, write_region
 from .scheduler import (
@@ -176,6 +181,13 @@ def _task(slug):
     return all_tasks[slug]
 
 
+def _end_terminal(meta, slug):
+    """End a git task's shell once its attempt has closed, whichever page closed it. For a
+    sync route, after its state has committed."""
+    if meta["kind"] == GIT:
+        anyio.from_thread.run(terminal.close, slug)
+
+
 def _check_etag(kind, src, sent):
     """Optimistic lock: the editor may only write what it last read."""
     if sent != kind.etag(src):
@@ -289,6 +301,7 @@ def _payload(st, slug, meta, src):
                         "helm",
                         "hadolint",
                         "pglite",
+                        "git",
                         "seed",
                         "revision",
                     )
@@ -363,21 +376,27 @@ def preview_restore(payload: bytes = Body(...)):
 
 
 @app.post(RESTORE)
-def apply_restore(payload: bytes = Body(...)):
-    """Replace progress and saved code from a bundle. The current data is kept first."""
-    summary = backup.restore(payload)
+async def apply_restore(payload: bytes = Body(...)):
+    """Replace progress and saved code from a bundle. The current data is kept first.
+    No terminal runs across it and every git sitting goes after: a restored attempt
+    starts its repository afresh. A failed restore keeps the sittings."""
+    async with terminal.quiet():
+        summary = await asyncio.to_thread(backup.restore, payload)
+        await asyncio.to_thread(gitrepo.discard_all)
     log.info("restored %s, kept %s", summary["brings"], summary["kept"])
     return summary
 
 
 @app.post("/api/reset")
-def erase_everything(want: Erase):
+async def erase_everything(want: Erase):
     """Everything back to a first run. The typed phrase is the guard: this route can be
     reached by a bookmark or a stray script, and it is the one route with nothing behind
     it to undo the damage except the backup it writes first."""
     if want.confirm.strip() != backup.PHRASE:
         raise backup.Rejected(f"Type {backup.PHRASE!r} to confirm.")
-    summary = backup.erase()
+    async with terminal.quiet():
+        summary = await asyncio.to_thread(backup.erase)
+        await asyncio.to_thread(gitrepo.discard_all)
     log.info("erased everything, kept %s", summary["kept"])
     return summary
 
@@ -458,6 +477,8 @@ def save_task(slug: str, edit: Edit):
         kind = kinds.of(meta)
         src = kind.path(meta).read_text(encoding="utf-8")
         _check_etag(kind, src, edit.etag)
+        if not kind.saved_by_page:  # bash owns this file; the page never writes it
+            return {"etag": kind.etag(src)}
         new_src = kind.validate(edit.code, src)
         write_region(kind.path(meta), new_src)
         return {"etag": kind.etag(new_src)}
@@ -479,8 +500,11 @@ def run_task(slug: str, edit: Edit):
         kind = kinds.of(meta)
         src = kind.path(meta).read_text(encoding="utf-8")
         _check_etag(kind, src, edit.etag)
-        new_src = kind.validate(edit.code, src)
-        write_region(kind.path(meta), new_src)
+        if not kind.saved_by_page:  # bash owns this file; grade it as it stands
+            new_src = src
+        else:
+            new_src = kind.validate(edit.code, src)
+            write_region(kind.path(meta), new_src)
     passed, detail = kind.grade(meta, sitting, new_src)
     with writing() as st:
         o = current(st, slug)
@@ -524,7 +548,10 @@ def run_task(slug: str, edit: Edit):
                 "lapses": card(st, slug)["lapses"],
                 "next": pick(st, tasks())[0],
             }
-        return resp | {"etag": kind.etag(new_src)}
+        resp["etag"] = kind.etag(new_src)
+    if passed and edit.submit:
+        _end_terminal(meta, slug)
+    return resp
 
 
 @app.post("/api/task/{slug}/touch")
@@ -584,7 +611,9 @@ def abandon_task(slug: str, sent: Etag):
         new_src = abandon(st, slug, kind, src)
         log.info("%s abandoned", slug)
         reset_after_commit(st, meta, kind.path(meta), src, new_src)
-        return _payload(st, slug, meta, new_src)
+        payload = _payload(st, slug, meta, new_src)
+    _end_terminal(meta, slug)
+    return payload
 
 
 @app.put("/api/task/{slug}/note")
@@ -651,3 +680,43 @@ async def lsp(ws: WebSocket):
         return
     await ws.accept()
     await bridge(ws)
+
+
+def _git_sitting(slug):
+    """(meta, the open attempt) for a git task with a sitting open, else None."""
+    with reading() as st:
+        meta = tasks().get(slug)
+        o = st["open"].get(slug)
+        if meta is None or meta["kind"] != GIT or o is None:
+            return None
+        return meta, dict(o)
+
+
+@app.websocket("/terminal/{slug}")
+async def terminal_socket(ws: WebSocket, slug: str):
+    """A git task's shell, one per task. See `terminal.bridge`. The origin check is here
+    for the same reason as `/lsp`'s: middleware never runs for a websocket."""
+    if ws.headers.get("origin") not in _allowed_origins():
+        await ws.close(code=1008)
+        return
+    # accepted before "no sitting" is said: a close before accept reaches a browser as 1006
+    await ws.accept()
+    await terminal.bridge(ws, slug, functools.partial(_git_sitting, slug))
+
+
+@app.post("/api/task/{slug}/repo/reset")
+async def reset_repo(slug: str):
+    """Put a git sitting's repository back as the task set it up: the shell ends, the
+    repository goes, and the next terminal builds it again. The history stays, marked."""
+    async with terminal.admitted(), terminal.turn(slug):
+        # read here, so a restore or an abandon this waited out is the state it acts on
+        found = await asyncio.to_thread(_git_sitting, slug)
+        if found is None:
+            raise HTTPException(404, f"no git sitting open on {slug!r}")
+        await terminal.end(slug)
+        await asyncio.to_thread(gitrepo.discard, slug)
+        # inside, so a restore or an abandon never lands between the reset and its mark.
+        # An append keeps the inode, so a shell's Landlock grant on the file survives
+        with found[0]["path"].open("a", encoding="utf-8") as history:
+            history.write("# repository reset\n")
+    return {"reset": True}

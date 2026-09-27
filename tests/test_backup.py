@@ -14,10 +14,12 @@ import pytest
 from drillion import backup, region, state
 from drillion.api import app
 from drillion.settings import settings
+from tests.fixtures_git import fixture_task as git_fixture_task
 
 SLUG = "009_fstrings"
 OTHER = "008_slicing"
 MANIFEST = "268_first_deployment"
+GIT = "900_git_fixture"
 SOURCE = settings.tasks_dir
 
 
@@ -58,6 +60,20 @@ def _manifest_body():
     return (settings.tasks_dir / MANIFEST / "task.yaml").read_text(encoding="utf-8")
 
 
+def _add_git(root):
+    """No real git task ships yet, so the fixture one is written in directly, the same
+    files `tests.fixtures_git.fixture_task` gives the grading tests."""
+    task_dir = root / "tasks" / GIT
+    task_dir.mkdir()
+    for name, text in git_fixture_task().items():
+        (task_dir / name).write_text(text, encoding="utf-8")
+    shutil.copy(SOURCE / "_git.py", root / "tasks" / "_git.py")
+
+
+def _git_history():
+    return (settings.tasks_dir / GIT / "history.sh").read_text(encoding="utf-8")
+
+
 def test_a_bundle_round_trips_progress_and_saved_code(root):
     with state.writing() as st:
         st["notes"][SLUG] = "my note"
@@ -93,6 +109,31 @@ def test_a_bundle_restores_a_manifest_artifact(root):
 
     assert summary["brings"]["tasks"] == 2
     assert _manifest_body() == saved
+
+
+def test_a_bundle_round_trips_a_git_tasks_history_and_its_progress(root, monkeypatch):
+    """A git task's artifact is `history.sh`, which the page never rewrites: the fix in
+    `_Git.validate` must still let a restore bring back the history a backup holds,
+    against whatever bash has appended to the file since."""
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", "/dev/null")
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    _add_git(root)
+    history = settings.tasks_dir / GIT / "history.sh"
+    history.write_text("git add a.md\ngit commit -m start\n", encoding="utf-8")
+    with state.writing() as st:
+        st["notes"][GIT] = "P1"
+
+    data = backup.bundle()
+
+    history.write_text("git add a.md\ngit commit -m start\ngit log\n", encoding="utf-8")
+    with state.writing() as st:
+        st["notes"][GIT] = "clobbered"
+
+    summary = backup.restore(data)
+
+    assert summary["brings"]["tasks"] == 2  # SLUG plus the git fixture
+    assert _git_history() == "git add a.md\ngit commit -m start\n"
+    assert state.load()["notes"][GIT] == "P1"
 
 
 def test_a_bundle_holding_a_manifest_is_not_format_1(root):

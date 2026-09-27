@@ -153,6 +153,10 @@ function EditorSettings() {
         <Toggle checked={prefs.relativeLines} label={prefs.relativeLines ? "On" : "Off"}
           onChange={(on) => setPrefs({ relativeLines: on })} />
       </Row>
+      <Row label="Terminal screen reader mode" hint="A git task's terminal reads out to a screen reader. It draws a little slower, so it stays off unless you use one.">
+        <Toggle checked={prefs.screenReader} label={prefs.screenReader ? "On" : "Off"}
+          onChange={(on) => setPrefs({ screenReader: on })} />
+      </Row>
       <Row label="Practice timer" hint="Hidden or not, the time is still counted.">
         <Choice label="Practice timer" value={prefs.showTimer ? "shown" : "hidden"}
           options={[{ value: "shown", label: "Shown" }, { value: "hidden", label: "Hidden" }]}

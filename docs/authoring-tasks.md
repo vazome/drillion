@@ -65,8 +65,8 @@ it — and `POST /api/focus` sets it.
 
 One folder per task, `tasks/<NNN>_<name>/`; copy the shape of an existing one.
 
-`<NNN>` is the task's place in the curriculum, `001`–`338` with no gaps, so the next task you add is
-`339`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
+`<NNN>` is the task's place in the curriculum, `001`–`356` with no gaps, so the next task you add is
+`357`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
 always numbers below its own, and `doctor` will not let that stop being true. Append, never insert —
 inserting means rewriting every number after it, and [ADR-0006](adr/0006-the-fundamentals-come-first.md)
 says the two renumberings drillion has had are the last two.
@@ -249,6 +249,60 @@ shapes of task, one model:
 same rows on both, since that task cannot tell a copied answer from a real one. Every rule
 the README states needs a row in `tests/test_sql.py` that breaks it and fails.
 
+## Git tasks
+
+A task whose frontmatter says `kind: git` is a repository in a state, opened in a real
+terminal instead of an editor. It takes no `tier` and no `edits`, and its folder holds
+`history.sh` (the learner's file: their shell history, empty as shipped) beside `grade.py`
+and `solution.sh`:
+
+- **`brief(r)`**: as for a manifest, drawing file names, branch names and the like from the
+  `random.Random` it is handed.
+- **`setup(repo, b)`**: builds the starting repository, using only `b`, the stored brief, and
+  never `r`, since a sitting's repository is rebuilt from its brief alone, on a reload, a
+  restore or an upgrade, so `setup` has to be a pure function of it. `repo` is a
+  `tasks/_git.py` `Repo` open on `<sitting>/repo`. `repo.commit(message, files, author=None)`
+  writes `files` and commits them, each commit a fixed minute after the last from a fixed
+  epoch, so the same brief always yields the same SHAs; `repo.origin()` adds a bare
+  `origin.git` beside the repository and returns it, and `repo.teammate()` clones `origin`
+  again so a task can push "someone else's" commits to it without touching the learner's own
+  history, and the clone is deleted once `setup()` returns. `repo.git(*args, check=True)` runs
+  anything else: a branch, a stash, a merge left half done.
+- **`solution.sh`**: the answer key, a bash script run with `bash -e`, rendered with
+  `str.format` like `solution.Dockerfile`, so a literal brace bash needs is doubled (`{{`,
+  `}}`). An interactive step is scripted, never left for a human to drive:
+  `GIT_SEQUENCE_EDITOR="sed -i ..." git rebase -i` for a rebase, `GIT_EDITOR="..."` for a
+  commit message, a file written with `printf` rather than opened in an editor.
+- **`SKIP`**: a tuple naming which default probes to drop (`operation`, `refs`, `deleted`,
+  `head`, `status`, `stash`): a task about the stash may not care what `HEAD` is.
+- **`probes(b)`**: optional, `{sentence: argv}`, a git command's argv run in both repositories
+  and compared; `sentence` is what the learner reads when they differ ("the files git
+  ignores").
+- **`check(repo, b)`**: optional, for a rule no comparison can state, or where the learner's
+  own wording is the point (a reworded message, a hand-merged paragraph). It reads
+  learner-caused state with `repo.git(..., check=False)` or lets `repo.git(...)`'s own
+  `check=True` raise, and raises `AssertionError` for what the learner reads; anything else it
+  raises is read as a broken task, not a failed one.
+
+The README's `## You return` gives every commit message in a code span and every file the
+learner is meant to type given in full, in a fenced block: a **content id** makes a subject
+and a tree's bytes exact, so nothing about what to type is left unsaid. `## You get` describes
+the repository the way `git log --oneline --all --graph` would show it, in words, with no
+placeholders, since it is shown before a sitting opens. Give the task `track: git`, tags from
+the fixed set (`staging`, `commits`, `branches`, `merging`, `conflicts`, `rebase`,
+`history-rewriting`, `undo`, `stash`, `remotes`, `history-search`, `tagging`), and no `tier`.
+
+A grade compares the learner's repository with the one the answer key builds from the same
+`setup()`: every ref's content id, a ref the key deleted, `HEAD`, the staged and unstaged and
+untracked content (`git status --porcelain`, plus each changed path's own staged and unstaged
+content by blob id, a non-regular file compared by its type and never opened), an operation
+left in progress, and the stash, entry for entry rather than only its count, on the local
+repository and on `origin.git` alike. `SKIP` drops a row the task's own rules make redundant, and a task
+should turn off no more than it must: the comparison is what catches everything an author did
+not think to forbid, and `doctor` prints the git version it found. Every rule the README
+states needs a row in `tests/test_git_tasks.py` that breaks `solution.sh` and fails, through
+the real pipeline.
+
 ## When a new task does not show up
 
 A folder the catalogue cannot read is **skipped**, not reported: a half-written task must never
@@ -264,7 +318,7 @@ Run `uv run drillion doctor` — it reports every rule the folder breaks, not ju
 
 `uv run drillion selfcheck` splices `_reference` into every file and runs the tests; it must be
 green on Python 3.14 before a task is trusted. But it only counts tasks the catalogue already
-accepted, so if it still says `338/338` after you added one, `doctor` is where to look.
+accepted, so if it still says `356/356` after you added one, `doctor` is where to look.
 
 ## Retired tags
 

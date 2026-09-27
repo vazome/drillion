@@ -1,4 +1,4 @@
-/* drillion's icon list: 32 icons from IBM Carbon (@carbon/icons 11.88.0), Apache License 2.0 —
+/* drillion's icon list: 33 icons from IBM Carbon (@carbon/icons 11.88.0), Apache License 2.0 —
    the licence is carbon-icons.LICENSE.txt beside this file. Copied once, so the app has no
    runtime dependency and makes no request for them. Carbon's 16px artwork where it has one,
    its 32px artwork (drawn to scale down) where it does not. A new icon is a design-system
@@ -36,5 +36,6 @@ export const ICONS = {
   Archive: { viewBox: "0 0 32 32", nodes: [["path",{"d":"M14 19H18V21H14z"}],["path",{"d":"M6,2V28a2,2,0,0,0,2,2H24a2,2,0,0,0,2-2V2ZM24,28H8V16H24Zm0-14H8V10H24ZM8,8V4H24V8Z"}]] }, // carbon: archive (32px artwork)
   TrashCan: { viewBox: "0 0 32 32", nodes: [["path",{"d":"M12 12H14V24H12z"}],["path",{"d":"M18 12H20V24H18z"}],["path",{"d":"M4,6V8H6V28a2,2,0,0,0,2,2H24a2,2,0,0,0,2-2V8h2V6ZM8,28V8H24V28Z"}],["path",{"d":"M12 2H20V4H12z"}]] }, // carbon: trash-can (32px artwork)
   ArrowLeft: { viewBox: "0 0 16 16", nodes: [["path",{"d":"M6.7 12.3 2.9 8.5 15 8.5 15 7.5 2.9 7.5 6.7 3.7 6 3 1 8 6 13z"}]] }, // carbon: arrow--left (16px artwork)
+  Terminal: { viewBox: "0 0 32 32", nodes: [["path",{"d":"M26,4H6A2,2,0,0,0,4,6V26a2,2,0,0,0,2,2H26a2,2,0,0,0,2-2V6A2,2,0,0,0,26,4Zm0,2v4H6V6ZM6,26V12H26V26Z"}],["path",{"d":"M10.76 16.18 13.58 19.01 10.76 21.84 12.17 23.25 16.41 19.01 12.17 14.77 10.76 16.18z"}]] }, // carbon: terminal (32px artwork, @carbon/icons 11.89.0)
 };
 export const ICON_NAMES = Object.keys(ICONS);

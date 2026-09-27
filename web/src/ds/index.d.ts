@@ -524,7 +524,7 @@ export interface TrackRailProps {
 export declare function TrackRail(props: TrackRailProps): El;
 
 /** The 32 names of drillion's fixed icon list (IBM Carbon). */
-export type IconName = "ChevronRight" | "ChevronDown" | "ArrowUp" | "ArrowDown" | "Reset" | "Pause" | "CheckmarkOutline" | "CloseOutline" | "Checkmark" | "Pending" | "Close" | "ArrowRight" | "CircleFill" | "Locked" | "Unlocked" | "WarningAlt" | "Information" | "Idea" | "Play" | "Send" | "Search" | "Settings" | "Sun" | "Asleep" | "Folder" | "DataBase" | "Copy" | "Download" | "Upload" | "Archive" | "TrashCan" | "ArrowLeft";
+export type IconName = "ChevronRight" | "ChevronDown" | "ArrowUp" | "ArrowDown" | "Reset" | "Pause" | "CheckmarkOutline" | "CloseOutline" | "Checkmark" | "Pending" | "Close" | "ArrowRight" | "CircleFill" | "Locked" | "Unlocked" | "WarningAlt" | "Information" | "Idea" | "Play" | "Send" | "Search" | "Settings" | "Sun" | "Asleep" | "Folder" | "DataBase" | "Copy" | "Download" | "Upload" | "Archive" | "TrashCan" | "ArrowLeft" | "Terminal";
 /** One icon from the fixed list, beside a word. Hidden from assistive tech; coloured by
  *  the text around it (currentColor). */
 export interface IconProps {
@@ -565,3 +565,32 @@ export interface FileTabsProps {
   style?: Style;
 }
 export declare function FileTabs(props: FileTabsProps): El;
+
+/** The terminal a git task is worked in: a real bash in the task's repository over a
+ *  WebSocket, drawn by xterm.js (@xterm/xterm 6 and @xterm/addon-fit, the one dependency).
+ *  The component is the frame, the theme and the states; the shell is the server's.
+ */
+export interface TerminalProps {
+  /** the task; the socket is /terminal/<slug> (wss:// on a page served over TLS) */
+  slug: string;
+  /** which theme the page is in; the theme is re-read from the tokens when it changes */
+  dark: boolean;
+  /** an attempt is open and not yet passed: the socket is open only while this is true */
+  live: boolean;
+  /** the socket closed, with its close code (4000 moved, 4001 reset, 1013 full, 1011 failed) */
+  onClosed?: (code: number) => void;
+  /** controls for the head's right end: the page passes Reset repository here */
+  actions?: React.ReactNode;
+  /** said in the foot while `live` is false: "Passed. The shell is closed; your repository
+   *  was graded as you left it." or "No attempt is open. The last output stays here." */
+  idleNote?: React.ReactNode;
+  /** the editor's face and size from the learner's settings; default --font-mono at 14px */
+  fontFamily?: string;
+  fontSize?: number;
+  /** xterm.js's screen reader mode; a page cannot detect a screen reader, so this comes
+   *  from a setting */
+  screenReader?: boolean;
+  className?: string;
+  style?: Style;
+}
+export declare function Terminal(props: TerminalProps): El;

@@ -31,6 +31,9 @@ _selfcheck.py
 # sandboxed children's scratch folders, and what a killed run leaves in them
 .scratch/
 
+# a git sitting's own repository: built per attempt, never shipped with a clone
+.sittings/
+
 # your practice history: yours, never shipped with a clone (#4)
 progress.json
 progress.json.bak

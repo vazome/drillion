@@ -102,11 +102,12 @@ def run_python(meta, seed):
     return r.returncode == 0, r.stdout, case
 
 
-def run_manifest(meta, brief, learner=None, helm=None, docker=None, sql=None):
+def run_manifest(meta, brief, learner=None, helm=None, docker=None, sql=None, git=None):
     """A manifest sitting: the validator and the task's `check()`, in one sandboxed child.
     A Helm sitting is the same child with `helm` set: it renders the chart first. A
     Dockerfile sitting sets `docker`, and hadolint stands in for the validator. A SQL sitting
-    sets `sql`, and PGlite stands in for it.
+    sets `sql`, and PGlite stands in for it. A git sitting sets `git`, and the child reads
+    its repository in place and never writes it.
 
     Returns `(passed, diagnostics, validator report, what Helm rendered)`. No pytest: a manifest run is one
     file, one validator call and one `check()`, and a test framework in the middle only
@@ -114,7 +115,7 @@ def run_manifest(meta, brief, learner=None, helm=None, docker=None, sql=None):
 
     Paired with `run_python`, which grades the other kind. Neither dispatches: the caller
     already holds a kind, and `kind.grade` picks the one that fits."""
-    job = manifest.job(meta, brief, learner, helm, docker, sql)
+    job = manifest.job(meta, brief, learner, helm, docker, sql, git)
     with tempfile.TemporaryDirectory(
         dir=sandbox.scratch_root(), ignore_cleanup_errors=True
     ) as scratch:
@@ -129,6 +130,7 @@ def run_manifest(meta, brief, learner=None, helm=None, docker=None, sql=None):
                 [str(script), str(job_path), str(out)],
                 scratch,
                 manifest.GRADE_SECONDS,
+                reads=[git["sitting"]] if git and git.get("sitting") else [],
             )
         except subprocess.TimeoutExpired:
             raise manifest.Rejected(

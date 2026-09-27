@@ -90,7 +90,7 @@ def grade(tmp_path, monkeypatch, *body):
     ]  # these tests grade the sandbox, not the case
 
 
-def unconfined(child, scratch, cpu, **env):
+def unconfined(child, scratch, cpu, reads=(), **env):
     """`_run_pytest` as it was before the sandbox: the parent's whole environment, no
     `preexec_fn`, no profile. The control run every escape test is measured against."""
     return {
@@ -307,3 +307,24 @@ def test_scratch_lives_in_one_folder_and_a_killed_runs_leftovers_are_cleared(
     sandbox.scratch_root()
     assert not stale.exists() and fresh.exists()
     assert [p.name for p in tmp_path.iterdir()] == [".scratch"]
+
+
+def test_a_read_root_is_readable_and_not_writable(tmp_path):
+    if sandbox.status()[0] != "landlock":
+        pytest.skip("Landlock is the only tier that enforces a read root")
+    shown = tmp_path / "shown"
+    shown.mkdir()
+    (shown / "f.txt").write_text("hello")
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    script = scratch / "probe.py"
+    script.write_text(
+        "import sys\n"
+        f"print(open({str(shown / 'f.txt')!r}).read())\n"
+        "try:\n"
+        f"    open({str(shown / 'g.txt')!r}, 'w')\n"
+        "except PermissionError:\n"
+        "    print('denied')\n"
+    )
+    done = sandbox.run_script([str(script)], scratch, 20, reads=[shown])
+    assert done.stdout.split() == ["hello", "denied"]

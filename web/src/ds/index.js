@@ -32,3 +32,4 @@ export { TrackRail } from "./TrackRail.jsx";
 export { Icon } from "./Icon.jsx";
 export { ICONS, ICON_NAMES } from "./icons.js";
 export { FileTabs } from "./FileTabs.jsx";
+export { Terminal } from "./Terminal.jsx";

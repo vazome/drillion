@@ -18,6 +18,8 @@ export type Prefs = {
   wordWrap: boolean;
   relativeLines: boolean;
   showTimer: boolean;
+  /** xterm's screen reader mode for a git task's terminal; a page cannot detect a reader */
+  screenReader: boolean;
   taskPanePercent: number;
   /** null: the output fits what it shows, up to 40% of the column */
   resultPanePercent: number | null;
@@ -34,6 +36,7 @@ export const DEFAULTS: Prefs = {
   wordWrap: true,
   relativeLines: false,
   showTimer: true,
+  screenReader: false,
   taskPanePercent: 42,
   resultPanePercent: null,
 };

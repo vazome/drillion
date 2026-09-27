@@ -10,8 +10,8 @@ import logging
 
 import yaml
 
-from . import manifest, pglite, region, sandbox, tools
-from .catalogue import DOCKER, FILENAMES, HELM, MANIFEST, PYTHON, SQL, solution
+from . import gitrepo, manifest, pglite, region, sandbox, tools
+from .catalogue import DOCKER, FILENAMES, GIT, HELM, MANIFEST, PYTHON, SQL, solution
 from .region import Invalid, _solve
 
 __all__ = ["Invalid", "of"]
@@ -44,6 +44,7 @@ class _Python:
     name = PYTHON
     filename = FILENAMES[PYTHON]
     language = "python"
+    saved_by_page = True
 
     def path(self, meta):
         return meta["path"]
@@ -123,6 +124,7 @@ class _Manifest:
     filename = FILENAMES[MANIFEST]
     language = "yaml"
     suffix = ".yaml"
+    saved_by_page = True
 
     def path(self, meta):
         return meta["path"]
@@ -371,12 +373,87 @@ class _Sql(_Manifest):
         return {"sql": manifest.sql_job(meta, brief, seed, selfcheck)}
 
 
+class _Git(_Manifest):
+    """A repository in a real terminal: the learner's artifact is the history bash writes,
+    and the repository they leave behind is what is graded. See `gitrepo` and `grade_git`
+    in `grading.py`."""
+
+    name = GIT
+    filename = FILENAMES[GIT]
+    language = "shell"
+    suffix = ".sh"
+    saved_by_page = False
+
+    def validate(self, edited, src):
+        """The page never reaches here: only a backup restore calls this, asking what
+        history to write back. `edited` is the saved history the restore brought, and
+        that, not what is on disk now, is the one to keep."""
+        return edited
+
+    def etag(self, src):
+        # constant, so a Run from a page that last read an older history is never a conflict
+        return "history"
+
+    def answer_key(self, meta, brief):
+        """`solution.sh` with its placeholders filled in; a brace bash needs is doubled."""
+        return manifest.render(solution(meta).read_text(encoding="utf-8"), brief)
+
+    def judges(self):
+        return {"git": gitrepo.version()}
+
+    def revision(self, meta, src):
+        return gitrepo.fingerprint(meta)
+
+    def extra(self, meta, brief, seed, selfcheck=False):
+        return {"git": gitrepo.job(meta, brief, sitting=gitrepo.home(meta["dir"].name))}
+
+    def grade(self, meta, o, src):
+        """The sitting's repository as it stands. One the task changed under is rebuilt
+        and refused: grading it against the new task's answer key would fail work that was
+        right for the task it was typed into."""
+        if "brief" not in o:
+            raise manifest.Rejected(
+                "this sitting opened before git grading: abandon it and start again"
+            )
+        _, replaced = gitrepo.ensure(meta, o)
+        if replaced:
+            raise manifest.Rejected(f"{gitrepo.REBUILT}, nothing was spent")
+        return super().grade(meta, o, src)
+
+    def selfcheck(self, meta):
+        """The answer key's commands typed into a fresh repository must pass, and the
+        untouched repository must fail: a task that passes with nothing done asks nothing."""
+        from . import runner
+
+        brief = manifest.generate_brief(meta, SELFCHECK_SEED)
+
+        def graded(script):
+            passed, diagnostics, *_ = runner.run_manifest(
+                meta, brief, git=gitrepo.job(meta, brief, script=script)
+            )
+            return passed, diagnostics[0]["message"] if diagnostics else ""
+
+        def judge():
+            passed, why = graded(self.answer_key(meta, brief))
+            if not passed:
+                return False, why
+            if graded(None)[0]:
+                return (
+                    False,
+                    "the untouched repository passes: the task asks for nothing",
+                )
+            return True, ""
+
+        return {}, judge
+
+
 KINDS = {
     PYTHON: _Python(),
     MANIFEST: _Manifest(),
     HELM: _Helm(),
     DOCKER: _Docker(),
     SQL: _Sql(),
+    GIT: _Git(),
 }
 
 

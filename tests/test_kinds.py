@@ -95,3 +95,14 @@ def test_sql_is_a_whole_file_kind_in_pgsql():
     assert k.body("SELECT 1;\n") == "SELECT 1;\n"
     assert k.empty("SELECT 1;\n") == ""
     assert k.validate("SELEC oops", "") == "SELEC oops", "Postgres says it on the run"
+
+
+def test_a_git_task_is_its_history():
+    kind = kinds.KINDS["git"]
+    assert kind.filename == "history.sh"
+    assert kind.saved_by_page is False
+    # the page never writes a git task's file: bash does. validate() is only asked by a
+    # backup restore, which hands it the history to keep as `edited`.
+    assert kind.validate("history to restore", "git status\n") == "history to restore"
+    assert kind.etag("git status\n") == kind.etag("") == "history"
+    assert kind.empty("git status\n") == ""

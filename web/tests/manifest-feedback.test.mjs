@@ -5,7 +5,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 test("manifest failures render the grader's diagnostics as they arrive", async () => {
-  const server = await createServer({ root: new URL("../", import.meta.url).pathname, configFile: false, server: { middlewareMode: true, ws: false, watch: null } });
+  const server = await createServer({ root: new URL("../", import.meta.url).pathname, configFile: false, server: { middlewareMode: true, ws: false, watch: null }, ssr: { noExternal: ["@xterm/xterm", "@xterm/addon-fit"] } });
   try {
     const { ManifestFailure } = await server.ssrLoadModule("/src/ManifestWorkspace.tsx");
     const render = (component, props) => renderToStaticMarkup(createElement(component, props));

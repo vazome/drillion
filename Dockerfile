@@ -32,8 +32,10 @@ COPY --from=ghcr.io/astral-sh/uv@sha256:95f2aa1fe59274951cfe9b0cbc7972e879ff1004
 
 # a base tag is a snapshot of Debian, and the digest pins above freeze that snapshot on
 # purpose. This upgrade is what keeps the OS packages current regardless, so a pin can never
-# mean a stale openssl.
-RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+# mean a stale openssl. git, less, nano and vim-tiny are the git track's terminal (ADR 0013).
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends git less nano vim-tiny \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 # no uv cache reaches the image: it lives only in the build cache mounts below, and a cache

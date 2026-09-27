@@ -10,6 +10,7 @@ import "@codingame/monaco-vscode-standalone-languages/languages/definitions/pyth
 import "@codingame/monaco-vscode-standalone-languages/languages/definitions/yaml/register.js";
 import "@codingame/monaco-vscode-standalone-languages/languages/definitions/dockerfile/register.js";
 import "@codingame/monaco-vscode-standalone-languages/languages/definitions/pgsql/register.js";
+import "@codingame/monaco-vscode-standalone-languages/languages/definitions/shell/register.js";
 import { EditorApp } from "monaco-languageclient/editorApp";
 import { MonacoVscodeApiWrapper } from "monaco-languageclient/vscodeApiWrapper";
 import { LanguageClientWrapper, LcWebSocket } from "monaco-languageclient/lcwrapper";
@@ -32,7 +33,7 @@ const bare = (name: string) => token(name).replace("#", "");
  *  browser has no business knowing filesystem paths. */
 const WORKSPACE = "file:///workspace";
 // Monaco reads the language off the extension, so naming the file is choosing the mode.
-const EXT: Partial<Record<Meta["kind"], string>> = { python: "py", docker: "dockerfile", sql: "sql" };
+const EXT: Partial<Record<Meta["kind"], string>> = { python: "py", docker: "dockerfile", sql: "sql", git: "sh" };
 const ext = (kind: Meta["kind"]) => EXT[kind] ?? "yaml";
 const fileFor = (kind: Meta["kind"]) => `${WORKSPACE}/${kind === "python" ? "solve" : "task"}.${ext(kind)}`;
 // Monaco's pgsql claims no file extension, so a .sql model has to be told its language
