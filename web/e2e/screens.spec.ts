@@ -73,7 +73,7 @@ test("captures the screens a reviewer needs", async ({ page, request }) => {
   // A git task: the terminal takes the editor's place, Reset repository in its head.
   // Task 339 does not exist until Task 10, so `pnpm --dir web screens` does not run this
   // shot until Task 13; the assertion just proves the page renders the terminal shell.
-  await page.goto(`/#/task/339_git_first_commit`);
+  await page.goto("/#/task/339_git_first_commit");
   await expect(page.getByRole("region", { name: "Terminal, in the task's repository" })).toBeVisible();
   await shot(page, "task-git");
 

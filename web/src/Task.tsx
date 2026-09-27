@@ -571,7 +571,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
                     </div>
                     {a.revision ? (
                       <div className="tabular" style={{ fontSize: 12.5, color: "var(--text-faint)", fontFamily: "var(--font-mono)" }}>
-                        {a.python ? `Python ${a.python}` : a.hadolint ? `hadolint ${a.hadolint}` : a.pglite ? `PGlite ${a.pglite}` : `kubeconform ${a.validator} · Kubernetes ${a.kubernetes}`} · seed {a.seed} · grader {a.revision}
+                        {a.python ? `Python ${a.python}` : a.hadolint ? `hadolint ${a.hadolint}` : a.pglite ? `PGlite ${a.pglite}` : a.git ? `git ${a.git}` : `kubeconform ${a.validator} · Kubernetes ${a.kubernetes}`} · seed {a.seed} · grader {a.revision}
                       </div>
                     ) : null}
                     {a.code ? <pre style={{ margin: "6px 0 0", fontSize: 12.5, whiteSpace: "pre-wrap", color: "var(--text-muted)" }}>{a.code}</pre> : null}
@@ -662,7 +662,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
             </div>
             {/* Run executes and grades nothing; Submit is the committing act, so it is the
               * one primary in the row and the only one that costs an attempt */}
-            <Button variant="secondary" kbdHint={`${MOD} ↵`} onClick={run} disabled={!!inflight || passed}>
+            <Button variant="secondary" kbdHint={meta.kind === "git" ? undefined : `${MOD} ↵`} onClick={run} disabled={!!inflight || passed}>
               <Icon name="Play" />{inflight === "run" ? "Running…" : "Run"}
             </Button>
             <Button kbdHint={`${MOD} ⇧ ↵`} onClick={submit} disabled={!!inflight || passed}>
