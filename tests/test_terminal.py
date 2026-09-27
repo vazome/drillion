@@ -135,7 +135,7 @@ def test_exit_ends_the_socket_and_the_shells_jobs(client):
         _until(ws, "confined by")
         pid = _pid(ws, "sleep 1000 & echo pid=$!=$((5*5))\r")
         _type(ws, "exit\r")
-        assert _closed_with(ws) == 1000
+        assert _closed_with(ws) == terminal.EXITED
     _gone(pid)
 
 
@@ -238,6 +238,22 @@ def test_an_abandon_ends_the_terminal(client):
             headers={"Origin": SAME},
         )
         assert r.status_code == 200
+        assert _closed_with(ws) == 1000
+
+
+def test_a_passing_submit_ends_the_terminal(client):
+    with reading() as st:
+        name = st["open"][SLUG]["brief"]["name"]
+    with client.websocket_connect(f"{WS}/{SLUG}", headers={"Origin": SAME}) as ws:
+        _until(ws, "confined by")
+        _type(ws, f"git add {name}.md; git commit -qm 'add {name}'; echo ok-$((2*4))\r")
+        _until(ws, "ok-8")
+        r = client.post(
+            f"/api/task/{SLUG}/run",
+            json={"code": "", "etag": "history", "submit": True},
+            headers={"Origin": SAME},
+        )
+        assert r.status_code == 200 and r.json()["passed"], r.text
         assert _closed_with(ws) == 1000
 
 

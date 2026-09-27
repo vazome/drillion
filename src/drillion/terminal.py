@@ -5,6 +5,7 @@ server to page is the PTY's bytes, as binary frames."""
 import asyncio
 import collections
 import contextlib
+import ctypes
 import fcntl
 import json
 import os
@@ -18,7 +19,8 @@ from . import gitrepo, manifest, sandbox
 MAX_SHELLS = 4
 # per process: bounds a runaway command without timing out a shell someone is thinking in
 CPU_SECONDS = 600
-MOVED, RESET = 4000, 4001
+# 4002: bash itself exited; the page offers to reconnect
+MOVED, RESET, EXITED = 4000, 4001, 4002
 RC = r"""
 [ -r /usr/share/bash-completion/completions/git ] && . /usr/share/bash-completion/completions/git
 [ -r /usr/lib/git-core/git-sh-prompt ] && . /usr/lib/git-core/git-sh-prompt
@@ -158,6 +160,34 @@ async def _out(shell):
         loop.remove_reader(shell.fd)
 
 
+_SYS_PIDFD_OPEN = 434  # the same number on every Linux architecture
+
+
+def _pidfd(pid):
+    """`os.pidfd_open`, which uv's standalone Pythons are built without."""
+    if hasattr(os, "pidfd_open"):
+        return os.pidfd_open(pid)
+    fd = sandbox._libc().syscall(
+        ctypes.c_long(_SYS_PIDFD_OPEN), ctypes.c_int(pid), ctypes.c_uint(0)
+    )
+    if fd < 0:
+        raise OSError(ctypes.get_errno(), "pidfd_open")
+    return fd
+
+
+async def _exited(proc):
+    """Until bash exits, whatever jobs still hold its PTY."""
+    loop = asyncio.get_running_loop()
+    fd = _pidfd(proc.pid)
+    gone = asyncio.Event()
+    loop.add_reader(fd, gone.set)
+    try:
+        await gone.wait()
+    finally:
+        loop.remove_reader(fd)
+        os.close(fd)
+
+
 async def _in(shell):
     """Page to PTY: keys, and the window's size."""
     while True:
@@ -183,13 +213,29 @@ async def end_all(code=RESET):
     await asyncio.gather(*(end(slug, code) for slug in list(_live)))
 
 
+async def _unquiet():
+    while _quiet is not None:
+        await _quiet.wait()
+
+
+@contextlib.asynccontextmanager
+async def admitted():
+    """Wait out a restore or an erase, and hold the next one off until this is done."""
+    global _starting
+    await _unquiet()
+    _starting += 1
+    try:
+        yield
+    finally:
+        _starting -= 1
+
+
 @contextlib.asynccontextmanager
 async def quiet():
     """Held across a restore or an erase: shells in setup finish, every shell ends, and a
     new socket waits until it is released, so it reads the state that came after."""
     global _quiet
-    while _quiet is not None:
-        await _quiet.wait()
+    await _unquiet()
     _quiet = asyncio.Event()
     try:
         while _starting:
@@ -206,10 +252,9 @@ async def bridge(ws, slug, find):
     the open attempt), or None when there is no git sitting to open. A second socket for
     the same task ends the first: the newer tab wins."""
     global _starting
-    while _quiet is not None:
-        await _quiet.wait()
+    await _unquiet()
     _starting += 1
-    starting, claimed, shell, pumps = True, False, None, []
+    starting, claimed, shell, pumps, code = True, False, None, [], 1000
     try:
         found = await asyncio.to_thread(find)
         if found is None:
@@ -243,20 +288,22 @@ async def bridge(ws, slug, find):
             asyncio.create_task(_out(shell)),
             asyncio.create_task(_in(shell)),
             # a job holding the PTY keeps `_out` reading after bash exits
-            asyncio.create_task(asyncio.to_thread(proc.wait)),
+            asyncio.create_task(_exited(proc)),
         ]
         await asyncio.wait(pumps, return_when=asyncio.FIRST_COMPLETED)
+        if proc.poll() is not None:
+            code = EXITED
     finally:
         if starting:
             _starting -= 1
         # shielded whole: a cancelled bridge, a server shutting down, still ends its shell
-        release = asyncio.ensure_future(_release(slug, shell, pumps, claimed))
+        release = asyncio.ensure_future(_release(slug, shell, pumps, claimed, code))
         _releasing.add(release)
         release.add_done_callback(_releasing.discard)
         await asyncio.shield(release)
 
 
-async def _release(slug, shell, pumps, claimed):
+async def _release(slug, shell, pumps, claimed, code):
     """Stop the pumps, end the shell, close its PTY, give the claim back."""
     try:
         for task in pumps:
@@ -265,7 +312,7 @@ async def _release(slug, shell, pumps, claimed):
         if shell:
             if _live.get(slug) is shell:
                 del _live[slug]
-            await shell.end()
+            await shell.end(code)
             os.close(shell.fd)
     finally:
         if claimed:

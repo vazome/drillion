@@ -2,9 +2,9 @@
 
 Every route that touches progress is a plain `def` doing it inside a `state.writing()`
 or `state.reading()` block: an `async def` blocking on that lock would freeze the whole
-server, while FastAPI runs sync handlers in a threadpool. The async ones are the two
-websockets and the routes that end terminals (restore, erase, repository reset), which
-await `terminal` and push their blocking work to a thread."""
+server, while FastAPI runs sync handlers in a threadpool. The async ones are those that
+await `terminal` directly (the terminal socket, restore, erase, repository reset) and the
+language server's socket; they push their blocking work to a thread."""
 
 import asyncio
 import functools
@@ -711,7 +711,7 @@ async def reset_repo(slug: str):
     found = await asyncio.to_thread(_git_sitting, slug)
     if found is None:
         raise HTTPException(404, f"no git sitting open on {slug!r}")
-    async with terminal.turn(slug):
+    async with terminal.admitted(), terminal.turn(slug):
         await terminal.end(slug)
         await asyncio.to_thread(gitrepo.discard, slug)
     # an append keeps the inode, so a shell's Landlock grant on the file survives
