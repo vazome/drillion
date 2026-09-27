@@ -8,7 +8,7 @@ export type Grade = "quick" | "pass" | "struggled" | "abandoned";
 export interface Meta {
   topic: number; title: string;
   difficulty: "easy" | "medium" | "hard"; tier?: "core" | "advanced" | "packages"; track?: string;
-  kind: "python" | "manifest" | "helm" | "docker" | "sql";
+  kind: "python" | "manifest" | "helm" | "docker" | "sql" | "git";
   /** a Helm task's one hole: the chart path the learner's file stands in for */
   edits?: string;
   tags: string[]; source?: string;
@@ -105,7 +105,7 @@ export interface Task {
    *  the grade, and are absent on a pass archived before a run recorded it. */
   archive: {
     date: string; grade: Grade; code: string | null;
-    python?: string; validator?: string; kubernetes?: string; helm?: string; hadolint?: string; pglite?: string; seed?: number; revision?: string;
+    python?: string; validator?: string; kubernetes?: string; helm?: string; hadolint?: string; pglite?: string; git?: string; seed?: number; revision?: string;
   }[];
   /** The learner's one note on the task, `""` when there is none — `PUT /api/task/{slug}/note`. */
   note: string;
@@ -203,3 +203,7 @@ export const FOCUS_SAVED = "drillion-focus";
 /** Set the one focus new picks come from, or clear it with null. */
 export const setFocus = (tag: string | null) =>
   post("/focus", { tag }).then(() => { dispatchEvent(new Event(FOCUS_SAVED)); });
+
+/** Put a git task's sitting back the way it started; the terminal's socket closes with 4001. */
+export const resetRepo = (slug: string) =>
+  post(`/task/${encodeURIComponent(slug)}/repo/reset`);

@@ -1,13 +1,13 @@
 import { memo, useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
-import { Button, Card, Icon, Collapsible, ConflictBanner, DepLineage, EmptyState, FailedCase, Kbd, NoteField, GraceNotice, NoticeBanner, RequiresTag, RowFlags, SpecText, StatusBadge, TaskPath, Timer, StuckNudge } from "./ds/index.js";
-import { ApiError, api, post, type Task as TaskData, type RunResult, type Case, type Diagnostic } from "./api";
+import { Button, Card, Icon, Collapsible, ConflictBanner, DepLineage, EmptyState, FailedCase, Kbd, NoteField, GraceNotice, NoticeBanner, RequiresTag, RowFlags, SpecText, StatusBadge, TaskPath, Terminal, Timer, StuckNudge } from "./ds/index.js";
+import { ApiError, api, post, resetRepo, type Task as TaskData, type RunResult, type Case, type Diagnostic } from "./api";
 import { Centre, depsHref, prefetch, taskHref } from "./Deps";
 import { plural, secs, topicNo } from "./format";
 import { inDays, strength } from "./strength";
 import { DiffView, Editor } from "./Editor";
 import { ChartFiles, ManifestFailure } from "./ManifestWorkspace";
 import { useDraft } from "./useDraft";
-import { setPrefs, usePrefs, type Prefs } from "./prefs";
+import { fontStack, setPrefs, usePrefs, type Prefs } from "./prefs";
 import { resultBounds, Splitter, TaskPanes } from "./TaskPanes";
 import { Crumbs } from "./Shell";
 import { useNarrow } from "./narrow";
@@ -27,7 +27,7 @@ const clockOf = (n: number) => `${Math.floor(n / 60)}:${String(n % 60).padStart(
  *  its text changes. */
 const Spec = memo(SpecText);
 /** A reference shown with nothing of the learner's to diff against, highlighted as its file. */
-const FENCE: Record<TaskData["meta"]["kind"], string> = { python: "python", docker: "dockerfile", manifest: "yaml", helm: "yaml", sql: "sql" };
+const FENCE: Record<TaskData["meta"]["kind"], string> = { python: "python", docker: "dockerfile", manifest: "yaml", helm: "yaml", sql: "sql", git: "shell" };
 
 /** A refused action, shown beside the control that asked for it. */
 type Gate = { at: "hints" | "solution" | "editor" | "note"; message: string } | null;
@@ -97,13 +97,14 @@ function Review({ kind, mine, reference, dark, prefs, narrow, fresh }: {
 }
 
 /** What the learner is checking, by kind: the idle and running lines name it. */
-const FILE: Record<TaskData["meta"]["kind"], string> = { python: "code", docker: "Dockerfile", manifest: "manifest", helm: "chart", sql: "SQL" };
+const FILE: Record<TaskData["meta"]["kind"], string> = { python: "code", docker: "Dockerfile", manifest: "manifest", helm: "chart", sql: "SQL", git: "repository" };
 const CHECKS: Record<TaskData["meta"]["kind"], string> = {
   python: "pytest, on freshly generated data.",
   docker: "hadolint, then the build context, then the rules.",
   manifest: "the Kubernetes schema, offline, then the rules.",
   helm: "Helm renders the chart, then the schema and the rules.",
   sql: "Postgres runs it on this sitting's data and on a hidden second dataset, then the rules.",
+  git: "git compares your repository with the answer key's: every branch, HEAD, the staging area, and origin.",
 };
 /** The tabs around the editor, named for what they hold. A Helm chart keeps the default words. */
 const TABS: Partial<Record<TaskData["meta"]["kind"], { label: string; partOf: string }>> = {
@@ -469,6 +470,12 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
     }
   };
 
+  /** Reset repository lives in the terminal's own head, not the toolbar: the command history
+   *  the terminal keeps is not something Run or Submit ever touch. */
+  const onResetRepo = () => {
+    if (confirm("Put the repository back as the task set it up? Your command history is kept.")) void resetRepo(slug);
+  };
+
   /** A Helm run that named a line in the learner's own file marks it, as a syntax error does.
    *  Kept stable across the clock's ticks, since a new one redraws the editor's diagnostics. */
   const edits = task?.meta.edits;
@@ -640,7 +647,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
           {/* first in the DOM and drawn below the editor: Tab reaches Run before it lands in Monaco,
             * where Tab only indents */}
           <div role="toolbar" aria-label="Grade your file" className={css.grading}>
-            <span className={css.mono}>{plural(submits, "submit")}{attempt ? ` · seed ${attempt.seed}` : ""}</span>
+            <span className={css.mono}>{meta.kind === "git" ? "" : `${plural(submits, "submit")}${attempt ? ` · seed ${attempt.seed}` : ""}`}</span>
             {/* the marker lives inside the spacer, which is allowed to shrink below its own
               * content: a status that appears while you type must not re-wrap the row and
               * push the editor down under the cursor */}
@@ -663,17 +670,29 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
             </Button>
           </div>
 
-          <div className={css.editorBox}>
-            <div className={css.fill}>
-              {chart && meta.edits ? (
-                // keyed by task: a new task opens on the learner's own file
-                <ChartFiles key={slug} edits={meta.edits} chart={task.chart} labels={TABS[meta.kind]}
-                  diagnostics={result.state === "failed" ? result.diagnostics : []}>
-                  {editor}
-                </ChartFiles>
-              ) : editor}
+          {meta.kind === "git" ? (
+            <div style={{ height: "clamp(280px, 42vh, 560px)" }} onKeyDown={(e) => {
+              if (e.key === "Enter" && e.shiftKey && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); }
+            }}>
+              <Terminal key={slug} slug={slug} dark={dark} live={hasAttempt && !passed}
+                fontFamily={fontStack(prefs.font)} fontSize={prefs.fontSize}
+                idleNote={passed ? "Passed. The shell is closed; your repository was graded as you left it."
+                                 : "No attempt is open. The last output stays here; the shell starts with the next attempt."}
+                actions={<Button variant="quiet" onClick={onResetRepo}><Icon name="Reset" size={14} />Reset repository</Button>} />
             </div>
-          </div>
+          ) : (
+            <div className={css.editorBox}>
+              <div className={css.fill}>
+                {chart && meta.edits ? (
+                  // keyed by task: a new task opens on the learner's own file
+                  <ChartFiles key={slug} edits={meta.edits} chart={task.chart} labels={TABS[meta.kind]}
+                    diagnostics={result.state === "failed" ? result.diagnostics : []}>
+                    {editor}
+                  </ChartFiles>
+                ) : editor}
+              </div>
+            </div>
+          )}
           </>}
 
           {review && !passed ? null : <ResultPane narrow={narrow} label={ungraded ? "Output of your run" : resultNo ? `Result of submit ${resultNo}` : "Result"}>
@@ -706,7 +725,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
             ) : null}
 
             {(result.state === "failed" || result.state === "ran") && result.output ? (
-              <Collapsible label={meta.kind === "python" ? "Full output" : meta.kind === "sql" ? "Expected result" : "Validator details"} meta={`${{ python: "pytest", docker: "hadolint", sql: "the answer key" }[meta.kind as string] ?? "raw report"} · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
+              <Collapsible label={meta.kind === "python" ? "Full output" : meta.kind === "sql" ? "Expected result" : meta.kind === "git" ? "Your repository" : "Validator details"} meta={`${{ python: "pytest", docker: "hadolint", sql: "the answer key", git: "git log --graph" }[meta.kind as string] ?? "raw report"} · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
                 {result.output}
               </Collapsible>
             ) : null}
