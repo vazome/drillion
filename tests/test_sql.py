@@ -128,6 +128,14 @@ BREAKS = {
         (" CHECK (role IN ('owner', '{role}'))", ""),
         ("email text NOT NULL UNIQUE", "email text UNIQUE"),
         ("name text NOT NULL UNIQUE", "name varchar(100) NOT NULL UNIQUE"),
+        (
+            "  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n  team_id",
+            "  id integer NOT NULL DEFAULT 1,\n  team_id",
+        ),
+        (
+            "  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n  team_id",
+            "  id integer GENERATED ALWAYS AS IDENTITY,\n  team_id",
+        ),
     ],
     "337_sql_safe_migration": [
         ("\n  ALTER COLUMN plan SET DEFAULT 'free',", ""),
@@ -147,6 +155,7 @@ BREAKS = {
             "OLD.{watched} IS DISTINCT FROM NEW.{watched}",
             "OLD.{other} IS DISTINCT FROM NEW.{other}",
         ),
+        ("now()", "TIMESTAMP '2001-01-01'"),
     ],
 }
 
@@ -294,6 +303,25 @@ def test_a_hard_coded_answer_fails_on_the_hidden_dataset():
 
 
 @needs_pglite
+def test_an_error_on_the_hidden_dataset_keeps_its_rows_hidden():
+    meta = _sql_tasks()["324_sql_first_select"]
+    brief = manifest.generate_brief(meta, 0)
+    people = _module(meta).rows(random.Random("rows:0"), brief)["customers"]
+    hidden = _module(meta).rows(random.Random("hidden:0"), brief)["customers"]
+    only_shown = next(c["name"] for c in people if c["name"] not in str(hidden))
+    key = kinds.of(meta).answer_key(meta, brief)
+    leak = (
+        "DO $$ BEGIN IF NOT EXISTS (SELECT FROM customers "
+        f"WHERE name = '{only_shown}') THEN "
+        "RAISE EXCEPTION 'leaked %', (SELECT string_agg(name, ',') FROM customers); "
+        "END IF; END $$;\n"
+    )
+    passed, diagnostics, report, rendered = _graded(meta, brief, leak + key)
+    assert not passed and "hidden" in diagnostics[0]["message"]
+    assert "leaked" not in str((diagnostics, report, rendered))
+
+
+@needs_pglite
 def test_a_syntax_error_marks_its_own_line():
     meta = _sql_tasks()["324_sql_first_select"]
     brief = manifest.generate_brief(meta, 0)
@@ -345,6 +373,23 @@ def test_selfcheck_fails_a_key_that_cannot_tell_a_hard_coded_answer():
     finally:
         path.unlink()
     assert not passed and "same rows on both datasets" in diagnostics[0]["message"]
+
+
+@needs_pglite
+def test_a_key_longer_than_the_rows_compared_is_the_tasks_bug():
+    """Only the first 1000 rows come back, so a difference after them could never show."""
+    meta = _sql_tasks()["324_sql_first_select"]
+    brief = manifest.generate_brief(meta, 0)
+    extra = kinds.of(meta).extra(meta, brief, 0)
+    extra["sql"]["key"] = "SELECT g FROM generate_series(1, 1001) AS g"
+    last_differs = "SELECT least(g, 1000) AS g FROM generate_series(1, 1001) AS g"
+    path = meta["dir"] / f"_test_{uuid.uuid4().hex}.sql"
+    path.write_text(last_differs, encoding="utf-8")
+    try:
+        with pytest.raises(manifest.Rejected, match="1000 rows"):
+            runner.run_manifest(meta, brief, learner=path, **extra)
+    finally:
+        path.unlink()
 
 
 @needs_pglite

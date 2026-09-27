@@ -699,16 +699,9 @@ def _run_passes(s, passes):
 def _hidden_rules(s, key, mine):
     """The hidden dataset says only which part differed, never its rows."""
     if e := mine.get("error"):
-        answer(
-            False,
-            [
-                (
-                    None,
-                    "On a second dataset the grader keeps hidden, your SQL fails: "
-                    + e["message"],
-                )
-            ],
-        )
+        # its message can carry hidden rows, through RAISE if nothing else
+        said = f"On a second dataset the grader keeps hidden, your SQL fails with SQLSTATE {e['code']}"
+        answer(False, [(None, said)])
     if key["result"] is not None and (
         found := differ(key["result"], mine["result"], s["ordered"])
     ):
@@ -768,6 +761,14 @@ def grade_sql(grade):
     for p in (key, key_hidden):
         if e := p.get("setup") or p.get("error"):
             answer(False, broken=f"the answer key does not run: {e['message']}")
+        # a learner's count has to equal the key's, so a key inside the cut keeps theirs whole
+        if any(
+            r and "rows" in r and r["count"] > len(r["rows"])
+            for r in (p["result"], *p["probes"].values())
+        ):
+            answer(
+                False, broken="the answer key returns more than the 1000 rows compared"
+            )
     if mine.get("setup"):
         answer(False, broken=f"the database did not load: {mine['setup']['message']}")
     if e := mine["error"]:
