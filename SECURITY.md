@@ -8,7 +8,8 @@ the tasks ship inside the Docker image, so a contributed task is code execution 
 machine. That is what the sandbox is for.
 
 - **Graded code runs in a sandboxed subprocess** (`src/drillion/sandbox.py`): pytest for a Python
-  task, and for a manifest the pinned kubeconform plus the task's `grade.py`. What it
+  task, for a manifest the pinned kubeconform plus the task's `grade.py`, and for SQL the
+  task's `grade.py` plus Node running the pinned PGlite. What it
   can reach depends on the host kernel under the container; `drillion doctor` prints the tier
   in force and, when it is not Landlock, why. drillion ships only as a Linux image, so Landlock
   is the tier that counts. The image is an additional process boundary, not a
@@ -54,7 +55,8 @@ whole ruleset fail.
   the files under it, `progress.sqlite3` included, are not readable. The one subtree under it
   that is readable is `tools/`, which holds the checksum-pinned graders and is also
   executable: a manifest task is graded by running kubeconform, and a Helm task by running Helm
-  and then kubeconform, and a Dockerfile task by running hadolint. No Dockerfile is ever built.
+  and then kubeconform, a Dockerfile task by running hadolint, and a SQL task by running Node
+  on PGlite, Postgres compiled to WASM, from `tools/pglite/`. No Dockerfile is ever built.
 - **Writes** are confined to the scratch directory.
 - **TCP** — every bind and connect is refused, on ABI 4 and above. UDP and Unix sockets are
   not covered by Landlock; on ABI 6 and above, abstract Unix sockets and signals are scoped

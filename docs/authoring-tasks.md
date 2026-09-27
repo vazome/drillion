@@ -27,12 +27,12 @@ tiered on the solution, while
 lines you can only write once you have seen the trick is `hard`. Anchor the call on the task's
 `## Rules` — rules are where the traps live — and grade a new task against the rubric the rest
 were graded against: [difficulty-rubric.md](difficulty-rubric.md).
-Today: 51 easy · 210 medium · 62 hard.
+Today: 54 easy · 219 medium · 65 hard.
 
 **track** — one per task: a themed run through the catalogue that cuts across tiers. The home
 screen offers each track as a pill, and picking one sets the **focus**. A Python task that names
 none is on `python`; the Kubernetes manifests say `track: kubernetes`, the Helm charts
-`track: helm`, and the Dockerfiles `track: docker`. Name a track only when
+`track: helm`, the Dockerfiles `track: docker`, and the SQL tasks `track: sql`. Name a track only when
 the task belongs to a run other than `python`, and give the run a logo in `web/public/tracks/`.
 
 **tags** — what you practise. Lowercase, kebab-case, 1–3 per task, and one rule decides
@@ -44,7 +44,8 @@ every one of them:
 could sit down and get better at, and something a *future* task could also be tagged with.
 `flatten-array`, `phone-screens` and `take-home-task-2` are not. They name one task and could
 never name another. The same holds on the infra tracks: `probes`, `multi-stage` and
-`layer-cache` are tags, `statefulset` and `distroless` are not. A task never repeats its
+`layer-cache` are tags, `statefulset` and `distroless` are not; on `sql`, `joins`,
+`window-functions` and `constraints` are tags, and `DISTINCT ON` is not. A task never repeats its
 track as a tag, since focus and the catalogue already match the track.
 
 Every tag has at least two tasks, and a new tag should arrive with two contrasting contexts.
@@ -64,8 +65,8 @@ it — and `POST /api/focus` sets it.
 
 One folder per task, `tasks/<NNN>_<name>/`; copy the shape of an existing one.
 
-`<NNN>` is the task's place in the curriculum, `001`–`323` with no gaps, so the next task you add is
-`324`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
+`<NNN>` is the task's place in the curriculum, `001`–`338` with no gaps, so the next task you add is
+`339`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
 always numbers below its own, and `doctor` will not let that stop being true. Append, never insert —
 inserting means rewriting every number after it, and [ADR-0006](adr/0006-the-fundamentals-come-first.md)
 says the two renumberings drillion has had are the last two.
@@ -214,6 +215,40 @@ info is advice, `# hadolint ignore=` is ignored), then the context check, then `
 Nothing is built. Give the task `track: docker`. Every rule the README states needs a row in
 `tests/test_docker.py` that breaks it and fails, through the real pipeline.
 
+## SQL tasks
+
+A task whose frontmatter says `kind: sql` is a database with a question about it, and
+`edits: task.sql`. Give it `track: sql`; `ordered: true` when the row order is part of the
+answer, and `explain: true` when `check()` reads the plan. It has a manifest task's brief and
+README placeholders, and in place of the chart:
+
+- **`db/schema.sql`**: the tables, shown read-only in tabs and run before every pass. It holds
+  no rows: those come from `rows()`. `db/task.sql` must not exist.
+- **`task.sql`**: the learner's file, empty.
+- **`solution.sql`**: the answer key, filled with `str.format`, so a brace SQL needs (a JSONB
+  literal) is written `{{` and `}}`. Why and You get cannot hold a brace at all.
+- **`grade.py`**: `brief(r)` as for a manifest, and `rows(r, brief)`, which returns
+  `{table: [row, ...]}` with each row a dict of column to value; a date is a `date` or ISO
+  string, JSON is a dict or list. Optionally `probes(brief)`, `{sentence: sql}`, where the
+  sentence is what the learner reads when the probe disagrees, and `check(result, brief)`,
+  where `result` has the learner's `fields`, `rows`, `probes` and, with `explain: true`,
+  `nodes`, the plan's node types.
+
+A grade runs four passes on one PGlite: the answer key and then the learner's SQL, each on
+the data shown and on a hidden second dataset grown from the same seed. There are three
+shapes of task, one model:
+
+- **a query**: the last statement's rows are compared with the answer key's, column names
+  and order included, values as Postgres prints them, numbers as decimals;
+- **a change to the data**: probes read the tables back afterwards;
+- **a schema**: probes read `information_schema` and try the writes each rule is about. A
+  probe asks about behaviour, never a name the learner was free to choose, such as a
+  constraint's; an expected error agrees on its SQLSTATE alone.
+
+`selfcheck` fails a query task whose answer key returns no rows on either dataset, or the
+same rows on both, since that task cannot tell a copied answer from a real one. Every rule
+the README states needs a row in `tests/test_sql.py` that breaks it and fails.
+
 ## When a new task does not show up
 
 A folder the catalogue cannot read is **skipped**, not reported: a half-written task must never
@@ -229,7 +264,7 @@ Run `uv run drillion doctor` — it reports every rule the folder breaks, not ju
 
 `uv run drillion selfcheck` splices `_reference` into every file and runs the tests; it must be
 green on Python 3.14 before a task is trusted. But it only counts tasks the catalogue already
-accepted, so if it still says `323/323` after you added one, `doctor` is where to look.
+accepted, so if it still says `338/338` after you added one, `doctor` is where to look.
 
 ## Retired tags
 

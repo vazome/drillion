@@ -15,8 +15,9 @@
 3. **Run** saves your region into the file and runs that file's pytest test with the attempt's
    seed. A manifest task instead validates your YAML with kubeconform, a Helm task renders it
    with `helm template` and lints it with `helm lint --strict`, and a Dockerfile task lints it
-   with hadolint; each is then checked against the task's own rules, naming each field that is
-   wrong. Failures come back with the assertion lines mapped to editor line numbers, and
+   with hadolint, and a SQL task runs your SQL on Postgres (PGlite) beside the answer key, on
+   the data shown and on a hidden second dataset; each is then checked against the task's own
+   rules, naming each field that is wrong. Failures come back with the assertion lines mapped to editor line numbers, and
    whatever your own `print()` wrote is shown above them whether the tests passed or failed.
    A Run grades nothing — it is free and repeatable, however green it comes back. **Submit** is the
    same execution plus the claim that you are done: it costs an attempt, and on green it is

@@ -10,8 +10,8 @@ import logging
 
 import yaml
 
-from . import manifest, region, sandbox, tools
-from .catalogue import DOCKER, FILENAMES, HELM, MANIFEST, PYTHON, solution
+from . import manifest, pglite, region, sandbox, tools
+from .catalogue import DOCKER, FILENAMES, HELM, MANIFEST, PYTHON, SQL, solution
 from .region import Invalid, _solve
 
 __all__ = ["Invalid", "of"]
@@ -235,7 +235,7 @@ class _Manifest:
         # A grader upgraded under a live sitting still grades its stored brief; one that
         # can no longer read it is `run_manifest`'s Rejected, never the learner's failure.
         passed, diagnostics, report, rendered = runner.run_manifest(
-            meta, o["brief"], **self.extra(meta)
+            meta, o["brief"], **self.extra(meta, o["brief"], o.get("seed"))
         )
         return passed, {
             "headline": [d["message"] for d in diagnostics][:6],
@@ -246,7 +246,7 @@ class _Manifest:
             "rendered": rendered,
         }
 
-    def extra(self, meta):
+    def extra(self, meta, brief, seed, selfcheck=False):
         """What this kind adds to the grading job, as `run_manifest`'s keywords. A manifest
         adds nothing: it is validated as written."""
         return {}
@@ -276,7 +276,10 @@ class _Manifest:
 
         def judge():
             passed, diagnostics, *_ = runner.run_manifest(
-                meta, brief, learner=key, **self.extra(meta)
+                meta,
+                brief,
+                learner=key,
+                **self.extra(meta, brief, SELFCHECK_SEED, selfcheck=True),
             )
             return passed, diagnostics[0]["message"] if diagnostics else ""
 
@@ -308,7 +311,7 @@ class _Helm(_Manifest):
     def judges(self):
         return {**super().judges(), "helm": tools.pin_for(tools.HELM).version}
 
-    def extra(self, meta):
+    def extra(self, meta, brief, seed, selfcheck=False):
         return {"helm": manifest.helm_job(meta)}
 
 
@@ -336,11 +339,45 @@ class _Docker(_Manifest):
     def judges(self):
         return {"hadolint": tools.pin_for(tools.HADOLINT).version}
 
-    def extra(self, meta):
+    def extra(self, meta, brief, seed, selfcheck=False):
         return {"docker": manifest.docker_job(meta)}
 
 
-KINDS = {PYTHON: _Python(), MANIFEST: _Manifest(), HELM: _Helm(), DOCKER: _Docker()}
+class _Sql(_Manifest):
+    """A database with a question about it: the learner's `task.sql` runs on PGlite after
+    the answer key, on the data shown and on a hidden second dataset. See `grade_sql` in
+    `grading.py`."""
+
+    name = SQL
+    filename = FILENAMES[SQL]
+    language = "pgsql"
+    suffix = ".sql"
+
+    def validate(self, edited, src):
+        """Nothing to parse on save: Postgres says it better, with the line, on the run."""
+        return edited
+
+    def answer_key(self, meta, brief):
+        """`solution.sql` with its placeholders filled in; a brace SQL needs is doubled."""
+        return manifest.render(solution(meta).read_text(encoding="utf-8"), brief)
+
+    def revision(self, meta, src):
+        return manifest.sql_fingerprint(meta)
+
+    def judges(self):
+        return {"pglite": pglite.VERSION}
+
+    def extra(self, meta, brief, seed, selfcheck=False):
+        return {"sql": manifest.sql_job(meta, brief, seed, selfcheck)}
+
+
+KINDS = {
+    PYTHON: _Python(),
+    MANIFEST: _Manifest(),
+    HELM: _Helm(),
+    DOCKER: _Docker(),
+    SQL: _Sql(),
+}
 
 
 def of(meta):

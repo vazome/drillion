@@ -1,4 +1,4 @@
-"""The grading child for every kind but python: a manifest, a Helm chart or a Dockerfile.
+"""The grading child for every kind but python: a manifest, a Helm chart, a Dockerfile or SQL.
 
 `runner.run_manifest` copies this file into the sandbox's scratch directory and runs it with
 two paths: the job to do, and the file to answer in. Everything it needs arrives as JSON,
@@ -7,10 +7,13 @@ import it tries, and on such a tier it goes without."""
 
 import importlib.util
 import json
+import random
 import re
 import shutil
 import subprocess
 import sys
+from collections import Counter
+from decimal import Decimal
 from pathlib import Path
 from typing import NoReturn
 
@@ -516,7 +519,310 @@ def grade_manifest(grade):
     answer(True, report=report)
 
 
-GRADERS = {"helm": grade_helm, "docker": grade_docker}
+NUMBER = re.compile(r"-?\d+(\.\d+)?([eE][-+]?\d+)?")
+MAX_SHOWN = 20  # rows a result table shows before it says how many more
+HIDDEN = (
+    "This matches on the data shown, and returns {what} on a second dataset the grader "
+    "keeps hidden. A value copied from the data shown, or a condition that only happens "
+    "to fit it?"
+)
+HIDDEN_WHAT = {
+    "none": "no result",
+    "columns": "different columns",
+    "count": "a different number of rows",
+    "row": "different rows",
+    "order": "the rows in a different order",
+}
+
+
+def sql_value(text):
+    """What a value compares as: a Decimal when Postgres printed a number, its text if not."""
+    if text is not None and NUMBER.fullmatch(text):
+        return Decimal(text)
+    return text
+
+
+def _shown(row):
+    return "(" + ", ".join("NULL" if v is None else v for v in row) + ")"
+
+
+def differ(expected, got, ordered):
+    """(what, message) for the first way `got` is not `expected`, or None when they agree."""
+    if got is None:
+        return "none", (
+            "your SQL returned no rows at all: its last statement has to be a SELECT"
+        )
+    if got["fields"] != expected["fields"]:
+        return "columns", (
+            f"columns: expected {', '.join(expected['fields'])}; "
+            f"got {', '.join(got['fields'])}"
+        )
+    if got["count"] != expected["count"]:
+        return "count", f"expected {expected['count']} rows, got {got['count']}"
+    want = [tuple(map(sql_value, row)) for row in expected["rows"]]
+    have = [tuple(map(sql_value, row)) for row in got["rows"]]
+    missing = Counter(want) - Counter(have)
+    if missing:
+        row = expected["rows"][want.index(next(iter(missing)))]
+        return "row", f"a row the answer has and yours does not: {_shown(row)}"
+    if ordered:
+        for n, (w, h) in enumerate(zip(want, have), 1):
+            if w != h:
+                return "order", (
+                    f"row {n}: expected {_shown(expected['rows'][n - 1])}, got "
+                    f"{_shown(got['rows'][n - 1])}. The order matters here"
+                )
+    return None
+
+
+def probe_differ(want, got):
+    """What went differently when a probe ran after the learner's SQL, or None. A probe that
+    must fail agrees on its SQLSTATE alone, since its message names what the learner chose."""
+    if got is None:
+        return "did not run"
+    if "error" in want:
+        if "error" not in got:
+            return (
+                f"expected an error with SQLSTATE {want['error']['code']}, "
+                "and it succeeded"
+            )
+        if got["error"]["code"] != want["error"]["code"]:
+            return (
+                f"expected SQLSTATE {want['error']['code']}, got "
+                f"{got['error']['code']}: {got['error']['message']}"
+            )
+        return None
+    if "error" in got:
+        return f"failed: {got['error']['message']} (SQLSTATE {got['error']['code']})"
+    found = differ(want, got, ordered=False)
+    return found and found[1]
+
+
+def table(result):
+    """A result as psql would print it, cut at MAX_SHOWN rows."""
+    if result is None:
+        return "(no result: the last statement returned no columns)"
+    rows = [
+        ["NULL" if v is None else v for v in row] for row in result["rows"][:MAX_SHOWN]
+    ]
+    widths = [
+        max([len(f), *(len(row[i]) for row in rows)])
+        for i, f in enumerate(result["fields"])
+    ]
+
+    def line(cells):
+        return " | ".join(c.ljust(w) for c, w in zip(cells, widths)).rstrip()
+
+    more = result["count"] - len(rows)
+    tail = f"({result['count']} rows{f', {more} not shown' if more > 0 else ''})"
+    return "\n".join(
+        [
+            line(result["fields"]),
+            "-+-".join("-" * w for w in widths),
+            *map(line, rows),
+            tail,
+        ]
+    )
+
+
+def line_of(text, position):
+    """Postgres counts an error's position in characters from 1, across the whole script."""
+    return text[: position - 1].count("\n") + 1
+
+
+def _param(value):
+    """A row value as sqlrun binds it: JSON for a dict or list, ISO for a date."""
+    if isinstance(value, (dict, list)):
+        return json.dumps(value)
+    return value.isoformat() if hasattr(value, "isoformat") else value
+
+
+def _nodes(plan):
+    """Every node type in an EXPLAIN (FORMAT JSON) plan, so a check can ask for WindowAgg."""
+    found, stack = set(), [json.loads(plan)[0]["Plan"]] if plan else []
+    while stack:
+        node = stack.pop()
+        found.add(node["Node Type"])
+        stack += node.get("Plans", [])
+    return found
+
+
+def _datasets(grade, brief, seed):
+    """The rows of the data shown and of the hidden dataset, ready to bind."""
+    return [
+        {
+            table_: [{c: _param(v) for c, v in row.items()} for row in rows]
+            for table_, rows in grade.rows(
+                random.Random(f"{name}:{seed}"), brief
+            ).items()
+        }
+        for name in ("rows", "hidden")
+    ]
+
+
+def _run_passes(s, passes):
+    """sqlrun's four passes, or an answer: a learner's SQL that never finishes or stops
+    PGlite is theirs to fix, since `selfcheck` has already shown the key finishes."""
+    Path("sqlrun.mjs").write_text(s["runner"], encoding="utf-8")
+    Path("sqljob.json").write_text(
+        json.dumps({"pglite": s["pglite"], "schema": s["schema"], "passes": passes}),
+        encoding="utf-8",
+    )
+    try:
+        subprocess.run(
+            [s["node"], *s["flags"], "sqlrun.mjs", "sqljob.json", "sqlout.json"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=job["validator_seconds"],
+        )
+    except subprocess.TimeoutExpired:
+        said = (
+            f"your SQL did not finish within {job['validator_seconds']}s: look for a "
+            "WITH RECURSIVE that never stops, or a join with no condition"
+        )
+        answer(False, [(None, said, "task.sql")])
+    except OSError as exc:
+        answer(False, broken=f"PGlite did not run: {exc}")
+    try:
+        return json.loads(Path("sqlout.json").read_text(encoding="utf-8"))["passes"]
+    except OSError, ValueError:
+        # Node's own dying words are a V8 stack, and the sandbox's memory cap is the cause
+        said = (
+            "your SQL stopped PGlite, most likely by running out of memory: look for a "
+            "query that returns or builds millions of rows, such as a join with no "
+            "condition"
+        )
+        answer(False, [(None, said, "task.sql")])
+
+
+def _hidden_rules(s, key, mine):
+    """The hidden dataset says only which part differed, never its rows."""
+    if e := mine.get("error"):
+        # its message can carry hidden rows, through RAISE if nothing else
+        said = f"On a second dataset the grader keeps hidden, your SQL fails with SQLSTATE {e['code']}"
+        answer(False, [(None, said)])
+    if key["result"] is not None and (
+        found := differ(key["result"], mine["result"], s["ordered"])
+    ):
+        answer(False, [(None, HIDDEN.format(what=HIDDEN_WHAT[found[0]]))])
+    for name, want in key["probes"].items():
+        if probe_differ(want, mine["probes"].get(name)):
+            said = (
+                f"{name}: right on the data shown, wrong on a second dataset the "
+                "grader keeps hidden"
+            )
+            answer(False, [(None, said)])
+
+
+def _selfcheck_rules(key, hidden):
+    """A query task whose key cannot tell a real answer from a hard-coded one is broken."""
+    if key["result"] is None:
+        return
+    if not key["result"]["count"] or not hidden["result"]["count"]:
+        answer(False, [(None, "the answer key returns no rows on one of the datasets")])
+    if Counter(map(tuple, key["result"]["rows"])) == Counter(
+        map(tuple, hidden["result"]["rows"])
+    ):
+        said = (
+            "the answer key returns the same rows on both datasets, so a hard-coded "
+            "answer passes"
+        )
+        answer(False, [(None, said)])
+
+
+def grade_sql(grade):
+    """A SQL sitting: the answer key, then the learner's SQL, each on the data shown and on
+    a hidden second dataset, in one PGlite; then the probes, then the task's `check()`.
+    The key's own failures are the task's bug and never the learner's."""
+    s, brief = job["sql"], job["brief"]
+    text = Path(job["learner"]).read_text(encoding="utf-8")
+    if not text.strip():
+        answer(
+            False,
+            [(None, "task.sql is empty: write your SQL before submitting", "task.sql")],
+        )
+    try:
+        datasets = _datasets(grade, brief, s["seed"])
+        probes = list(grade.probes(brief).items()) if hasattr(grade, "probes") else []
+    except Exception as exc:
+        answer(False, broken=f"{type(exc).__name__}: {exc}")
+    passes = [
+        {
+            "rows": rows,
+            "sql": sql,
+            "probes": probes,
+            "explain": s["explain"] and learner,
+        }
+        for sql, learner in ((s["key"], False), (text, True))
+        for rows in datasets
+    ]
+    key, key_hidden, mine, mine_hidden = _run_passes(s, passes)
+    for p in (key, key_hidden):
+        if e := p.get("setup") or p.get("error"):
+            answer(False, broken=f"the answer key does not run: {e['message']}")
+        # a learner's count has to equal the key's, so a key inside the cut keeps theirs whole
+        if any(
+            r and "rows" in r and r["count"] > len(r["rows"])
+            for r in (p["result"], *p["probes"].values())
+        ):
+            answer(
+                False, broken="the answer key returns more than the 1000 rows compared"
+            )
+    if mine.get("setup"):
+        answer(False, broken=f"the database did not load: {mine['setup']['message']}")
+    if e := mine["error"]:
+        line = line_of(text, e["position"]) if e["position"] else None
+        where = f"line {line}: " if line else ""
+        answer(
+            False,
+            [(None, f"{where}{e['message']} (SQLSTATE {e['code']})", "task.sql", line)],
+        )
+    if mine["result"] is not None:
+        CURRENT["rendered"] = table(mine["result"])
+    if s["explain"] and mine["result"] is not None and mine["plan"] is None:
+        said = (
+            "task.sql must hold your query alone for the grader to read its plan: "
+            "remove the other statements"
+        )
+        answer(False, [(None, said, "task.sql")])
+    if key["result"] is not None and (
+        found := differ(key["result"], mine["result"], s["ordered"])
+    ):
+        answer(
+            False,
+            [(None, found[1])],
+            f"Expected, on the data shown:\n{table(key['result'])}",
+        )
+    for name, want in key["probes"].items():
+        got = mine["probes"].get(name)
+        if said := probe_differ(want, got):
+            answer(
+                False,
+                [(None, f"{name}: {said}")],
+                ""
+                if "error" in want
+                else f"Expected, after the answer key:\n{table(want)}",
+            )
+    _hidden_rules(s, key_hidden, mine_hidden)
+    if s["selfcheck"]:
+        _selfcheck_rules(key, key_hidden)
+    if hasattr(grade, "check"):
+        result = {
+            **(mine["result"] or {"fields": [], "rows": [], "count": 0}),
+            "probes": mine["probes"],
+            "nodes": _nodes(mine["plan"]),
+        }
+        try:
+            grade.check(result, brief)
+        except AssertionError as exc:
+            answer(False, [(None, str(exc))])
+        except Exception as exc:
+            answer(False, broken=f"{type(exc).__name__}: {exc}")
+    answer(True)
+
+
+GRADERS = {"helm": grade_helm, "docker": grade_docker, "sql": grade_sql}
 
 
 if __name__ == "__main__":

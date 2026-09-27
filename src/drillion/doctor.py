@@ -5,8 +5,18 @@ import re
 
 import yaml
 
-from . import kinds, manifest, sandbox, tools
-from .catalogue import DOCKER, HELM, MANIFEST, PYTHON, SECTION, SLUG, scan, solution
+from . import kinds, manifest, pglite, sandbox, tools
+from .catalogue import (
+    DOCKER,
+    HELM,
+    MANIFEST,
+    PYTHON,
+    SECTION,
+    SLUG,
+    SQL,
+    scan,
+    solution,
+)
 
 TAG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 MAX_TAGS = 3
@@ -152,12 +162,25 @@ def _docker_rules(meta):
     return out + _placeholder_rules(meta.get("spec_md", "")) + _render_rules(meta)
 
 
+def _sql_rules(meta):
+    """A SQL task's hole is `task.sql`, and nothing in `db/` may already sit where it goes.
+    Whether the answer key runs, and tells a real answer from a hard-coded one, is
+    `selfcheck`'s question, since only PGlite can answer it."""
+    out = _no_tier(meta, "a SQL task")
+    if meta.get("edits") not in (None, "task.sql"):
+        out.append(f"README.md: edits {meta['edits']!r} is not task.sql")
+    elif "dir" in meta and (meta["dir"] / "db" / "task.sql").exists():
+        out.append("db/task.sql: must not exist, the learner's file is the one")
+    return out + _placeholder_rules(meta.get("spec_md", "")) + _render_rules(meta)
+
+
 # One row per kind, as `catalogue.CHECKS` is: a new kind adds a row rather than a branch.
 KIND_RULES = {
     PYTHON: _python_rules,
     MANIFEST: _manifest_rules,
     HELM: _helm_rules,
     DOCKER: _docker_rules,
+    SQL: _sql_rules,
 }
 
 
@@ -286,7 +309,12 @@ def _graders(fetch):
                     tools.acquire(name)
             except (tools.Unsupported, tools.Rejected, OSError) as exc:
                 print(f"{name}: {exc}")
-    for name, status in tools.report():
+        try:
+            if pglite.installed() is None:
+                pglite.acquire()
+        except (tools.Rejected, OSError) as exc:
+            print(f"{pglite.NAME}: {exc}")
+    for name, status in [*tools.report(), (pglite.NAME, pglite.status())]:
         print(f"{name}: {status}")
 
 

@@ -16,8 +16,10 @@ words mean.
 The unit of practice: one folder under `tasks/`, holding one spec, one file to fill in, and the
 grader that judges it. A Python task keeps the last two in one `task.py`; a manifest task splits
 them into `task.yaml` and `grade.py`; a Helm task does the same beside the **chart** its
-`task.yaml` completes, and a Dockerfile task beside the **build context** its `Dockerfile` is
-written for. There are 323: 267 Python, 26 manifest, 15 Helm, 15 Dockerfile.
+`task.yaml` completes, a Dockerfile task beside the **build context** its `Dockerfile` is
+written for, and a SQL task splits them into `task.sql` and `grade.py` beside the
+**database** it asks about. There are 338: 267 Python, 26 manifest, 15 Helm, 15 Dockerfile,
+15 SQL.
 _Avoid_: exercise, drill, problem, kata, question
 
 **Slug**:
@@ -39,7 +41,7 @@ _Avoid_: complexity, hardness; and never `easy` as a **grade**
 
 **Track**:
 A themed run through the catalogue that cuts across tiers, one per task. A Python task that
-names none is on the `python` track.
+names none is on the `python` track; the others are `kubernetes`, `helm`, `docker` and `sql`.
 _Avoid_: course, path, series, curriculum
 
 **Tag**:
@@ -69,9 +71,26 @@ Shown read-only beside the editor, and every `COPY` source must be one of them. 
 built: there is no Docker engine inside drillion.
 _Avoid_: project, source tree, workspace
 
+**Database**:
+The files a SQL task ships under `db/`: `schema.sql`, which every pass of a grade runs before
+anything else. Shown read-only beside the editor.
+_Avoid_: fixture, seed data, dump
+
+**Dataset**:
+The rows a SQL task's `rows(r, brief)` grows from a seed. Every SQL grade runs on two: the one
+the learner's results are shown for, and a hidden one, so an answer copied from the first
+fails the second.
+_Avoid_: fixture, sample, test data
+
+**Probe**:
+A query a SQL task's grader runs after the learner's SQL, inside a transaction rolled back
+after it, and compares with the same probe run after the answer key. How a change to data
+or to the schema is judged, since it returns no rows of its own.
+_Avoid_: assertion, test query, check
+
 **Edits**:
 The path a Helm task's `task.yaml` stands in for in its chart: `values.yaml`, or one template.
-A Dockerfile task's is always `Dockerfile`. Fixed per task by its frontmatter, and the label
+A Dockerfile task's is always `Dockerfile`, and a SQL task's `task.sql`. Fixed per task by its frontmatter, and the label
 on the learner's own tab.
 _Avoid_: slot, target, learner file
 

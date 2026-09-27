@@ -27,7 +27,7 @@ const clockOf = (n: number) => `${Math.floor(n / 60)}:${String(n % 60).padStart(
  *  its text changes. */
 const Spec = memo(SpecText);
 /** A reference shown with nothing of the learner's to diff against, highlighted as its file. */
-const FENCE: Record<TaskData["meta"]["kind"], string> = { python: "python", docker: "dockerfile", manifest: "yaml", helm: "yaml" };
+const FENCE: Record<TaskData["meta"]["kind"], string> = { python: "python", docker: "dockerfile", manifest: "yaml", helm: "yaml", sql: "sql" };
 
 /** A refused action, shown beside the control that asked for it. */
 type Gate = { at: "hints" | "solution" | "editor" | "note"; message: string } | null;
@@ -97,12 +97,18 @@ function Review({ kind, mine, reference, dark, prefs, narrow, fresh }: {
 }
 
 /** What the learner is checking, by kind: the idle and running lines name it. */
-const FILE: Record<TaskData["meta"]["kind"], string> = { python: "code", docker: "Dockerfile", manifest: "manifest", helm: "chart" };
+const FILE: Record<TaskData["meta"]["kind"], string> = { python: "code", docker: "Dockerfile", manifest: "manifest", helm: "chart", sql: "SQL" };
 const CHECKS: Record<TaskData["meta"]["kind"], string> = {
   python: "pytest, on freshly generated data.",
   docker: "hadolint, then the build context, then the rules.",
   manifest: "the Kubernetes schema, offline, then the rules.",
   helm: "Helm renders the chart, then the schema and the rules.",
+  sql: "Postgres runs it on this sitting's data and on a hidden second dataset, then the rules.",
+};
+/** The tabs around the editor, named for what they hold. A Helm chart keeps the default words. */
+const TABS: Partial<Record<TaskData["meta"]["kind"], { label: string; partOf: string }>> = {
+  docker: { label: "Build context files", partOf: "the build context" },
+  sql: { label: "Database files", partOf: "the database" },
 };
 
 /** The first lines of the result panel: what happened, and what it cost. A Run never costs
@@ -558,7 +564,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
                     </div>
                     {a.revision ? (
                       <div className="tabular" style={{ fontSize: 12.5, color: "var(--text-faint)", fontFamily: "var(--font-mono)" }}>
-                        {a.python ? `Python ${a.python}` : a.hadolint ? `hadolint ${a.hadolint}` : `kubeconform ${a.validator} · Kubernetes ${a.kubernetes}`} · seed {a.seed} · grader {a.revision}
+                        {a.python ? `Python ${a.python}` : a.hadolint ? `hadolint ${a.hadolint}` : a.pglite ? `PGlite ${a.pglite}` : `kubeconform ${a.validator} · Kubernetes ${a.kubernetes}`} · seed {a.seed} · grader {a.revision}
                       </div>
                     ) : null}
                     {a.code ? <pre style={{ margin: "6px 0 0", fontSize: 12.5, whiteSpace: "pre-wrap", color: "var(--text-muted)" }}>{a.code}</pre> : null}
@@ -661,7 +667,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
             <div className={css.fill}>
               {chart && meta.edits ? (
                 // keyed by task: a new task opens on the learner's own file
-                <ChartFiles key={slug} edits={meta.edits} chart={task.chart} context={meta.kind === "docker"}
+                <ChartFiles key={slug} edits={meta.edits} chart={task.chart} labels={TABS[meta.kind]}
                   diagnostics={result.state === "failed" ? result.diagnostics : []}>
                   {editor}
                 </ChartFiles>
@@ -692,15 +698,15 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
               </Collapsible>
             ) : null}
 
-            {/* what Helm made of the chart: the thing to read before anything else, so it opens on a Run */}
+            {/* what Helm made of the chart, or what the SQL returned: the thing to read first, so it opens on a Run */}
             {rendered ? (
-              <Collapsible label="Rendered" meta={`helm template · ${plural(rendered.trimEnd().split("\n").length, "line")}`} defaultOpen={ungraded} style={{ marginTop: 8 }}>
+              <Collapsible label={meta.kind === "sql" ? "Your result" : "Rendered"} meta={`${meta.kind === "sql" ? "on the data shown" : "helm template"} · ${plural(rendered.trimEnd().split("\n").length, "line")}`} defaultOpen={ungraded} style={{ marginTop: 8 }}>
                 {rendered}
               </Collapsible>
             ) : null}
 
             {(result.state === "failed" || result.state === "ran") && result.output ? (
-              <Collapsible label={meta.kind === "python" ? "Full output" : "Validator details"} meta={`${meta.kind === "python" ? "pytest" : meta.kind === "docker" ? "hadolint" : "raw report"} · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
+              <Collapsible label={meta.kind === "python" ? "Full output" : meta.kind === "sql" ? "Expected result" : "Validator details"} meta={`${{ python: "pytest", docker: "hadolint", sql: "the answer key" }[meta.kind as string] ?? "raw report"} · ${plural(result.output.trimEnd().split("\n").length, "line")}`} style={{ marginTop: 8 }}>
                 {result.output}
               </Collapsible>
             ) : null}

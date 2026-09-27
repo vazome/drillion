@@ -1,0 +1,1 @@
+-- The database starts empty: your task.sql creates its tables.
