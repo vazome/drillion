@@ -34,6 +34,32 @@ BREAKS = {
         ("tail -n 1", "head -n 1"),
         (" -- docs/", ""),
     ],
+    "345_git_merge_a_branch": [
+        ("git merge --ff-only feature/{a}", "git merge --no-ff --no-edit feature/{a}"),
+        ("git branch -d feature/{a} feature/{b}", "git branch -d feature/{a}"),
+    ],
+    "346_git_resolve_a_conflict": [
+        ("git commit --no-edit", "true"),
+        ("'port = {port}'", "'port = {theirs}'"),
+    ],
+    "347_git_backport_a_fix": [
+        (
+            "git cherry-pick \"$(git log main --format=%H --grep='^fix {bug}$')\"",
+            "git merge --no-edit main",
+        ),
+        ("git switch main", "true"),
+    ],
+    "348_git_tidy_a_branch": [
+        (" -e '5s/^pick/drop/'", ""),
+        (" -e '4s/^pick/reword/'", ""),
+    ],
+    "349_git_fixup_commits": [
+        (" --autosquash", ""),
+    ],
+    "350_git_rebase_onto_main": [
+        ("git rebase main || true", "git merge --no-edit main || true"),
+        ("git branch -d feature/{feature}", "true"),
+    ],
 }
 
 
