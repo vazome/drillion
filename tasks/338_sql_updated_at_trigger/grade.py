@@ -1,8 +1,8 @@
 """What one sitting of 338 asks for: a trigger that keeps updated_at current when one column
 changes, and leaves it alone otherwise.
 
-The probes compare whether updated_at moved, never its value, since now() differs between
-the learner's run and the answer key's."""
+The probes compare whether updated_at reached the probe's own now(), never its value, since
+now() differs between the learner's run and the answer key's."""
 
 WORDS = ["draft", "notes", "plan", "minutes", "brief", "memo"]
 
@@ -23,7 +23,7 @@ def rows(r, b):
 
 def probes(b):
     w, o = b["watched"], b["other"]
-    moved = "SELECT updated_at > TIMESTAMP '2000-01-01' AS moved FROM documents WHERE id = {}"
+    moved = "SELECT updated_at >= now() AS current FROM documents WHERE id = {}"
     return {
         f"changing {w} moves updated_at": (
             f"UPDATE documents SET {w} = {w} || '!' WHERE id = 1; " + moved.format(1)

@@ -28,6 +28,17 @@ def probes(b):
     return {
         "the columns of teams": columns.format("teams"),
         "the columns of members": columns.format("members"),
+        "the primary keys": (
+            "SELECT k.table_name, k.column_name FROM information_schema.table_constraints c "
+            "JOIN information_schema.key_column_usage k USING (constraint_schema, constraint_name) "
+            "WHERE c.constraint_type = 'PRIMARY KEY' ORDER BY k.table_name"
+        ),
+        "every team and member gets its own id": (
+            TEAM + "INSERT INTO teams (name) VALUES ('u'); "
+            "INSERT INTO members (team_id, email) SELECT id, name || '@example.com' FROM teams; "
+            "SELECT (SELECT count(DISTINCT id) FROM teams) AS teams, "
+            "(SELECT count(DISTINCT id) FROM members) AS members"
+        ),
         "a new team gets an id by itself": (
             "INSERT INTO teams (name) VALUES ('a') RETURNING id IS NOT NULL AS given"
         ),
