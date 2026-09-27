@@ -714,7 +714,8 @@ async def reset_repo(slug: str):
     async with terminal.admitted(), terminal.turn(slug):
         await terminal.end(slug)
         await asyncio.to_thread(gitrepo.discard, slug)
-    # an append keeps the inode, so a shell's Landlock grant on the file survives
-    with found[0]["path"].open("a", encoding="utf-8") as history:
-        history.write("# repository reset\n")
+        # inside, so a restore or an abandon never lands between the reset and its mark.
+        # An append keeps the inode, so a shell's Landlock grant on the file survives
+        with found[0]["path"].open("a", encoding="utf-8") as history:
+            history.write("# repository reset\n")
     return {"reset": True}

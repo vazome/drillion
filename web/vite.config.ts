@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 // The API is served by `uv run drillion` on 8765; in dev Vite proxies to it. The language
-// server rides the same origin over a websocket, so it needs the proxy too.
+// server and a git task's terminal ride the same origin over websockets, so they need it too.
 const API = "http://127.0.0.1:8765";
 
 export default defineConfig({
@@ -21,6 +21,7 @@ export default defineConfig({
     proxy: {
       "/api": { target: API, headers: { Origin: API } },
       "/lsp": { target: API.replace("http", "ws"), ws: true, headers: { Origin: API } },
+      "/terminal": { target: API.replace("http", "ws"), ws: true, headers: { Origin: API } },
     },
   },
 });

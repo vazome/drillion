@@ -188,7 +188,7 @@ point.
 
 A checkout uses the host's `git`, `bash` and `nano`. A git task with no `git` on `PATH` says
 so and names the install, as a manifest task with kubeconform absent names `doctor --fetch`.
-`doctor` reports the git version and fails a git task when git is older than 2.40.
+`doctor` reports the git version, and opening a git task refuses a git older than 2.40.
 
 ## Surfaces
 

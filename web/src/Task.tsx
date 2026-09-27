@@ -678,7 +678,9 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
                 fontFamily={fontStack(prefs.font)} fontSize={prefs.fontSize}
                 idleNote={passed ? "Passed. The shell is closed; your repository was graded as you left it."
                                  : "No attempt is open. The last output stays here; the shell starts with the next attempt."}
-                actions={<Button variant="quiet" onClick={onResetRepo}><Icon name="Reset" size={14} />Reset repository</Button>} />
+                actions={hasAttempt && !passed
+                  ? <Button variant="quiet" onClick={onResetRepo}><Icon name="Reset" size={14} />Reset repository</Button>
+                  : undefined} />
             </div>
           ) : (
             <div className={css.editorBox}>
