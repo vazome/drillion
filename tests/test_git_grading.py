@@ -5,6 +5,7 @@ import importlib.util
 import os
 import shutil
 import subprocess
+import threading
 from datetime import datetime
 
 import httpx
@@ -141,6 +142,74 @@ def test_head_status_and_stash_are_each_named(git, tmp_path):
     r.git("stash", "-u")
     assert _diff(git, mine, key) == "the stash holds 1 entry, expected 0"
     assert _diff(git, mine, key, skip={"stash"}) is None
+
+
+def test_an_unstaged_change_that_holds_the_wrong_text_is_named(git, tmp_path):
+    def setup(repo, _b):
+        repo.commit("start", {"notes.md": "- one\n"})
+
+    mine, key = _two(git, tmp_path, setup)
+    git.Repo(key / "repo").write("notes.md", "- one\n- the note\n")
+    git.Repo(mine / "repo").write("notes.md", "the note was lost\n")
+    assert _diff(git, mine, key) == "notes.md does not hold what it should (not staged)"
+    git.Repo(mine / "repo").write("notes.md", "- one\n- the note\n")
+    assert _diff(git, mine, key) is None
+
+
+def test_a_staged_change_that_holds_the_wrong_text_is_named(git, tmp_path):
+    def setup(repo, _b):
+        repo.commit("start", {"a.txt": "a\n"})
+
+    mine, key = _two(git, tmp_path, setup)
+    for root, text in ((mine, "wrong\n"), (key, "right\n")):
+        r = git.Repo(root / "repo")
+        r.write("a.txt", text)
+        r.git("add", "a.txt")
+    assert _diff(git, mine, key) == "a.txt does not hold what it should (staged)"
+
+
+def test_an_untracked_file_that_holds_the_wrong_text_is_named(git, tmp_path):
+    mine, key = _two(git, tmp_path, _base)
+    git.Repo(mine / "repo").write("new.txt", "mine\n")
+    git.Repo(key / "repo").write("new.txt", "key\n")
+    assert _diff(git, mine, key) == "new.txt does not hold what it should (not staged)"
+
+
+def test_a_stash_that_holds_another_edit_is_named(git, tmp_path):
+    def setup(repo, _b):
+        repo.commit("start", {"a.txt": "a\n"})
+        repo.write("a.txt", "half done\n")
+        repo.git("stash", "-q")
+
+    mine, key = _two(git, tmp_path, setup)
+    assert _diff(git, mine, key) is None
+    r = git.Repo(mine / "repo")
+    r.git("stash", "drop", "-q")
+    r.write("a.txt", "something else\n")
+    r.git("stash", "-q")
+    assert _diff(git, mine, key) == "the stash's 1st entry does not hold what it should"
+
+
+def test_a_fifo_in_the_working_tree_is_never_opened(git, tmp_path):
+    def setup(repo, _b):
+        repo.commit("start", {"a.txt": "a\n"})
+
+    mine, key = _two(git, tmp_path, setup)
+    git.Repo(key / "repo").write("a.txt", "b\n")
+    git.Repo(key / "repo").write("p.txt", "p\n")
+    (mine / "repo" / "a.txt").unlink()
+    os.mkfifo(mine / "repo" / "a.txt")
+    os.mkfifo(mine / "repo" / "p.txt")
+    found = []
+    t = threading.Thread(
+        target=lambda: found.append(_diff(git, mine, key)), daemon=True
+    )
+    t.start()
+    t.join(10)
+    assert found and found[0] is not None
+    (mine / "repo" / "p.txt").unlink()
+    (mine / "repo" / "p.txt").write_text("p\n")
+    assert _diff(git, mine, key) == "a.txt does not hold what it should (not staged)"
 
 
 def test_a_fsmonitor_in_the_learners_config_never_runs(git, tmp_path):

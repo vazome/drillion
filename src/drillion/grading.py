@@ -13,6 +13,7 @@ import os
 import random
 import re
 import shutil
+import stat
 import subprocess
 import sys
 from collections import Counter
@@ -867,6 +868,50 @@ def _commits(repo, tips):
     return out
 
 
+def _held(repo, entries):
+    """{path: [its index entries, what is on disk]} for every path in `entries`, git status
+    lines. Only a regular file is read; a symlink is its target, anything else its type."""
+    paths = sorted({e[3:] for e in entries})
+    index = {}
+    for line in repo.git("ls-files", "-s", "-z").split("\0"):
+        if line:
+            info, path = line.split("\t", 1)
+            index.setdefault(path, []).append(info)
+    disk, files = {}, []
+    for path in paths:
+        try:
+            mode = os.lstat(repo.path / path).st_mode
+        except OSError:
+            disk[path] = None
+            continue
+        if stat.S_ISREG(mode):
+            files.append(path)
+        elif stat.S_ISLNK(mode):
+            disk[path] = "-> " + os.readlink(repo.path / path)
+        else:
+            disk[path] = stat.filemode(mode)[0]
+    if files:
+        ids = iter(
+            repo.git("hash-object", "--no-filters", "--", *files, check=False).split()
+        )
+        disk |= {path: next(ids, None) for path in files}
+    return {path: [index.get(path, []), disk[path]] for path in paths}
+
+
+def _stash(repo):
+    """Each stash entry, newest first, as the trees it holds: the work tree's, the index's,
+    and the untracked files' when it has them."""
+    entries = [
+        line.split()
+        for line in repo.git(
+            "log", "--walk-reflogs", "--format=%T %P", "refs/stash", "--", check=False
+        ).splitlines()
+    ]
+    parents = [f"{p}^{{tree}}" for e in entries for p in e[2:]]
+    trees = iter(repo.git("rev-parse", *parents).split() if parents else ())
+    return [[e[0], *(next(trees) for _ in e[2:])] for e in entries]
+
+
 def git_snapshot(repo, bare=False):
     """What the default probes read from one repository, as plain data."""
     refs = {}
@@ -886,17 +931,15 @@ def git_snapshot(repo, bare=False):
     status = repo.git(
         "status", "--porcelain=v1", "-z", "--no-renames", "--untracked-files=all"
     )
+    status = sorted(e for e in status.split("\0") if e)
     return shot | {
         "head": repo.git("symbolic-ref", "-q", "HEAD", check=False).strip() or None,
-        "status": sorted(e for e in status.split("\0") if e),
+        "status": status,
+        "held": _held(repo, status),
         "operation": next(
             (m for f, m in IN_PROGRESS.items() if (gitdir / f).exists()), None
         ),
-        "stash": len(
-            repo.git(
-                "log", "--walk-reflogs", "--format=%H", "refs/stash", "--", check=False
-            ).split()
-        ),
+        "stash": _stash(repo),
     }
 
 
@@ -997,9 +1040,22 @@ def git_difference(mine, key, start, skip, where=""):
             "the working tree or the staging area is not as it should be: "
             f"expected {listed(key['status'])}, found {listed(mine['status'])}"
         )
+    if "status" not in skip:
+        for path in sorted(key["held"]):
+            sides = zip(("staged", "not staged"), mine["held"][path], key["held"][path])
+            for side, a, b in sides:
+                if a != b:
+                    return f"{path} does not hold what it should ({side})"
     if "stash" not in skip and mine["stash"] != key["stash"]:
-        n = mine["stash"]
-        return f"the stash holds {n} entr{'y' if n == 1 else 'ies'}, expected {key['stash']}"
+        n, want = len(mine["stash"]), len(key["stash"])
+        if n != want:
+            return (
+                f"the stash holds {n} entr{'y' if n == 1 else 'ies'}, expected {want}"
+            )
+        i = next(
+            i for i, (a, b) in enumerate(zip(mine["stash"], key["stash"])) if a != b
+        )
+        return f"the stash's {_ordinal(i + 1)} entry does not hold what it should"
     return None
 
 
