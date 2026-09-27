@@ -11,6 +11,8 @@ test("CSS Modules resolve every component class and preserve renderer contracts"
   const server = await createServer({
     root, configFile: false, appType: "custom",
     server: { middlewareMode: true, ws: false, watch: null },
+    // xterm's ES build is only under `module`, which Node's own loader ignores
+    ssr: { noExternal: ["@xterm/xterm", "@xterm/addon-fit"] },
   });
   try {
     for (const file of await readdir(new URL("../src/ds/", import.meta.url))) {
