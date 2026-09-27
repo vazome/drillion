@@ -205,7 +205,12 @@ def _pidfd(pid):
 async def _exited(proc):
     """Until bash exits, whatever jobs still hold its PTY."""
     loop = asyncio.get_running_loop()
-    fd = _pidfd(proc.pid)
+    try:
+        fd = _pidfd(proc.pid)
+    except OSError, AttributeError:
+        # macOS, or a kernel older than 5.3: a worker thread waits instead
+        await asyncio.to_thread(proc.wait)
+        return
     gone = asyncio.Event()
     loop.add_reader(fd, gone.set)
     try:
@@ -233,6 +238,13 @@ async def end(slug, code=RESET):
     shell = _live.pop(slug, None)
     if shell:
         await shell.end(code)
+
+
+async def close(slug, code=1000):
+    """End `slug`'s shell once its attempt has closed, after any shell still starting on it
+    has registered, so a tab mid-setup cannot outlive the attempt."""
+    async with turn(slug):
+        await end(slug, code)
 
 
 async def end_all(code=RESET):

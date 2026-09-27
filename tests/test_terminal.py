@@ -492,3 +492,68 @@ def test_two_shells_starting_at_once_share_one_rc(tmp_path, monkeypatch):
     for t in threads:
         t.join()
     assert seen == [(tmp_path / ".drillionrc").stat().st_ino] * 2
+
+
+def test_an_abandon_during_setup_leaves_no_shell_behind(client, monkeypatch):
+    real_ensure, real_spawn, spawned = gitrepo.ensure, terminal._spawn, []
+
+    def ensure(meta, o):
+        time.sleep(0.3)
+        return real_ensure(meta, o)
+
+    def spawn(meta, sitting):
+        spawned.append(real_spawn(meta, sitting))
+        return spawned[-1]
+
+    monkeypatch.setattr(gitrepo, "ensure", ensure)
+    monkeypatch.setattr(terminal, "_spawn", spawn)
+    with reading() as st:
+        meta, o = tasks()[SLUG], dict(st["open"][SLUG])
+
+    async def drive():
+        page = _Page()
+        run = asyncio.create_task(terminal.bridge(page, SLUG, lambda: (meta, o)))
+        await asyncio.sleep(0.1)  # inside the slow setup
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url=SAME
+        ) as api:
+            r = await api.post(f"/api/task/{SLUG}/abandon", json={"etag": "history"})
+        assert r.status_code == 200
+        await page.close()
+        await run
+        return page.code
+
+    assert asyncio.run(drive()) == 1000
+    assert [proc.poll() is not None for proc, _ in spawned] == [True]
+    assert not terminal._live
+
+
+def test_a_reset_waiting_out_a_restore_acts_on_the_state_after_it(client):
+    history = tasks()[SLUG]["path"]
+
+    async def drive():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url=SAME
+        ) as api:
+            async with terminal.quiet():
+                reset = asyncio.create_task(api.post(f"/api/task/{SLUG}/repo/reset"))
+                await asyncio.sleep(0.1)  # waiting on the restore
+                r = await api.post(
+                    f"/api/task/{SLUG}/abandon", json={"etag": "history"}
+                )
+                assert r.status_code == 200
+            return (await reset).status_code
+
+    assert asyncio.run(drive()) == 404
+    assert "# repository reset" not in history.read_text(encoding="utf-8")
+
+
+def test_a_shell_is_watched_where_pidfd_open_is_missing(monkeypatch):
+    def missing(pid):
+        raise OSError(38, "pidfd_open")
+
+    monkeypatch.setattr(terminal, "_pidfd", missing)
+    proc = subprocess.Popen(["sleep", "0.3"])
+    started = time.monotonic()
+    asyncio.run(asyncio.wait_for(terminal._exited(proc), 5))
+    assert proc.returncode == 0 and time.monotonic() - started > 0.2

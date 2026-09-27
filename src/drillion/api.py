@@ -185,7 +185,7 @@ def _end_terminal(meta, slug):
     """End a git task's shell once its attempt has closed, whichever page closed it. For a
     sync route, after its state has committed."""
     if meta["kind"] == GIT:
-        anyio.from_thread.run(terminal.end, slug, 1000)
+        anyio.from_thread.run(terminal.close, slug)
 
 
 def _check_etag(kind, src, sent):
@@ -708,10 +708,11 @@ async def terminal_socket(ws: WebSocket, slug: str):
 async def reset_repo(slug: str):
     """Put a git sitting's repository back as the task set it up: the shell ends, the
     repository goes, and the next terminal builds it again. The history stays, marked."""
-    found = await asyncio.to_thread(_git_sitting, slug)
-    if found is None:
-        raise HTTPException(404, f"no git sitting open on {slug!r}")
     async with terminal.admitted(), terminal.turn(slug):
+        # read here, so a restore or an abandon this waited out is the state it acts on
+        found = await asyncio.to_thread(_git_sitting, slug)
+        if found is None:
+            raise HTTPException(404, f"no git sitting open on {slug!r}")
         await terminal.end(slug)
         await asyncio.to_thread(gitrepo.discard, slug)
         # inside, so a restore or an abandon never lands between the reset and its mark.
