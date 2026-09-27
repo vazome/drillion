@@ -944,9 +944,11 @@ def git_snapshot(repo, bare=False):
 
 
 def git_state(_git, root):
-    """{"": the repository, " on origin": its server, when it has one} under `root`."""
+    """{"": the repository, " on origin": its server, each when it is there} under `root`."""
     root = Path(root)
-    out = {"": git_snapshot(_git.Repo(root / "repo"))}
+    out = {}
+    if (root / "repo" / ".git").exists():
+        out[""] = git_snapshot(_git.Repo(root / "repo"))
     if (root / "origin.git").is_dir():
         out[" on origin"] = git_snapshot(_git.Repo(root / "origin.git"), bare=True)
     return out
@@ -1011,7 +1013,9 @@ def git_difference(mine, key, start, skip, where=""):
     None. `start` is the key's repository before its commands ran, for the refs they
     deleted. A server has only refs to compare."""
     if mine is None:
-        return f"there is no origin{where}" if where else "there is no repository"
+        if where:
+            return "there is no origin repository"
+        return "there is no repository here any more: Reset repository builds it again"
     local = not where
     if local and "operation" not in skip and mine["operation"] and not key["operation"]:
         return mine["operation"]

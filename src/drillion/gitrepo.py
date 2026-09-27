@@ -21,6 +21,10 @@ MIN_VERSION = (2, 40)
 SITTINGS = ".sittings"
 STAMP = ".started"
 SETUP_SECONDS = 30
+REBUILT = (
+    "this task changed since you started, so its repository was rebuilt: "
+    "do your steps again"
+)
 GITCONFIG = """\
 [user]
 \tname = You

@@ -441,3 +441,31 @@ def test_the_shell_reads_its_rc_and_cannot_write_it(client):
         _type(ws, f"echo pwned >> {rc}; echo hs=$HISTSIZE=$((4*4))\r")
         assert "hs=-1=16" in _until(ws, "=16")
     assert rc.read_text() == terminal.RC
+
+
+def test_a_repository_rebuilt_for_a_changed_task_says_so(client):
+    _shell(client)
+    grade = settings.tasks_dir / SLUG / "grade.py"
+    grade.write_text(grade.read_text() + "\n# changed\n")
+    assert "its repository was rebuilt: do your steps again" in _shell(client)
+
+
+def test_a_missing_repository_is_refused_with_the_way_back(client):
+    _shell(client, ("cd .. && rm -rf repo; echo gone-$((2*5))\r", "gone-10"))
+    with client.websocket_connect(f"{WS}/{SLUG}", headers={"Origin": SAME}) as ws:
+        said = ws.receive_bytes().decode()
+        assert _closed_with(ws) == 1011
+    assert "there is no repository here any more: Reset repository" in said
+
+
+def test_a_run_without_git_in_the_repository_fails_with_the_way_back(client):
+    _shell(client, ("rm -rf .git; echo gone-$((2*5))\r", "gone-10"))
+    r = client.post(
+        f"/api/task/{SLUG}/run",
+        json={"code": "", "etag": "history", "submit": False},
+        headers={"Origin": SAME},
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["headline"] == [
+        "there is no repository here any more: Reset repository builds it again"
+    ]

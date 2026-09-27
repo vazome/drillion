@@ -112,6 +112,10 @@ def _rc(folder):
 
 def _spawn(meta, sitting):
     """bash on a fresh PTY in the sitting's repository, under the sandbox."""
+    if not (sitting / "repo").is_dir():
+        raise manifest.Rejected(
+            "there is no repository here any more: Reset repository builds it again"
+        )
     home = sitting / "home"
     rc = _rc(sitting.parent)
     master, slave = os.openpty()
@@ -289,7 +293,9 @@ async def bridge(ws, slug, find):
             try:
                 # ponytail: a bridge cancelled while this runs (a shutdown) loses its bash;
                 # spawn under shield if shutdowns ever leave shells behind
-                sitting, _ = await asyncio.to_thread(gitrepo.ensure, meta, o)
+                sitting, replaced = await asyncio.to_thread(gitrepo.ensure, meta, o)
+                if replaced:
+                    await ws.send_bytes(f"drillion: {gitrepo.REBUILT}\r\n".encode())
                 proc, fd = await asyncio.to_thread(_spawn, meta, sitting)
             except manifest.Rejected as err:
                 await ws.send_bytes(f"drillion: {err}\r\n".encode())

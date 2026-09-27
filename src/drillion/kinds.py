@@ -417,10 +417,7 @@ class _Git(_Manifest):
             )
         _, replaced = gitrepo.ensure(meta, o)
         if replaced:
-            raise manifest.Rejected(
-                "this task changed since you started, so its repository was rebuilt: "
-                "do your steps again, nothing was spent"
-            )
+            raise manifest.Rejected(f"{gitrepo.REBUILT}, nothing was spent")
         return super().grade(meta, o, src)
 
     def selfcheck(self, meta):

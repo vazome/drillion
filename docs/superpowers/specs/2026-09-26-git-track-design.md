@@ -59,7 +59,9 @@ bash wrote.
 `started` in `<root>/.sittings/<slug>.started`, beside it: the shell owns everything inside
 the sitting, so the server never writes a file there once it is built, nor trusts one. It survives a reload and a restart. It is built when the terminal connects and
 finds no directory, or one stamped for another sitting, which is how a pass, an abandon and an
-upgrade all end up with a fresh repo without a hook in any of them. A restore or an erase is
+upgrade all end up with a fresh repo without a hook in any of them. When an upgrade rebuilt
+the repository of an attempt still open, the terminal says so before the prompt, and a Run
+that finds it first refuses without spending the attempt. A restore or an erase is
 not lazy about it: the route ends every open terminal and deletes `<root>/.sittings` outright
 before it returns, so the next connect still finds nothing and builds fresh, just already
 emptied rather than found stale.

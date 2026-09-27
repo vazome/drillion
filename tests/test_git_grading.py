@@ -347,7 +347,7 @@ def test_an_origin_only_the_answer_key_makes_is_named(task):
     solution.write_text(solution.read_text() + "git init -q --bare ../origin.git\n")
     _commit_the_answer(meta, o)
     assert kinds.KINDS["git"].grade(meta, o, "")[1]["headline"] == [
-        "there is no origin on origin"
+        "there is no origin repository"
     ]
 
 
