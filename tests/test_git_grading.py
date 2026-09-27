@@ -295,6 +295,15 @@ def test_the_untouched_sitting_fails_and_the_answer_passes(task):
     assert kind.grade(meta, o, "")[0]
 
 
+def _commit_the_answer(meta, o):
+    """Make the fixture's answer in the sitting, as a learner would type it."""
+    where = gitrepo.ensure(meta, o)[0]
+    env = {**os.environ, **gitrepo.environ(where)}
+    name = o["brief"]["name"]
+    for argv in (["add", f"{name}.md"], ["commit", "-qm", f"add {name}"]):
+        subprocess.run(["git", *argv], cwd=where / "repo", env=env, check=True)
+
+
 def test_the_fixture_self_checks(task):
     meta, _ = task
     files, judge = kinds.KINDS["git"].selfcheck(meta)
@@ -318,6 +327,28 @@ def test_a_task_changed_under_a_sitting_is_refused_and_rebuilt(task):
     assert (
         gitrepo.ensure(meta, o)[1] is False
     )  # already rebuilt: the next grade is fair
+
+
+def test_a_check_that_crashes_names_a_broken_task(task):
+    meta, o = task
+    grader = meta["dir"] / "grade.py"
+    grader.write_text(
+        grader.read_text() + "\n\ndef check(repo, b):\n    raise RuntimeError('boom')\n"
+    )
+    _commit_the_answer(meta, o)
+    with pytest.raises(manifest.Rejected, match="grader could not read") as caught:
+        kinds.KINDS["git"].grade(meta, o, "")
+    assert "RuntimeError: boom" in str(caught.value)
+
+
+def test_an_origin_only_the_answer_key_makes_is_named(task):
+    meta, o = task
+    solution = meta["dir"] / "solution.sh"
+    solution.write_text(solution.read_text() + "git init -q --bare ../origin.git\n")
+    _commit_the_answer(meta, o)
+    assert kinds.KINDS["git"].grade(meta, o, "")[1]["headline"] == [
+        "there is no origin on origin"
+    ]
 
 
 def test_a_verdict_is_fingerprinted_by_git_and_moves_with_the_helper(task):

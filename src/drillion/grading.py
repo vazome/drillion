@@ -1106,7 +1106,10 @@ def grade_git(grade):
     ceilings = {str(Path.cwd().parent)} | ({str(sitting.parent)} if sitting else set())
     os.environ["GIT_CEILING_DIRECTORIES"] = ":".join(sorted(ceilings))
     skip = set(getattr(grade, "SKIP", ()))
-    key = _git.build(Path("key"), grade.setup, brief)
+    try:
+        key = _git.build(Path("key"), grade.setup, brief)
+    except Exception as exc:
+        answer(False, broken=f"{type(exc).__name__}: {exc}")
     start = git_state(_git, key)
     ran, said = _typed(g["key"], key / "repo")
     if not ran:
@@ -1120,7 +1123,8 @@ def grade_git(grade):
     report = _graph(_git, sitting)
     theirs, keys = git_state(_git, sitting), git_state(_git, key)
     for where in keys:
-        why = git_difference(theirs.get(where), keys[where], start[where], skip, where)
+        was = start.get(where, {"refs": {}})
+        why = git_difference(theirs.get(where), keys[where], was, skip, where)
         if why:
             answer(False, [(None, why)], report)
     why = git_extra(_git, grade, brief, sitting, key)
@@ -1133,6 +1137,8 @@ def grade_git(grade):
             answer(
                 False, [(None, str(exc) or "a rule of this task is not met")], report
             )
+        except Exception as exc:
+            answer(False, report=report, broken=f"{type(exc).__name__}: {exc}")
     answer(True, report=report)
 
 
