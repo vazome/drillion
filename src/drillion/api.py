@@ -459,6 +459,8 @@ def save_task(slug: str, edit: Edit):
         kind = kinds.of(meta)
         src = kind.path(meta).read_text(encoding="utf-8")
         _check_etag(kind, src, edit.etag)
+        if not kind.saved_by_page:  # bash owns this file; the page never writes it
+            return {"etag": kind.etag(src)}
         new_src = kind.validate(edit.code, src)
         write_region(kind.path(meta), new_src)
         return {"etag": kind.etag(new_src)}
@@ -480,8 +482,11 @@ def run_task(slug: str, edit: Edit):
         kind = kinds.of(meta)
         src = kind.path(meta).read_text(encoding="utf-8")
         _check_etag(kind, src, edit.etag)
-        new_src = kind.validate(edit.code, src)
-        write_region(kind.path(meta), new_src)
+        if not kind.saved_by_page:  # bash owns this file; grade it as it stands
+            new_src = src
+        else:
+            new_src = kind.validate(edit.code, src)
+            write_region(kind.path(meta), new_src)
     passed, detail = kind.grade(meta, sitting, new_src)
     with writing() as st:
         o = current(st, slug)

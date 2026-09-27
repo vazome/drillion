@@ -1,14 +1,17 @@
 """How two repositories are compared: content ids, the default probes, the messages."""
 
+import asyncio
 import importlib.util
 import os
 import shutil
 import subprocess
 from datetime import datetime
 
+import httpx
 import pytest
 
 from drillion import gitrepo, grading, kinds, manifest
+from drillion.api import app
 from drillion.settings import settings
 from tests.fixtures import tasks_root
 from tests.fixtures_git import fixture_task
@@ -175,13 +178,20 @@ def test_origin_is_compared_by_its_refs(git, tmp_path):
     ) == ('main on origin is missing 1 commit, starting with "add b"')
 
 
+def _git_root():
+    """A throwaway tasks/ root holding the fixture git task and the real `_git.py`
+    helper, with `settings.root` pointed at it. The caller restores `settings.root`."""
+    root, keep = tasks_root(**{SLUG: fixture_task()}), settings.root
+    shutil.copy(keep / "tasks" / "_git.py", root / "tasks" / "_git.py")
+    settings.root = root
+    return root, keep
+
+
 @pytest.fixture
 def task(monkeypatch):
     monkeypatch.setenv("GIT_CONFIG_GLOBAL", "/dev/null")
     monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
-    root, keep = tasks_root(**{SLUG: fixture_task()}), settings.root
-    shutil.copy(keep / "tasks" / "_git.py", root / "tasks" / "_git.py")
-    settings.root = root
+    root, keep = _git_root()
     meta = {
         "dir": root / "tasks" / SLUG,
         "path": root / "tasks" / SLUG / "history.sh",
@@ -248,3 +258,64 @@ def test_a_verdict_is_fingerprinted_by_git_and_moves_with_the_helper(task):
     helper = settings.tasks_dir / "_git.py"
     helper.write_text(helper.read_text() + "\n# changed\n")
     assert kinds.KINDS["git"].revision(meta, "") != before
+
+
+@pytest.fixture
+def api_root(monkeypatch):
+    """The fixture git task, reachable through the real HTTP routes rather than by
+    calling a kind directly: what `save_task` and `run_task` do to `history.sh`."""
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", "/dev/null")
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    root, keep = _git_root()
+    yield root
+    settings.root = keep
+    shutil.rmtree(root, ignore_errors=True)
+
+
+def _run(flow):
+    async def drive():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://127.0.0.1"
+        ) as api:
+            await flow(api)
+
+    asyncio.run(drive())
+
+
+def test_a_save_leaves_historys_content_and_inode_unchanged_and_returns_the_etag(
+    api_root,
+):
+    path = settings.tasks_dir / SLUG / "history.sh"
+    path.write_text("git status\n", encoding="utf-8")
+    before = os.stat(path).st_ino
+
+    async def flow(api):
+        opened = (await api.post(f"/api/task/{SLUG}/open")).json()
+        saved = await api.put(
+            f"/api/task/{SLUG}",
+            json={"code": "echo mine\n", "etag": opened["etag"]},
+        )
+        assert saved.status_code == 200, saved.text
+        assert saved.json() == {"etag": opened["etag"]}
+
+    _run(flow)
+    assert path.read_text(encoding="utf-8") == "git status\n"
+    assert os.stat(path).st_ino == before
+
+
+def test_a_run_leaves_historys_content_and_inode_unchanged(api_root):
+    path = settings.tasks_dir / SLUG / "history.sh"
+    path.write_text("git status\n", encoding="utf-8")
+    before = os.stat(path).st_ino
+
+    async def flow(api):
+        opened = (await api.post(f"/api/task/{SLUG}/open")).json()
+        run = await api.post(
+            f"/api/task/{SLUG}/run",
+            json={"code": "echo mine\n", "etag": opened["etag"], "submit": False},
+        )
+        assert run.status_code == 200, run.text
+
+    _run(flow)
+    assert path.read_text(encoding="utf-8") == "git status\n"
+    assert os.stat(path).st_ino == before

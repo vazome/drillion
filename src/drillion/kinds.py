@@ -44,6 +44,7 @@ class _Python:
     name = PYTHON
     filename = FILENAMES[PYTHON]
     language = "python"
+    saved_by_page = True
 
     def path(self, meta):
         return meta["path"]
@@ -123,6 +124,7 @@ class _Manifest:
     filename = FILENAMES[MANIFEST]
     language = "yaml"
     suffix = ".yaml"
+    saved_by_page = True
 
     def path(self, meta):
         return meta["path"]
@@ -380,10 +382,13 @@ class _Git(_Manifest):
     filename = FILENAMES[GIT]
     language = "shell"
     suffix = ".sh"
+    saved_by_page = False
 
     def validate(self, edited, src):
-        """The page never writes this file: bash appends to it, so what is on disk stands."""
-        return src
+        """The page never reaches here: only a backup restore calls this, asking what
+        history to write back. `edited` is the saved history the restore brought, and
+        that, not what is on disk now, is the one to keep."""
+        return edited
 
     def etag(self, src):
         # constant, so a Run from a page that last read an older history is never a conflict
