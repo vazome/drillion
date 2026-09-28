@@ -7,6 +7,7 @@ await `terminal` directly (the terminal socket, restore, erase, repository reset
 language server's socket; they push their blocking work to a thread."""
 
 import asyncio
+import contextlib
 import functools
 import logging
 from collections import Counter
@@ -68,7 +69,14 @@ RECENT_SHOWN = 4
 MAX_BUNDLE = 64 * 1024 * 1024
 RESTORE = "/api/restore"
 
-app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+
+@contextlib.asynccontextmanager
+async def _lifespan(app):
+    yield
+    await terminal.shutdown()
+
+
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, lifespan=_lifespan)
 
 
 class Edit(BaseModel):

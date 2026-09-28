@@ -1,6 +1,7 @@
 """The learner's shell: bash on a PTY over a WebSocket, one per task, ended with its socket."""
 
 import asyncio
+import contextlib
 import json
 import os
 import re
@@ -37,20 +38,31 @@ pytestmark = [
 
 
 @pytest.fixture
-def client(monkeypatch):
+def git_root(monkeypatch):
     monkeypatch.setenv("GIT_CONFIG_GLOBAL", "/dev/null")
     monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
     root, keep = tasks_root(**{SLUG: fixture_task()}), settings.root
     shutil.copy(keep / "tasks" / "_git.py", root / "tasks" / "_git.py")
     settings.root = root
+    yield
+    settings.root = keep
+    shutil.rmtree(root, ignore_errors=True)
+
+
+@contextlib.contextmanager
+def _server():
     with TestClient(app, base_url=SAME) as c:
         assert (
             c.post(f"/api/task/{SLUG}/open", headers={"Origin": SAME}).status_code
             == 200
         )
         yield c
-    settings.root = keep
-    shutil.rmtree(root, ignore_errors=True)
+
+
+@pytest.fixture
+def client(git_root):
+    with _server() as c:
+        yield c
 
 
 def _until(ws, needle):
@@ -113,6 +125,24 @@ def test_every_command_lands_in_history(client):
         _until(ws, "two-2")
     history = (settings.tasks_dir / SLUG / "history.sh").read_text()
     assert "git status --short" in history
+
+
+def test_a_stopping_server_reaps_a_shell_still_ending(git_root, monkeypatch):
+    ending = terminal._Shell.end
+
+    async def slow(self, code=1000):
+        await asyncio.sleep(0.5)  # a loaded runner
+        await ending(self, code)
+
+    monkeypatch.setattr(terminal._Shell, "end", slow)
+    with (
+        _server() as c,
+        c.websocket_connect(f"{WS}/{SLUG}", headers={"Origin": SAME}) as ws,
+    ):
+        _until(ws, "confined by")
+        pid = _pid(ws, "echo pid=$$=$((5*5))\r")
+    with pytest.raises(ProcessLookupError):
+        os.kill(pid, 0)
 
 
 def test_a_newer_socket_ends_the_older(client):
