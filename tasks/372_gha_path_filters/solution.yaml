@@ -1,0 +1,26 @@
+name: {svc}
+on:
+  push:
+    branches: [main]
+    paths:
+      - {pattern}
+      - .github/workflows/service.yml
+  pull_request:
+    paths:
+      - {pattern}
+      - .github/workflows/service.yml
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [staging, production]
+        default: staging
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: {test}
+      - run: {deploy}
+        env:
+          TARGET: ${{ inputs.environment || 'staging' }}

@@ -15,7 +15,8 @@
 3. **Run** saves your region into the file and runs that file's pytest test with the attempt's
    seed. A manifest task instead validates your YAML with kubeconform, a Helm task renders it
    with `helm template` and lints it with `helm lint --strict`, and a Dockerfile task lints it
-   with hadolint, and a SQL task runs your SQL on Postgres (PGlite) beside the answer key, on
+   with hadolint, a workflow task lints your GitHub Actions workflow with actionlint, and a
+   SQL task runs your SQL on Postgres (PGlite) beside the answer key, on
    the data shown and on a hidden second dataset; each is then checked against the task's own
    rules, naming each field that is wrong. Failures come back with the assertion lines mapped to editor line numbers, and
    whatever your own `print()` wrote is shown above them whether the tests passed or failed.

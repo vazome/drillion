@@ -15,6 +15,7 @@ from .catalogue import (
     SECTION,
     SLUG,
     SQL,
+    WORKFLOW,
     scan,
     solution,
 )
@@ -197,6 +198,25 @@ def _git_rules(meta):
     return out + _placeholder_rules(meta.get("spec_md", "")) + _render_rules(meta)
 
 
+# where a workflow task's learner file may go: one workflow of the repository
+WORKFLOW_EDITS = re.compile(r"^\.github/workflows/[a-z0-9-]+\.ya?ml$")
+
+
+def _workflow_rules(meta):
+    """A workflow task's hole is one workflow file, and nothing the task ships under `repo/`
+    may already sit where it goes. Whether the answer key lints clean and passes is
+    `selfcheck`'s question, since only actionlint can answer it."""
+    out = _no_tier(meta, "a workflow task")
+    edits = meta.get("edits")
+    if edits is not None and not (
+        isinstance(edits, str) and WORKFLOW_EDITS.match(edits)
+    ):
+        out.append(f"README.md: edits {edits!r} is not .github/workflows/<name>.yml")
+    elif edits and "dir" in meta and (meta["dir"] / "repo" / edits).exists():
+        out.append(f"repo/{edits}: must not exist, the learner's file goes there")
+    return out + _placeholder_rules(meta.get("spec_md", "")) + _render_rules(meta)
+
+
 # One row per kind, as `catalogue.CHECKS` is: a new kind adds a row rather than a branch.
 KIND_RULES = {
     PYTHON: _python_rules,
@@ -205,6 +225,7 @@ KIND_RULES = {
     DOCKER: _docker_rules,
     SQL: _sql_rules,
     GIT: _git_rules,
+    WORKFLOW: _workflow_rules,
 }
 
 

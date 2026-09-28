@@ -108,7 +108,8 @@ The server binds to loopback, accepts only `127.0.0.1`/`localhost` host headers,
 that declare more than 256 KB (the restore route is exempt, up to 64 MB, since it carries a whole
 practice history), and runs task code only in a sandboxed subprocess with a timeout: pytest for a
 Python task, the pinned kubeconform and the task's grader for a manifest, `helm template` and
-`helm lint --strict` for a Helm chart, and hadolint for a Dockerfile. It is a laptop tool; do not
+`helm lint --strict` for a Helm chart, hadolint for a Dockerfile, and actionlint for a GitHub
+Actions workflow. It is a laptop tool; do not
 put it on a public address.
 
 ## Verifying a release

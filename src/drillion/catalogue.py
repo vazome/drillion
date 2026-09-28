@@ -18,7 +18,8 @@ HELM = "helm"
 DOCKER = "docker"
 SQL = "sql"
 GIT = "git"
-KINDS = (PYTHON, MANIFEST, HELM, DOCKER, SQL, GIT)
+WORKFLOW = "workflow"
+KINDS = (PYTHON, MANIFEST, HELM, DOCKER, SQL, GIT, WORKFLOW)
 # what every task needs, then what each kind adds. `tier` is Python depth and a manifest
 # reaches nowhere into the language, so it is not asked of one.
 REQUIRED = ("title", "difficulty", "minutes", "tags")
@@ -29,6 +30,7 @@ REQUIRED_BY_KIND = {
     DOCKER: ("edits",),
     SQL: ("edits",),
     GIT: (),
+    WORKFLOW: ("edits",),
 }
 BROWSER = (
     "topic",
@@ -212,6 +214,16 @@ def _check_git(folder):
     ]
 
 
+def _check_workflow(folder):
+    """A workflow task is the learner's workflow, the grader and its answer key, and
+    optionally the rest of the repository the workflow lives in, under `repo/`."""
+    return [
+        f"{name}: missing"
+        for name in ("workflow.yml", "grade.py", "solution.yaml")
+        if not (folder / name).is_file()
+    ]
+
+
 CHECKS = {
     PYTHON: _check_python,
     MANIFEST: _check_manifest,
@@ -219,6 +231,7 @@ CHECKS = {
     DOCKER: _check_docker,
     SQL: _check_sql,
     GIT: _check_git,
+    WORKFLOW: _check_workflow,
 }
 # the learner's own file per kind — what a browser tab opens and `path` points at
 FILENAMES = {
@@ -228,6 +241,7 @@ FILENAMES = {
     DOCKER: "Dockerfile",
     SQL: "task.sql",
     GIT: "history.sh",
+    WORKFLOW: "workflow.yml",
 }
 # the answer key, for the kinds that render one from a brief
 SOLUTIONS = {DOCKER: "solution.Dockerfile", SQL: "solution.sql", GIT: "solution.sh"}

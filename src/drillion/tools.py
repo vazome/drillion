@@ -22,6 +22,7 @@ from .settings import PKG, settings
 KUBECONFORM = "kubeconform"
 HELM = "helm"
 HADOLINT = "hadolint"
+ACTIONLINT = "actionlint"
 TIMEOUT = (10, 60)  # connect, read
 MAX_ARCHIVE = 64 << 20
 
@@ -148,6 +149,36 @@ PINS[HADOLINT] = {
     ("linux", "arm64"): _hadolint(
         "hadolint-linux-arm64",
         "f6198ef8090f404dbb771abfee086eb8c48ac177f30da7fd3510aca35b344b5d",
+    ),
+}
+
+
+ACTIONLINT_VERSION = "v1.7.12"
+
+
+def _actionlint(arch, archive_sha256, binary_sha256):
+    return Pin(
+        ACTIONLINT_VERSION,
+        "https://github.com/rhysd/actionlint/releases/download/"
+        f"{ACTIONLINT_VERSION}/actionlint_{ACTIONLINT_VERSION[1:]}_linux_{arch}.tar.gz",
+        archive_sha256,
+        "actionlint",
+        binary_sha256,
+    )
+
+
+# Upstream's `actionlint_<version>_checksums.txt` lists each archive; `binary_sha256` is
+# ours, recomputed by hand when the version moves, as for kubeconform.
+PINS[ACTIONLINT] = {
+    ("linux", "amd64"): _actionlint(
+        "amd64",
+        "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8",
+        "c872d6db8c6bf83a8eaa704fc93999f027d55dffbc63b8a6abdccb47df5f4cd4",
+    ),
+    ("linux", "arm64"): _actionlint(
+        "arm64",
+        "325e971b6ba9bfa504672e29be93c24981eeb1c07576d730e9f7c8805afff0c6",
+        "ac0323433c2853ec3fb978c611430c5b3dc5d43c58d1a1ec031b00ab572beb60",
     ),
 }
 

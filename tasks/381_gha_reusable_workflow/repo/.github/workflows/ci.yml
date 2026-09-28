@@ -1,0 +1,22 @@
+name: ci
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image: shop/web
+      context: services/web
+    secrets:
+      REGISTRY_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: ./deploy.sh "$DIGEST"
+        env:
+          DIGEST: ${{ needs.build.outputs.digest }}

@@ -17,7 +17,7 @@ from pathlib import Path
 import yaml
 
 from . import pglite, sandbox, tools
-from .catalogue import DOCKER, MANIFEST, SQL, solution
+from .catalogue import DOCKER, MANIFEST, SQL, WORKFLOW, solution
 
 MAX_BRIEF_BYTES = 8192
 MAX_RESULT_BYTES = 64 << 10
@@ -89,12 +89,13 @@ def grader_revision(meta):
     return digest.hexdigest()[:12]
 
 
-SHIPPED = {DOCKER: "context", SQL: "db"}
+SHIPPED = {DOCKER: "context", SQL: "db", WORKFLOW: "repo"}
 
 
 def shipped(meta):
     """The folder a task ships around the learner's file: a Helm chart, the build context a
-    Dockerfile is written for, or the database a SQL task asks about."""
+    Dockerfile is written for, the database a SQL task asks about, or the rest of the
+    repository a workflow lives in."""
     return meta["dir"] / SHIPPED.get(meta.get("kind"), "chart")
 
 
@@ -274,6 +275,12 @@ def helm_job(meta):
     }
 
 
+# actionlint's own shellcheck and pyflakes integrations run only when those tools are on PATH,
+# which the image never has; switched off so a verdict cannot depend on the host. Part of a
+# workflow verdict's fingerprint.
+WORKFLOW_FLAGS = "-shellcheck= -pyflakes="
+
+
 # drillion's own hadolint config: errors and warnings fail, info is advice. Pinning every
 # apt or apk package version is switched off, since a pinned Debian version leaves the
 # mirror and few teams follow it. Part of a Dockerfile verdict's fingerprint.
@@ -289,6 +296,21 @@ def docker_job(meta):
         "tool": str(tool),
         "context": str(shipped(meta)),
         "config": HADOLINT_CONFIG,
+    }
+
+
+def workflow_job(meta):
+    """What the child needs to lay out a workflow's repository and lint it: the learner's
+    file goes at `edits`, beside whatever the task ships under `repo/`."""
+    tool = tools.installed(tools.ACTIONLINT)
+    if tool is None:
+        raise ToolMissing("actionlint is not installed: run `drillion doctor --fetch`")
+    return {
+        "tool": str(tool),
+        "repo": str(shipped(meta)),
+        "files": chart_files(meta),
+        "edits": meta["edits"],
+        "flags": WORKFLOW_FLAGS.split(),
     }
 
 
@@ -317,7 +339,9 @@ def sql_job(meta, brief, seed, selfcheck=False):
     }
 
 
-def job(meta, brief, learner=None, helm=None, docker=None, sql=None, git=None):
+def job(
+    meta, brief, learner=None, helm=None, docker=None, sql=None, git=None, workflow=None
+):
     """Everything the child needs to grade one sitting, as plain data.
 
     `learner` is the file to grade, and defaults to the learner's own. A self-check grades
@@ -325,9 +349,11 @@ def job(meta, brief, learner=None, helm=None, docker=None, sql=None, git=None):
     answer for a Helm task and `docker` is `docker_job`'s for a Dockerfile task; a manifest
     has neither. `sql` is `sql_job`'s answer for a SQL task. Neither a Dockerfile nor SQL
     needs kubeconform, so they are not asked for one. `git` is `gitrepo.job`'s answer for
-    a git task, which needs no kubeconform either."""
+    a git task, which needs no kubeconform either, and `workflow` is `workflow_job`'s for a
+    workflow task, which actionlint judges instead."""
     tool = tools.installed(tools.KUBECONFORM)
-    if tool is None and docker is None and sql is None and git is None:
+    own = (docker, sql, git, workflow)
+    if tool is None and all(k is None for k in own):
         raise ToolMissing("kubeconform is not installed: run `drillion doctor --fetch`")
     return {
         "kind": meta.get("kind", MANIFEST),
@@ -335,6 +361,7 @@ def job(meta, brief, learner=None, helm=None, docker=None, sql=None, git=None):
         "docker": docker,
         "sql": sql,
         "git": git,
+        "workflow": workflow,
         "learner": str(learner or meta["path"]),
         "grader": str(meta["dir"] / "grade.py"),
         "module": module_name(meta["dir"].name),
@@ -397,6 +424,14 @@ def docker_fingerprint(meta):
             pin.binary_sha256,
             json.dumps(HADOLINT_CONFIG, sort_keys=True),
         ),
+    )
+
+
+def workflow_fingerprint(meta):
+    """What decided a workflow verdict: the grader and its repository, and actionlint."""
+    pin = tools.pin_for(tools.ACTIONLINT)
+    return _fingerprint(
+        "w1:", (grader_revision(meta), pin.version, pin.binary_sha256, WORKFLOW_FLAGS)
     )
 
 

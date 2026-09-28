@@ -1,5 +1,5 @@
-"""The grading child for every kind but python: a manifest, a Helm chart, a Dockerfile, SQL
-or a git repository.
+"""The grading child for every kind but python: a manifest, a Helm chart, a Dockerfile, SQL,
+a git repository or a GitHub Actions workflow.
 
 `runner.run_manifest` copies this file into the sandbox's scratch directory and runs it with
 two paths: the job to do, and the file to answer in. Everything it needs arrives as JSON,
@@ -519,6 +519,94 @@ def grade_manifest(grade):
     except Exception as exc:
         # past the schema, anything but an assert is the grader failing to read this
         # sitting's brief: ours to fix, and it must not cost the learner an attempt
+        answer(False, report=report, broken=f"{type(exc).__name__}: {exc}")
+    answer(True, report=report)
+
+
+class WorkflowLoader(yaml.SafeLoader):
+    """YAML as GitHub reads a workflow. PyYAML reads YAML 1.1, where an unquoted `on:` is
+    the key True and `yes`, `no` and `off` are booleans too; GitHub keeps them as strings,
+    and only true and false are booleans."""
+
+
+WorkflowLoader.yaml_implicit_resolvers = {
+    first: [r for r in resolvers if r[0] != "tag:yaml.org,2002:bool"]
+    for first, resolvers in yaml.SafeLoader.yaml_implicit_resolvers.items()
+}
+WorkflowLoader.add_implicit_resolver(
+    "tag:yaml.org,2002:bool",
+    re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"),
+    list("tTfF"),
+)
+
+
+def grade_workflow(grade):
+    """A workflow sitting: the repository laid out with the learner's file at `edits`,
+    actionlint over every workflow in it, then the task's `check()` over the learner's.
+    Nothing runs. The empty `.git` is how actionlint finds the repository's root, and with
+    it a reusable workflow that a caller names by its `./.github/workflows/` path."""
+    w, brief = job["workflow"], job["brief"]
+    edits = w["edits"]
+    text = Path(job["learner"]).read_text(encoding="utf-8")
+    if not text.strip():
+        answer(
+            False,
+            [(None, f"{edits} is empty: write the workflow before submitting", edits)],
+        )
+    repo = Path("repo")
+    (repo / ".git").mkdir(parents=True)
+    for name in w["files"]:
+        (repo / name).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(Path(w["repo"]) / name, repo / name)
+    (repo / edits).parent.mkdir(parents=True, exist_ok=True)
+    (repo / edits).write_text(text, encoding="utf-8")
+    workflows = sorted(
+        p.relative_to(repo).as_posix()
+        for p in (repo / ".github" / "workflows").glob("*")
+        if p.suffix in (".yml", ".yaml")
+    )
+    try:
+        done = subprocess.run(
+            [w["tool"], *w["flags"], "-no-color", "-format", "{{json .}}", *workflows],
+            capture_output=True,
+            check=False,
+            cwd=repo,
+            text=True,
+            timeout=job["validator_seconds"],
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        answer(False, broken=f"actionlint did not run: {exc}")
+    try:
+        found = json.loads(done.stdout) or []
+    except ValueError:
+        answer(False, broken=f"actionlint did not run: {done.stderr.strip()[-500:]}")
+    report = "\n".join(
+        f"{f['filepath']}:{f['line']}:{f['column']} [{f['kind']}] {f['message']}"
+        for f in found
+    )
+    if found:
+        answer(
+            False,
+            [
+                (
+                    None,
+                    f"line {f['line']}: {f['message']} ({f['kind']})",
+                    f["filepath"],
+                    f["line"],
+                )
+                for f in found
+            ],
+            report,
+        )
+    workflow = yaml.load(text, Loader=WorkflowLoader)
+    if not isinstance(workflow, dict):
+        answer(False, [(None, f"{edits} must be a mapping, not a list or a scalar")])
+    try:
+        # never `unset`: an event with nothing under it, `pull_request:`, is null and still on
+        grade.check(workflow, brief)
+    except AssertionError as exc:
+        answer(False, [(None, str(exc))], report)
+    except Exception as exc:
         answer(False, report=report, broken=f"{type(exc).__name__}: {exc}")
     answer(True, report=report)
 
@@ -1151,6 +1239,7 @@ GRADERS = {
     "docker": grade_docker,
     "sql": grade_sql,
     "git": grade_git,
+    "workflow": grade_workflow,
 }
 
 

@@ -1,0 +1,34 @@
+name: build-image
+on:
+  workflow_call:
+    inputs:
+      image:
+        type: string
+        required: true
+      context:
+        type: string
+        required: true
+    secrets:
+      REGISTRY_PASSWORD:
+        required: true
+    outputs:
+      digest:
+        value: ${{ jobs.build.outputs.digest }}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/login-action@v4
+        with:
+          registry: acmeshop.azurecr.io
+          username: acmeshop
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - id: push
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ inputs.context }}
+          push: true
+          tags: acmeshop.azurecr.io/${{ inputs.image }}:${{ github.sha }}

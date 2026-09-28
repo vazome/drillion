@@ -456,6 +456,42 @@ def test_a_dockerfile_task_without_its_context_or_key_is_skipped():
     }
 
 
+def _workflow(edits=".github/workflows/ci.yml", **repo):
+    readme = README.replace("tier: core\n", "").replace(
+        "difficulty: easy", f"kind: workflow\nedits: {edits}\ndifficulty: easy"
+    )
+    return {
+        "README.md": readme,
+        "workflow.yml": "",
+        "grade.py": _GRADER,
+        "solution.yaml": "on: push\n",
+        **{f"repo/{path}": text for path, text in repo.items()},
+    }
+
+
+def test_a_workflow_task_edits_one_workflow_the_repository_does_not_have():
+    assert _reasons(**{"046_workflow": _workflow()}) == {}
+    shipped = {".github/workflows/ci.yml": "on: push\n"}
+    assert _reasons(**{"046_workflow": _workflow(**shipped)}) == {
+        "046_workflow": [
+            "repo/.github/workflows/ci.yml: must not exist, the learner's file goes there"
+        ]
+    }
+    assert _reasons(**{"046_workflow": _workflow("action.yml")}) == {
+        "046_workflow": [
+            "README.md: edits 'action.yml' is not .github/workflows/<name>.yml"
+        ]
+    }
+
+
+def test_a_workflow_task_without_its_key_is_skipped():
+    files = _workflow()
+    del files["solution.yaml"]
+    assert _reasons(**{"046_workflow": files}) == {
+        "046_workflow": ["solution.yaml: missing"]
+    }
+
+
 _SQL_README = README.replace("tier: core\n", "").replace(
     "difficulty: easy", "kind: sql\nedits: task.sql\ndifficulty: easy"
 )

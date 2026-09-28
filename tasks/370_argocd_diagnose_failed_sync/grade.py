@@ -48,7 +48,9 @@ def difference(got, want, path=""):
                 return f"{path}.{key} is missing, and git has it".lstrip(".")
         for key in got:
             if key not in want:
-                return f"{path}.{key} is not in git's manifest; leave it out".lstrip(".")
+                return f"{path}.{key} is not in git's manifest; leave it out".lstrip(
+                    "."
+                )
         for key in want:
             found = difference(got[key], want[key], f"{path}.{key}")
             if found:
@@ -68,7 +70,9 @@ def difference(got, want, path=""):
 
 
 def check(doc, b):
-    assert doc.get("kind") == "Job", f"kind is {doc.get('kind')!r}, and the fix is to the Job"
+    assert doc.get("kind") == "Job", (
+        f"kind is {doc.get('kind')!r}, and the fix is to the Job"
+    )
     notes = (doc.get("metadata") or {}).get("annotations") or {}
     assert notes.get(HOOK) == "PreSync", (
         f"the Job's {HOOK} is {notes.get(HOOK)!r}: without PreSync the migration would run "
@@ -78,7 +82,9 @@ def check(doc, b):
         ((doc.get("spec") or {}).get("template") or {}).get("spec") or {}
     ).get("containers") or [{}]
     c = containers[0] if isinstance(containers[0], dict) else {}
-    env = {e.get("name"): e.get("value") for e in c.get("env") or [] if isinstance(e, dict)}
+    env = {
+        e.get("name"): e.get("value") for e in c.get("env") or [] if isinstance(e, dict)
+    }
     host = env.get("DATABASE_HOST")
     assert host != "postgres", (
         "DATABASE_HOST is still 'postgres', the name the log says DNS cannot find"
