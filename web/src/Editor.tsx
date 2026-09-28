@@ -11,6 +11,12 @@ import "@codingame/monaco-vscode-standalone-languages/languages/definitions/yaml
 import "@codingame/monaco-vscode-standalone-languages/languages/definitions/dockerfile/register.js";
 import "@codingame/monaco-vscode-standalone-languages/languages/definitions/pgsql/register.js";
 import "@codingame/monaco-vscode-standalone-languages/languages/definitions/shell/register.js";
+// what a Docker task's build context holds beside the Dockerfile, shown read-only
+import "@codingame/monaco-vscode-standalone-languages/languages/definitions/javascript/register.js";
+import "@codingame/monaco-vscode-standalone-languages/languages/definitions/go/register.js";
+import "@codingame/monaco-vscode-standalone-languages/languages/definitions/java/register.js";
+import "@codingame/monaco-vscode-standalone-languages/languages/definitions/html/register.js";
+import "@codingame/monaco-vscode-standalone-languages/languages/definitions/xml/register.js";
 import { EditorApp } from "monaco-languageclient/editorApp";
 import { MonacoVscodeApiWrapper } from "monaco-languageclient/vscodeApiWrapper";
 import { LanguageClientWrapper, LcWebSocket } from "monaco-languageclient/lcwrapper";
@@ -38,6 +44,20 @@ const ext = (kind: Meta["kind"]) => EXT[kind] ?? "yaml";
 const fileFor = (kind: Meta["kind"]) => `${WORKSPACE}/${kind === "python" ? "solve" : "task"}.${ext(kind)}`;
 // Monaco's pgsql claims no file extension, so a .sql model has to be told its language
 const language = (kind: Meta["kind"]) => (kind === "sql" ? { enforceLanguageId: "pgsql" } : {});
+
+/** The Monarch language of a file shown read-only beside the editor, read off its name. A Helm
+ *  template is YAML with `{{ }}` in it, and YAML is the nearest colouring there is for it;
+ *  JSON has no Monarch grammar, and JavaScript's colours it right. */
+const LANG: [RegExp, string][] = [
+  [/\.sql$/, "pgsql"], [/\.(ya?ml|tpl)$/, "yaml"], [/(^|\/)Dockerfile$/, "dockerfile"], [/\.py$/, "python"],
+  [/\.sh$/, "shell"], [/\.(m?js|json)$/, "javascript"], [/\.go$/, "go"], [/\.java$/, "java"], [/\.html?$/, "html"], [/\.xml$/, "xml"],
+];
+const langOf = (path: string) => LANG.find(([re]) => re.test(path))?.[1] ?? "plaintext";
+
+/** A read-only file as coloured markup, by the editor's own tokenizer and theme, so it reads
+ *  the way the file beside it does and follows the theme with it. The markup is Monaco's: it
+ *  escapes the text itself. */
+export const colorize = (text: string, path: string) => monaco.editor.colorize(text, langOf(path), {});
 
 /** wss on a served-over-TLS page: a tunnel or a reverse proxy in front of drillion makes a
  *  plain ws:// socket mixed content, which the browser blocks outright. */
@@ -108,6 +128,14 @@ function applyTheme(dark: boolean) {
       { token: "comment", foreground: bare("--syn-comment"), fontStyle: "italic" },
       { token: "identifier", foreground: bare("--text") },
       { token: "type.identifier", foreground: bare("--syn-function"), fontStyle: "bold" },
+      // the base themes colour these by language, more specifically than the rules above, in
+      // colours that are not ours (a red SQL string, a magenta type)
+      { token: "string.sql", foreground: bare("--syn-string") },
+      { token: "predefined.sql", foreground: bare("--syn-keyword") },
+      { token: "operator.sql", foreground: bare("--syn-keyword") },
+      { token: "tag", foreground: bare("--syn-keyword") },
+      { token: "attribute.name", foreground: bare("--syn-number") },
+      { token: "attribute.value", foreground: bare("--syn-string") },
     ],
     colors: {
       "editor.background": token("--editor"),
@@ -149,6 +177,11 @@ const editorOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
   minimap: { enabled: false },
   scrollBeyondLastLine: false,
   automaticLayout: true,
+  // a task's file stays well under a thousand lines: three digits and one of margin, not
+  // Monaco's five, and no glyph column, since nothing here sets breakpoints or glyph marks
+  lineNumbersMinChars: 4,
+  glyphMargin: false,
+  lineDecorationsWidth: 8,
   // the frame clips for its rounded corners, and suggest/hover/signature panels render
   // inside the editor by default — this reparents them so they are not cut off
   fixedOverflowWidgets: true,

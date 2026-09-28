@@ -22,6 +22,8 @@ export function PracticeHeatmap({ days = {}, today, className, style, cell = 14,
   const months = [];
   let prev = -1;
   cols.forEach((week, c) => { const m = week[0].getMonth(); if (m !== prev && c < 51) { months.push({ c, m }); prev = m; } });
+  // a label spans four columns: a month the year only clips the end of would print over the next
+  const labels = months.filter((x, i) => !months[i + 1] || months[i + 1].c - x.c >= 3);
   const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   const counts = Object.values(days);
@@ -30,22 +32,27 @@ export function PracticeHeatmap({ days = {}, today, className, style, cell = 14,
   const fmt = (d) => d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
   const aria = "Practice over the last year: " + passes + " passes across " + practised + " days.";
   const [tip, setTip] = React.useState(null);
-  const show = (e, text) => setTip({ text, x: e.currentTarget.offsetLeft + e.currentTarget.offsetWidth / 2, y: e.currentTarget.offsetTop });
+  // the bubble sits outside the scrolling plot, which would clip it above the top row: so it
+  // is placed against the root, less however far the year has been scrolled
+  const show = (e, text) => {
+    const sq = e.currentTarget, plot = sq.offsetParent;
+    setTip({ text, x: sq.offsetLeft - plot.scrollLeft + sq.offsetWidth / 2, y: plot.offsetTop + sq.offsetTop });
+  };
 
   return (
-    <div className={className} style={style}>
-      <div role="img" aria-label={aria} tabIndex={0} className={s.plot} onMouseLeave={() => setTip(null)}>
-        {tip ? <Tip text={tip.text} x={tip.x} y={tip.y} /> : null}
+    <div className={className ? s.root + " " + className : s.root} style={style}>
+      {tip ? <Tip text={tip.text} x={tip.x} y={tip.y} /> : null}
+      <div role="img" aria-label={aria} tabIndex={0} className={s.plot} onMouseLeave={() => setTip(null)} onScroll={() => setTip(null)}>
         <div className={s.grid} style={{ "--cols": "repeat(53, " + cellSize + "px)" }}>
           <div className={s.months} style={{ gap: gap + "px" }}>
-            {months.map(({ c, m }) => <div key={c} style={{ gridRow: 1, gridColumn: c + 1 + " / span 4" }}>{MON[m]}</div>)}
+            {labels.map(({ c, m }) => <div key={c} style={{ gridRow: 1, gridColumn: c + 1 + " / span 4" }}>{MON[m]}</div>)}
           </div>
           <div className={s.cells} style={{ gap: gap + "px", gridTemplateRows: "repeat(7, " + cellSize + "px)", marginTop: gap }}>
             {cols.flatMap((week) => week.map((d) => {
               const future = d > end;
               const n = days[iso(d)] || 0;
               const text = n === 0 ? "No practice on " + fmt(d) : n + (n === 1 ? " pass" : " passes") + " on " + fmt(d);
-              return <div key={iso(d)} title={future ? undefined : text} onMouseEnter={future ? undefined : (e) => show(e, text)}
+              return <div key={iso(d)} onMouseEnter={future ? undefined : (e) => show(e, text)}
                 className={s.cell} data-heat={heatLevel(n)} data-future={future ? "" : undefined} data-round={cellSize > 14 ? "lg" : undefined}
                 style={{ height: cellSize }} />;
             }))}

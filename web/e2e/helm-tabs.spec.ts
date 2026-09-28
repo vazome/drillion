@@ -17,8 +17,8 @@ test("a Helm task's chart files open read-only and the learner's file comes back
   await tabs.getByRole("tab", { name: /^values\.yaml, part of the chart, read-only/ }).click();
   const file = page.getByRole("tabpanel").locator("pre");
   await expect(file).toContainText("replicaCount: 1");
-  // the note under the strip says it in words, not only with the lock
-  await expect(page.getByText("values.yaml · part of the chart, read-only", { exact: false }).filter({ visible: true })).toHaveCount(1);
+  // coloured by the editor's own tokenizer, the way the file beside it is
+  await expect(file.locator("span[class*='mtk']").first()).toBeVisible();
 
   // arrows move and open in one step, and wrap
   await page.keyboard.press("ArrowLeft");

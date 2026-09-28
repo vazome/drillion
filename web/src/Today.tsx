@@ -1,10 +1,12 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { m } from "motion/react";
 import { Button, EmptyState, Icon, Kbd, NoticeBanner, TagChip, TaskPath } from "./ds/index.js";
 import type { Catalogue as Payload, Row } from "./api";
 import { Level } from "./Level";
 import { taskHref } from "./Deps";
 import { plural, topicNo } from "./format";
 import { inDays, strength, tally } from "./strength";
+import { Drop, dur, ease } from "./motion";
 import s from "./Today.module.css";
 
 const DAY = 86400000;
@@ -16,6 +18,18 @@ const FIRST_RUN = "drillion-first-run";
 const HOW_IT_WORKS = "https://github.com/vazome/drillion/blob/main/docs/how-it-works.md";
 // the ladder drawn as a staircase: each rung a step higher than the last, whatever it holds
 const RUNG = [14, 24, 34, 46, 58, 74, 92];
+
+/** Up next lands just after the headline when a new track redraws them (`.arrive`). */
+const SECOND = { "--i": 1 } as CSSProperties;
+
+const PAINTED = "drillion-today-painted";
+/** True on the first Today of a browser session: the ladder grows and recent work staggers in
+ *  then, and the tenth visit of the day is not a show. */
+function useFirstPaint() {
+  const [first] = useState(() => !sessionStorage.getItem(PAINTED));
+  useEffect(() => sessionStorage.setItem(PAINTED, "1"), []);
+  return first;
+}
 
 /** Today as a LOCAL YYYY-MM-DD, which parses back to the same UTC midnight `due` does. */
 const localToday = () => new Date().toLocaleDateString("en-CA");
@@ -56,27 +70,29 @@ function noPicks(no: NonNullable<Payload["today"]["no_new"]>, today: Payload["to
   return no satisfies never;
 }
 
-/** "The first of 15 in docker": where a task sits in its track. */
-function place(row: Row, rows: Row[]) {
-  const group = row.track ?? row.tier;
-  if (!group) return null;
-  const peers = rows.filter((r) => (r.track ?? r.tier) === group).sort((a, b) => a.topic - b.topic);
-  const n = peers.indexOf(row) + 1;
-  const suffix: Partial<Record<Intl.LDMLPluralRule, string>> = { one: "st", two: "nd", few: "rd" };
-  const nth = n === 1 ? "first" : `${n}${suffix[new Intl.PluralRules("en", { type: "ordinal" }).select(n)] ?? "th"}`;
-  return `The ${nth} of ${peers.length} in ${group}.`;
+/** The day's sentence. Keyed by what it says, so it comes in again only when that changes;
+ *  `arrive` is read once, at mount: after a new track it pops in (`.arrive`). */
+function Headline({ today, arrive }: { today: Payload["today"]; arrive: boolean }) {
+  const [pop] = useState(arrive || undefined);
+  return <>
+    <h1 className={s.h1} data-arrive={pop}>{headline(today.review.length, today.due_total, today.new.length)}</h1>
+    {today.review.length < today.due_total
+      ? <p className={s.muted} data-arrive={pop}>{today.review.length} are served a day; the other {today.due_total - today.review.length} stay due.</p> : null}
+  </>;
 }
 
-function UpNext({ data, by, queue, focus, onFocus, onAllDue }: {
+/** Keyed by the task it offers, so a new track that changes it pops the card in. */
+function UpNext({ data, by, queue, focus, onFocus, onAllDue, arrive }: {
   data: Payload; by: Map<string, Row>; queue: Row[]; focus: string | null;
-  onFocus: (tag: string | null) => void; onAllDue: () => void;
+  onFocus: (tag: string | null) => void; onAllDue: () => void; arrive: boolean;
 }) {
+  const [pop] = useState(arrive || undefined);
   const { today, stats, tasks } = data;
   const empty = today.no_new ? noPicks(today.no_new, today, focus, by) : null;
   const head = queue[0];
   if (!head) {
     return (
-      <section aria-labelledby="next-h" className={s.card} data-empty="">
+      <section aria-labelledby="next-h" className={s.card} data-empty="" data-arrive={pop} style={SECOND}>
         <div className={s.nextBody}>
           <h2 id="next-h" className={s.eyebrow}>Up next</h2>
           <p className={s.nextNote}>{empty?.message ?? "Nothing is waiting today."}</p>
@@ -87,11 +103,10 @@ function UpNext({ data, by, queue, focus, onFocus, onAllDue }: {
   }
   const review = today.review.includes(head.slug);
   const opens = tasks.filter((r) => r.prereqs?.includes(head.topic)).sort((a, b) => a.topic - b.topic);
-  const needs = (head.prereqs ?? []).map(topicNo);
   const known = strength(head.box, !!head.seen, stats.ladder);
   const then = queue.slice(1, 4);
   return (
-    <section aria-labelledby="next-h" className={s.card}>
+    <section aria-labelledby="next-h" className={s.card} data-arrive={pop} style={SECOND}>
       <div className={s.number}>
         <span className={s.big}>{topicNo(head.topic)}</span>
         <span className={s.grow} />
@@ -101,10 +116,7 @@ function UpNext({ data, by, queue, focus, onFocus, onAllDue }: {
       <div className={s.nextBody}>
         <h2 id="next-h" className={s.eyebrow} data-accent="">Up next · {review ? "review" : "new pick"}</h2>
         <p className={s.title}>{head.title}</p>
-        <p className={s.muted}>
-          {review ? <>{cap(dueText(head))}. {known ? <>Last seen as <Level of={known} />.</> : null}</>
-            : <>{needs.length ? `Builds on ${needs.join(" · ")}.` : "No prereqs."} {place(head, tasks)}</>}
-        </p>
+        {review ? <p className={s.muted}>{cap(dueText(head))}. {known ? <>Last seen as <Level of={known} />.</> : null}</p> : null}
         {opens.length ? (
           <div className={s.opens}>
             <span className={s.eyebrow}>Progresses into {plural(opens.length, "task")}</span>
@@ -131,6 +143,7 @@ function UpNext({ data, by, queue, focus, onFocus, onAllDue }: {
 }
 
 function Ladder({ stats }: { stats: Payload["stats"] }) {
+  const first = useFirstPaint();
   const words = stats.ladder.map((_, i) => strength(i, true, stats.ladder)!);
   const known = tally(stats.boxes, stats.ladder);
   const groups = (["learning", "familiar", "solid"] as const).map((k) => ({ k, rungs: words.filter((w) => w === k).length }));
@@ -144,9 +157,11 @@ function Ladder({ stats }: { stats: Payload["stats"] }) {
       </div>
       <div className={s.rungs} role="img" aria-label={`Tasks by how soon they come back: ${stats.ladder.map((d, i) => `${stats.boxes[i]} in ${d} days`).join(", ")}.`}>
         {stats.ladder.map((d, i) => (
-          <span key={d} className={s.rung} data-of={words[i]} data-empty={stats.boxes[i] ? undefined : ""} style={{ height: RUNG[i] ?? RUNG.at(-1) }}>
+          <m.span key={d} className={s.rung} data-of={words[i]} data-empty={stats.boxes[i] ? undefined : ""} style={{ height: RUNG[i] ?? RUNG.at(-1) }}
+            initial={first ? { transform: "scaleY(0)" } : false} animate={{ transform: "none" }}
+            transition={{ duration: dur("slow"), ease: ease("out"), delay: i * 0.03 }}>
             {stats.boxes[i] ? <span className={s.held}>{stats.boxes[i]}</span> : null}
-          </span>
+          </m.span>
         ))}
       </div>
       <div className={s.axis} aria-hidden="true">{stats.ladder.map((d) => <span key={d}>{d}d</span>)}</div>
@@ -179,6 +194,7 @@ function Ladder({ stats }: { stats: Payload["stats"] }) {
 
 /** Pick up where you left off: what shares a state is said once, in the band. */
 function Recent({ rows, window }: { rows: Row[]; window: number }) {
+  const first = useFirstPaint();
   const shared = !rows.length ? null
     : rows.every((r) => !r.seen) ? "none passed yet"
     : rows.every((r) => r.status === "done") ? "all passed"
@@ -191,7 +207,7 @@ function Recent({ rows, window }: { rows: Row[]; window: number }) {
         <span className={s.muted}>last {window} days{shared ? ` · ${shared}` : ""}</span>
       </div>
       {rows.length ? (
-        <div className={s.recent}>
+        <div className={first ? `${s.recent} m-stagger` : s.recent}>
           {rows.map((r) => (
             <a key={r.slug} href={taskHref(r.slug)} className={s.tile}>
               <span className={s.tileTitle}>{r.title}</span>
@@ -211,10 +227,12 @@ function Recent({ rows, window }: { rows: Row[]; window: number }) {
 }
 
 /** Today: what to do now, answered before the catalogue. */
-export function Today({ data, by, focus, onFocus, onAllDue, tracks, firstRun, onFirstRunDone }: {
+/** `arrive` is true once the focus has changed since the page loaded: what a new track
+ *  redraws comes in with motion, and nothing else moves. */
+export function Today({ data, by, focus, onFocus, onAllDue, tracks, firstRun, onFirstRunDone, arrive }: {
   data: Payload; by: Map<string, Row>; focus: string | null;
   onFocus: (tag: string | null) => void; onAllDue: () => void;
-  tracks: { name: string; total: number }[]; firstRun: boolean; onFirstRunDone: () => void;
+  tracks: { name: string; total: number }[]; firstRun: boolean; onFirstRunDone: () => void; arrive: boolean;
 }) {
   const { today, stats } = data;
   const pick = (slugs: string[]) => slugs.map((slug) => by.get(slug)).filter(Boolean) as Row[];
@@ -240,8 +258,8 @@ export function Today({ data, by, focus, onFocus, onAllDue, tracks, firstRun, on
 
   return (
     <>
-      {firstRun && stats.seen === 0 && today.recent.length === 0 ? (
-        <div className="m-drop"><NoticeBanner style={{ background: "var(--surface-2)" }}
+      <Drop>{firstRun && stats.seen === 0 && today.recent.length === 0 ? (
+        <NoticeBanner style={{ background: "var(--surface-2)" }}
           message={<>Every task you pass comes back later than the last time: {inDays(stats.ladder[0])} at
             first, {inDays(stats.ladder.at(-1)!)} once it is solid. A sitting you struggle through brings it
             back sooner instead. Reviews come first and a day holds only so many of them, so a backlog cannot
@@ -249,15 +267,13 @@ export function Today({ data, by, focus, onFocus, onAllDue, tracks, firstRun, on
           actions={[
             { label: "How it works", onClick: () => window.open(HOW_IT_WORKS, "_blank", "noopener") },
             { label: "Got it", onClick: () => { localStorage.setItem(FIRST_RUN, "1"); onFirstRunDone(); } },
-          ]} /></div>
-      ) : null}
+          ]} />
+      ) : null}</Drop>
 
       <header className={s.head}>
         <div className={s.headText}>
           <span className={s.eyebrow}>{new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</span>
-          <h1 className={s.h1}>{headline(today.review.length, today.due_total, today.new.length)}</h1>
-          {today.review.length < today.due_total
-            ? <p className={s.muted}>{today.review.length} are served a day; the other {today.due_total - today.review.length} stay due.</p> : null}
+          <Headline key={`${today.review.length}|${today.due_total}|${today.new.length}`} today={today} arrive={arrive} />
         </div>
         <dl className={s.stats}>
           <div><dt>done today</dt><dd>{today.done_today}</dd></div>
@@ -275,7 +291,7 @@ export function Today({ data, by, focus, onFocus, onAllDue, tracks, firstRun, on
       </div>
 
       <div className={s.pair}>
-        <UpNext data={data} by={by} queue={queue} focus={focus} onFocus={onFocus} onAllDue={onAllDue} />
+        <UpNext key={queue[0]?.slug ?? `none:${focus}`} arrive={arrive} data={data} by={by} queue={queue} focus={focus} onFocus={onFocus} onAllDue={onAllDue} />
         <Ladder stats={stats} />
       </div>
 

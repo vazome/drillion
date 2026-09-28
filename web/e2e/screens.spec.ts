@@ -113,12 +113,6 @@ test("captures the screens a reviewer needs", async ({ page, request }) => {
   await expect(page.getByText(/^Needs · \d+$/)).toBeVisible();
   await shot(page, "7-lineage");
 
-  // ...and the header chips plus the panel over the task, which is the other way in
-  await page.goto(`/#/task/${GATED}`);
-  await page.getByRole("button", { name: /^Opens \d+ tasks?$/ }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await shot(page, "8-task-lineage-panel");
-
   // Vim mode last: it is a browser preference, so switching it on would follow the page
   // into every shot above. Turned back off before the run ends.
   await page.goto("/#/settings");

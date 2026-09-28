@@ -33,8 +33,10 @@ const Nav = ({ href, route, children }: { href: string; route: string; children:
 export function Sidebar({ route, head, dark, setDark, onSettings }: Chrome & { route: string; head: Head }) {
   const [picks, setPicks] = useState<Picks | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // the track just clicked, lit at once while the server saves it; undefined once it has
+  const [asked, setAsked] = useState<string | null | undefined>(undefined);
   useEffect(() => {
-    const load = () => { api<Picks>("/picks").then(setPicks).catch(() => {}); };
+    const load = () => { api<Picks>("/picks").then((p) => { setPicks(p); setAsked(undefined); }).catch(() => {}); };
     load();
     addEventListener(FOCUS_SAVED, load);
     return () => removeEventListener(FOCUS_SAVED, load);
@@ -42,7 +44,8 @@ export function Sidebar({ route, head, dark, setDark, onSettings }: Chrome & { r
   const focus = picks?.focus ?? null;
   const pick = (tag: string | null) => {
     setError(null);
-    setFocus(tag).catch((e) => setError(`Focus is still “${focus ?? "every track"}”: ${e.message}`));
+    setAsked(tag);
+    setFocus(tag).catch((e) => { setAsked(undefined); setError(`Focus is still “${focus ?? "every track"}”: ${e.message}`); });
   };
   const rows = [{ key: null, name: "All tracks", size: head.total },
     ...Object.entries(picks?.tracks ?? {}).map(([name, size]) => ({ key: name, name, size }))];
@@ -60,7 +63,7 @@ export function Sidebar({ route, head, dark, setDark, onSettings }: Chrome & { r
           <h2 id="picks-from" className={s.label}>New picks from</h2>
           <div role="group" aria-labelledby="picks-from" className={s.stack}>
             {rows.map(({ key, name, size }) => {
-              const on = focus === key;
+              const on = (asked === undefined ? focus : asked) === key;
               const icon = key ? trackIcon(key) : undefined;
               return (
                 <button key={name} type="button" aria-pressed={on} data-on={on || undefined} onClick={() => pick(key)} className={s.track}>

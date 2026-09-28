@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { FailedCase, FileTabs } from "./ds/index.js";
 import type { ChartFile, Diagnostic, Meta } from "./api";
 import s from "./ManifestWorkspace.module.css";
@@ -27,6 +27,22 @@ export function ManifestFailure({ diagnostics, kind }: { diagnostics: Diagnostic
   );
 }
 
+/** One of the files around the editor, coloured the way the editor colours; plain until the
+ *  colouring comes back, which is a frame or two. */
+function ReadOnly({ path, text }: { path: string; text: string }) {
+  const [html, setHtml] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    // loaded here, not at the top: the editor is already on the page by now, and a render
+    // with no browser (the component tests) never gets as far as Monaco
+    import("./Editor").then((m) => m.colorize(text, path)).then((h) => { if (live) setHtml(h); }, () => {});
+    return () => { live = false; };
+  }, [path, text]);
+  return html === null
+    ? <pre tabIndex={0} className={s.chartFile}>{text}</pre>
+    : <pre tabIndex={0} className={s.chartFile} dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
 /** A Helm task's chart, a Dockerfile's build context or a SQL task's database, around the
  *  editor: the learner's file first, the rest read-only.
  *  A chart file is laid over the editor rather than swapped in, so the editor keeps its
@@ -48,7 +64,7 @@ export function ChartFiles({ edits, chart, diagnostics, labels, children }: {
         {...(labels ?? {})} />
       <div id={panel} role="tabpanel" aria-label={open} className={s.panel}>
         <div inert={!!shown} className={s.fill}>{children}</div>
-        {shown ? <pre tabIndex={0} className={s.chartFile}>{shown.text}</pre> : null}
+        {shown ? <ReadOnly key={shown.path} path={shown.path} text={shown.text} /> : null}
       </div>
     </div>
   );
