@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: {app}
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          - env: dev
+            url: {dev_url}
+          - env: staging
+            url: {staging_url}
+          - env: prod
+            url: {prod_url}
+  template:
+    metadata:
+      name: {name_tpl}
+    spec:
+      project: default
+      source:
+        repoURL: {repo}
+        targetRevision: main
+        path: {path_tpl}
+      destination:
+        server: '{{.url}}'
+        namespace: {app}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

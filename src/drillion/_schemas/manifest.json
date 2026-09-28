@@ -1,5 +1,10 @@
 {
     "kubernetes_version": "1.34.11",
     "source": "https://github.com/yannh/kubernetes-json-schema",
-    "digest": "3620ca1354adf32f0945afcb6544c7799d14b937a7ec9ed2a36a1431d4ce4ddc"
+    "argo": {
+        "source": "the CRDs in manifests/crds/ at https://github.com/argoproj/argo-cd/tree/v3.5.3 and https://github.com/argoproj/argo-rollouts/tree/v1.10.0",
+        "generated": "DENY_ROOT_ADDITIONAL_PROPERTIES=1 FILENAME_FORMAT='{kind}-{group}-{version}' from https://github.com/yannh/kubeconform/blob/6ae8c45bc156ceeb1d421e9b217cfc0c7ba5828d/scripts/openapi2jsonschema.py, written compact",
+        "kinds": ["Application", "ApplicationSet", "AppProject", "Rollout", "AnalysisTemplate"]
+    },
+    "digest": "619dd0af42825e14f46bb7a4ade5a859f3abcd55044c6e43d71cb7d665edadc3"
 }

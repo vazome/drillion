@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {name}
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: {repo}
+    targetRevision: main
+    path: {path}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {namespace}
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: {name}
+      jsonPointers:
+        - /spec/replicas
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - RespectIgnoreDifferences=true
