@@ -256,8 +256,10 @@ async def shutdown():
     """End every shell and wait out the releases still running, which the loop would
     otherwise drop with their bash unreaped. Run as the server stops."""
     await end_all()
-    while _releasing:
-        await asyncio.gather(*_releasing, return_exceptions=True)
+    # not `while _releasing`: a finished release leaves the set a loop turn later, and
+    # awaiting only finished tasks never yields that turn
+    while pending := [t for t in _releasing if not t.done()]:
+        await asyncio.wait(pending)
 
 
 async def _unquiet():
