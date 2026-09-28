@@ -252,6 +252,16 @@ async def end_all(code=RESET):
     await asyncio.gather(*(end(slug, code) for slug in list(_live)))
 
 
+async def shutdown():
+    """End every shell and wait out the releases still running, which the loop would
+    otherwise drop with their bash unreaped. Run as the server stops."""
+    await end_all()
+    # not `while _releasing`: a finished release leaves the set a loop turn later, and
+    # awaiting only finished tasks never yields that turn
+    while pending := [t for t in _releasing if not t.done()]:
+        await asyncio.wait(pending)
+
+
 async def _unquiet():
     while _quiet is not None:
         await _quiet.wait()
