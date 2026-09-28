@@ -39,6 +39,8 @@ test("the chart strip never moves the editor and is one tab stop", async ({ page
   await expect(tabs.getByRole("tab").first()).toBeVisible();
   // against the document, not the viewport: a run may scroll the page, which moves nothing
   const top = () => panel.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+  // the page rises into place as it arrives: measure where it settles, not where it passes
+  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"));
   const before = await top();
 
   await expect(tabs.locator('[tabindex="0"]')).toHaveCount(1);

@@ -27,6 +27,9 @@ export function Motion({ children }: { children: ReactNode }) {
   return <LazyMotion features={domMax} strict><MotionConfig reducedMotion="user">{children}</MotionConfig></LazyMotion>;
 }
 
+/* Under reduced motion both below start where they end, with no first frame at opacity 0:
+   a zero duration still paints that frame once before the animation runs. */
+
 /** Something that appears in place and goes again, like a notice: pass it as the child while
  *  it shows and `null` once it has gone, and it lifts out instead of vanishing. `y` is where it
  *  comes from (above by default); `enter={false}` when the child already animates itself in. */
@@ -37,7 +40,7 @@ export function Drop({ children, y = -7, enter = true, className, style }: {
     <AnimatePresence>
       {children ? (
         <m.div key="drop" className={className} style={style}
-          initial={enter ? { opacity: 0, transform: `translateY(${y}px)` } : false}
+          initial={enter && dur("base") ? { opacity: 0, transform: `translateY(${y}px)` } : false}
           animate={{ opacity: 1, transform: "none", transition: { duration: dur("base"), ease: ease("out") }, transitionEnd: { transform: "none" } }}
           exit={{ opacity: 0, transform: `translateY(${y}px)`, transition: { duration: dur("fast"), ease: ease("in") } }}>
           {children}
@@ -56,7 +59,7 @@ export function Swap({ id, children, rise = false, appear = false, className }: 
   return (
     <AnimatePresence mode="wait" initial={appear}>
       <m.div key={id} className={className}
-        initial={{ opacity: 0, transform: `translateY(${rise ? 6 : 0}px)` }}
+        initial={dur("base") ? { opacity: 0, transform: `translateY(${rise ? 6 : 0}px)` } : false}
         animate={{ opacity: 1, transform: "none", transition: { duration: dur("base"), ease: ease("out") }, transitionEnd: { transform: "none" } }}
         exit={{ opacity: 0, transition: { duration: dur("fast"), ease: ease("in") } }}>
         {children}
