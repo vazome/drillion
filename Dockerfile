@@ -4,8 +4,12 @@ WORKDIR /build
 COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml ./
 # node images no longer bundle corepack. It stays the mechanism because it reads the pnpm version
 # out of package.json's packageManager, which keeps that pin the only place the version is
-# written; --force is for the yarn shim the image ships and this stage never uses.
-RUN npm install -g --force corepack@0.35.0 && corepack enable pnpm
+# written. Unpacked from its checksummed release tarball rather than `npm install -g`, which
+# cannot pin by hash; the package has no dependencies, so unpacking it is the whole install.
+ADD --checksum=sha256:f62535fc7be1f77e4b12cd1e420b8542b8e895cbb14178926963a41a9232a4fe \
+    https://registry.npmjs.org/corepack/-/corepack-0.35.0.tgz /tmp/corepack.tgz
+RUN mkdir /opt/corepack && tar -xzf /tmp/corepack.tgz -C /opt/corepack --strip-components=1 \
+    && node /opt/corepack/dist/corepack.js enable --install-directory /usr/local/bin pnpm
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --store-dir /pnpm/store
 COPY web/ ./
