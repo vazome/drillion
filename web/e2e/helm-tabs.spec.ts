@@ -94,3 +94,13 @@ test("a SQL task's database opens read-only beside task.sql", async ({ page }) =
   await tabs.getByRole("tab", { name: /^schema\.sql, part of the database, read-only/ }).click();
   await expect(page.getByRole("tabpanel").locator("pre")).toContainText("CREATE TABLE customers");
 });
+
+/** A workflow task shows the rest of its repository the same way: here, the workflow that
+ *  calls the reusable one the learner writes. */
+test("a workflow task's repository opens read-only beside the learner's workflow", async ({ page }) => {
+  await page.goto("/#/task/381_gha_reusable_workflow");
+  const tabs = page.getByRole("tablist", { name: "Repository files" });
+  await expect(tabs.getByRole("tab", { name: /^\.github\/workflows\/build-image\.yml, yours/ })).toHaveAttribute("aria-selected", "true");
+  await tabs.getByRole("tab", { name: /^\.github\/workflows\/ci\.yml, part of the repository, read-only/ }).click();
+  await expect(page.getByRole("tabpanel").locator("pre")).toContainText("uses: ./.github/workflows/build-image.yml");
+});

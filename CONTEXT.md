@@ -19,8 +19,10 @@ them into `task.yaml` and `grade.py`; a Helm task does the same beside the **cha
 `task.yaml` completes, a Dockerfile task beside the **build context** its `Dockerfile` is
 written for, and a SQL task splits them into `task.sql` and `grade.py` beside the
 **database** it asks about. A git task keeps `history.sh`, `grade.py` and `solution.sh`, and
-the learner works in the **sitting repository** its `setup()` builds. There are 370: 267
-Python, 40 manifest (14 of them Argo CD's objects), 15 Helm, 15 Dockerfile, 15 SQL, 18 git.
+the learner works in the **sitting repository** its `setup()` builds. A workflow task keeps
+`workflow.yml` beside `grade.py`, placed in the **shipped repository** at the path `edits`
+names. There are 385: 267 Python, 40 manifest (14 of them Argo CD's objects), 15 Helm, 15
+Dockerfile, 15 SQL, 18 git, 15 workflow.
 _Avoid_: exercise, drill, problem, kata, question
 
 **Slug**:
@@ -43,7 +45,7 @@ _Avoid_: complexity, hardness; and never `easy` as a **grade**
 **Track**:
 A themed run through the catalogue that cuts across tiers, one per task. A Python task that
 names none is on the `python` track; the others are `kubernetes`, `argocd`, `helm`, `docker`,
-`sql` and `git`.
+`github-actions`, `sql` and `git`.
 _Avoid_: course, path, series, curriculum
 
 **Tag**:
@@ -72,6 +74,13 @@ The files a Dockerfile task ships under `context/`: the app the learner's `Docke
 Shown read-only beside the editor, and every `COPY` source must be one of them. Nothing is
 built: there is no Docker engine inside drillion.
 _Avoid_: project, source tree, workspace
+
+**Shipped repository**:
+The files a workflow task ships under `repo/`: the rest of the repository the learner's
+workflow lives in, such as the workflow that calls theirs. Shown read-only beside the editor,
+and linted with the learner's file, in a repository laid out fresh for each grade. Nothing
+runs: there is no runner inside drillion.
+_Avoid_: sitting repository, which is a git task's; workspace, checkout
 
 **Database**:
 The files a SQL task ships under `db/`: `schema.sql`, which every pass of a grade runs before

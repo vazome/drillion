@@ -1,0 +1,19 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  staging:
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: staging
+      image-tag: ${{ github.ref_name }}
+  production:
+    needs: staging
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+      image-tag: ${{ github.ref_name }}

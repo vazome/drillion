@@ -1,7 +1,8 @@
 # GitHub Actions and Argo CD: what it takes
 
-Research, 2026-09-28, reviewed the same day (see the end). The Argo CD design is
-[2026-09-28-argocd-track-design.md](../superpowers/specs/2026-09-28-argocd-track-design.md).
+Research, 2026-09-28, reviewed the same day (see the end). The designs are
+[2026-09-28-argocd-track-design.md](../superpowers/specs/2026-09-28-argocd-track-design.md) and
+[2026-09-28-gha-track-design.md](../superpowers/specs/2026-09-28-gha-track-design.md).
 
 ## Why
 
@@ -118,8 +119,9 @@ outside drillion.
 **Argo CD, 14 tasks, on the manifest kind** once the Argo schemas are packaged. The list is
 in the design.
 
-**GitHub Actions, about 14 tasks, a new kind.** The learner writes one workflow; actionlint,
-then `check()` on the workflow parsed with the loader above.
+**GitHub Actions, 15 tasks, a new kind** (ADR 0014). The learner writes one workflow;
+actionlint, then `check()` on the workflow parsed with the loader above. The list is in the
+design; these were the topics:
 
 - triggers: `on:`, branch and path filters, `workflow_dispatch` inputs
 - `needs:` ordering, `if:` conditions and `failure()`

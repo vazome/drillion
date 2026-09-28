@@ -7,7 +7,7 @@ import s from "./ManifestWorkspace.module.css";
  *  reads a sentence back into data: `path` is where in the YAML, `message` is what is
  *  wrong with it, and a diagnostic with no path is about the document as a whole. On a Helm
  *  task the paths are into what Helm rendered, not into the file the learner wrote. */
-const LOOK: Partial<Record<Meta["kind"], string>> = { helm: "Your chart needs another look", docker: "Your Dockerfile needs another look", sql: "Your SQL needs another look", git: "Your repository needs another look" };
+const LOOK: Partial<Record<Meta["kind"], string>> = { helm: "Your chart needs another look", docker: "Your Dockerfile needs another look", sql: "Your SQL needs another look", git: "Your repository needs another look", workflow: "Your workflow needs another look" };
 
 export function ManifestFailure({ diagnostics, kind }: { diagnostics: Diagnostic[]; kind: Meta["kind"] }) {
   const fields = diagnostics.filter((d) => d.path);

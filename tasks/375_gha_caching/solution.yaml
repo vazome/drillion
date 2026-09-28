@@ -1,0 +1,20 @@
+name: CI
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/pip
+          key: {key}
+          restore-keys: {restore}
+      - run: {install}
+      - run: pytest

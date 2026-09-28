@@ -141,6 +141,17 @@ def test_every_hadolint_pin_is_the_one_release():
         assert pin.filename == "hadolint" and pin.archive_sha256 == pin.binary_sha256
 
 
+def test_every_actionlint_pin_is_the_one_release():
+    for (os_name, arch), pin in tools.PINS[tools.ACTIONLINT].items():
+        v = tools.ACTIONLINT_VERSION
+        assert pin.version == v
+        assert pin.url == (
+            f"https://github.com/rhysd/actionlint/releases/download/{v}/"
+            f"actionlint_{v[1:]}_{os_name}_{arch}.tar.gz"
+        )
+        assert pin.member == "actionlint" and pin.filename == "actionlint"
+
+
 @responses.activate
 def test_a_bare_binary_is_installed_as_downloaded(tmp_path, monkeypatch):
     """hadolint ships the executable itself, no archive around it."""
@@ -289,6 +300,7 @@ def test_report_names_the_command_that_fixes_a_missing_tool(tmp_path, monkeypatc
         ("kubeconform", "missing or altered: run `drillion doctor --fetch`"),
         ("helm", "missing or altered: run `drillion doctor --fetch`"),
         ("hadolint", "missing or altered: run `drillion doctor --fetch`"),
+        ("actionlint", "missing or altered: run `drillion doctor --fetch`"),
     ]
 
 

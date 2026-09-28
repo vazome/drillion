@@ -11,7 +11,17 @@ import logging
 import yaml
 
 from . import gitrepo, manifest, pglite, region, sandbox, tools
-from .catalogue import DOCKER, FILENAMES, GIT, HELM, MANIFEST, PYTHON, SQL, solution
+from .catalogue import (
+    DOCKER,
+    FILENAMES,
+    GIT,
+    HELM,
+    MANIFEST,
+    PYTHON,
+    SQL,
+    WORKFLOW,
+    solution,
+)
 from .region import Invalid, _solve
 
 __all__ = ["Invalid", "of"]
@@ -447,6 +457,25 @@ class _Git(_Manifest):
         return {}, judge
 
 
+class _Workflow(_Manifest):
+    """A GitHub Actions workflow, and optionally the rest of the repository it lives in:
+    the learner's `workflow.yml` goes at the path `edits` names. actionlint stands in for
+    the validator and nothing runs: see `grade_workflow` in `grading.py`."""
+
+    name = WORKFLOW
+    filename = FILENAMES[WORKFLOW]
+    suffix = ".yml"
+
+    def revision(self, meta, src):
+        return manifest.workflow_fingerprint(meta)
+
+    def judges(self):
+        return {"actionlint": tools.pin_for(tools.ACTIONLINT).version}
+
+    def extra(self, meta, brief, seed, selfcheck=False):
+        return {"workflow": manifest.workflow_job(meta)}
+
+
 KINDS = {
     PYTHON: _Python(),
     MANIFEST: _Manifest(),
@@ -454,6 +483,7 @@ KINDS = {
     DOCKER: _Docker(),
     SQL: _Sql(),
     GIT: _Git(),
+    WORKFLOW: _Workflow(),
 }
 
 

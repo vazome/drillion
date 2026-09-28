@@ -32,7 +32,8 @@ Today: 54 easy · 219 medium · 65 hard.
 **track** — one per task: a themed run through the catalogue that cuts across tiers. The home
 screen offers each track as a pill, and picking one sets the **focus**. A Python task that names
 none is on `python`; the Kubernetes manifests say `track: kubernetes`, the Argo CD ones
-`track: argocd`, the Helm charts `track: helm`, the Dockerfiles `track: docker`, and the SQL tasks `track: sql`. Name a track only when
+`track: argocd`, the Helm charts `track: helm`, the Dockerfiles `track: docker`, the GitHub
+Actions workflows `track: github-actions`, and the SQL tasks `track: sql`. Name a track only when
 the task belongs to a run other than `python`, and give the run a logo in `web/public/tracks/`.
 
 **tags** — what you practise. Lowercase, kebab-case, 1–3 per task, and one rule decides
@@ -65,8 +66,8 @@ it — and `POST /api/focus` sets it.
 
 One folder per task, `tasks/<NNN>_<name>/`; copy the shape of an existing one.
 
-`<NNN>` is the task's place in the curriculum, `001`–`370` with no gaps, so the next task you add is
-`371`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
+`<NNN>` is the task's place in the curriculum, `001`–`385` with no gaps, so the next task you add is
+`386`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
 always numbers below its own, and `doctor` will not let that stop being true. Append, never insert —
 inserting means rewriting every number after it, and [ADR-0006](adr/0006-the-fundamentals-come-first.md)
 says the two renumberings drillion has had are the last two.
@@ -226,6 +227,34 @@ info is advice, `# hadolint ignore=` is ignored), then the context check, then `
 Nothing is built. Give the task `track: docker`. Every rule the README states needs a row in
 `tests/test_docker.py` that breaks it and fails, through the real pipeline.
 
+## Workflow tasks
+
+A task whose frontmatter says `kind: workflow` asks for one GitHub Actions workflow, and
+`edits` names where it goes, `.github/workflows/<name>.yml`. Give it `track: github-actions`.
+It has a manifest task's brief and README placeholders, and:
+
+- **`workflow.yml`**: the learner's file, empty.
+- **`repo/`**: optional, the rest of the repository, shown read-only in tabs: a workflow that
+  calls the learner's, a reusable workflow theirs calls, or a document such as the
+  environments a repository has. `repo/<edits>` must not exist.
+- **`solution.yaml`**: the answer key, rendered like a manifest's, each `{placeholder}` a
+  whole value. A value that mixes an expression with a brief value
+  (`${{ runner.os }}-pip-...`) comes whole from the brief; `${{ }}` elsewhere is written as
+  is. In `## You return` and `## Rules` an expression's braces are doubled for `str.format`;
+  Why and You get cannot hold a brace at all.
+- **`grade.py`**: `brief(r)` as for a manifest, and `check(workflow, brief)`, where `workflow`
+  is the learner's file parsed as GitHub reads it: `on`, `yes` and `off` stay strings, and
+  only `true` and `false` are booleans. An event with nothing under it, `pull_request:`, is
+  there with the value `None`. Match an action by name at any version
+  (`uses.startswith("actions/checkout@")`): a major version is not what a task teaches.
+
+A submission is laid out as a repository with `repo/` and the learner's file at `edits`, and
+actionlint lints every workflow in it together, so a caller and the reusable workflow it
+calls are checked against each other; any finding fails, and names its file and line. Then
+`check()`. Nothing runs, and actionlint's shellcheck and pyflakes integrations are off, since
+the image has neither. Every rule the README states needs a row in `tests/test_workflow.py`
+that breaks it and fails.
+
 ## SQL tasks
 
 A task whose frontmatter says `kind: sql` is a database with a question about it, and
@@ -329,7 +358,7 @@ Run `uv run drillion doctor` — it reports every rule the folder breaks, not ju
 
 `uv run drillion selfcheck` splices `_reference` into every file and runs the tests; it must be
 green on Python 3.14 before a task is trusted. But it only counts tasks the catalogue already
-accepted, so if it still says `370/370` after you added one, `doctor` is where to look.
+accepted, so if it still says `385/385` after you added one, `doctor` is where to look.
 
 ## Retired tags
 
