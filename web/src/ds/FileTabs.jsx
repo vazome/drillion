@@ -15,16 +15,6 @@ const nameOf = (f, partOf) =>
   f.path + (f.readOnly ? ", part of " + partOf + ", read-only" : ", yours, editable") +
   (f.marked ? ", the last run reported a problem here" : "");
 
-/** The line under the strip. Every variant is rendered into the same grid cell and only the
- *  active one is visible, so the row is always as tall as its longest variant: picking a tab,
- *  or a run marking one, never changes the strip's height and never moves the editor. */
-function noteOf(f, mine, marked, partOf) {
-  if (!f.readOnly) return { base: "yours — the only file you edit.", flag: marked ? "The last run reported a problem here." : null };
-  return marked
-    ? { base: "part of " + partOf + ", read-only.", flag: "The last run reported a problem here; the fix goes in " + mine + "." }
-    : { base: "part of " + partOf + ", read-only — you write " + mine + ".", flag: null };
-}
-
 /** The files of one task above the editor — a Helm chart, a Docker build context: the
  *  learner's one file first, the rest read-only. Each locked tab says so itself, in a quiet
  *  word after its name, so "read-only" is a property of the tab and never a thing in the row
@@ -36,7 +26,6 @@ export function FileTabs({ files = [], active, onSelect, label = "Chart files", 
   const list = React.useRef(null);
   const tabs = React.useRef([]);
   const at = Math.max(0, files.findIndex((f) => f.path === active));
-  const mine = (files.find((f) => !f.readOnly) || {}).path || "";
 
   // keep the active tab in view by scrolling the strip itself — scrollIntoView could also
   // scroll the page, and the strip is the only thing allowed to move
@@ -88,18 +77,6 @@ export function FileTabs({ files = [], active, onSelect, label = "Chart files", 
             </React.Fragment>
           );
         })}
-      </div>
-      <div aria-hidden="true" className={s.notes}>
-        {files.flatMap((f, i) => [false, true].map((marked) => {
-          const n = noteOf(f, mine, marked, partOf);
-          return (
-            <p key={f.path + (marked ? "+" : "")} className={s.note}
-              data-on={i === at && !!f.marked === marked ? "" : undefined}>
-              <span className={s.file}>{f.path}</span> · {n.base}
-              {n.flag ? <> <span className={s.flag}>{n.flag}</span></> : null}
-            </p>
-          );
-        }))}
       </div>
     </div>
   );

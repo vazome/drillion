@@ -74,7 +74,8 @@ reaches Run before Monaco, where Tab only indents.
 **E2e expectations changed:** Today is found by its Up next heading; results by region name
 (Result of submit N, Output of your run) and the verdict words; Key binding, Tab size and the
 Practice timer are pressed buttons; the danger zone is one step with no Cancel; the dialog
-closes by "Close settings"; the lineage reads "Needs · N" and the header button "Opens N tasks";
+closes by "Close settings"; the lineage reads "Needs · N"; the task header is one line with
+no "Opens N tasks" button and no panel over the task (the lineage screen is the one way in);
 a passed task opens on Review, so the a11y spec moved to 010; the restore wait is 30s because
 it fsyncs every saved task file.
 
@@ -111,7 +112,12 @@ The conversion carries these local adaptations forward:
 - `StuckNudge` retains the hint/read-material copy and no bury action. `ResultBanner` keeps
   entrance animation in its app wrapper. `DepLineage` retains `hrefOf`-controlled links.
 - `PracticeHeatmap` derives a separate cell size instead of reassigning an effect dependency.
+  Its hover bubble sits outside the scrolling plot (inside, the plot clipped it above the top
+  row), the native `title` that doubled it is gone, and a month label is dropped when the next
+  starts within three columns, so a clipped first month never prints over the second.
   Table headers retain sans-serif labels even for monospace data columns.
+- `FileTabs` has no caption row under the strip, the line that named the file and who writes it:
+  each tab already says read-only or yours, and a run's mark is the tab's wavy underline.
 - Settings uses the export's single-column sections, aligned rows and key-binding dropdown,
   with styles in `Settings.module.css`. It retains the app's full font list, ligatures, tab
   size, relative line numbers and Restore workflow, which the mock omits. Paths and actions

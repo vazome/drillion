@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { Button, EmptyState, Icon, Input, Kbd, NoticeBanner, RowFlags, SortReset, TagChip, TaskPath } from "./ds/index.js";
 import { api, FOCUS_SAVED, setFocus as saveFocus, type Catalogue as Payload, type Row } from "./api";
 import { FIRST_RUN, Today } from "./Today";
 import { Level } from "./Level";
+import { Drop } from "./motion";
 import css from "./Catalogue.module.css";
 import { strength } from "./strength";
 import { depsHref, taskHref } from "./Deps";
@@ -45,10 +46,11 @@ export function sortRows(rows: Row[], { key, dir }: Sort): Row[] {
 const href = (row: Row) => taskHref(row.slug);
 
 /** A row of the list: one line, the path in its own column, and `needs 289` in words. */
-function ListRow({ row, blocked, ladder, limit, next }: { row: Row; blocked: Row[]; ladder: number[]; limit: number; next: boolean }) {
+/** `order` places the row in the cascade a refreshed list comes in with; past the twelfth, all together. */
+function ListRow({ row, blocked, ladder, limit, next, order }: { row: Row; blocked: Row[]; ladder: number[]; limit: number; next: boolean; order: number }) {
   const known = strength(row.box, !!row.seen, ladder);
   return (
-    <a href={href(row)} className={`m-tint ${css.row}`}>
+    <a href={href(row)} className={`m-tint ${css.row}`} style={{ "--r": order } as CSSProperties}>
       <span className={css.num}>{topicNo(row.topic)}</span>
       <span className={css.task}>
         <span className={css.title}>{row.title}</span>
@@ -137,6 +139,13 @@ export function Catalogue() {
   }, [ready]);
 
   const focus = data?.focus ?? null;
+  // the focus last drawn, and whether it has changed since the page first loaded
+  const [drawn, setDrawn] = useState<string | null | undefined>(undefined);
+  const [refocused, setRefocused] = useState(false);
+  if (data && focus !== drawn) {
+    if (drawn !== undefined) setRefocused(true);
+    setDrawn(focus);
+  }
   // focus decides what the scheduler may pick next, so the whole payload is stale after it changes
   const setFocus = (tag: string | null) => {
     setNotice(null);
@@ -195,10 +204,10 @@ export function Catalogue() {
   };
 
   return (
-    <div className={css.page}>
-      {notice ? <div className="m-drop"><NoticeBanner message={notice} actions={[{ label: "Dismiss", onClick: () => setNotice(null) }]} /></div> : null}
+    <div className={`${css.page} ${css.arrive}`}>
+      <Drop>{notice ? <NoticeBanner message={notice} actions={[{ label: "Dismiss", onClick: () => setNotice(null) }]} /> : null}</Drop>
       <Today data={data} by={by} focus={focus} onFocus={setFocus} onAllDue={allDue} tracks={tracks}
-        firstRun={firstRun} onFirstRunDone={() => setFirstRun(false)} />
+        firstRun={firstRun} onFirstRunDone={() => setFirstRun(false)} arrive={refocused} />
 
       <section aria-labelledby="cat-h" className={css.section}>
         <div ref={listHead} className={css.heading}>
@@ -226,7 +235,8 @@ export function Catalogue() {
               </button>
             ))}
           </div>
-          <div className={css.tags}>
+          {/* a new track brings its own tags: they fade in rather than swap */}
+          <div key={focus ?? ""} className={refocused ? `${css.tags} ${css.tagsIn}` : css.tags}>
             {/* a tier is Python depth, so its chips go when nothing listed is Python; a tier that
               * is the focus stays, since its chip is the way back out */}
             {tiersHere ? <>
@@ -243,8 +253,9 @@ export function Catalogue() {
           </div>
         </div>
 
-        {/* narrower than the columns need, the card scrolls sideways; the page body never does */}
-        <div className={css.list}>
+        {/* narrower than the columns need, the card scrolls sideways; the page body never does.
+          * A new track, status or tag set cascades the rows in afresh; search and sort do not. */}
+        <div key={`${focus}|${status}|${activeTags.join()}`} className={`${css.list} ${css.cascade}`}>
           {sorted.length === 0
             ? <EmptyState message="No task matches those filters. Loosen a tag or clear the search." actionLabel="Clear filters" onAction={() => { clear(); if (focus) setFocus(null); }} />
             : <>
@@ -257,7 +268,7 @@ export function Catalogue() {
                   <SortHead label="Status" col="status" sort={sort} onSort={setSort} />
                   <SortReset disabled={unsorted} onClick={() => setSort(DEFAULT_SORT)} />
                 </div>
-                {sorted.map((row) => <ListRow key={row.slug} row={row} next={row.slug === head}
+                {sorted.map((row, n) => <ListRow key={row.slug} row={row} order={Math.min(n, 12)} next={row.slug === head}
                   blocked={pick(row.blocked)} ladder={stats.ladder} limit={stats.lapse_limit} />)}
               </>}
         </div>

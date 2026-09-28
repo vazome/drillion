@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import { Dialog, EmptyState } from "./ds/index.js";
 import { api, type Health } from "./api";
 import { Catalogue } from "./Catalogue";
@@ -6,6 +7,7 @@ import { Progress } from "./Progress";
 import { Deps } from "./Deps";
 import { Settings } from "./Settings";
 import { Sidebar, TopBar, type Head } from "./Shell";
+import { Swap } from "./motion";
 import s from "./Shell.module.css";
 
 // the editor bundle is most of the app, and only the task screen needs it
@@ -52,9 +54,14 @@ const savedTheme = localStorage.getItem("drillion-theme");
 const initialDark = savedTheme ? savedTheme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
 applyTheme(initialDark);
 
+/** The switch crossfades the whole page, editor included, where the browser can snapshot it. */
 function useTheme(): [boolean, (v: boolean) => void] {
   const [dark, setDark] = useState(initialDark);
-  return [dark, (v) => { applyTheme(v); setDark(v); }];
+  return [dark, (v) => {
+    const flip = () => { applyTheme(v); flushSync(() => setDark(v)); };
+    if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) flip();
+    else document.startViewTransition(flip);
+  }];
 }
 
 /** `#/settings` stays a link anyone can keep, though Settings is no longer a screen of its
@@ -102,7 +109,9 @@ export function App() {
         <Sidebar {...chrome} head={head} />
         <TopBar {...chrome} className={s.narrow} />
         <main className={s.main}>
-          {slug ? <Deps key={slug} slug={slug} /> : route === "/progress" ? <Progress /> : <Catalogue />}
+          <Swap id={slug ? `deps:${slug}` : route === "/progress" ? "progress" : "catalogue"} rise appear>
+            {slug ? <Deps key={slug} slug={slug} /> : route === "/progress" ? <Progress /> : <Catalogue />}
+          </Swap>
         </main>
       </>}
       <Dialog open={settings} onClose={closeSettings} label="Settings">

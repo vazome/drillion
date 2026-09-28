@@ -26,10 +26,5 @@
 .ro{display:inline-flex;align-items:center;gap:3px;font-family:var(--font-sans);font-size:11.5px;letter-spacing:.02em;color:var(--text-faint)}
 /* text-faint on accent-tint is 4.3:1 in dark — one step up on the selected tab */
 .tab[data-on] .ro{color:var(--text-muted)}
-.notes{display:grid;padding:6px 16px 7px;border-top:1px solid var(--border);background:var(--editor)}
-.note{grid-area:1/1;margin:0;visibility:hidden;font-family:var(--font-sans);font-size:12.5px;line-height:1.45;color:var(--text-muted)}
-.note[data-on]{visibility:visible}
-.file{font-family:var(--font-mono);font-size:12px;color:var(--text)}
-.flag{color:var(--warn)}
 @media (prefers-reduced-motion:reduce){.tab{transition:none}.tab:active{transform:none}}
 .tab:focus-visible{box-shadow:inset 0 0 0 2px var(--accent)}

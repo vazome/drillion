@@ -19,7 +19,7 @@
 .trackName{flex-grow:1;font-size:14px;font-weight:500}
 .track[data-on] .trackName{font-weight:600;color:var(--accent)}
 .mark{display:flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0;box-sizing:border-box;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:13px;color:var(--text-muted)}
-.track[data-on] .mark{border-color:var(--accent-line);color:var(--accent)}
+.track[data-on] .mark:not([data-image]){border-color:var(--accent-line);color:var(--accent)}
 .mark[data-image]{border-color:transparent;object-fit:contain}
 /* helm's mark is one navy, which vanishes on the dark surface; white is how Helm draws it on dark */
 :global(.dark) .mark[src$="helm.svg"]{filter:brightness(0) invert(1)}

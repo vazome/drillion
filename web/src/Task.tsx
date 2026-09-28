@@ -1,9 +1,9 @@
-import { memo, useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
-import { Button, Card, Icon, Collapsible, ConflictBanner, DepLineage, EmptyState, FailedCase, Kbd, NoteField, GraceNotice, NoticeBanner, RequiresTag, RowFlags, SpecText, StatusBadge, TaskPath, Terminal, Timer, StuckNudge } from "./ds/index.js";
+import { memo, useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { Button, Icon, Collapsible, ConflictBanner, EmptyState, FailedCase, Kbd, NoteField, GraceNotice, NoticeBanner, RequiresTag, RowFlags, SpecText, StatusBadge, TaskPath, Terminal, Timer, StuckNudge } from "./ds/index.js";
 import { ApiError, api, post, resetRepo, type Task as TaskData, type RunResult, type Case, type Diagnostic } from "./api";
-import { Centre, depsHref, prefetch, taskHref } from "./Deps";
+import { depsHref, prefetch, taskHref } from "./Deps";
 import { plural, secs, topicNo } from "./format";
-import { inDays, strength } from "./strength";
+import { strength } from "./strength";
 import { DiffView, Editor } from "./Editor";
 import { ChartFiles, ManifestFailure } from "./ManifestWorkspace";
 import { useDraft } from "./useDraft";
@@ -12,6 +12,8 @@ import { resultBounds, Splitter, TaskPanes } from "./TaskPanes";
 import { Crumbs } from "./Shell";
 import { useNarrow } from "./narrow";
 import { Level } from "./Level";
+import { Climb, CLIMB } from "./Climb";
+import { Drop, Swap } from "./motion";
 import css from "./Task.module.css";
 
 const ATTEMPT_MS = 5000;    // reading the task is work: the clock starts once the page settles
@@ -51,8 +53,8 @@ export function stepLine(grade: string, box: number, fromBox: number, stepped: b
 
 /** After a pass the editor pane becomes this: yours against the reference. The changed lines
  *  are marked in the accent, never red and green, because both versions passed. */
-function Review({ kind, mine, reference, dark, prefs, narrow, fresh }: {
-  kind: TaskData["meta"]["kind"]; mine: string; reference: string; dark: boolean; prefs: Prefs; narrow: boolean; fresh: boolean;
+function Review({ kind, mine, reference, dark, prefs, narrow }: {
+  kind: TaskData["meta"]["kind"]; mine: string; reference: string; dark: boolean; prefs: Prefs; narrow: boolean;
 }) {
   const [view, setView] = useState<"compare" | "yours" | "reference">("compare");
   const [inline, setInline] = useState(false);
@@ -68,7 +70,7 @@ function Review({ kind, mine, reference, dark, prefs, narrow, fresh }: {
             <button key={k} type="button" aria-pressed={view === k} onClick={() => setView(k)}>{cap(k)}</button>
           ))}
         </div>
-        {changed === null ? null : <span className={css.aside}>{changed ? `${changed} ${changed === 1 ? "line differs" : "lines differ"}` : "the same"} · both pass</span>}
+        {changed === null ? null : <span className={css.aside}>{changed ? `${changed} ${changed === 1 ? "line differs" : "lines differ"}` : "the same"}</span>}
         <span className={css.grow} />
         {view === "compare" && !narrow ? (
           <div role="group" aria-label="Layout" className={css.segment}>
@@ -79,7 +81,7 @@ function Review({ kind, mine, reference, dark, prefs, narrow, fresh }: {
       </div>
       {view === "compare" && side ? (
         <div className={css.sides}>
-          <span><strong>Yours</strong> · {fresh ? "the pass you just submitted" : "your last pass"}</span>
+          <span><strong>Yours</strong></span>
           <span><strong>Reference</strong></span>
         </div>
       ) : null}
@@ -127,7 +129,7 @@ function Outcome({ result, kind, active, ladder, flagged, lapses }: {
       </div>
     );
     case "running": return (
-      <div className={`${css.state} m-sweep`} data-running="">
+      <div className={css.state}>
         <strong>Checking your {FILE[kind]}…</strong>
         <p className={css.aside}>{cap(CHECKS[kind])}</p>
       </div>
@@ -157,13 +159,15 @@ function Outcome({ result, kind, active, ladder, flagged, lapses }: {
       const word = strength(result.box, true, ladder)!;
       return (
         <div className={css.passed} data-grade={result.grade}>
-          <p className={css.gradeLine}><span>PASSED · {result.grade.toUpperCase()}</span> · {secs(active)} · {plural(result.attempts, "attempt")} · back {inDays(result.dueIn)}</p>
+          <p className={css.gradeLine}><span>PASSED · {result.grade.toUpperCase()}</span> · {secs(active)} · {plural(result.attempts, "attempt")}</p>
           <p className={css.climb}>
-            {/* the step animation would read as a promotion on a task that just fell back */}
-            {fell ? null : <span className={result.stepped ? "m-step" : undefined}><Level of={word} /></span>}
+            {/* the step animation would read as a promotion on a task that just fell back; it
+              * waits for the climb below to land */}
+            {fell ? null : <span className={result.stepped ? "m-step" : undefined} style={result.stepped ? CLIMBED : undefined}><Level of={word} /></span>}
             <span className={css.aside}>{fell ? "It comes back sooner, so it gets another look while it is fresh."
               : cap(stepLine(result.grade, result.box, result.fromBox, result.stepped, ladder.length)) + "."}</span>
           </p>
+          <Climb ladder={ladder} from={result.fromBox} to={result.box} />
           {flagged ? (
             <p className={css.flag}><Icon name="WarningAlt" />You have struggled with this {plural(lapses, "time")}. The hints or the prereqs may be the problem, not you.</p>
           ) : null}
@@ -173,80 +177,52 @@ function Outcome({ result, kind, active, ladder, flagged, lapses }: {
   }
 }
 
+/** The strength word steps once the climb has landed. */
+const CLIMBED = { animationDelay: `${CLIMB.wait + CLIMB.move}ms` };
+
 const cap = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
-/** The task's header: number, title and clock on the first line; what it is, what it needs
- *  and what it opens on the second. With no prereqs it all fits on one. Needs chips drop
- *  their titles past two, or past a 30-character one; the title stays in the tooltip. */
-function TaskHeader({ task, active, showTimer, paused, passed, onLineage, lineageOpen, lineageBtn, onAbandon }: {
-  task: TaskData; active: number; showTimer: boolean; paused: boolean; passed: boolean;
-  onLineage: () => void; lineageOpen: boolean; lineageBtn: RefObject<HTMLButtonElement | null>; onAbandon?: () => void;
+/** The task's header, on one line: number and title, what it is, what it needs, the clock.
+ *  Needs chips drop their titles past two, or past a 30-character one; the title stays in the
+ *  tooltip. What a task opens is on its lineage screen, one click from any Needs chip. */
+function TaskHeader({ task, active, showTimer, paused, onAbandon }: {
+  task: TaskData; active: number; showTimer: boolean; paused: boolean; onAbandon?: () => void;
 }) {
-  const { meta, requires, unlocks } = task;
+  const { meta, requires } = task;
   const titles = requires.length <= 2 && requires.every((r) => r.title.length <= 30);
-  const facts = <>
-    <Level of={meta.difficulty} />
-    <TaskPath tier={meta.tier} track={meta.track} tags={meta.tags} />
-    <span className={css.pill} data-status={task.status}>{task.status}</span>
-    <RowFlags lapses={task.lapses} lapseLimit={task.lapse_limit} />
-    {meta.source ? <span className={css.aside}>{meta.source}</span> : null}
-  </>;
-  const needs = requires.length ? (
-    <span className={css.needs}>Needs
-      {requires.map((r) => (
-        <RequiresTag key={r.slug} topic={r.topic} title={titles ? r.title : undefined}
-          state={r.state} href={depsHref(r.slug)} onPointerEnter={() => { void prefetch(r.slug); }} />
-      ))}
-    </span>
-  ) : <span className={css.aside}>No prereqs</span>;
-  // the lineage opens over the page: the editor, the run and the clock all survive it
-  const opens = (
-    <button type="button" ref={lineageBtn} onClick={onLineage} aria-expanded={lineageOpen} className={css.opens}>
-      {unlocks.length ? `Opens ${plural(unlocks.length, "task")}` : "Connections"}<Icon name="ArrowRight" size={14} />
-    </button>
-  );
-  // hidden by preference only: the clock behind it keeps running, and the grade is the same
-  const clock = (
-    <span className={css.clock}>
-      {showTimer ? <><Timer seconds={active} paused={paused} /><span className={css.aside}>active{passed ? " · passed" : ""}</span></> : null}
-      {onAbandon ? <button type="button" onClick={onAbandon} className={css.abandon}>Abandon</button> : null}
-    </span>
-  );
-  return requires.length ? (
-    <section aria-label="Task" className={css.header} data-lines="2">
-      <div className={css.line}>
-        <span className={css.num}>{topicNo(meta.topic)}</span>
-        <h1 className={css.h1}>{meta.title}</h1>
-        <span className={css.grow} />
-        {clock}
-      </div>
-      <div className={css.line} data-second="">
-        {facts}
-        <span aria-hidden="true" className={css.rule} />
-        {needs}
-        <span className={css.grow} />
-        {opens}
-      </div>
-    </section>
-  ) : (
+  return (
     <section aria-label="Task" className={css.header}>
       <div className={css.line}>
         <span className={css.num}>{topicNo(meta.topic)}</span>
         <h1 className={css.h1}>{meta.title}</h1>
-        {facts}
+        <Level of={meta.difficulty} />
+        <TaskPath tier={meta.tier} track={meta.track} tags={meta.tags} />
+        <span className={css.pill} data-status={task.status}>{task.status}</span>
+        <RowFlags lapses={task.lapses} lapseLimit={task.lapse_limit} />
+        {requires.length ? <>
+          <span aria-hidden="true" className={css.rule} />
+          <span className={css.needs}>Needs
+            {requires.map((r) => (
+              <RequiresTag key={r.slug} topic={r.topic} title={titles ? r.title : undefined}
+                state={r.state} href={depsHref(r.slug)} onPointerEnter={() => { void prefetch(r.slug); }} />
+            ))}
+          </span>
+        </> : null}
         <span className={css.grow} />
-        {needs}
-        {opens}
-        <span aria-hidden="true" className={css.rule} />
-        {clock}
+        {/* hidden by preference only: the clock behind it keeps running, and the grade is the same */}
+        <span className={css.clock}>
+          {showTimer ? <Timer seconds={active} paused={paused} /> : null}
+          {onAbandon ? <button type="button" onClick={onAbandon} className={css.abandon}>Abandon</button> : null}
+        </span>
       </div>
     </section>
   );
 }
 
 /** The output under the editor. Until its splitter is dragged it fits what it shows, up to 40%
- *  of the column; a drag fixes its height, and a double-click or Enter lets it fit again. */
-function ResultPane({ narrow, label, children }: { narrow: boolean; label: string; children: ReactNode }) {
+ *  of the column; a drag fixes its height, and a double-click or Enter lets it fit again.
+ *  `running` sweeps the whole pane while the checks are out, edge to edge. */
+function ResultPane({ narrow, label, running, children }: { narrow: boolean; label: string; running: boolean; children: ReactNode }) {
   const { resultPanePercent } = usePrefs();
   const box = useRef<HTMLElement>(null);
   const id = useId();
@@ -271,7 +247,7 @@ function ResultPane({ narrow, label, children }: { narrow: boolean; label: strin
         title="Drag to resize. Double-click to fit the output again."
         onDrag={setLive} onCommit={(next) => setPrefs({ resultPanePercent: next })}
         onReset={() => setPrefs({ resultPanePercent: null })} />}
-      <section id={id} ref={box} aria-label={label} className={css.result}
+      <section id={id} ref={box} aria-label={label} className={running ? `${css.result} m-sweep` : css.result}
         style={narrow || chosen === null ? undefined : { flex: `0 1 ${value}%`, maxHeight: "none" }}>
         {children}
       </section>
@@ -294,13 +270,10 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
   const [nudge, setNudge] = useState(false);        // the server's offer of a hint, not ours
   const [nudgeOff, setNudgeOff] = useState(false);
   const [inflight, setInflight] = useState<"run" | "submit" | null>(null);
-  const [lineage, setLineage] = useState(false);
   const narrow = useNarrow();
 
   const graceRef = useRef(0);                // read inside the tick, so it is not a dep
   const gateTimer = useRef<number | undefined>(undefined);
-  const unlocksBtn = useRef<HTMLButtonElement>(null);
-  const panel = useRef<HTMLDivElement>(null);
   const lastHint = useRef<HTMLDivElement>(null);
   const dropped = useRef(false);             // discarded here: do not re-open the attempt behind them
   const hasAttempt = !!task?.attempt;
@@ -413,17 +386,6 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
   const run = () => { void go(false); };
   const submit = () => { void go(true); };
 
-  /** The lineage panel, not a navigation: it opens mid-attempt, so the editor buffer, the
-   *  run state and the timer all have to survive it. */
-  const closeLineage = useCallback(() => { setLineage(false); unlocksBtn.current?.focus(); }, []);
-  useEffect(() => {
-    if (!lineage) return;
-    panel.current?.focus();
-    const on = (e: globalThis.KeyboardEvent) => { if (e.key === "Escape") closeLineage(); };
-    addEventListener("keydown", on);
-    return () => removeEventListener("keydown", on);
-  }, [lineage, closeLineage]);
-
   /** Hint and solution are the same spend: over no live PUT, inside an attempt, once. */
   const spend = async (what: "hint" | "solution", refused: (err: ApiError) => void) => {
     if (busy) return;
@@ -501,8 +463,8 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
   /** The gate banner, under the control that raised it. The container stays in the tree so
    * screen readers have a live region to announce into. */
   const notice = (at: Exclude<Gate, null>["at"]) => (
-    <div role="status" style={{ marginTop: gate?.at === at ? 10 : 0 }}>
-      {gate?.at === at ? <div className="m-drop"><NoticeBanner message={gate.message} actions={[{ label: "Dismiss", onClick: () => setGate(null) }]} /></div> : null}
+    <div role="status">
+      <Drop style={{ marginTop: 10 }}>{gate?.at === at ? <NoticeBanner message={gate.message} actions={[{ label: "Dismiss", onClick: () => setGate(null) }]} /> : null}</Drop>
     </div>
   );
 
@@ -519,28 +481,9 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
 
   return (<>
     {bar(<Crumbs group={meta.track ?? meta.tier} topic={meta.topic} />)}
-    <main className={css.page}>
-      <TaskHeader task={task} active={active} showTimer={prefs.showTimer} paused={!hasAttempt || passed} passed={passed}
-        onLineage={() => setLineage(true)} lineageOpen={lineage} lineageBtn={unlocksBtn}
+    <main className={`${css.page} m-rise`}>
+      <TaskHeader task={task} active={active} showTimer={prefs.showTimer} paused={!hasAttempt || passed}
         onAbandon={hasAttempt && !passed ? abandon : undefined} />
-
-      {lineage ? (
-        <div role="dialog" aria-label={`Connections of ${meta.title}`} onClick={closeLineage} className="m-fade"
-          style={{ position: "fixed", inset: 0, zIndex: 40, background: "var(--scrim)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "72px 24px", overflow: "hidden" }}>
-          {/* the scroll lives on the animated element, not around it: `m-rise` starts the
-            * panel 6px low, and inside a scrolling parent those 6px are overflow — one frame
-            * of scrollbar on the way in. An element's own transform never adds to its own
-            * scroll content, so putting the two on one box makes the flash impossible. */}
-          <div ref={panel} tabIndex={-1} onClick={(e) => e.stopPropagation()} className="m-rise"
-            style={{ width: "min(1080px, 100%)", maxHeight: "100%", overflowY: "auto", outline: "none" }}>
-            <Card label={`Connections · ${task.slug}`} style={{ boxShadow: "var(--shadow-pop)" }}>
-              <DepLineage task={{ topic: meta.topic, title: meta.title, tags: meta.tags, aside: <><Centre task={task} /><span>attempt still open behind this</span></> }}
-                requires={task.requires} unlocks={task.unlocks} stacked={narrow}
-                hrefOf={(r) => depsHref(r.slug)} onPrefetch={(r) => { void prefetch(r.slug); }} onClose={closeLineage} />
-            </Card>
-          </div>
-        </div>
-      ) : null}
 
       <TaskPanes narrow={narrow} fixed={review ? 440 : undefined}>
         <div className={css.brief}>
@@ -596,7 +539,7 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
                   </p>
                 ) : null}
                 {hints.shown.map((text, i) => (
-                  <div key={i} ref={i === hints.shown.length - 1 ? lastHint : undefined} className={css.hint}>
+                  <div key={i} ref={i === hints.shown.length - 1 ? lastHint : undefined} className={`${css.hint} m-expand`}>
                     <div className={css.hintHead}><Icon name="Idea" size={14} />Hint {i + 1} of {hints.total}</div>
                     <Spec text={text} slug={slug} style={HINT_TEXT} />
                   </div>
@@ -630,20 +573,20 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
         </div>
 
         <div className={css.work}>
-          {conflict ? <div className="m-drop"><ConflictBanner detail="Your draft and the file on disk have diverged." onReload={takeDisk} onKeep={keepMine} /></div> : null}
-          {offer ? (
-            <div className="m-drop">
-              <NoticeBanner message="A newer local draft exists for this task."
-                actions={[
-                  { label: "Restore it", onClick: restore },
-                  { label: "Discard", onClick: discard },
-                ]} />
-            </div>
-          ) : null}
+          <Drop>{conflict ? <ConflictBanner detail="Your draft and the file on disk have diverged." onReload={takeDisk} onKeep={keepMine} /> : null}</Drop>
+          <Drop>{offer ? (
+            <NoticeBanner message="A newer local draft exists for this task."
+              actions={[
+                { label: "Restore it", onClick: restore },
+                { label: "Discard", onClick: discard },
+              ]} />
+          ) : null}</Drop>
           {notice("editor")}
           {task.has_given ? <NoticeBanner message="This task ships given code above solve(): read it, but leave it alone." actions={[]} /> : null}
 
-          {review ? <Review kind={meta.kind} mine={mine} reference={reference!} dark={dark} prefs={prefs} narrow={narrow} fresh={passed} /> : <>
+          {/* after a pass the editor fades out and Review comes in where it was */}
+          <Swap id={review ? "review" : "edit"} className={css.swap}>
+          {review ? <Review kind={meta.kind} mine={mine} reference={reference!} dark={dark} prefs={prefs} narrow={narrow} /> : <>
           {/* first in the DOM and drawn below the editor: Tab reaches Run before it lands in Monaco,
             * where Tab only indents */}
           <div role="toolbar" aria-label="Grade your file" className={css.grading}>
@@ -671,7 +614,9 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
           </div>
 
           {meta.kind === "git" ? (
-            <div style={{ height: "clamp(280px, 42vh, 560px)" }} onKeyDown={(e) => {
+            // it takes what the column has left, the way the editor does: a fixed height here
+            // would spill past the Run and Submit row whenever the window is short
+            <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }} onKeyDown={(e) => {
               if (e.key === "Enter" && e.shiftKey && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); }
             }}>
               <Terminal key={slug} slug={slug} dark={dark} live={hasAttempt && !passed}
@@ -696,8 +641,9 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
             </div>
           )}
           </>}
+          </Swap>
 
-          {review && !passed ? null : <ResultPane narrow={narrow} label={ungraded ? "Output of your run" : resultNo ? `Result of submit ${resultNo}` : "Result"}>
+          {review && !passed ? null : <ResultPane narrow={narrow} running={result.state === "running"} label={ungraded ? "Output of your run" : resultNo ? `Result of submit ${resultNo}` : "Result"}>
             {/* the region stays mounted and only the state inside it is keyed: a live region
               * that arrives with its text already in place is never announced */}
             <div role="status">
@@ -732,11 +678,8 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
               </Collapsible>
             ) : null}
 
-            {passed && result.reason ? <p className={css.aside}>Why {result.grade}: {result.reason}.</p> : null}
-
             {passed ? (
               <div className={css.actions}>
-                <span className={css.aside}>Your code is archived; the stub comes back when the task does.</span>
                 <span className={css.grow} />
                 <Button variant="quiet" onClick={() => { location.hash = "#/"; }}>Back to Today</Button>
                 {nextSlug ? <Button onClick={() => { location.hash = taskHref(nextSlug); }}>Next in Today<Icon name="ArrowRight" /></Button> : null}
@@ -746,17 +689,14 @@ export function Task({ slug, dark, bar }: { slug: string; dark: boolean; bar: (c
         </div>
       </TaskPanes>
 
-      {grace > 0 && !readFirstOff && !passed ? (
-        <div className={css.corner}>
-          <GraceNotice seconds={grace} onDismiss={() => setReadFirstOff(true)} />
-        </div>
-      ) : null}
-      {nudge && !nudgeOff && !passed ? (
-        <div className={css.corner}>
-          <StuckNudge minutes={Math.round(active / 60)} hintsShown={hints.shown.length} hintsTotal={hints.total} hintReady={hintReady}
-            onHint={() => { setNudgeOff(true); hint(); }} onDismiss={() => setNudgeOff(true)} />
-        </div>
-      ) : null}
+      {/* both rise in by themselves; these only see them out */}
+      <Drop className={css.corner} y={6} enter={false}>{grace > 0 && !readFirstOff && !passed ? (
+        <GraceNotice seconds={grace} onDismiss={() => setReadFirstOff(true)} />
+      ) : null}</Drop>
+      <Drop className={css.corner} y={6} enter={false}>{nudge && !nudgeOff && !passed ? (
+        <StuckNudge minutes={Math.round(active / 60)} hintsShown={hints.shown.length} hintsTotal={hints.total} hintReady={hintReady}
+          onHint={() => { setNudgeOff(true); hint(); }} onDismiss={() => setNudgeOff(true)} />
+      ) : null}</Drop>
     </main>
   </>);
 }

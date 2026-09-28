@@ -43,7 +43,7 @@
 .ladder{background:var(--surface);border-radius:var(--radius-lg);box-shadow:0 0 0 1px var(--border);padding:24px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .more{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500}
 .rungs{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;align-items:end;height:96px;margin-top:6px;border-bottom:1px solid var(--border-strong)}
-.rung{--c:var(--strength-learning);position:relative;box-sizing:border-box;border:1px solid var(--c);border-bottom:0;border-radius:var(--radius-sm) var(--radius-sm) 0 0;background:color-mix(in srgb,var(--c) 22%,transparent)}
+.rung{--c:var(--strength-learning);position:relative;transform-origin:bottom;box-sizing:border-box;border:1px solid var(--c);border-bottom:0;border-radius:var(--radius-sm) var(--radius-sm) 0 0;background:color-mix(in srgb,var(--c) 22%,transparent)}
 .rung[data-of="familiar"]{--c:var(--strength-familiar)}
 .rung[data-of="solid"]{--c:var(--strength-solid)}
 .rung[data-empty]{border-style:dashed;border-color:color-mix(in srgb,var(--c) 60%,transparent);background:color-mix(in srgb,var(--c) 8%,transparent)}
