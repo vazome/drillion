@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {template}
+spec:
+  args:
+    - name: service-name
+  metrics:
+    - name: success-rate
+      interval: 1m
+      count: 5
+      failureLimit: {limit}
+      successCondition: {condition}
+      provider:
+        prometheus:
+          address: {address}
+          query: {query}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {name}
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: {name}
+  template:
+    metadata:
+      labels:
+        app: {name}
+    spec:
+      containers:
+        - name: {name}
+          image: {image}
+  strategy:
+    canary:
+      steps:
+        - setWeight: 20
+        - analysis:
+            templates:
+              - templateName: {template}
+            args:
+              - name: service-name
+                value: {service}
+        - setWeight: 50
+        - pause:
+            duration: 10m

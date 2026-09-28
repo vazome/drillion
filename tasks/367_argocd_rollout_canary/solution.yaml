@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {name}
+spec:
+  replicas: {replicas}
+  selector:
+    matchLabels:
+      app: {name}
+  template:
+    metadata:
+      labels:
+        app: {name}
+    spec:
+      containers:
+        - name: {name}
+          image: {image}
+  strategy:
+    canary:
+      steps:
+        - setWeight: {first}
+        - pause:
+            duration: {pause}
+        - setWeight: {second}
+        - pause: {}

@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {chart}
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: {repo}
+    chart: {chart}
+    targetRevision: {version}
+    helm:
+      releaseName: {chart}
+      valuesObject:
+        replicaCount: {replicas}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {chart}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

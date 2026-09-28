@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {job}
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+spec:
+  backoffLimit: {retries}
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: {image}
+          args: ["migrate", "up"]
+          env:
+            - name: DATABASE_HOST
+              value: {db}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {name}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: {name}
+  template:
+    metadata:
+      labels:
+        app: {name}
+    spec:
+      containers:
+        - name: {name}
+          image: {image}

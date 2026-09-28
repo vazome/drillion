@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: {team}
+  namespace: argocd
+spec:
+  sourceRepos:
+    - {repo}
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: {pattern}
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: ResourceQuota
+    - group: ""
+      kind: LimitRange
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {app}
+  namespace: argocd
+spec:
+  project: {team}
+  source:
+    repoURL: {repo}
+    targetRevision: main
+    path: {path}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {namespace}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

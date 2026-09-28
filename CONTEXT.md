@@ -19,8 +19,8 @@ them into `task.yaml` and `grade.py`; a Helm task does the same beside the **cha
 `task.yaml` completes, a Dockerfile task beside the **build context** its `Dockerfile` is
 written for, and a SQL task splits them into `task.sql` and `grade.py` beside the
 **database** it asks about. A git task keeps `history.sh`, `grade.py` and `solution.sh`, and
-the learner works in the **sitting repository** its `setup()` builds. There are 356: 267
-Python, 26 manifest, 15 Helm, 15 Dockerfile, 15 SQL, 18 git.
+the learner works in the **sitting repository** its `setup()` builds. There are 370: 267
+Python, 40 manifest (14 of them Argo CD's objects), 15 Helm, 15 Dockerfile, 15 SQL, 18 git.
 _Avoid_: exercise, drill, problem, kata, question
 
 **Slug**:
@@ -42,8 +42,8 @@ _Avoid_: complexity, hardness; and never `easy` as a **grade**
 
 **Track**:
 A themed run through the catalogue that cuts across tiers, one per task. A Python task that
-names none is on the `python` track; the others are `kubernetes`, `helm`, `docker`, `sql` and
-`git`.
+names none is on the `python` track; the others are `kubernetes`, `argocd`, `helm`, `docker`,
+`sql` and `git`.
 _Avoid_: course, path, series, curriculum
 
 **Tag**:

@@ -31,8 +31,8 @@ Today: 54 easy · 219 medium · 65 hard.
 
 **track** — one per task: a themed run through the catalogue that cuts across tiers. The home
 screen offers each track as a pill, and picking one sets the **focus**. A Python task that names
-none is on `python`; the Kubernetes manifests say `track: kubernetes`, the Helm charts
-`track: helm`, the Dockerfiles `track: docker`, and the SQL tasks `track: sql`. Name a track only when
+none is on `python`; the Kubernetes manifests say `track: kubernetes`, the Argo CD ones
+`track: argocd`, the Helm charts `track: helm`, the Dockerfiles `track: docker`, and the SQL tasks `track: sql`. Name a track only when
 the task belongs to a run other than `python`, and give the run a logo in `web/public/tracks/`.
 
 **tags** — what you practise. Lowercase, kebab-case, 1–3 per task, and one rule decides
@@ -65,8 +65,8 @@ it — and `POST /api/focus` sets it.
 
 One folder per task, `tasks/<NNN>_<name>/`; copy the shape of an existing one.
 
-`<NNN>` is the task's place in the curriculum, `001`–`356` with no gaps, so the next task you add is
-`357`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
+`<NNN>` is the task's place in the curriculum, `001`–`370` with no gaps, so the next task you add is
+`371`. It encodes no difficulty and no provenance, but it does encode order: a task's prereqs are
 always numbers below its own, and `doctor` will not let that stop being true. Append, never insert —
 inserting means rewriting every number after it, and [ADR-0006](adr/0006-the-fundamentals-come-first.md)
 says the two renumberings drillion has had are the last two.
@@ -160,6 +160,17 @@ It takes no `tier`, and its folder holds four files instead of two:
 A sitting's brief is stored when it opens, and a grader upgraded later keeps grading the brief
 it stored: a new `grade.py` must still accept every mapping an older `brief()` could return.
 Every rule the README states needs a row in `tests/test_graders.py` that breaks it and fails.
+
+A manifest task may ask for Argo CD's objects too: an Application, ApplicationSet or
+AppProject, or Argo Rollouts' Rollout and AnalysisTemplate. Their schemas are generated from
+the CRDs at the tags `_schemas/manifest.json` records and packaged beside Kubernetes', so the
+same kubeconform run judges both, and a kind with no packaged schema fails `doctor`. Give such
+a task `track: argocd`. An ApplicationSet's Go template braces are doubled in `## You return`
+and `## Rules`, and a templated value (`'{{.env}}-checkout'`) comes from the brief, so the
+answer key's placeholder stays a whole value. A **diagnosis** task puts what `argocd app get`
+and `kubectl` printed in `## You get`, written by hand in the tools' shape and saying so, beside
+the manifest as git has it; its brief is empty, since the evidence names fixed objects, and
+`check()` compares the answer with the fixed manifest.
 
 ## Helm tasks
 
@@ -318,7 +329,7 @@ Run `uv run drillion doctor` — it reports every rule the folder breaks, not ju
 
 `uv run drillion selfcheck` splices `_reference` into every file and runs the tests; it must be
 green on Python 3.14 before a task is trusted. But it only counts tasks the catalogue already
-accepted, so if it still says `356/356` after you added one, `doctor` is where to look.
+accepted, so if it still says `370/370` after you added one, `doctor` is where to look.
 
 ## Retired tags
 
