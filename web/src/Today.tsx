@@ -169,7 +169,7 @@ function Ladder({ stats }: { stats: Payload["stats"] }) {
         {groups.map(({ k }) => <span key={k} data-of={k}><Level of={k} count={known[k]} /></span>)}
       </div>
       <p className={s.muted}>{stats.seen
-        ? "A pass sends a task further out, so it comes back later; a struggle brings it back sooner."
+        ? "A pass sends a task further out, so it comes back later."
         : "Pass a task and it comes back later."}</p>
       <div className={s.week}>
         <div className={s.between}>
