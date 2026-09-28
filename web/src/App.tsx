@@ -50,8 +50,8 @@ function applyTheme(dark: boolean) {
   document.documentElement.classList.toggle("dark", dark);
   localStorage.setItem("drillion-theme", dark ? "dark" : "light");
 }
-const savedTheme = localStorage.getItem("drillion-theme");
-const initialDark = savedTheme ? savedTheme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+// index.html has already chosen it, before any stylesheet
+const initialDark = document.documentElement.classList.contains("dark");
 applyTheme(initialDark);
 
 /** The switch crossfades the whole page, editor included, where the browser can snapshot it. */

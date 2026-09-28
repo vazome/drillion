@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- the theme, before any stylesheet: a page styled light first can keep light text in dark (WebKit) -->
+    <script>
+      try {
+        var t = localStorage.getItem("drillion-theme");
+        if (t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark");
+      } catch {}
+    </script>
     <!-- ?v= is what makes a browser drop the icon it cached for this address: bump it when the icons change -->
     <link rel="icon" href="/favicon-32.png?v=2" sizes="32x32" type="image/png" />
     <link rel="icon" href="/favicon-16.png?v=2" sizes="16x16" type="image/png" />
