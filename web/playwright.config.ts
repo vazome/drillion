@@ -26,6 +26,10 @@ export default defineConfig({
     trace: "retain-on-failure",
     // fixed, so a screenshot changes when the UI changes and not when the runner does
     viewport: { width: 1440, height: 900 },
+    // the specs measure where things land, and the app moves them there: a screen rises 6px
+    // on arrival, so a position read in its first 200ms depends on the runner's speed. Under
+    // reduced motion the app collapses every animation, CSS and Motion alike.
+    reducedMotion: "reduce",
   },
   // Chromium runs everything; the other two engines run the keyboard and audit pass only.
   // Screenshots stay on one engine, or every capture churns three ways for one UI change.
