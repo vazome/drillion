@@ -1,0 +1,72 @@
+<!-- @dsCard group="App screens" height=700 width=1440 page="true" subtitle="Task: the one-line header" -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=Spline+Sans+Mono:wght@400;500&amp;display=swap">
+<div style="width: 1440px; height: 700px; box-sizing: border-box; padding: 40px 0; background: var(--bg); color: var(--text); font-family: var(--font-sans); display: flex; flex-direction: column; gap: 32px;">
+<header style="padding: 0 24px; display: flex; flex-direction: column; gap: 6px;">
+<h1 style="margin: 0; font-size: 22px; font-weight: 500;">The task header, on one line</h1>
+<p style="margin: 0; font-size: 13px; color: var(--text-muted);">Number and title, what the task is, what it needs, and the clock. Every Needs chip opens that task's lineage; a task with no prereqs shows nothing in their place.</p>
+</header>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="padding: 0 24px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">290 · its prereq not passed yet</figcaption>
+<section aria-label="Task" style="box-sizing: border-box; padding: 18px 24px; display: flex; align-items: center; gap: 16px 20px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 15px; color: var(--text-muted);">290</span>
+<h2 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">the layer cache, and why requirements.txt goes first</h2>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span></span>easy</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">docker/<span style="color: var(--text);">layer-cache · pip</span></span>
+<span style="height: 22px; display: inline-flex; align-items: center; padding: 0 8px; border-radius: 999px; background: var(--accent-tint); color: var(--accent); font-size: 12px; font-weight: 500;">open</span>
+<span aria-hidden="true" style="width: 1px; height: 18px; background: var(--border);"></span>
+<span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">Needs
+<a href="#" style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; background: var(--warn-bg); color: var(--warn); font-size: 13px; text-decoration: none;"><svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 2 15 14H1z"></path></svg><span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px;">289</span><span style="color: var(--text);">your first Dockerfile</span><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%);">, not passed yet</span></a></span>
+<span style="flex-grow: 1;"></span>
+<span style="display: flex; align-items: baseline; white-space: nowrap;"><span role="timer" aria-label="Active time 0:00" style="font-family: 'Spline Sans Mono', monospace; font-size: 17px;">0:00</span><button type="button" style="margin-left: 14px; height: 32px; padding: 0 4px; background: transparent; border: 0; font: inherit; font-size: 13px; color: var(--text-muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer;">Abandon</button></span>
+</section>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="padding: 0 24px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">290 · once 289 is passed</figcaption>
+<section aria-label="Task" style="box-sizing: border-box; padding: 18px 24px; display: flex; align-items: center; gap: 16px 20px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 15px; color: var(--text-muted);">290</span>
+<h2 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">the layer cache, and why requirements.txt goes first</h2>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span></span>easy</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">docker/<span style="color: var(--text);">layer-cache · pip</span></span>
+<span style="height: 22px; display: inline-flex; align-items: center; padding: 0 8px; border-radius: 999px; background: var(--accent-tint); color: var(--accent); font-size: 12px; font-weight: 500;">open</span>
+<span aria-hidden="true" style="width: 1px; height: 18px; background: var(--border);"></span>
+<span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">Needs
+<a href="#" style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; background: var(--pass-bg); color: var(--pass); font-size: 13px; text-decoration: none;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8.5l3 3 7-7"></path></svg><span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px;">289</span><span style="color: var(--text);">your first Dockerfile</span><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%);">, passed</span></a></span>
+<span style="flex-grow: 1;"></span>
+<span style="display: flex; align-items: baseline; white-space: nowrap;"><span role="timer" aria-label="Active time 3:05" style="font-family: 'Spline Sans Mono', monospace; font-size: 17px;">3:05</span><button type="button" style="margin-left: 14px; height: 32px; padding: 0 4px; background: transparent; border: 0; font: inherit; font-size: 13px; color: var(--text-muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer;">Abandon</button></span>
+</section>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="padding: 0 24px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">322 · two prereqs, one title over 30 characters, so the chips drop their titles (kept in the tooltip)</figcaption>
+<section aria-label="Task" style="box-sizing: border-box; padding: 18px 24px; display: flex; align-items: center; gap: 16px 20px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 15px; color: var(--text-muted);">322</span>
+<h2 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">a private package index, and a token that never lands in the image</h2>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span></span>hard</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">docker/<span style="color: var(--text);">buildkit · secret · security</span></span>
+<span style="height: 22px; display: inline-flex; align-items: center; padding: 0 8px; border-radius: 999px; background: var(--accent-tint); color: var(--accent); font-size: 12px; font-weight: 500;">open</span>
+<span aria-hidden="true" style="width: 1px; height: 18px; background: var(--border);"></span>
+<span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">Needs
+<a href="#" title="292 · ARG or ENV: build time, run time, or both" style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; background: var(--warn-bg); color: var(--warn); font-size: 13px; text-decoration: none;"><svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 2 15 14H1z"></path></svg><span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px;">292</span><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%);">, not passed yet</span></a><a href="#" title="321 · a cache mount, so pip stops downloading the same wheels" style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; background: var(--warn-bg); color: var(--warn); font-size: 13px; text-decoration: none;"><svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 2 15 14H1z"></path></svg><span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px;">321</span><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%);">, not passed yet</span></a></span>
+<span style="flex-grow: 1;"></span>
+<span style="display: flex; align-items: baseline; white-space: nowrap;"><span role="timer" aria-label="Active time 12:40" style="font-family: 'Spline Sans Mono', monospace; font-size: 17px;">12:40</span><button type="button" style="margin-left: 14px; height: 32px; padding: 0 4px; background: transparent; border: 0; font: inherit; font-size: 13px; color: var(--text-muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer;">Abandon</button></span>
+</section>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+<figcaption style="padding: 0 24px; font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">001 · no prereqs: nothing takes their place</figcaption>
+<section aria-label="Task" style="box-sizing: border-box; padding: 18px 24px; display: flex; align-items: center; gap: 16px 20px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 15px; color: var(--text-muted);">001</span>
+<h2 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">basics — Guido's lasagna kitchen timer</h2>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted);"><span aria-hidden="true" style="display: flex; gap: 2px;"><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--text-muted);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span><span style="width: 4px; height: 10px; border-radius: 1px; background: var(--border-strong);"></span></span>easy</span>
+<span style="font-family: 'Spline Sans Mono', monospace; font-size: 12px; color: var(--text-muted);">core/<span style="color: var(--text);">functions</span></span>
+<span style="height: 22px; display: inline-flex; align-items: center; padding: 0 8px; border-radius: 999px; background: var(--surface-2); color: var(--text-muted); font-size: 12px; font-weight: 500;">new</span>
+<span style="flex-grow: 1;"></span>
+<span style="display: flex; align-items: baseline; white-space: nowrap;"><span role="timer" aria-label="Active time 0:00" style="font-family: 'Spline Sans Mono', monospace; font-size: 17px;">0:00</span></span>
+</section>
+</figure>
+</div>
+<script>/* A static screen: nothing to mount. Until the page regenerates tokens.css with the tokens this screen uses, define them here; once tokens.css has them, this does nothing. */
+(function(){if(getComputedStyle(document.documentElement).getPropertyValue("--control-edge").trim())return;var s=document.createElement("style");s.textContent=':root,[data-theme="light"]{--control-edge:#8a959d;--strength-learning:var(--warn);--strength-familiar:var(--accent);--strength-solid:var(--pass);--heat-0:var(--surface-2);--heat-1:#d3e0f6;--heat-2:var(--accent-line);--heat-3:#6f95d9;--heat-4:var(--accent-hover);--danger-surface:#fff8f8;--danger-edge:var(--fail);--scrim:rgba(28,34,38,.32);}[data-theme="dark"]{--control-edge:#6b7883;--heat-1:#2e4466;--heat-3:#5a86cc;--danger-surface:#221c1f;--scrim:rgba(10,13,16,.62);}';document.head.appendChild(s);})();
+</script>
