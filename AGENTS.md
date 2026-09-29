@@ -1,6 +1,6 @@
 # drillion
 
-drillion is an Open Source platform to learn Python programming language through practice tasks.
+drillion is an Open Source platform to learn Python and DevOps tooling (Kubernetes, Helm, Argo CD, Docker, GitHub Actions, SQL, git) through practice tasks.
 
 It draws inpsiration from Exercism and Hackerank, but implements its own pragmatic approch.
 
@@ -12,7 +12,7 @@ drillion can be used by any number of users. It came to from the frustration aro
 This is not "raise money", learn python in 30 days, "here is a voucher" platform. Everybody can freely use drillion and contribute.
 
 2. Categorical pragmatism
-People use drillion for only one single purpose - to get better at Python. drillion aids them, by clearly tagging pracises with respective topics names, people can easly search across topics and tasks. Transparency is key to understanding.
+People use drillion for only one single purpose - to get better at Python and the DevOps tools around it. drillion aids them, by clearly tagging pracises with respective topics names, people can easly search across topics and tasks. Transparency is key to understanding.
 
 3. Local ready
 drillion is a Docker image: one `docker run` and the client is available with a ready environment. A checkout is the contributors' dev loop, not a way to use drillion. There is no login or registration. Convenience is important factor to consistent learning. We must make sure that it stays this way. Upgrades should not be a concern, learning progress must be kept regardless of distribution line.

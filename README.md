@@ -4,23 +4,23 @@
 
 ---
 
-# drillion: Python practice, on your machine
+# drillion: DevOps practice, on your machine
 
 [![CI](https://github.com/vazome/drillion/actions/workflows/ci.yml/badge.svg)](https://github.com/vazome/drillion/actions/workflows/ci.yml)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14269/badge)](https://www.bestpractices.dev/projects/14269)
 [![License](https://img.shields.io/github/license/vazome/drillion)](https://github.com/vazome/drillion/blob/main/LICENSE)
 
-TL;DR: self-hosted Python practice with a UI that stays out of your way. No streaks,
-no leaderboard nonsense, no badges and no engagement bait. Made by a neurodivergent
-engineer. It is simple, and it runs your code in a sandbox.
+TL;DR: self-hosted practice for Python, Kubernetes, Docker, SQL and git, with a UI that
+stays out of your way. No streaks, no leaderboard nonsense, no badges and no engagement
+bait. Made by a neurodivergent engineer. It is simple, and it runs your code in a sandbox.
 
 Longer: drillion is a local web app with 385 short tasks, 267 in Python, 26 Kubernetes
 manifests, 15 Helm charts, 14 Argo CD, 15 Dockerfiles, 15 GitHub Actions workflows, 15 in
-Postgres SQL and 18 git, in a real terminal,
-each tagged with the
-concept it drills so you can go straight at whatever you're worst at. No login, no
-account, no server except the one on your laptop. Tasks are folders of Markdown, Python and
-YAML. Your progress is a single SQLite file you can copy, back up and carry.
+Postgres SQL and 18 git, in a real terminal, each tagged with the concept it drills so you
+can go straight at whatever you're worst at. No login, no account, no server except the one
+on your laptop. Tasks are folders of Markdown with the files they grade: Python, YAML,
+Dockerfiles, SQL and shell. Your progress is a single SQLite file you can copy, back up and
+carry.
 
 | | Light | Dark |
 | --- | --- | --- |
@@ -33,9 +33,9 @@ YAML. Your progress is a single SQLite file you can copy, back up and carry.
 | **Progress**<br><sub>the ladder, what is due, where each topic sits</sub> | [![Progress, light](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/progress-1-light.png)](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/progress-1-light.png) | [![Progress, dark](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/progress-1-dark.png)](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/progress-1-dark.png) |
 | **Settings**<br><sub>the editor set up the way you have it everywhere else</sub> | [![Settings, light](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/settings-1-light.png)](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/settings-1-light.png) | [![Settings, dark](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/settings-1-dark.png)](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/settings-1-dark.png) |
 
-Every `solve()` says what it takes, so the editor knows what your value can do. Completions,
-signatures and type errors come from a language server running next to the grader, on your
-machine, and nothing is sent anywhere.
+In Python tasks, every `solve()` says what it takes, so the editor knows what your value can
+do. Completions, signatures and type errors come from a language server running next to the
+grader, on your machine, and nothing is sent anywhere.
 
 ## But why?
 
@@ -46,37 +46,6 @@ sharp and learn new things, not to chat about it with peers.
 
 I took heavy inspiration from Exercism, HackerRank and, surprisingly, Anki, and built it
 from scratch.
-
-Core ideas I'm keeping in mind during the development:
-
-- **A clean UI that does not gate the task.** Nothing stands between opening drillion and
-  writing code.
-- **Categorisation.** Every task is tagged with the concept it drills, and a tag spans
-  many tasks, so you can go straight at the thing you are worst at instead of grinding a
-  track in order.
-- **Anki-like progression.** Tasks return on a fixed review ladder, with a daily cap so a
-  backlog cannot bury you.
-- **An editor that behaves like an IDE without the complexity of one.** Every `solve()` is
-  typed, so completions, signatures and inline type errors are real as they come from a
-  language server running next to the grader, on your machine.
-- **Hints unlock and they are not free.** Three per task, escalating from a nudge to the
-  same idea worked through on different data. After half an hour with no submission,
-  drillion suggests taking one as you cannot brute-force something you are unaware of.
-- **Grading is real.** A Python answer is spliced into the task's own pytest file and run; a
-  manifest is validated by kubeconform, a Helm chart by `helm template` and `helm lint --strict`,
-  a Dockerfile by hadolint, a GitHub Actions workflow by actionlint, and SQL runs on Postgres
-  (PGlite) beside the answer key, then each
-  is checked against the task's own rules.
-- **YOUR progress.** One SQLite file on your disk, stamped with a schema version, and a
-  build refuses to rewrite a file a newer one wrote rather than quietly mangling it. Settings
-  turns it into a backup you can carry, and can erase the lot if you want to start over.
-- **It is free, and it stays free.** No tier, no voucher, no account, no telemetry,
-  open-source.
-
-One consequence worth stating plainly: every task ships executable Python, a manifest or Helm task's in
-its `grade.py`, and it runs on import. Shipping tasks as code is what makes the sandbox necessary, so graded code
-is confined by the kernel and you do not have to take my word for it. **What running it
-does to your machine**, below, is the detail.
 
 ## Run
 
@@ -118,30 +87,6 @@ docker exec drillion drillion selfcheck  # solve every task with its own referen
 docker exec drillion drillion doctor     # report why a task folder would be skipped
 ```
 
-## What running it does to your machine
-
-drillion runs Python on your computer: the code you write, and the code that ships inside the
-385 tasks. So it is worth saying plainly what that costs you.
-
-- **Your submissions are confined by the Linux kernel, where it allows.** The image runs them with
-  Landlock: they read only the interpreter, system libraries and tasks, and write only to a scratch
-  directory deleted after the run. On Landlock ABI 4 and newer (Linux 6.7) they cannot open a TCP
-  connection either. An older kernel, or a container policy that blocks Landlock, leaves only an
-  in-process guard that is a speed bump rather than a boundary; `drillion doctor` prints the tier a
-  probe process actually obtained. `compose.yaml` also runs the container read-only with every
-  capability dropped, so even then nothing outside `/data` and `/tmp` can be changed.
-- **Nothing leaves your machine.** No account, no telemetry, no fonts or scripts fetched from
-  anyone. The server binds `127.0.0.1`, and refuses a request from a page it did not serve, so
-  a website you happen to have open cannot drive your local drillion.
-- **What you downloaded can be checked.** Every image carries provenance naming the workflow run
-  that built it:
-
-  ```bash
-  gh attestation verify oci://ghcr.io/vazome/drillion:latest --repo vazome/drillion
-  ```
-
-[SECURITY.md](SECURITY.md) is the whole picture and explains how to report something.
-
 ## Docs
 
 - [How a sitting works, and why](docs/how-it-works.md): the learning loop, what the ladder
@@ -151,6 +96,7 @@ drillion runs Python on your computer: the code you write, and the code that shi
 - [CONTEXT.md](CONTEXT.md): the vocabulary the code, the API and the UI all use
 - [DESIGN.md](DESIGN.md): the UI brief; [`web/README.md`](web/README.md) for the frontend
 - [docs/adr/](docs/adr/): decisions worth their own page
+- [SECURITY.md](SECURITY.md): how your code is sandboxed, and how to report a vulnerability
 
 ## Contributing
 
@@ -158,7 +104,7 @@ The most useful contribution is a new task. Open an issue with the **New task** 
 then read [CONTRIBUTING.md](CONTRIBUTING.md) for the dev loop and the contract a task is graded
 against, and [AGENTS.md](AGENTS.md) for how the project decides things. Bugs and ideas go in
 [Issues](https://github.com/vazome/drillion/issues); a vulnerability goes through
-[SECURITY.md](SECURITY.md), which also spells out what running drillion does to your machine.
+[SECURITY.md](SECURITY.md), which also explains how your code is sandboxed.
 
 ## License
 
