@@ -4,23 +4,23 @@
 
 ---
 
-# drillion: Python practice, on your machine
+# drillion: DevOps practice, on your machine
 
 [![CI](https://github.com/vazome/drillion/actions/workflows/ci.yml/badge.svg)](https://github.com/vazome/drillion/actions/workflows/ci.yml)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14269/badge)](https://www.bestpractices.dev/projects/14269)
 [![License](https://img.shields.io/github/license/vazome/drillion)](https://github.com/vazome/drillion/blob/main/LICENSE)
 
-TL;DR: self-hosted Python practice with a UI that stays out of your way. No streaks,
-no leaderboard nonsense, no badges and no engagement bait. Made by a neurodivergent
-engineer. It is simple, and it runs your code in a sandbox.
+TL;DR: self-hosted practice for Python, Kubernetes, Docker, SQL and git, with a UI that
+stays out of your way. No streaks, no leaderboard nonsense, no badges and no engagement
+bait. Made by a neurodivergent engineer. It is simple, and it runs your code in a sandbox.
 
 Longer: drillion is a local web app with 385 short tasks, 267 in Python, 26 Kubernetes
 manifests, 15 Helm charts, 14 Argo CD, 15 Dockerfiles, 15 GitHub Actions workflows, 15 in
-Postgres SQL and 18 git, in a real terminal,
-each tagged with the
-concept it drills so you can go straight at whatever you're worst at. No login, no
-account, no server except the one on your laptop. Tasks are folders of Markdown, Python and
-YAML. Your progress is a single SQLite file you can copy, back up and carry.
+Postgres SQL and 18 git, in a real terminal, each tagged with the concept it drills so you
+can go straight at whatever you're worst at. No login, no account, no server except the one
+on your laptop. Tasks are folders of Markdown with the files they grade: Python, YAML,
+Dockerfiles, SQL and shell. Your progress is a single SQLite file you can copy, back up and
+carry.
 
 | | Light | Dark |
 | --- | --- | --- |
@@ -33,9 +33,9 @@ YAML. Your progress is a single SQLite file you can copy, back up and carry.
 | **Progress**<br><sub>the ladder, what is due, where each topic sits</sub> | [![Progress, light](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/progress-1-light.png)](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/progress-1-light.png) | [![Progress, dark](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/progress-1-dark.png)](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/progress-1-dark.png) |
 | **Settings**<br><sub>the editor set up the way you have it everywhere else</sub> | [![Settings, light](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/settings-1-light.png)](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/settings-1-light.png) | [![Settings, dark](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/settings-1-dark.png)](https://raw.githubusercontent.com/vazome/drillion/main/docs/images/settings-1-dark.png) |
 
-Every `solve()` says what it takes, so the editor knows what your value can do. Completions,
-signatures and type errors come from a language server running next to the grader, on your
-machine, and nothing is sent anywhere.
+In Python tasks, every `solve()` says what it takes, so the editor knows what your value can
+do. Completions, signatures and type errors come from a language server running next to the
+grader, on your machine, and nothing is sent anywhere.
 
 ## But why?
 
