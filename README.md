@@ -37,8 +37,8 @@ plenty of things I did not like about all of them, the gamification and the rati
 above all. I simply do not care about them. I came for one thing: to keep my Python
 sharp and learn new things, not to chat about it with peers.
 
-I took heavy inspiration from Exercism, HackerRank and, surprisingly, Anki, and built it
-from scratch.
+I took heavy inspiration from Exercism, HackerRank and, surprisingly, Anki, and made it
+self-hosted and multi-dimensional.
 
 ## Run
 
