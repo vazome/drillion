@@ -13,8 +13,9 @@ pnpm encode          # out/frames → ../images/drillion-film.avif and its still
 pnpm check           # every AVIF frame against its render; fails on stale or smeared blocks
 ```
 
-`pnpm encode` takes a CRF, `18` by default: about 5 MB for the whole film, and at 3x zoom its
-worst frame still matches the render. What it writes, and why:
+`pnpm encode` takes a CRF, `18` by default: about 2.3 MB for the whole film, and at 3x zoom
+its worst frame still matches the render. Held shots cost almost nothing; a camera that
+creeps costs every frame. What it writes, and why:
 
 - **Animated AVIF, AV1 in 4:4:4.** Full colour resolution keeps coloured UI text sharp; 4:2:0
   smears it. AV1 predicts each frame from the decoded one before, so a fade cannot leave the
@@ -46,6 +47,27 @@ Every encode stays in git history, so encode when the film changes, not on a whi
 
 Captions state no counts, of tasks or of tracks: the film outlives the next task someone adds.
 Numbers inside the app screens are fine, they are the UI as it looks.
+
+## Motion rules
+
+The film is read at about 880 px wide on github.com, looping. These keep it composed:
+
+- **Frame on gutters.** A shot's visible app range (`x` to `x + width / scale`) starts and ends
+  in the space between panels, never through text, a card or a border. No slivers of a
+  neighbouring column at the edge.
+- **Hold still to read.** The camera moves only when the action calls for it (following the
+  code down to Submit), then stops. Each scene holds its finished state for about a second
+  before the crossfade.
+- **One caption at a time.** `Caption` arrives after the crossfade in and leaves before the one
+  out (`SceneFrames` tells it the scene's length). It sits on the window's left edge.
+- **One springy thing.** Entrances use a critically damped spring; the rung climbing the
+  ladder in Climb is the only bounce.
+- **The pointer behaves like a hand.** It fades in and out, travels in an arc, pauses before a
+  click, and aims beside the label it clicks, not on it. A click that opens something is a
+  reason to cut.
+- **The loop has no seam.** The end card sheds everything but the wordmark, which glides to
+  where Open draws it, and the last frames dissolve into Open's first frame, so the last
+  frame and the first are the same picture.
 
 Remotion is free for individuals and teams of up to three people; see its
 [licence](https://www.remotion.dev/license).

@@ -4,7 +4,7 @@ import { Icon } from "@ds/Icon.jsx";
 import { Kbd } from "@ds/Kbd.jsx";
 import { Level } from "@app/Level";
 import { TagChip } from "@ds/TagChip.jsx";
-import { Caption, Cursor, Stage, Window, label, mix, mono, usePath, useShot, useSpring } from "../kit";
+import { Caption, Cursor, Stage, Window, label, mix, mono, toFrame, usePath, useShown, useSpring, useT } from "../kit";
 import { ROW, ROWS_TOP, Sidebar, TRACK_LIST } from "../Sidebar";
 
 /** What Today leads with once a track is picked: its first task, straight from tasks/. */
@@ -14,41 +14,49 @@ const PICKS: Record<string, { n: string; title: string; path: string; opens: [st
   docker: { n: "289", title: "your first Dockerfile", path: "docker/cmd", opens: [["290", "the layer cache, and why requirements.txt goes first"], ["291", "run as a numbered user, not root"], ["292", "ARG or ENV: build time, run time, or both"], ["294", "ENTRYPOINT and CMD: the program and its default"]], more: 0, count: 15, tags: ["multi-stage", "layer-cache", "pip", "security", "image-size", "cmd"] },
   kubernetes: { n: "268", title: "your first Deployment, and the two labels that have to agree", path: "kubernetes/deployment", opens: [["269", "one Pod, no controller: the smallest object"], ["275", "a StatefulSet is nothing without its headless"], ["276", "a DaemonSet has no replicas: one per node"], ["279", "install a chart with your own values.yaml"]], more: 6, count: 26, tags: ["deployment", "service", "labels", "multi-document", "networking", "workloads"] },
 };
-/** The clicks: which row, and on which frame. */
-const CLICKS: [string, number][] = [["helm", 44], ["docker", 76], ["kubernetes", 108]];
+/** The clicks: which row, and on which frame. The last click opens the task in Pick up. */
+const CLICKS: [string, number][] = [["helm", 52], ["docker", 82], ["kubernetes", 112]];
+const OPEN_TASK = 172;
 const rowOf = (name: string) => TRACK_LIST.findIndex(([n]) => n === name);
-const S = 0.86;   // the shot's scale: the whole screen, at the window's size
+export const LEFT = 112, TOP = 96;
+const SHOT = { scale: 0.86, x: 0, y: 0 };   // the whole screen, at the window's size
 
 export function Tracks() {
   const f = useCurrentFrame();
   const enter = useSpring(4, 200, 26);
-  const shot = useShot({ scale: S, x: 0, y: 0 }, { scale: 0.9, x: 20, y: 24 }, 118, 60);
   const done = CLICKS.filter(([, at]) => f >= at);
   const current = done.length ? done[done.length - 1] : (["All tracks", 0] as [string, number]);
   const prev = done.length > 1 ? done[done.length - 2][0] : "All tracks";
-  const slide = useSpring(current[1], 22, 14);
+  const slide = useSpring(current[1], 200, 12);
   const at = done.length ? mix(slide, rowOf(prev), rowOf(current[0])) : 0;
-  // the pointer, in frame pixels: the window's origin plus the row's centre at this shot's scale
-  const rowY = (name: string) => 116 + (ROWS_TOP + rowOf(name) * ROW + 22) * S;
-  const p = usePath([[16, 760, 780], [38, 190, rowY("helm")], [44, 190, rowY("helm")], [70, 196, rowY("docker")], [76, 196, rowY("docker")], [102, 200, rowY("kubernetes")], [130, 200, rowY("kubernetes")], [150, 420, 760]]);
+  // the pointer aims at a row's right half, clear of the name it picks
+  const row = (name: string) => toFrame(SHOT, LEFT, TOP, 196, ROWS_TOP + rowOf(name) * ROW + 23);
+  const card = toFrame(SHOT, LEFT, TOP, 560, 700);
+  const stops: [number, number, number][] = [[18, 760, 840]];
+  for (const [name, click] of CLICKS) stops.push([click - 8, row(name).x, row(name).y], [click, row(name).x, row(name).y]);
+  const last = row(CLICKS[CLICKS.length - 1][0]);
+  stops.push([140, last.x, last.y], [OPEN_TASK - 8, card.x, card.y], [OPEN_TASK + 4, card.x + 6, card.y + 4]);
+  const p = usePath(stops);
   return (
     <Stage>
-      <Caption eyebrow="TRACKS" inline left={112} top={34} size={44}>Every track, one ladder.</Caption>
-      <Window left={112} top={116} width={1376} height={774} shot={shot} enter={enter} tilt={0}>
+      <Caption eyebrow="TRACKS" inline left={LEFT} top={24} size={44}>Every track, one ladder.</Caption>
+      <Window left={LEFT} top={TOP} width={1376} height={774} shot={SHOT} enter={enter}>
         <Sidebar at={at} />
-        <Today pick={current[0]} since={current[1]} />
+        <Today pick={current[0]} prev={prev} since={current[1]} opening={f >= OPEN_TASK} />
       </Window>
-      <Cursor x={p.x} y={p.y} clicks={CLICKS.map(([, c]) => c)} opacity={f < 16 ? 0 : 1} />
+      <Cursor x={p.x} y={p.y} clicks={[...CLICKS.map(([, c]) => c), OPEN_TASK]} opacity={useShown(18)} />
     </Stage>
   );
 }
 
-/** Today, for the picked track. A new pick pops in as the app draws it: small to full size. */
-function Today({ pick, since }: { pick: string; since: number }) {
-  const d = PICKS[pick];
-  const pop = useSpring(since, 12, 24);
-  const arrive = since ? pop : 1;
-  const popped = { opacity: Math.min(1, arrive * 1.6), transform: `scale(${mix(arrive, 0.85, 1)})`, transformOrigin: "left center" };
+/** Today, for the picked track. A new pick replaces the old in a quick dip, as the app redraws. */
+function Today({ pick, prev, since, opening }: { pick: string; prev: string; since: number; opening: boolean }) {
+  const t = useT(since, 8);
+  const swap = since ? t : 1;
+  const name = swap < 0.4 ? prev : pick;
+  const d = PICKS[name];
+  const shown = swap < 0.4 ? 1 - swap / 0.4 : (swap - 0.4) / 0.6;
+  const popped = { opacity: shown, transform: `translateY(${swap < 0.4 ? 0 : (1 - shown) * 6}px)` };
   return (
     <>
       <div style={{ position: "absolute", left: 334, top: 44, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -92,7 +100,7 @@ function Today({ pick, since }: { pick: string; since: number }) {
         <span style={label}>Pick up where you left off</span>
         <span style={{ color: "var(--text-muted)" }}>last 7 days · all passed</span>
       </div>
-      <div style={{ position: "absolute", left: 334, top: 634, width: 284, height: 120, boxSizing: "border-box", padding: "20px 18px", display: "flex", flexDirection: "column", border: "1px solid var(--border)", borderRadius: 8, background: "var(--surface)" }}>
+      <div style={{ position: "absolute", left: 334, top: 634, width: 284, height: 120, boxSizing: "border-box", padding: "20px 18px", display: "flex", flexDirection: "column", border: `1px solid ${opening ? "var(--accent-line)" : "var(--border)"}`, borderRadius: 8, background: opening ? "var(--accent-tint)" : "var(--surface)" }}>
         <span style={{ fontSize: 15, fontWeight: 500 }}>f-strings — aligned report columns</span>
         <span style={{ flexGrow: 1 }} />
         <span style={{ display: "flex", justifyContent: "space-between", ...mono, fontSize: 12.5, color: "var(--text-muted)" }}>009 · python<Icon name="ArrowRight" /></span>
@@ -100,9 +108,9 @@ function Today({ pick, since }: { pick: string; since: number }) {
 
       <div style={{ position: "absolute", left: 334, top: 796, width: 1180, display: "flex", alignItems: "center", gap: 16 }}>
         <span style={{ fontSize: 22, fontWeight: 600 }}>Catalogue</span>
-        {pick === "All tracks" ? null : (
+        {name === "All tracks" ? null : (
           <span style={{ display: "flex", alignItems: "center", gap: 8, padding: "3px 12px", borderRadius: 999, background: "var(--accent-tint)", color: "var(--accent)", fontSize: 13.5, ...popped }}>
-            {pick} · {d.count} of 385<Icon name="Close" size={12} />
+            {name} · {d.count} of 385<Icon name="Close" size={12} />
           </span>
         )}
         <span style={{ flexGrow: 1 }} />
@@ -112,7 +120,7 @@ function Today({ pick, since }: { pick: string; since: number }) {
       </div>
       <div style={{ position: "absolute", left: 334, top: 848, width: 1180, display: "flex", alignItems: "center", gap: 24 }}>
         <div style={{ display: "flex", padding: 3, gap: 2, border: "1px solid var(--border)", borderRadius: 6 }}>
-          {[["Any", ""], ["new", String(d.count - (pick === "All tracks" ? 1 : 0))], ["due", "0"], ["open", "0"], ["done", pick === "All tracks" ? "1" : "0"]].map(([k, v], i) => (
+          {[["Any", ""], ["new", String(d.count - (name === "All tracks" ? 1 : 0))], ["due", "0"], ["open", "0"], ["done", name === "All tracks" ? "1" : "0"]].map(([k, v], i) => (
             <span key={k} style={{ padding: "4px 12px", borderRadius: 4, background: i ? undefined : "var(--accent-tint)", color: i ? undefined : "var(--accent)" }}>{k}{v ? ` ${v}` : ""}</span>
           ))}
         </div>

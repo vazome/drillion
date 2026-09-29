@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { createContext, useContext, type CSSProperties, type ReactNode } from "react";
 import { loadFont } from "@remotion/fonts";
 import { AbsoluteFill, Easing, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 // the app's tokens, minus fonts.css, whose absolute /fonts urls the film serves differently
@@ -16,10 +16,16 @@ loadFont({ family: "Spline Sans Mono", url: staticFile("fonts/spline-sans-mono-l
 export const OUT = Easing.bezier(0.16, 0.84, 0.44, 1);
 export const INOUT = Easing.bezier(0.65, 0, 0.35, 1);
 
-/** 0 → 1 across `dur` frames from `start`, eased; held at either end. */
+/** Scenes crossfade over this many frames. */
+export const CUT = 10;
+/** The length of the scene being drawn, so its caption can leave before the crossfade. */
+export const SceneFrames = createContext(Infinity);
+
+/** 0 → 1 across `dur` frames from `start`, eased; held at either end. An infinite `start` never comes. */
 export function useT(start: number, dur: number, easing = OUT) {
   const f = useCurrentFrame();
-  return interpolate(f, [start, start + dur], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing });
+  const from = Math.min(start, Number.MAX_SAFE_INTEGER - dur);
+  return interpolate(f, [from, from + dur], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing });
 }
 
 /** A spring from `start`: 0 → 1 with the given bounce, 0 before it starts. */
@@ -46,15 +52,19 @@ export function Stage({ children, light = false, style }: { children: ReactNode;
   );
 }
 
-/** The line above a shot: a mono eyebrow in the scene's colour, then the sentence. */
-export function Caption({ eyebrow, color = "var(--accent)", children, at = 4, left = 96, top = 64, inline = false, size = 56 }: {
-  eyebrow: string; color?: string; children: ReactNode; at?: number; left?: number; top?: number; inline?: boolean; size?: number;
+/** The line above a shot: a mono eyebrow in the scene's colour, then the sentence. It arrives
+ *  once the crossfade in is over and leaves before the one out starts, so two never overlap. */
+export function Caption({ eyebrow, color = "var(--accent)", children, at = CUT, until, left = 96, top = 64, inline = false, size = 56 }: {
+  eyebrow: string; color?: string; children: ReactNode; at?: number; until?: number; left?: number; top?: number; inline?: boolean; size?: number;
 }) {
+  const scene = useContext(SceneFrames);
+  const end = until ?? scene - CUT - 8;
   const a = useT(at, 16);
   const b = useT(at + 5, 20);
+  const gone = 1 - useT(end, 8);
   return (
-    <div style={{ position: "absolute", left, top, display: "flex", flexDirection: inline ? "row" : "column", alignItems: inline ? "baseline" : "flex-start", gap: inline ? 24 : 14 }}>
-      <span style={{ fontFamily: "var(--font-mono)", fontSize: 18, letterSpacing: "0.08em", color, ...rise(a, 10) }}>{eyebrow}</span>
+    <div style={{ position: "absolute", left, top, display: "flex", flexDirection: inline ? "row" : "column", alignItems: inline ? "baseline" : "flex-start", gap: inline ? 24 : 14, opacity: gone }}>
+      <span style={{ fontFamily: "var(--font-mono)", fontSize: 24, letterSpacing: "0.08em", color, ...rise(a, 10) }}>{eyebrow}</span>
       <h1 style={{ margin: 0, fontSize: size, lineHeight: 1.08, fontWeight: 500, letterSpacing: "-0.02em", ...rise(b, 22) }}>{children}</h1>
     </div>
   );
@@ -64,13 +74,13 @@ export type Shot = { scale: number; x: number; y: number };
 
 /** The app, in a window the camera looks through: `shot` places a 1600-wide app inside it
  *  (scale, then the app point at the window's top left). Pass a moving shot for a push-in. */
-export function Window({ left, top, width, height, shot, appHeight = 900, tilt = 3, enter = 1, children }: {
-  left: number; top: number; width: number; height: number; shot: Shot; appHeight?: number; tilt?: number; enter?: number; children: ReactNode;
+export function Window({ left, top, width, height, shot, appHeight = 900, enter = 1, children }: {
+  left: number; top: number; width: number; height: number; shot: Shot; appHeight?: number; enter?: number; children: ReactNode;
 }) {
   return (
     <div style={{
       position: "absolute", left, top, width, height, overflow: "hidden", borderRadius: 12, boxShadow: "var(--shadow-pop)",
-      opacity: enter, transform: `perspective(3200px) rotateX(${tilt}deg) translateY(${mix(enter, 60, 0)}px) scale(${mix(enter, 0.96, 1)})`, transformOrigin: "center top",
+      opacity: enter, transform: `translateY(${mix(enter, 40, 0)}px) scale(${mix(enter, 0.97, 1)})`, transformOrigin: "center top",
     }}>
       <div style={{ width: 1600, height: appHeight, position: "relative", background: "var(--bg)", fontSize: 14,
         transform: `scale(${shot.scale}) translate(${-shot.x}px, ${-shot.y}px)`, transformOrigin: "0 0" }}>
@@ -95,7 +105,7 @@ export function Cursor({ x, y, clicks = [], opacity = 1 }: { x: number; y: numbe
     <div style={{ position: "absolute", left: x, top: y, width: 0, height: 0, opacity, pointerEvents: "none" }}>
       {since.map((d) => (
         <span key={d} style={{ position: "absolute", left: -18, top: -18, width: 36, height: 36, borderRadius: 999,
-          border: "2px solid var(--accent)", opacity: 1 - d / 16, transform: `scale(${0.4 + d / 16})` }} />
+          border: "2px solid var(--accent)", opacity: 1 - d / 16, transform: `scale(${0.4 + OUT(d / 16)})` }} />
       ))}
       <svg width="30" height="38" viewBox="0 0 15 19" style={{ position: "absolute", left: -2, top: -2, transform: `scale(${press ? 0.88 : 1})`, transformOrigin: "2px 2px" }}>
         <path d="M1 1 L1 15.5 L4.6 12.2 L7.2 17.8 L9.6 16.7 L7.1 11.2 L12.2 11.2 Z" fill="#fff" stroke="#171c21" strokeWidth="1.1" strokeLinejoin="round" />
@@ -104,12 +114,21 @@ export function Cursor({ x, y, clicks = [], opacity = 1 }: { x: number; y: numbe
   );
 }
 
-/** Where the pointer is at this frame, along `path`: [frame, x, y] stops, eased between. */
+/** Where the pointer is at this frame, along `path`: [frame, x, y] stops. x and y ease on
+ *  different curves, so it travels in a slight arc, the way a hand moves, not a ruler. */
 export function usePath(path: [number, number, number][]) {
   const f = useCurrentFrame();
   const fs = path.map((p) => p[0]);
-  const opts = { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: INOUT } as const;
-  return { x: interpolate(f, fs, path.map((p) => p[1]), opts), y: interpolate(f, fs, path.map((p) => p[2]), opts) };
+  const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
+  return {
+    x: interpolate(f, fs, path.map((p) => p[1]), { ...clamp, easing: INOUT }),
+    y: interpolate(f, fs, path.map((p) => p[2]), { ...clamp, easing: OUT }),
+  };
+}
+
+/** Fades in over `dur` frames from `from`, and out over `dur` frames from `to`. */
+export function useShown(from: number, to = Infinity, dur = 6) {
+  return useT(from, dur) * (1 - useT(to, dur));
 }
 
 /** The wordmark path from web/src/Shell.tsx (the banner, cropped). */
