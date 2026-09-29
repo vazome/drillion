@@ -79,6 +79,7 @@ exclude = [
     "/DESIGN.md",
     "/web/node_modules",
     "/web/screenshots",
+    "/docs/film",
     # the README points at these by URL; they never need to ship inside the package
     "/docs/images",
     "/web/test-results",
