@@ -138,6 +138,10 @@ code (constants, exception classes, a toy app) goes above `solve`, never below. 
 (`_gen`, `_reference`, `test_*`) is never sent to the editor, and an edit that pastes the marker,
 defines `_reference`/`_gen`/`test_*` or names `_reference` is refused.
 
+The solution the learner is shown is `_reference` renamed to `solve`, under the stub's own
+`def solve(...)` header, so Review does not count line 1 as a difference. That header is only
+borrowed when `_reference` takes the same parameter names, in the same order, as the stub.
+
 ## Manifest tasks
 
 A task whose frontmatter says `kind: manifest` asks for a Kubernetes manifest instead of Python.
