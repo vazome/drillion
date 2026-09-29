@@ -120,11 +120,32 @@ jobs:
       # The download is checksum-pinned; an unpinned or altered one is refused rather
       # than installed.
       - run: uv run drillion doctor --fetch
-      - run: uv run pytest tests -q -n auto --durations=20 # one worker per core; the tests share no server or port
+      # Git task tests spawn many short-lived git processes. On PRs and main pushes,
+      # put them on their own runner so slow filesystem runs do not hold up this suite.
+      - run: uv run pytest tests -q -n auto --durations=20 --ignore=tests/test_git_tasks.py
+        if: github.event_name != 'schedule'
+      # Keep the nightly upgrade test in one environment after uv lock --upgrade.
+      - run: uv run pytest tests -q -n auto --durations=20
+        if: github.event_name == 'schedule'
       # The installed image runs the full catalogue selfcheck below. Keep the checkout
       # variant on the nightly run to catch differences in the dev environment.
       - run: uv run drillion selfcheck
         if: github.event_name == 'schedule'
+
+  git-tests:
+    needs: changes
+    if: needs.changes.outputs.check == 'true' && github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run pytest tests/test_git_tasks.py -q -n auto --durations=20
 
   web:
     needs: changes
@@ -352,7 +373,7 @@ jobs:
     if: always()
     # `changes` is in here so that a filter that fails takes the gate down with it, rather than
     # skipping every job below it and reporting a green nobody earned
-    needs: [changes, docs, film, check, web, screens, image]
+    needs: [changes, docs, film, check, git-tests, web, screens, image]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
