@@ -21,6 +21,7 @@ SLUG = "009_fstrings"
 NEXT_SLUG = "008_slicing"  # what the scheduler offers once 017 is cleared
 PREREQ, GATED = "048_dictget", "049_counter"  # 010 waits on topic 9
 TASKS = settings.tasks_dir  # the real ones — `_api()` repoints settings.root at a copy
+ANSWER = "{value:>12,.2f}"  # a fragment only 009's reference holds
 PASSING = 'return "\\n".join(f"{name:<14}{value:>12,.2f}" for name, value in rows)'
 
 
@@ -120,7 +121,7 @@ async def _stub_to_pass(api, path):
     assert run["box"] == 1 and run["stepped"] is True  # box 0 -> 1: a real promotion
     assert run["from_box"] == 0  # ...and it is a climb, not a fall
     assert run["reason"] == "the runs it took"  # the cause, never par's number
-    assert run["reference"].startswith("def _reference(")  # passing is what opens it
+    assert run["reference"].startswith("def solve(")  # passing is what opens it
     assert run["next"] == NEXT_SLUG  # what to sit down with now this card is cleared
     body = region.cut(path.read_text(encoding="utf-8")).body
     assert region.stub(body) == body  # passing puts the stub back on disk
@@ -131,9 +132,7 @@ async def _stub_to_pass(api, path):
     assert PASSING in st["archive"][SLUG][0]["code"]
 
     done = (await api.get(f"/api/task/{SLUG}")).json()
-    assert done["reference"].startswith(
-        "def _reference("
-    )  # a passed card may re-read it
+    assert done["reference"].startswith("def solve(")  # a passed card may re-read it
     assert done["nudge"] is False and done["lapses"] == 0
 
     again = (await api.post(f"/api/task/{SLUG}/open")).json()
@@ -183,7 +182,7 @@ async def _guards(api, path):
     assert (
         task["reference"] is None
     )  # nobody has passed it: the answer is not in the payload
-    assert "_reference" not in str(task)  # ...and it is nowhere else in it either
+    assert ANSWER not in str(task)  # ...and it is nowhere else in it either
     nobody = await api.post(
         f"/api/task/{SLUG}/run", json={"code": task["code"], "etag": task["etag"]}
     )
@@ -340,12 +339,10 @@ async def _the_reference_needs_the_peek_not_just_its_price(api, _path):
 
     task = (await api.get(f"/api/task/{SLUG}")).json()
     assert task["solution"]["unlocked"] is True and task["reference"] is None
-    assert "_reference" not in str(task)
+    assert ANSWER not in str(task)
 
     took = (await api.post(f"/api/task/{SLUG}/solution")).json()
-    assert took["reference"].startswith(
-        "def _reference("
-    )  # the payload carries the answer
+    assert took["reference"].startswith("def solve(")  # the payload carries the answer
     assert state.load()["open"][SLUG]["solution_shown"] is True  # ...and it is marked
     reread = (await api.get(f"/api/task/{SLUG}")).json()
     assert reread["reference"] == took["reference"]  # a reload does not un-take it

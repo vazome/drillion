@@ -4,10 +4,12 @@ Time is *active* seconds: every touch adds the gap since the last one, capped at
 minutes, and grades, hints and the solution gate all price themselves in that currency.
 The first minute is free — see `GRACE_SECS`."""
 
+import ast
 import random
+import re
 from datetime import datetime, timedelta
 
-from . import kinds
+from . import kinds, region
 from .scheduler import grade_of, reschedule
 from .state import card, own, today
 
@@ -210,11 +212,33 @@ def unlock_solution(st, slug):
     o["solution_shown"] = True
 
 
+def _start(node):
+    """The 1-based line a statement starts on, its decorators included."""
+    return min([node.lineno, *(d.lineno for d in getattr(node, "decorator_list", []))])
+
+
+def _params(fn):
+    return [a.arg for a in ast.walk(fn.args) if isinstance(a, ast.arg)]
+
+
 def solution_text(path):
-    """The reference answer, read from disk. The gate is the caller's line above."""
+    """The reference answer as the learner would write it, read from disk: `_reference` is
+    served as `solve`, under the region's own `def solve(...)` header when the parameters
+    match, so Compare does not count line 1. `task.py` keeps the grader's name. The gate is
+    the caller's line above."""
     txt = path.read_text(encoding="utf-8")
-    marker = "def _reference("
-    return txt[txt.index(marker) :].split("\ndef test_")[0].strip()
+    ref = txt[txt.index("def _reference(") :].split("\ndef test_")[0].strip()
+    ref = re.sub(r"\b_reference\b", "solve", ref)
+    try:
+        body = region.cut(txt).body
+        stub = region._solve(ast.parse(body))
+    except SyntaxError, region.Invalid:
+        return ref  # a draft that does not parse has no header to borrow
+    fn = ast.parse(ref).body[0]
+    if _params(fn) != _params(stub):
+        return ref
+    head = body.split("\n")[_start(stub) - 1 : _start(stub.body[0]) - 1]
+    return "\n".join(head + ref.split("\n")[_start(fn.body[0]) - 1 :])
 
 
 def attempt_view(o, hints):

@@ -1,5 +1,6 @@
 """Attempts: the timer, hints, the solution gate, abandoning and the state file."""
 
+import ast
 import shutil
 import tempfile
 from datetime import datetime, timedelta
@@ -41,7 +42,17 @@ def _st(**kw):
 
 def test_solution_returns_only_the_reference():
     text = attempts.solution_text(settings.tasks_dir / "009_fstrings" / "task.py")
-    assert text.startswith("def _reference(") and "def test_" not in text
+    assert text.startswith("def solve(rows: list[tuple[str, float]]):")
+    assert "def test_" not in text
+
+
+def test_no_served_reference_names_the_grader():
+    """Recursion (143) and a decorated stub (120) included: every reference reads as the
+    learner's `solve`, and still defines it."""
+    for path in sorted(settings.tasks_dir.glob("*/task.py")):
+        text = attempts.solution_text(path)
+        assert "_reference" not in text, path.parent.name
+        assert ast.parse(text).body[0].name == "solve", path.parent.name
 
 
 def test_touch_caps_a_long_gap():
