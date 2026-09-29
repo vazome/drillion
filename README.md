@@ -96,8 +96,7 @@ docker exec drillion drillion doctor     # report why a task folder would be ski
 - [CONTEXT.md](CONTEXT.md): the vocabulary the code, the API and the UI all use
 - [DESIGN.md](DESIGN.md): the UI brief; [`web/README.md`](web/README.md) for the frontend
 - [docs/adr/](docs/adr/): decisions worth their own page
-- [SECURITY.md](SECURITY.md): what running drillion does to your machine, and how to report
-  a vulnerability
+- [SECURITY.md](SECURITY.md): how your code is sandboxed, and how to report a vulnerability
 
 ## Contributing
 
@@ -105,7 +104,7 @@ The most useful contribution is a new task. Open an issue with the **New task** 
 then read [CONTRIBUTING.md](CONTRIBUTING.md) for the dev loop and the contract a task is graded
 against, and [AGENTS.md](AGENTS.md) for how the project decides things. Bugs and ideas go in
 [Issues](https://github.com/vazome/drillion/issues); a vulnerability goes through
-[SECURITY.md](SECURITY.md), which also spells out what running drillion does to your machine.
+[SECURITY.md](SECURITY.md), which also explains how your code is sandboxed.
 
 ## License
 
