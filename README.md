@@ -40,7 +40,7 @@ sharp and learn new things, not to chat about it with peers.
 I took heavy inspiration from Exercism, HackerRank and, surprisingly, Anki, and made it
 self-hosted and multi-dimensional.
 
-## Run
+## Install
 
 Drillion is distributed as a Docker image. Install Docker Engine on Linux or Docker Desktop on
 macOS or Windows, then start it:
@@ -55,7 +55,7 @@ Open <http://127.0.0.1:8765>. The image never opens a host browser. Your work li
 `drillion` volume, which outlives the container. [compose.yaml](compose.yaml) runs the same
 container read-only with every capability dropped: save it anywhere and `docker compose up -d`.
 
-To update, pull the new image and replace the container. Removing the container keeps the volume:
+### Update
 
 ```bash
 docker pull ghcr.io/vazome/drillion && docker stop drillion && docker rm drillion
