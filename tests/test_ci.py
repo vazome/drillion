@@ -11,33 +11,13 @@ import yaml
 from drillion.cli import LEARNER_FILES
 
 WORKFLOW = Path(__file__).parents[1] / ".github/workflows/ci.yml"
+CHANGE_SCRIPT = WORKFLOW.parent.parent / "scripts/ci-changes.py"
+BROWSERS_SCRIPT = WORKFLOW.parent.parent / "scripts/screens-multiengine.sh"
 RELEASE_WORKFLOW = Path(__file__).parents[1] / ".github/workflows/release.yml"
 ROOT = Path(__file__).parents[1]
 
 
-@pytest.mark.parametrize(
-    ("paths", "base_override", "expected"),
-    [
-        (["docs/guide.md"], None, "false"),
-        (["docs/images/screen.png"], None, "false"),
-        (["CONTRIBUTING.md"], None, "false"),
-        (["web/README.md"], None, "false"),
-        ([".design-sync/NOTES.md"], None, "false"),
-        (["README.md"], None, "true"),
-        (["web/src/README.md"], None, "true"),
-        (["LICENSE"], None, "true"),
-        (["tasks/001_example/README.md"], None, "true"),
-        (["docs/check.py"], None, "true"),
-        (["docs/guide.md", "src/code.py"], None, "true"),
-        (["new-folder/file"], None, "true"),
-        (["docs/guide.md\nsrc/code.py"], None, "true"),
-        (["docs/guide.md"], "missing", "true"),
-        (["docs/guide.md"], "0" * 40, "true"),
-        (["docs/guide.md"], "", "true"),
-        ([], None, "true"),
-    ],
-)
-def test_change_filter(tmp_path, paths, base_override, expected):
+def run_change_filter(tmp_path, changes, base_files=None, base_override=None):
     def git(*args):
         return subprocess.check_output(["git", *args], cwd=tmp_path, text=True).strip()
 
@@ -45,12 +25,20 @@ def test_change_filter(tmp_path, paths, base_override, expected):
     git("config", "commit.gpgsign", "false")
     git("config", "user.name", "Test")
     git("config", "user.email", "test@example.invalid")
-    git("commit", "--allow-empty", "-qm", "base")
-    base = git("rev-parse", "HEAD")
-    for name in paths:
+    script = tmp_path / ".github/scripts/ci-changes.py"
+    script.parent.mkdir(parents=True)
+    shutil.copyfile(CHANGE_SCRIPT, script)
+    for name, content in (base_files or {}).items():
         path = tmp_path / name
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("changed\n")
+        path.write_text(content)
+    git("add", ".")
+    git("commit", "--allow-empty", "-qm", "base")
+    base = git("rev-parse", "HEAD")
+    for name, content in changes.items():
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
     git("add", ".")
     git("commit", "--allow-empty", "-qm", "head")
     step = yaml.safe_load(WORKFLOW.read_text())["jobs"]["changes"]["steps"][-1]
@@ -62,13 +50,147 @@ def test_change_filter(tmp_path, paths, base_override, expected):
             **os.environ,
             "BASE": base if base_override is None else base_override,
             "HEAD": git("rev-parse", "HEAD"),
+            "EVENT_NAME": "pull_request",
             "GITHUB_OUTPUT": str(output),
             "GITHUB_STEP_SUMMARY": str(tmp_path / "summary"),
-            "RUNNER_TEMP": str(tmp_path),
         },
         check=True,
     )
-    assert output.read_text().strip() == f"code={expected}"
+    return output.read_text().strip().splitlines()
+
+
+def selected_lines(enabled):
+    return [
+        f"{name}={'true' if value else 'false'}"
+        for name, value in zip(
+            ("docs", "check", "web", "screens", "image"), enabled, strict=True
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    ("paths", "base_override", "expected"),
+    [
+        (["docs/guide.md"], None, (1, 0, 0, 0, 0)),
+        (["docs/images/screen.png"], None, (0, 0, 0, 0, 0)),
+        (["CONTRIBUTING.md"], None, (1, 0, 0, 0, 0)),
+        (["web/README.md"], None, (1, 0, 0, 0, 0)),
+        ([".design-sync/NOTES.md"], None, (1, 0, 0, 0, 0)),
+        (["README.md"], None, (1, 0, 0, 0, 0)),
+        (["web/src/README.md"], None, (0, 0, 1, 1, 1)),
+        (["web/e2e/races.spec.ts"], None, (0, 0, 1, 1, 0)),
+        (["LICENSE"], None, (0, 1, 1, 1, 1)),
+        (["tasks/001_example/README.md"], None, (0, 1, 1, 1, 1)),
+        (["docs/check.py"], None, (0, 1, 1, 1, 1)),
+        (["docs/guide.md", "src/code.py"], None, (1, 1, 1, 1, 1)),
+        (["new-folder/file"], None, (0, 1, 1, 1, 1)),
+        (["docs/guide.md\nsrc/code.py"], None, (0, 1, 1, 1, 1)),
+        (["docs/guide.md"], "missing", (1, 1, 1, 1, 1)),
+        (["docs/guide.md"], "0" * 40, (1, 1, 1, 1, 1)),
+        (["docs/guide.md"], "", (1, 1, 1, 1, 1)),
+        ([], None, (1, 1, 1, 1, 1)),
+    ],
+)
+def test_change_filter(tmp_path, paths, base_override, expected):
+    assert run_change_filter(
+        tmp_path, {name: "changed\n" for name in paths}, base_override=base_override
+    ) == selected_lines(expected)
+
+
+@pytest.mark.parametrize(
+    ("before", "after", "other_paths", "expected"),
+    [
+        (
+            '[project]\nname = "drillion"\ndescription = "old"\ndependencies = ["fastapi"]\n',
+            '[project]\nname = "drillion"\ndescription = "new"\ndependencies = ["fastapi"]\n',
+            ["README.md", "AGENTS.md"],
+            (1, 0, 0, 0, 0),
+        ),
+        (
+            '[project]\nname = "drillion"\ndependencies = ["fastapi"]\n',
+            '[project]\nname = "drillion"\ndependencies = ["starlette"]\n',
+            [],
+            (0, 1, 1, 1, 1),
+        ),
+        (
+            '[project]\nname = "drillion"\n',
+            "not valid TOML\n",
+            [],
+            (0, 1, 1, 1, 1),
+        ),
+        (
+            '[project]\nname = "drillion"\n',
+            'project = "not a table"\n',
+            [],
+            (0, 1, 1, 1, 1),
+        ),
+    ],
+)
+def test_change_filter_project_metadata(tmp_path, before, after, other_paths, expected):
+    changes = {"pyproject.toml": after, **dict.fromkeys(other_paths, "changed\n")}
+    assert run_change_filter(
+        tmp_path, changes, base_files={"pyproject.toml": before}
+    ) == selected_lines(expected)
+
+
+def test_scheduled_ci_runs_all_checks(tmp_path):
+    output = tmp_path / "output"
+    subprocess.run(
+        ["python3", str(CHANGE_SCRIPT)],
+        env={
+            **os.environ,
+            "EVENT_NAME": "schedule",
+            "BASE": "",
+            "HEAD": "",
+            "GITHUB_OUTPUT": str(output),
+            "GITHUB_STEP_SUMMARY": str(tmp_path / "summary"),
+        },
+        check=True,
+    )
+    assert output.read_text().strip().splitlines() == [
+        f"{name}=true" for name in ("docs", "check", "web", "screens", "image")
+    ]
+
+
+@pytest.mark.parametrize("failed", ["", "firefox", "webkit"])
+def test_parallel_browser_engines_keep_state_separate_and_report_failures(
+    tmp_path, failed
+):
+    pnpm = tmp_path / "pnpm"
+    pnpm.write_text(
+        "#!/usr/bin/env bash\n"
+        'echo "$DRILLION_E2E_ROOT $DRILLION_PORT $*" >> "$CALLS"\n'
+        'if [[ "$*" == *"--project=$FAIL_ON"* && -n "$FAIL_ON" ]]; then exit 7; fi\n'
+    )
+    pnpm.chmod(0o755)
+    calls = tmp_path / "calls"
+    result = subprocess.run(
+        ["bash", str(BROWSERS_SCRIPT)],
+        cwd=tmp_path,
+        env={
+            **os.environ,
+            "PATH": f"{tmp_path}:{os.environ['PATH']}",
+            "RUNNER_TEMP": str(tmp_path),
+            "CALLS": str(calls),
+            "FAIL_ON": failed,
+        },
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == (1 if failed else 0), result.stderr
+    lines = calls.read_text().splitlines()
+    assert len(lines) == 2
+    assert any(
+        "drillion-firefox 8766 screens --project=firefox --output=test-results/firefox"
+        in line
+        for line in lines
+    )
+    assert any(
+        "drillion-webkit 8767 screens --project=webkit --output=test-results/webkit"
+        in line
+        for line in lines
+    )
 
 
 @pytest.mark.parametrize("status", [0, 7])

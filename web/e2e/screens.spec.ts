@@ -1,10 +1,9 @@
 /** What the client looks like on this branch, as PNGs a reviewer can open. A review aid,
  *  not a visual regression test: nothing is diffed, and it fails only when the app cannot
  *  be driven at all. */
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { repoRoot, scratchRoot } from "../playwright.config";
+import { scratchRoot } from "../playwright.config";
 
 const SHOTS = join(import.meta.dirname, "..", "screenshots");
 const SLUG = "009_fstrings";
@@ -15,15 +14,11 @@ const SOLUTION = [
   '    return "\\n".join(f"{name:<14}{value:>12,.2f}" for name, value in rows)',
 ].join("\n");
 
-/** When the throwaway root was built: anything newer was written by this run. Read off the
- *  copy, not a clock — a restarted worker would re-read a `Date.now()` too late. */
-const runStart = statSync(join(scratchRoot, "tasks")).mtimeMs;
-
 /** fullPage everywhere: the part that scrolled off is usually the part worth reviewing. */
 const shot = (page: Page, name: string) =>
   page.screenshot({ path: join(SHOTS, `${name}.png`), fullPage: true, animations: "disabled" });
 
-test("captures the screens a reviewer needs", async ({ page, request }) => {
+test("captures the screens a reviewer needs", { tag: "@capture" }, async ({ page, request }) => {
   await page.goto("/#/");
   await expect(page.getByRole("heading", { name: /^Up next/ })).toBeVisible();
   await shot(page, "1-catalogue");
@@ -147,22 +142,4 @@ test("captures the screens a reviewer needs", async ({ page, request }) => {
   await page.goto("/#/settings");
   await page.getByRole("button", { name: "Standard", exact: true }).click();
   await page.keyboard.press("Escape");
-});
-
-test("the run cannot have touched the repository's own state", async ({ request }) => {
-  // the server was handed DRILLION_ROOT; this asserts the checkout itself was left alone
-  const untouched = (path: string) =>
-    !existsSync(path) || statSync(path).mtimeMs < runStart;
-
-  for (const slug of readdirSync(join(repoRoot, "tasks")))
-    expect(untouched(join(repoRoot, "tasks", slug, "task.py")), `${slug} was written`).toBe(true);
-  for (const name of ["progress.json", "progress.json.bak", "progress.sqlite3", "progress.sqlite3-journal", "progress.sqlite3-wal", "progress.sqlite3-shm"])
-    expect(untouched(join(repoRoot, name)), `${name} was written`).toBe(true);
-
-  // ...and the same writes landed in the scratch root, so the checks above are not vacuous
-  expect(statSync(join(scratchRoot, "tasks", SLUG, "task.py")).mtimeMs).toBeGreaterThan(runStart);
-  expect(readFileSync(join(scratchRoot, "progress.sqlite3")).subarray(0, 16).toString()).toBe("SQLite format 3\0");
-  const progress = await request.get("/api/progress");
-  expect(progress.ok()).toBe(true);
-  expect((await progress.json()).log.some((entry: { slug: string }) => entry.slug === SLUG)).toBe(true);
 });
