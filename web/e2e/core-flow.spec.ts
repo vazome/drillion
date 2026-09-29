@@ -1,20 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 test("a passing submission reaches Review", async ({ page }) => {
-  // Other required specs open 009_fstrings as an unpassed task. Keep this pass separate.
-  await page.goto("/#/task/001_guidos_gorgeous_lasagna");
+  await page.goto("/#/task/009_fstrings");
   await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
   const solution = [
-    "def solve():",
-    "    def bake_time_remaining(elapsed): return 40 - elapsed",
-    "    def preparation_time_in_minutes(layers): return layers * 2",
-    "    def elapsed_time_in_minutes(layers, elapsed): return preparation_time_in_minutes(layers) + elapsed",
-    "    return {",
-    '        "EXPECTED_BAKE_TIME": 40,',
-    '        "bake_time_remaining": bake_time_remaining,',
-    '        "preparation_time_in_minutes": preparation_time_in_minutes,',
-    '        "elapsed_time_in_minutes": elapsed_time_in_minutes,',
-    "    }",
+    "def solve(rows):",
+    '    return "\\n".join(f"{name:<14}{value:>12,.2f}" for name, value in rows)',
   ].join("\n");
   await page.locator(".monaco-editor .view-lines").first().click();
   await page.keyboard.press("ControlOrMeta+a");
