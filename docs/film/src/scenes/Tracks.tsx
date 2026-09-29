@@ -33,7 +33,7 @@ export function Tracks() {
   const p = usePath([[16, 760, 780], [38, 190, rowY("helm")], [44, 190, rowY("helm")], [70, 196, rowY("docker")], [76, 196, rowY("docker")], [102, 200, rowY("kubernetes")], [130, 200, rowY("kubernetes")], [150, 420, 760]]);
   return (
     <Stage>
-      <Caption eyebrow="385 TASKS" inline left={112} top={34} size={44}>Eight tracks. One ladder.</Caption>
+      <Caption eyebrow="TRACKS" inline left={112} top={34} size={44}>Every track, one ladder.</Caption>
       <Window left={112} top={116} width={1376} height={774} shot={shot} enter={enter} tilt={0}>
         <Sidebar at={at} />
         <Today pick={current[0]} since={current[1]} />
