@@ -1,6 +1,6 @@
 [project]
 name = "drillion"
-version = "0.11.2"
+version = "0.12.0"
 description = "DevOps practice, on your machine"
 readme = "README.md"
 license = "MIT"

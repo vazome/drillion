@@ -4,6 +4,33 @@ Hand-written, newest first. drillion follows [semantic versioning](CONTRIBUTING.
 against its public surface: the CLI, the HTTP API, the `progress.json` schema, and the
 task-folder format. The version is declared once, in `pyproject.toml`.
 
+## 0.12.0 — 2026-09-29
+
+Four new tracks, motion across the app, and the wordmark.
+
+- **Postgres SQL, 15 tasks.** Your SQL runs on PGlite (Postgres 18 compiled to WASM) inside
+  the sandbox, against the data shown and a hidden second dataset, so a result copied into
+  `VALUES` does not pass. The editor has Postgres highlighting and the schema in a tab beside it.
+- **git, 18 tasks, in a real terminal.** A bash terminal in the page works on a real
+  repository, and Submit grades it against an answer key's, naming the first difference. The
+  image gains git, `less`, `nano` and `vim-tiny`, about 110 MB.
+- **Argo CD, 14 tasks, and GitHub Actions, 15 tasks.** Applications, sync waves and hooks,
+  ApplicationSets and Rollouts canaries; workflows from a first pytest run to matrices, caching,
+  OIDC deploys and reusable workflows.
+- **Motion across the app.** Screens cross over, a pass shows the task's rung climbing the
+  ladder, notices leave as well as arrive, and a new pick redraws only what depends on it.
+  Reduced motion turns it all off, with no transparent first frame.
+- **The wordmark** replaces the plain name in the sidebar and top bar, in both themes. Track
+  marks centre on their whole row, and the theme item drops its switch graphic.
+- **Editor popups** (hovers, suggestions, Quick Fix) share Monaco's layout and drillion's
+  colours, and suggestions open at the cursor again.
+- **Review** shows the reference as `solve`, not the grader's `_reference`.
+- **Dark mode** is set before the first style, so WebKit no longer repaints text in the light
+  theme's colour.
+- A stopping server waits for its terminal shells to end.
+- A release now waits for CI to pass on the exact tagged commit.
+- The README opens with an animated tour of the app.
+
 ## 0.11.2 — 2026-09-24
 
 A resizable output pane, a quieter Solution button, and a faster release build.
