@@ -12,20 +12,21 @@
 .nav:hover{color:var(--text);text-decoration:none}
 .picks{display:flex;flex-direction:column;gap:10px}
 .label{margin:0;padding:0 10px;font-size:var(--fs-label);font-weight:500;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--text-muted)}
-.track{display:flex;flex-direction:column;gap:6px;padding:8px 10px;background:transparent;border:0;border-radius:var(--radius);font:inherit;color:var(--text);cursor:pointer;text-align:left;transition:background var(--dur-press) var(--ease-out)}
+/* a grid, so the mark centres on the name and the size bar together, not the name alone */
+.track{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:6px 10px;padding:8px 10px;background:transparent;border:0;border-radius:var(--radius);font:inherit;color:var(--text);cursor:pointer;text-align:left;transition:background var(--dur-press) var(--ease-out)}
 @media (hover:hover){.track:hover:not([data-on]){background:var(--surface-2)}}
 .track[data-on]{background:var(--accent-tint)}
-.trackHead{display:flex;align-items:center;gap:10px;width:100%}
+.trackHead{display:contents}
 .trackName{flex-grow:1;font-size:14px;font-weight:500}
 .track[data-on] .trackName{font-weight:600;color:var(--accent)}
-.mark{display:flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0;box-sizing:border-box;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:13px;color:var(--text-muted)}
+.mark{grid-row:span 2;display:flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0;box-sizing:border-box;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:13px;color:var(--text-muted)}
 .track[data-on] .mark:not([data-image]){border-color:var(--accent-line);color:var(--accent)}
 .mark[data-image]{border-color:transparent;object-fit:contain}
 /* helm's mark is one navy, which vanishes on the dark surface; white is how Helm draws it on dark */
 :global(.dark) .mark[src$="helm.svg"]{filter:brightness(0) invert(1)}
 .mark[data-all]{display:grid;grid-template-columns:6px 6px;gap:2px;place-content:center}
 .mark[data-all] i{width:6px;height:6px;box-sizing:border-box;border:1px solid currentColor}
-.size{margin-left:38px;min-width:6px;height:3px;border-radius:var(--radius-pill);background:var(--border)}
+.size{grid-column:2 / -1;justify-self:start;min-width:6px;height:3px;border-radius:var(--radius-pill);background:var(--border)}
 .track[data-on] .size{background:var(--accent-line)}
 .note{margin:0;padding:0 10px;font-size:var(--fs-label);line-height:1.45;color:var(--text-muted)}
 .note[data-error]{color:var(--fail)}

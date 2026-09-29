@@ -75,7 +75,7 @@ export function Sidebar({ route, head, dark, setDark, onSettings }: Chrome & { r
                     <span className={s.trackName}>{name}</span>
                     <span className={s.count}>{size}</span>
                   </span>
-                  <span aria-hidden="true" className={s.size} style={{ width: `calc((100% - 38px) * ${head.total ? size / head.total : 0})` }} />
+                  <span aria-hidden="true" className={s.size} style={{ width: `${head.total ? (100 * size) / head.total : 0}%` }} />
                 </button>
               );
             })}
