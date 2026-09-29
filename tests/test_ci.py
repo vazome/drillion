@@ -1,5 +1,6 @@
 """Exercise the Linux CI change filter against real Git histories."""
 
+import json
 import os
 import shutil
 import subprocess
@@ -14,6 +15,7 @@ WORKFLOW = Path(__file__).parents[1] / ".github/workflows/ci.yml"
 CHANGE_SCRIPT = WORKFLOW.parent.parent / "scripts/ci-changes.py"
 BROWSERS_SCRIPT = WORKFLOW.parent.parent / "scripts/screens-multiengine.sh"
 RELEASE_WORKFLOW = Path(__file__).parents[1] / ".github/workflows/release.yml"
+RELEASE_CI_GATE = WORKFLOW.parent.parent / "scripts/release-ci-gate.sh"
 ROOT = Path(__file__).parents[1]
 
 
@@ -298,6 +300,11 @@ def test_release_publishes_only_the_attested_container_image():
     # a published version is never rebuilt: a retry reuses its digest
     gate = {step.get("id"): step for step in jobs["gate"]["steps"]}
     assert "imagetools inspect" in gate["published"]["run"]
+    assert jobs["gate"]["permissions"]["actions"] == "read"
+    assert any(
+        step.get("run") == "bash .github/scripts/release-ci-gate.sh"
+        for step in jobs["gate"]["steps"]
+    )
     assert jobs["build"]["if"] == "needs.gate.outputs.published == ''"
     assert image["digest"]["env"]["PUBLISHED"] == "${{ needs.gate.outputs.published }}"
     # a skipped build skips everything below it unless each job says otherwise
@@ -348,6 +355,55 @@ def test_release_publishes_only_the_attested_container_image():
     assert "gh attestation verify oci://${image}@${DIGEST}" in notes
     assert 'gh release create "$GITHUB_REF_NAME"' in notes
     assert "dist/" not in notes
+
+
+def ci_run(sha, event, branch, conclusion):
+    return {
+        "head_sha": sha,
+        "event": event,
+        "head_branch": branch,
+        "status": "completed",
+        "conclusion": conclusion,
+    }
+
+
+@pytest.mark.parametrize(
+    ("runs", "allowed"),
+    [
+        ([ci_run("tagged", "push", "main", "success")], True),
+        ([ci_run("tagged", "push", "main", "failure")], False),
+        (
+            [
+                ci_run("tagged", "pull_request", "topic", "success"),
+                ci_run("other", "push", "main", "success"),
+                ci_run("tagged", "push", "main", "failure"),
+            ],
+            False,
+        ),
+    ],
+)
+def test_release_ci_gate_checks_tagged_main_run(tmp_path, runs, allowed):
+    response = tmp_path / "runs.json"
+    response.write_text(json.dumps({"workflow_runs": runs}))
+    gh = tmp_path / "gh"
+    gh.write_text('#!/bin/sh\ncat "$CI_RUN_RESPONSE"\n')
+    gh.chmod(0o755)
+
+    result = subprocess.run(
+        ["bash", str(RELEASE_CI_GATE)],
+        check=False,
+        env={
+            **os.environ,
+            "PATH": f"{tmp_path}:{os.environ['PATH']}",
+            "CI_RUN_RESPONSE": str(response),
+            "GITHUB_REPOSITORY": "vazome/drillion",
+            "GITHUB_SHA": "tagged",
+        },
+        capture_output=True,
+        text=True,
+        timeout=5,
+    )
+    assert (result.returncode == 0) is allowed, result.stdout + result.stderr
 
 
 def test_user_docs_describe_docker_as_the_only_distribution():
