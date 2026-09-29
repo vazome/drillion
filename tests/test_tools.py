@@ -146,8 +146,8 @@ def test_every_actionlint_pin_is_the_one_release():
         v = tools.ACTIONLINT_VERSION
         assert pin.version == v
         assert pin.url == (
-            f"https://github.com/rhysd/actionlint/releases/download/{v}/"
-            f"actionlint_{v[1:]}_{os_name}_{arch}.tar.gz"
+            f"https://github.com/vazome/actionlint/releases/download/{v}/"
+            f"actionlint-{os_name}-{arch}.tar.gz"
         )
         assert pin.member == "actionlint" and pin.filename == "actionlint"
 

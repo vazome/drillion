@@ -153,32 +153,33 @@ PINS[HADOLINT] = {
 }
 
 
-ACTIONLINT_VERSION = "v1.7.12"
+ACTIONLINT_VERSION = "v1.7.12-drillion.1"
 
 
 def _actionlint(arch, archive_sha256, binary_sha256):
     return Pin(
         ACTIONLINT_VERSION,
-        "https://github.com/rhysd/actionlint/releases/download/"
-        f"{ACTIONLINT_VERSION}/actionlint_{ACTIONLINT_VERSION[1:]}_linux_{arch}.tar.gz",
+        "https://github.com/vazome/actionlint/releases/download/"
+        f"{ACTIONLINT_VERSION}/actionlint-linux-{arch}.tar.gz",
         archive_sha256,
         "actionlint",
         binary_sha256,
     )
 
 
-# Upstream's `actionlint_<version>_checksums.txt` lists each archive; `binary_sha256` is
-# ours, recomputed by hand when the version moves, as for kubeconform.
+# Upstream's v1.7.12 rebuilt with Go 1.26.8 and golang.org/x/sys v0.44.0 by the fork's
+# release-drillion.yml, whose CHECKSUMS file lists each archive; `binary_sha256` is ours,
+# recomputed by hand when the version moves, as for kubeconform.
 PINS[ACTIONLINT] = {
     ("linux", "amd64"): _actionlint(
         "amd64",
-        "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8",
-        "c872d6db8c6bf83a8eaa704fc93999f027d55dffbc63b8a6abdccb47df5f4cd4",
+        "04c3fed60b64e8d554412b309e6372d0d39c782ebb647a01f26e3638a180c7b9",
+        "589894db9436835aa3180574f848302e2f1e0c19b0f6813127a624eea49f5adf",
     ),
     ("linux", "arm64"): _actionlint(
         "arm64",
-        "325e971b6ba9bfa504672e29be93c24981eeb1c07576d730e9f7c8805afff0c6",
-        "ac0323433c2853ec3fb978c611430c5b3dc5d43c58d1a1ec031b00ab572beb60",
+        "e732e6c1b4eafa1b035f566e33db4709817e864e7689db5c06ed5837a21806bc",
+        "33ae0935f3c3fb96a6e286faf90d516e2c549a33a109f5cfe7a97e606e6a31ed",
     ),
 }
 
