@@ -55,6 +55,9 @@ The most common defect in this repo is a change that works on the path you teste
 - Docs screenshots live in `docs/images/` and are linked by absolute
   `raw.githubusercontent.com/.../main/...` URL — never a tag, never relative. See
   `CONTRIBUTING.md`.
+- The film at the top of the README is rendered, not recorded: `docs/film` is its Remotion
+  project, and its README says how to render and encode it. A visible UI change means the film
+  may need a re-render.
 - Comments describe how a thing is used, and move when the code moves. To be used mostly to describe functions, not to annotate every line of behavior.
 - If a rule here fights the task in front of you, say so loudly and get a human sign-off before breaking it.
 
