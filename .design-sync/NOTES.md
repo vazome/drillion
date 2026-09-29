@@ -198,6 +198,11 @@ The vendored design system in `web/src/ds/` diverges from the Claude Design proj
 - `TrackRail` came from the artifact as-is, converted to the local idiom (sibling
   `.module.css` import, `track-rail-` prefix dropped). Its pills replace the track chips that
   used to sit after the tier chips in the filter row, so a track is focused from one place.
+- `tokens/motion.css`: the arrival utilities (`m-rise`, `m-fade`, `m-expand`, `m-drop`,
+  `m-stagger`, `m-step`) fill `backwards`, not `both`. A held last frame keeps an identity
+  transform on the element, which makes it the containing block for anything `position: fixed`
+  inside it: the task page's `<main>` is `m-rise`, so Monaco's suggest, hover and details
+  widgets (`fixedOverflowWidgets`) landed a top bar's height below the cursor.
 
 Every entry above is a deliberate local divergence. Apply them upstream before any
 `/design-sync`, or the next sync will silently overwrite them.
