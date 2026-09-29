@@ -1,14 +1,9 @@
 import { useCurrentFrame } from "remotion";
 import { Icon } from "@ds/Icon.jsx";
 import { Kbd } from "@ds/Kbd.jsx";
-import { Caption, Cursor, Ring, Stage, Window, label, mono, rise, toFrame, useShot, useSpring, useT } from "../kit";
-import { RunBar, Spec, TaskHeader, TopBar } from "../Task";
+import { Ring, label, mono, rise, useT } from "./kit";
 
-const CLICK = 24;   // Submit
-const BACK = 46;    // the verdict comes back
-const LEFT = 150, TOP = 216;
 const E = [
-  "E           AssertionError: assert 'queue               283.92\\ngateway             145.89\\nworker              547.30\\napi               83188.25\\ncache               305.64' == 'queue               283.92\\ngateway             145.89\\nworker              547.30\\napi              83,188.25\\ncache               305.64'",
   "E               queue               283.92",
   "E               gateway             145.89",
   "E               worker              547.30",
@@ -16,44 +11,15 @@ const E = [
   "E             ?                    -",
 ];
 
-export function Fail() {
-  const f = useCurrentFrame();
-  const enter = useSpring(0, 200, 20);
-  const shot = useShot({ scale: 1.25, x: 560, y: 290 }, { scale: 1.3, x: 590, y: 360 }, 50, 80);
-  const submit = toFrame(shot, LEFT, TOP, 1486, 387);
-  const p = { x: f < 8 ? submit.x + 220 : submit.x, y: f < 8 ? submit.y + 140 : submit.y };
-  const move = useT(6, 16);
-  const cursor = { x: p.x + (1 - move) * 220 * (f >= 8 ? 1 : 0), y: p.y + (1 - move) * 140 * (f >= 8 ? 1 : 0) };
-  return (
-    <Stage>
-      <Caption eyebrow="A FAILED RUN" color="var(--fail)" left={150}>It names the case that failed.</Caption>
-      <Window left={LEFT} top={TOP} width={1300} height={740} shot={shot} enter={enter}>
-        <TopBar />
-        <TaskHeader timer="4:12" />
-        <Spec width={672} from={6} />
-        <div style={{ position: "absolute", left: 673, top: 116, width: 927, height: 241, background: "var(--editor)" }}>
-          <div style={{ position: "absolute", left: 67, top: 10, ...mono, fontSize: 14, lineHeight: "19px", whiteSpace: "pre" }}>
-            <div><span style={{ color: "var(--syn-keyword)" }}>def</span> solve(rows: list[tuple[str, float]])<span style={{ color: "var(--text-faint)" }}> -&gt; str</span>:</div>
-            <div>    lines<span style={{ color: "var(--text-faint)" }}>: list[str]</span> = [<span style={{ color: "var(--syn-string)" }}>f"{"{"}n:&lt;14{"}{"}v:&gt;12.2f{"}"}"</span> <span style={{ color: "var(--syn-keyword)" }}>for</span> n, v <span style={{ color: "var(--syn-keyword)" }}>in</span> rows]</div>
-            <div>    <span style={{ color: "var(--syn-keyword)" }}>return</span> <span style={{ color: "var(--syn-string)" }}>"\n"</span>.join(lines)</div>
-          </div>
-        </div>
-        <RunBar left={673} top={357} width={927} submits={f < BACK ? 0 : 1} seed={4028} pressed={f >= CLICK && f < CLICK + 4} />
-        <Result />
-      </Window>
-      <Cursor x={cursor.x} y={cursor.y} clicks={[CLICK]} opacity={f < 6 || f > BACK + 20 ? 0 : 1} />
-    </Stage>
-  );
-}
-
-/** The result pane: idle, then the sweep while pytest runs, then the failure, line by line. */
-function Result() {
+/** The result pane under the editor: idle, then the sweep while pytest runs from the Submit at
+ *  `click`, then the failure from `back`, line by line, with the case that differs ringed. */
+export function Result({ click: CLICK, back: BACK }: { click: number; back: number }) {
   const f = useCurrentFrame();
   const verdict = useT(BACK, 12);
   const yours = useT(BACK + 44, 18);
   const want = useT(BACK + 54, 18);
-  const lines = [0, 1, 2, 3, 4, 5].map((i) => useT(BACK + 6 + i * 3, 10));   // a fixed count: hooks, not a loop that varies
-  const rest = [8, 10, 12].map((i) => useT(BACK + 6 + i * 3, 10));
+  const lines = [0, 1, 2, 3, 4].map((i) => useT(BACK + 6 + i * 3, 10));   // a fixed count: hooks, not a loop that varies
+  const rest = [7, 9, 11].map((i) => useT(BACK + 6 + i * 3, 10));
   const box = { position: "absolute", left: 673, top: 417, width: 927, height: 483, boxSizing: "border-box", padding: "18px 20px", overflow: "hidden" } as const;
   if (f < CLICK + 2) return (
     <div style={box}>

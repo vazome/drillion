@@ -3,7 +3,7 @@
 // never leaves stale blocks through a fade, which lossy animated WebP does.
 import { execFileSync } from "node:child_process";
 
-const POSTER = 200; // Tracks, settled: the whole app in view
+const POSTER = 215; // Tracks, just after the Kubernetes pick: the whole app in view
 
 const [crf = "18"] = process.argv.slice(2);
 const ffmpeg = (...args) => execFileSync("ffmpeg", ["-loglevel", "error", "-y", ...args], { stdio: "inherit" });
