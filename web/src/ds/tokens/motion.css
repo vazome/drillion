@@ -53,17 +53,17 @@ button:not([disabled]):active,
 @keyframes dsSweep { from { transform: translateX(-40%); } to { transform: translateX(340%); } }
 
 /* Content arriving. */
-.m-rise { animation: dsRise var(--dur-base) var(--ease-out) both; }
-.m-fade { animation: dsFade var(--dur-fast) var(--ease-out) both; }
-.m-expand { animation: dsExpand var(--dur-base) var(--ease-out) both; }
+.m-rise { animation: dsRise var(--dur-base) var(--ease-out) backwards; }
+.m-fade { animation: dsFade var(--dur-fast) var(--ease-out) backwards; }
+.m-expand { animation: dsExpand var(--dur-base) var(--ease-out) backwards; }
 
 /* Something the app is telling you it noticed — conflict, draft, gate.
    Drops from above the content it is about. */
-.m-drop { animation: dsDrop var(--dur-base) var(--ease-out) both; }
+.m-drop { animation: dsDrop var(--dur-base) var(--ease-out) backwards; }
 
 /* A list settling in. Rows land in reading order, 26ms apart, and the whole
    sweep is over inside 500ms however long the list is. */
-.m-stagger > * { animation: dsRise var(--dur-base) var(--ease-out) both; }
+.m-stagger > * { animation: dsRise var(--dur-base) var(--ease-out) backwards; }
 .m-stagger > *:nth-child(1) { animation-delay: 0ms; }
 .m-stagger > *:nth-child(2) { animation-delay: calc(var(--stagger) * 1); }
 .m-stagger > *:nth-child(3) { animation-delay: calc(var(--stagger) * 2); }
@@ -77,7 +77,7 @@ button:not([disabled]):active,
 .m-stagger > *:nth-child(n + 11) { animation-delay: calc(var(--stagger) * 10); }
 
 /* The step out. The new standing arrives with a single soft overshoot. */
-.m-step { animation: dsStep var(--dur-slow) var(--ease-step) both; }
+.m-step { animation: dsStep var(--dur-slow) var(--ease-step) backwards; }
 
 /* Work in flight. */
 .m-pulse { animation: dsPulse 1.15s var(--ease-inout) infinite; }
