@@ -63,7 +63,7 @@ def selected_lines(enabled):
     return [
         f"{name}={'true' if value else 'false'}"
         for name, value in zip(
-            ("docs", "check", "web", "screens", "image"), enabled, strict=True
+            ("docs", "film", "check", "web", "screens", "image"), enabled, strict=True
         )
     ]
 
@@ -71,24 +71,42 @@ def selected_lines(enabled):
 @pytest.mark.parametrize(
     ("paths", "base_override", "expected"),
     [
-        (["docs/guide.md"], None, (1, 0, 0, 0, 0)),
-        (["docs/images/screen.png"], None, (0, 0, 0, 0, 0)),
-        (["CONTRIBUTING.md"], None, (1, 0, 0, 0, 0)),
-        (["web/README.md"], None, (1, 0, 0, 0, 0)),
-        ([".design-sync/NOTES.md"], None, (1, 0, 0, 0, 0)),
-        (["README.md"], None, (1, 0, 0, 0, 0)),
-        (["web/src/README.md"], None, (0, 0, 1, 1, 1)),
-        (["web/e2e/races.spec.ts"], None, (0, 0, 1, 1, 0)),
-        (["LICENSE"], None, (0, 1, 1, 1, 1)),
-        (["tasks/001_example/README.md"], None, (0, 1, 1, 1, 1)),
-        (["docs/check.py"], None, (0, 1, 1, 1, 1)),
-        (["docs/guide.md", "src/code.py"], None, (1, 1, 1, 1, 1)),
-        (["new-folder/file"], None, (0, 1, 1, 1, 1)),
-        (["docs/guide.md\nsrc/code.py"], None, (0, 1, 1, 1, 1)),
-        (["docs/guide.md"], "missing", (1, 1, 1, 1, 1)),
-        (["docs/guide.md"], "0" * 40, (1, 1, 1, 1, 1)),
-        (["docs/guide.md"], "", (1, 1, 1, 1, 1)),
-        ([], None, (1, 1, 1, 1, 1)),
+        (["docs/guide.md"], None, (1, 0, 0, 0, 0, 0)),
+        (["docs/images/screen.png"], None, (0, 0, 0, 0, 0, 0)),
+        (["docs/images/drillion-film.webp"], None, (0, 0, 0, 0, 0, 0)),
+        (["docs/film/README.md"], None, (1, 0, 0, 0, 0, 0)),
+        (["docs/film/src/Film.tsx"], None, (0, 1, 0, 0, 0, 0)),
+        (["docs/film/check.py"], None, (0, 1, 0, 0, 0, 0)),
+        (["docs/film/src/Film.tsx", "README.md"], None, (1, 1, 0, 0, 0, 0)),
+        (
+            [
+                "AGENTS.md",
+                "README.md",
+                "docs/film/check.py",
+                "docs/film/encode.mjs",
+                "docs/film/src/scenes/Tracks.tsx",
+                "docs/images/drillion-film.webp",
+            ],
+            None,
+            (1, 1, 0, 0, 0, 0),
+        ),
+        ([".github/workflows/ci.yml"], None, (1, 1, 1, 1, 1, 1)),
+        (["CONTRIBUTING.md"], None, (1, 0, 0, 0, 0, 0)),
+        (["web/README.md"], None, (1, 0, 0, 0, 0, 0)),
+        ([".design-sync/NOTES.md"], None, (1, 0, 0, 0, 0, 0)),
+        (["README.md"], None, (1, 0, 0, 0, 0, 0)),
+        (["web/src/README.md"], None, (0, 0, 0, 1, 1, 1)),
+        (["web/e2e/races.spec.ts"], None, (0, 0, 0, 1, 1, 0)),
+        (["LICENSE"], None, (0, 0, 1, 1, 1, 1)),
+        (["tasks/001_example/README.md"], None, (0, 0, 1, 1, 1, 1)),
+        (["docs/check.py"], None, (0, 0, 1, 1, 1, 1)),
+        (["docs/guide.md", "src/code.py"], None, (1, 0, 1, 1, 1, 1)),
+        (["new-folder/file"], None, (0, 0, 1, 1, 1, 1)),
+        (["docs/guide.md\nsrc/code.py"], None, (0, 0, 1, 1, 1, 1)),
+        (["docs/guide.md"], "missing", (1, 1, 1, 1, 1, 1)),
+        (["docs/guide.md"], "0" * 40, (1, 1, 1, 1, 1, 1)),
+        (["docs/guide.md"], "", (1, 1, 1, 1, 1, 1)),
+        ([], None, (1, 1, 1, 1, 1, 1)),
     ],
 )
 def test_change_filter(tmp_path, paths, base_override, expected):
@@ -104,25 +122,25 @@ def test_change_filter(tmp_path, paths, base_override, expected):
             '[project]\nname = "drillion"\ndescription = "old"\ndependencies = ["fastapi"]\n',
             '[project]\nname = "drillion"\ndescription = "new"\ndependencies = ["fastapi"]\n',
             ["README.md", "AGENTS.md"],
-            (1, 0, 0, 0, 0),
+            (1, 0, 0, 0, 0, 0),
         ),
         (
             '[project]\nname = "drillion"\ndependencies = ["fastapi"]\n',
             '[project]\nname = "drillion"\ndependencies = ["starlette"]\n',
             [],
-            (0, 1, 1, 1, 1),
+            (0, 0, 1, 1, 1, 1),
         ),
         (
             '[project]\nname = "drillion"\n',
             "not valid TOML\n",
             [],
-            (0, 1, 1, 1, 1),
+            (0, 0, 1, 1, 1, 1),
         ),
         (
             '[project]\nname = "drillion"\n',
             'project = "not a table"\n',
             [],
-            (0, 1, 1, 1, 1),
+            (0, 0, 1, 1, 1, 1),
         ),
     ],
 )
@@ -148,7 +166,7 @@ def test_scheduled_ci_runs_all_checks(tmp_path):
         check=True,
     )
     assert output.read_text().strip().splitlines() == [
-        f"{name}=true" for name in ("docs", "check", "web", "screens", "image")
+        f"{name}=true" for name in ("docs", "film", "check", "web", "screens", "image")
     ]
 
 

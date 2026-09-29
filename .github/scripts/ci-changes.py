@@ -5,7 +5,7 @@ import subprocess
 import tomllib
 from pathlib import Path
 
-CHECKS = ("docs", "check", "web", "screens", "image")
+CHECKS = ("docs", "film", "check", "web", "screens", "image")
 FULL = set(CHECKS)
 CODE = {"check", "web", "screens", "image"}
 PROSE = {
@@ -42,6 +42,10 @@ def metadata_only(base, head):
 def checks_for(path, base, head):
     if path == "pyproject.toml":
         return {"docs"} if metadata_only(base, head) else CODE
+    if path in {".github/workflows/ci.yml", ".github/scripts/ci-changes.py"}:
+        return FULL
+    if path.startswith("docs/film/"):
+        return {"docs"} if path.endswith(".md") else {"film"}
     if (
         path in PROSE
         or path.startswith(("docs/", ".design-sync/"))
@@ -49,7 +53,9 @@ def checks_for(path, base, head):
         or path.startswith(".github/ISSUE_TEMPLATE/")
     ):
         return {"docs"}
-    if path.startswith("docs/images/") and path.endswith((".png", ".jpg", ".svg")):
+    if path.startswith("docs/images/") and path.endswith(
+        (".png", ".jpg", ".svg", ".webp")
+    ):
         return set()
     if path.startswith("web/e2e/") or path == "web/playwright.config.ts":
         return {"web", "screens"}
