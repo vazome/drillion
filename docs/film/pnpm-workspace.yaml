@@ -1,0 +1,5 @@
+packages: []
+
+# its own workspace, so an install here never reaches web/ or a workspace further up
+allowBuilds:
+  esbuild: true

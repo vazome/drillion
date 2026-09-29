@@ -1,0 +1,13 @@
+/* The app turns dark on <html>, so its :root aliases resolve against dark values there. The film
+   turns each scene dark on its own container, so the aliases are declared again where it does. */
+.dark {
+  --heat-0: var(--surface-2);
+  --heat-2: var(--accent-line);
+  --heat-4: var(--accent-hover);
+  --strength-learning: var(--warn);
+  --strength-familiar: var(--accent);
+  --strength-solid: var(--pass);
+  --surface-card: var(--surface);
+  --syn-comment: var(--text-faint);
+  --text-body: var(--text);
+}
