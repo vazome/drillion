@@ -5,7 +5,7 @@
   "scripts": {
     "studio": "remotion studio",
     "render": "remotion render Film --sequence --image-format=png out/frames",
-    "webp": "node encode.mjs",
+    "encode": "node encode.mjs",
     "check": "uv run --no-project --with pillow --with numpy python check.py",
     "typecheck": "tsc --noEmit"
   },
