@@ -16,8 +16,8 @@ export const port = Number(process.env.DRILLION_PORT ?? 8766);
 export default defineConfig({
   testDir: "e2e",
   outputDir: "test-results",
-  // Tests in one invocation share its server and progress state. The two non-Chromium
-  // engines use separate invocations, roots and ports in CI.
+  // Tests in one invocation share its server and progress state. CI runs separate
+  // invocations, roots and ports for Chromium shards and the two other engines.
   workers: 1,
   retries: 0,
   timeout: 60_000,

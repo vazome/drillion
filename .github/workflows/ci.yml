@@ -194,8 +194,8 @@ jobs:
           PY
         working-directory: web
 
-  # Each leg owns its server. The required suite keeps functional and accessibility
-  # assertions; the tagged capture tour remains available for an explicit review run.
+  # Each leg owns its server. Chromium's required tests run in two isolated shards
+  # within one leg; the tagged capture tour remains available for explicit review.
   screens:
     # web is the only build of web/dist; this job downloads it rather than building its own
     needs: [changes, web]
@@ -205,7 +205,6 @@ jobs:
       matrix:
         include:
           - engines: chromium
-            projects: --project=chromium --grep-invert=@render|@capture
           # every task page, one navigation each: the longest single spec, so it gets a leg
           - engines: chromium-render
             projects: --project=chromium --grep=@render
@@ -249,8 +248,11 @@ jobs:
         with:
           name: web-dist
           path: web/dist
+      - run: bash ../.github/scripts/screens-chromium.sh
+        if: matrix.engines == 'chromium'
+        working-directory: web
       - run: pnpm screens $PROJECTS # unquoted: one flag per project
-        if: matrix.engines != 'firefox-webkit'
+        if: matrix.engines == 'chromium-render'
         working-directory: web
         env:
           PROJECTS: ${{ matrix.projects }}
