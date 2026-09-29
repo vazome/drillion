@@ -54,7 +54,7 @@ def checks_for(path, base, head):
     ):
         return {"docs"}
     if path.startswith("docs/images/") and path.endswith(
-        (".png", ".jpg", ".svg", ".webp")
+        (".png", ".jpg", ".svg", ".webp", ".avif")
     ):
         return set()
     if path.startswith("web/e2e/") or path == "web/playwright.config.ts":

@@ -24,9 +24,11 @@ on your laptop. Tasks are folders of Markdown with the files they grade: Python,
 Dockerfiles, SQL and shell. Your progress is a single SQLite file you can copy, back up and
 carry.
 
-<p align="center">
-  <img alt="drillion in dark mode: picking a Kubernetes task, writing Python with editor completions, a failed run beside the expected output, the pass beside the reference, the ladder, task connections, progress filling in, and the docker run command" src="https://raw.githubusercontent.com/vazome/drillion/main/docs/images/drillion-film.webp" width="100%">
-</p>
+<picture>
+  <source media="(prefers-reduced-motion: reduce)" srcset="https://raw.githubusercontent.com/vazome/drillion/main/docs/images/drillion-film-still.png">
+  <source type="image/avif" srcset="https://raw.githubusercontent.com/vazome/drillion/main/docs/images/drillion-film.avif">
+  <img alt="drillion in dark mode: picking a Kubernetes task, writing Python with editor completions, a failed run beside the expected output, the pass beside the reference, the ladder, task connections, progress filling in, and the docker run command" src="https://raw.githubusercontent.com/vazome/drillion/main/docs/images/drillion-film-still.png" width="100%">
+</picture>
 
 In Python tasks, every `solve()` says what it takes, so the editor knows what your value can
 do. Completions, signatures and type errors come from a language server running next to the

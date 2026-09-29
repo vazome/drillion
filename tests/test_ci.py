@@ -74,6 +74,7 @@ def selected_lines(enabled):
         (["docs/guide.md"], None, (1, 0, 0, 0, 0, 0)),
         (["docs/images/screen.png"], None, (0, 0, 0, 0, 0, 0)),
         (["docs/images/drillion-film.webp"], None, (0, 0, 0, 0, 0, 0)),
+        (["docs/images/drillion-film.avif"], None, (0, 0, 0, 0, 0, 0)),
         (["docs/film/README.md"], None, (1, 0, 0, 0, 0, 0)),
         (["docs/film/src/Film.tsx"], None, (0, 1, 0, 0, 0, 0)),
         (["docs/film/check.py"], None, (0, 1, 0, 0, 0, 0)),
