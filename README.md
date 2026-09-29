@@ -1,4 +1,6 @@
 <picture align="center">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vazome/drillion/main/docs/images/drillion-github-banner-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/vazome/drillion/main/docs/images/drillion-github-banner-transparent.svg">
   <img alt="drillion" src="https://raw.githubusercontent.com/vazome/drillion/main/docs/images/drillion-github-banner-transparent.svg">
 </picture>
 
