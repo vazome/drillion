@@ -12,17 +12,13 @@
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14269/badge)](https://www.bestpractices.dev/projects/14269)
 [![License](https://img.shields.io/github/license/vazome/drillion)](https://github.com/vazome/drillion/blob/main/LICENSE)
 
-TL;DR: self-hosted practice for Python, Kubernetes, Docker, SQL and git, with a UI that
-stays out of your way. No streaks, no leaderboard nonsense, no badges and no engagement
-bait. Made by a neurodivergent engineer. It is simple, and it runs your code in a sandbox.
+Self-hosted practice for Python, Kubernetes, Helm, Argo CD, Docker, GitHub Actions, SQL and
+git. No streaks, no leaderboards, no badges, no engagement bait. Made by a neurodivergent
+engineer who wanted something simple.
 
-Longer: drillion is a local web app with 385 short tasks, 267 in Python, 26 Kubernetes
-manifests, 15 Helm charts, 14 Argo CD, 15 Dockerfiles, 15 GitHub Actions workflows, 15 in
-Postgres SQL and 18 git, in a real terminal, each tagged with the concept it drills so you
-can go straight at whatever you're worst at. No login, no account, no server except the one
-on your laptop. Tasks are folders of Markdown with the files they grade: Python, YAML,
-Dockerfiles, SQL and shell. Your progress is a single SQLite file you can copy, back up and
-carry.
+It runs on your laptop. Each task is short and tagged with the concept it drills, so you can go
+straight at what you're worst at. Your code runs in a sandbox, there's no account or login, and
+your progress is one SQLite file you can copy and back up.
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="https://raw.githubusercontent.com/vazome/drillion/main/docs/images/drillion-film-still.png">
