@@ -1,7 +1,7 @@
 /** The two races on the task page that only exist in a real browser: the localStorage draft
  *  offered after a save never landed, and the 409 the optimistic lock raises when the file
  *  moved underneath the editor. */
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { port, repoRoot, scratchRoot } from "../playwright.config";
@@ -12,6 +12,7 @@ const TASK_PY = join(scratchRoot, "tasks", SLUG, "task.py");
 const MARKER = "# ══ machinery";
 /** `region.py`'s `splice`, over the checkout's copy — the scratch file is what we rewrite. */
 const PRISTINE = readFileSync(join(repoRoot, "tasks", SLUG, "task.py"), "utf8");
+const runStart = statSync(join(scratchRoot, "tasks")).mtimeMs;
 const MARKER_AT = PRISTINE.indexOf(MARKER);
 if (MARKER_AT < 0) throw new Error(`${SLUG} has no ${MARKER} line: these tests would write a task with no grader`);
 const TAIL = PRISTINE.slice(MARKER_AT);
@@ -115,3 +116,20 @@ for (const [action, kept] of [
     expect(readFileSync(TASK_PY, "utf8")).toContain(`return "${kept}"`);
   });
 }
+
+test("browser writes stay in the throwaway root", async ({ page }) => {
+  await page.goto(`/#/task/${SLUG}`);
+  await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
+  const saved = putOk(page);
+  await typeCode(page, body("SCRATCH"));
+  await saved;
+
+  const untouched = (path: string) => !existsSync(path) || statSync(path).mtimeMs < runStart;
+  for (const slug of readdirSync(join(repoRoot, "tasks")))
+    expect(untouched(join(repoRoot, "tasks", slug, "task.py")), `${slug} was written`).toBe(true);
+  for (const name of ["progress.json", "progress.json.bak", "progress.sqlite3", "progress.sqlite3-journal", "progress.sqlite3-wal", "progress.sqlite3-shm"])
+    expect(untouched(join(repoRoot, name)), `${name} was written`).toBe(true);
+  expect(statSync(TASK_PY).mtimeMs).toBeGreaterThan(runStart);
+  expect(readFileSync(TASK_PY, "utf8")).toContain('return "SCRATCH"');
+  expect(readFileSync(join(scratchRoot, "progress.sqlite3")).subarray(0, 16).toString()).toBe("SQLite format 3\0");
+});

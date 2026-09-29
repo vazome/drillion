@@ -21,13 +21,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Only known prose/assets may skip checks. README.md and tasks/*/README.md are
-  # packaging/curriculum inputs; unknown paths and unavailable diffs run everything.
+  # Unknown paths and unavailable diffs run everything. A metadata-only edit is
+  # still packaged and checked against the user-facing documentation contract.
   changes:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      code: ${{ steps.f.outputs.code }}
+      docs: ${{ steps.f.outputs.docs }}
+      check: ${{ steps.f.outputs.check }}
+      web: ${{ steps.f.outputs.web }}
+      screens: ${{ steps.f.outputs.screens }}
+      image: ${{ steps.f.outputs.image }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -37,34 +41,29 @@ jobs:
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
           HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: |
-          code=true
-          files="$RUNNER_TEMP/ci-changed-files"
-          # Capture the diff first: pipeline/grep errors must never turn into a skip.
-          # --no-renames includes both sides of a move; NULs preserve unusual filenames.
-          if [ -n "$BASE" ] && [ -n "$HEAD" ] &&
-             git diff --no-renames --name-only -z "$BASE" "$HEAD" -- > "$files" &&
-             [ -s "$files" ]; then
-            code=false
-            while IFS= read -r -d '' file; do
-              case "$file" in
-                docs/*.md|docs/images/*.png|docs/images/*.jpg|docs/images/*.svg|\
-                .github/ISSUE_TEMPLATE/*|.github/pull_request_template.md|\
-                CONTRIBUTING.md|CHANGELOG.md|AGENTS.md|CLAUDE.md|\
-                CONTEXT.md|DESIGN.md|SECURITY.md|web/README.md|.design-sync/*.md) ;;
-                *) code=true; break ;;
-              esac
-            done < "$files"
-          fi
-          echo "code=$code" >> "$GITHUB_OUTPUT"
-          if [ "$code" = false ]; then
-            echo "documentation only: skipping the checks, the client and the image" >> "$GITHUB_STEP_SUMMARY"
-          fi
+          EVENT_NAME: ${{ github.event_name }}
+        run: python3 .github/scripts/ci-changes.py
+
+  docs:
+    needs: changes
+    if: needs.changes.outputs.docs == 'true' && needs.changes.outputs.check != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run pytest tests/test_ci.py -q -k user_docs_describe_docker_as_the_only_distribution
+      - run: uv build --sdist -o /tmp/sdist
 
   # Linux only: drillion ships as a Linux image, so no other OS runs it
   check:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.check == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -89,12 +88,15 @@ jobs:
       # The download is checksum-pinned; an unpinned or altered one is refused rather
       # than installed.
       - run: uv run drillion doctor --fetch
-      - run: uv run pytest tests -q -n auto # one worker per core; the tests share no server or port
+      - run: uv run pytest tests -q -n auto --durations=20 # one worker per core; the tests share no server or port
+      # The installed image runs the full catalogue selfcheck below. Keep the checkout
+      # variant on the nightly run to catch differences in the dev environment.
       - run: uv run drillion selfcheck
+        if: github.event_name == 'schedule'
 
   web:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -160,18 +162,18 @@ jobs:
           PY
         working-directory: web
 
-  # one leg per engine group, each with its own server: the specs walk one server through one
-  # session, so they cannot share it in parallel, but two servers in two jobs can
+  # Each leg owns its server. The required suite keeps functional and accessibility
+  # assertions; the tagged capture tour remains available for an explicit review run.
   screens:
     # web is the only build of web/dist; this job downloads it rather than building its own
     needs: [changes, web]
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.screens == 'true'
     strategy:
       fail-fast: false
       matrix:
         include:
           - engines: chromium
-            projects: --project=chromium --grep-invert=@render
+            projects: --project=chromium --grep-invert=@render|@capture
           # every task page, one navigation each: the longest single spec, so it gets a leg
           - engines: chromium-render
             projects: --project=chromium --grep=@render
@@ -216,15 +218,13 @@ jobs:
           name: web-dist
           path: web/dist
       - run: pnpm screens $PROJECTS # unquoted: one flag per project
+        if: matrix.engines != 'firefox-webkit'
         working-directory: web
         env:
           PROJECTS: ${{ matrix.projects }}
-      # the captures are chromium's alone
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: ${{ !cancelled() && matrix.engines == 'chromium' }}
-        with:
-          name: client-screenshots
-          path: web/screenshots/
+      - run: bash ../.github/scripts/screens-multiengine.sh
+        if: matrix.engines == 'firefox-webkit'
+        working-directory: web
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
@@ -237,7 +237,7 @@ jobs:
   # building the same Dockerfile from the same commit bought nothing but a second copy.
   image:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.image == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -256,11 +256,9 @@ jobs:
           tags: drillion:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # the runtime stage upgrades its Debian packages, and a cached layer never re-runs
-          # that: nothing in its key changes when a new advisory lands, so the scan below would
-          # report a months-old package set as today's. The two build stages keep their cache,
-          # which is where the minutes are.
-          no-cache-filters: runtime
+          # Refresh Debian on the nightly run. PRs reuse runtime layers; the release
+          # build still refreshes its own runtime before publishing an image.
+          no-cache-filters: ${{ github.event_name == 'schedule' && 'runtime' || '' }}
 
       # Both consumers use the loaded image on this runner. Collect smoke's status
       # after publishing scan reports, so a failing smoke test cannot swallow SARIF.
@@ -320,7 +318,7 @@ jobs:
     if: always()
     # `changes` is in here so that a filter that fails takes the gate down with it, rather than
     # skipping every job below it and reporting a green nobody earned
-    needs: [changes, check, web, screens, image]
+    needs: [changes, docs, check, web, screens, image]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -329,10 +327,8 @@ jobs:
           RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |
           echo "$RESULTS"
-          # `skipped` is a pass now, and it has to be: the jobs above are skipped deliberately on
-          # a documentation-only change, and a required check that goes red for that would block
-          # every prose PR. None of them has any other `needs`, so the only thing that can skip
-          # one is the `if:` written above it -- revisit this if that stops being true.
+          # `skipped` passes only because every path is selected by `changes` above.
+          # A failed prerequisite also appears here as failure and takes the gate down.
           case "$RESULTS" in
             *failure*|*cancelled*) exit 1 ;;
           esac

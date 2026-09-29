@@ -16,7 +16,8 @@ export const port = Number(process.env.DRILLION_PORT ?? 8766);
 export default defineConfig({
   testDir: "e2e",
   outputDir: "test-results",
-  // the captures walk one server through one session, which is not safe to run twice at once
+  // Tests in one invocation share its server and progress state. The two non-Chromium
+  // engines use separate invocations, roots and ports in CI.
   workers: 1,
   retries: 0,
   timeout: 60_000,
@@ -37,7 +38,7 @@ export default defineConfig({
   webServer: {
     // built here, not in a fixture: the root must exist before the server reads it, and
     // this runs once where a fixture re-runs on every restarted worker
-    command: `rm -rf ${scratchRoot} web/screenshots && mkdir -p ${scratchRoot} && cp -r tasks ${scratchRoot}/ && uv run drillion`,
+    command: `rm -rf ${scratchRoot} && mkdir -p ${scratchRoot} && cp -r tasks ${scratchRoot}/ && uv run drillion`,
     cwd: repoRoot,
     url: `http://127.0.0.1:${port}/api/health`,
     env: {
