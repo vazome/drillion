@@ -35,10 +35,6 @@
 .item{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;background:transparent;border:0;border-radius:var(--radius);font:inherit;font-size:14px;font-weight:500;color:var(--text-muted);cursor:pointer;text-align:left;white-space:nowrap}
 @media (hover:hover){.item:hover{background:var(--surface-2);color:var(--text)}}
 .grow{flex-grow:1}
-.switch{position:relative;width:30px;height:18px;box-sizing:border-box;border:1px solid var(--control-edge);border-radius:var(--radius-pill);background:var(--surface)}
-.switch span{position:absolute;top:1px;left:1px;width:14px;height:14px;border-radius:var(--radius-pill);background:var(--control-edge);transition:transform var(--dur-fast) var(--ease-step)}
-.switch[data-on]{border-color:var(--accent);background:var(--accent)}
-.switch[data-on] span{transform:translateX(12px);background:var(--bg)}
 .version{padding:8px 10px 0;font-family:var(--font-mono);font-size:11px;color:var(--text-muted)}
 
 .bar{height:48px;flex-shrink:0;box-sizing:border-box;padding:0 20px;display:flex;align-items:center;gap:20px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:10}

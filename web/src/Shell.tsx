@@ -23,13 +23,12 @@ function Wordmark({ height }: { height: number }) {
 export interface Head { total: number; version: string; python: string }
 interface Chrome { dark: boolean; setDark: (v: boolean) => void; onSettings: () => void }
 
-/** The theme as a word beside its icon; the sidebar draws a switch after it. */
-function Theme({ dark, setDark, track = false }: Pick<Chrome, "dark" | "setDark"> & { track?: boolean }) {
+/** The theme as a word beside its icon. */
+function Theme({ dark, setDark }: Pick<Chrome, "dark" | "setDark">) {
   return (
     <button type="button" role="switch" aria-checked={dark} onClick={() => setDark(!dark)} className={s.item}>
       <Icon name={dark ? "Asleep" : "Sun"} />
-      <span className={s.grow}>{dark ? "Dark" : "Light"}</span>
-      {track ? <span aria-hidden="true" className={s.switch} data-on={dark || undefined}><span /></span> : null}
+      {dark ? "Dark" : "Light"}
     </button>
   );
 }
@@ -103,7 +102,7 @@ export function Sidebar({ route, head, dark, setDark, onSettings }: Chrome & { r
       ) : null}
       <div className={s.foot}>
         <button type="button" onClick={onSettings} className={s.item}><Icon name="Settings" />Settings</button>
-        <Theme dark={dark} setDark={setDark} track />
+        <Theme dark={dark} setDark={setDark} />
         {head.version ? <span className={s.version}>v{head.version}{head.python ? ` · Python ${head.python}` : ""}</span> : null}
       </div>
     </aside>
