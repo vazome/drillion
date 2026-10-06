@@ -19,3 +19,6 @@ overrides:
   # the extension API arrives under the alias `vscode`, which an override keyed on the real
   # package name does not reach
   vscode: npm:@codingame/monaco-vscode-extension-api@37.1.0
+  # @codingame/monaco-vscode-api pins 3.4.15 exactly (still true in 37.3.4), and 3.4.16 is the
+  # GHSA-6688-9rhm-gjv2 / GHSA-p98j-92pf-mc4p fix; drop once CodinGame ships it
+  dompurify@3.4.15: 3.4.16
