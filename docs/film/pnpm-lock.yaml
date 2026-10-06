@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@remotion/cli':
         specifier: 4.0.529
-        version: 4.0.529(postcss@8.5.28)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(supports-color@8.1.1)(typescript@7.0.2)
+        version: 4.0.529(postcss@8.5.29)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(supports-color@8.1.1)(typescript@7.0.2)
       '@remotion/fonts':
         specifier: 4.0.529
         version: 4.0.529(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -1236,8 +1236,8 @@ packages:
   postcss-value-parser@4.2.0:
     resolution: {integrity: sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ==}
 
-  postcss@8.5.28:
-    resolution: {integrity: sha512-RRuzqDtt5Y9h3quz5hWhK+TPnsmVs6WwSU6LkJMeY4HstUEDuYTG8UJSdawMRzmzAtV+KEoG8N3Qg2qLy5vM/A==}
+  postcss@8.5.29:
+    resolution: {integrity: sha512-49cGhUbXj8Qenv0iTMxA1cFBzxXoctpC9Ujd77t1WcbJIr6nF/eI7g/8MgxrYldFRuAXvja7xQRwavoW7kgrxQ==}
     engines: {node: ^10 || ^12 || >=14}
 
   prismjs@1.30.0:
@@ -1317,8 +1317,8 @@ packages:
   snake-case@3.0.4:
     resolution: {integrity: sha512-LAOh4z89bGQvl9pFfNF8V146i7o7/CqFPbqzYgP+yYzDIDeS9HaNFtXABamRW+AQzEVODcvE79ljJ+8a9YSdMg==}
 
-  source-map-js@1.2.1:
-    resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
+  source-map-js@1.2.2:
+    resolution: {integrity: sha512-KGj/8Y43x35aZVDtt+J4mK1hoLGHULMYfSkODJNQjNDC3oW1PqPoxMwo0pLUsWM/UEGzON/NxeHywEfNXNP3Vw==}
     engines: {node: '>=0.10.0'}
 
   source-map-support@0.5.21:
@@ -1750,7 +1750,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.4
     optional: true
 
-  '@remotion/bundler@4.0.529(postcss@8.5.28)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@remotion/bundler@4.0.529(postcss@8.5.29)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       '@remotion/media-parser': 4.0.529
       '@remotion/studio': 4.0.529(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -1758,14 +1758,14 @@ snapshots:
       '@remotion/timeline-utils': 4.0.529(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@rspack/core': 1.7.11
       '@rspack/plugin-react-refresh': 1.6.1(react-refresh@0.18.0)
-      css-loader: 7.1.4(@rspack/core@1.7.11)(webpack@5.105.0(esbuild@0.28.1)(postcss@8.5.28))
+      css-loader: 7.1.4(@rspack/core@1.7.11)(webpack@5.105.0(esbuild@0.28.1)(postcss@8.5.29))
       esbuild: 0.28.1
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
       react-refresh: 0.18.0
       remotion: 4.0.529(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      style-loader: 4.0.0(webpack@5.105.0(esbuild@0.28.1)(postcss@8.5.28))
-      webpack: 5.105.0(esbuild@0.28.1)(postcss@8.5.28)
+      style-loader: 4.0.0(webpack@5.105.0(esbuild@0.28.1)(postcss@8.5.29))
+      webpack: 5.105.0(esbuild@0.28.1)(postcss@8.5.29)
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@remotion/video-matting'
@@ -1795,15 +1795,15 @@ snapshots:
 
   '@remotion/captions@4.0.529': {}
 
-  '@remotion/cli@4.0.529(postcss@8.5.28)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(supports-color@8.1.1)(typescript@7.0.2)':
+  '@remotion/cli@4.0.529(postcss@8.5.29)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(supports-color@8.1.1)(typescript@7.0.2)':
     dependencies:
       '@babel/parser': 7.24.1
-      '@remotion/bundler': 4.0.529(postcss@8.5.28)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@remotion/bundler': 4.0.529(postcss@8.5.29)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@remotion/media-utils': 4.0.529(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@remotion/player': 4.0.529(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@remotion/renderer': 4.0.529(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@remotion/studio': 4.0.529(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@remotion/studio-server': 4.0.529(postcss@8.5.28)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(supports-color@8.1.1)(typescript@7.0.2)
+      '@remotion/studio-server': 4.0.529(postcss@8.5.29)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(supports-color@8.1.1)(typescript@7.0.2)
       '@remotion/studio-shared': 4.0.529(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       dotenv: 17.3.1
       minimist: 1.2.6
@@ -1942,11 +1942,11 @@ snapshots:
     dependencies:
       zod: 4.5.4
 
-  '@remotion/studio-server@4.0.529(postcss@8.5.28)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(supports-color@8.1.1)(typescript@7.0.2)':
+  '@remotion/studio-server@4.0.529(postcss@8.5.29)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(supports-color@8.1.1)(typescript@7.0.2)':
     dependencies:
       '@babel/parser': 7.24.1
       '@babel/types': 7.24.0
-      '@remotion/bundler': 4.0.529(postcss@8.5.28)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@remotion/bundler': 4.0.529(postcss@8.5.29)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@remotion/codemods': 4.0.529(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@remotion/renderer': 4.0.529(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@remotion/studio-protocol': 4.0.529
@@ -2436,19 +2436,19 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
-  css-loader@7.1.4(@rspack/core@1.7.11)(webpack@5.105.0(esbuild@0.28.1)(postcss@8.5.28)):
+  css-loader@7.1.4(@rspack/core@1.7.11)(webpack@5.105.0(esbuild@0.28.1)(postcss@8.5.29)):
     dependencies:
-      icss-utils: 5.1.0(postcss@8.5.28)
-      postcss: 8.5.28
-      postcss-modules-extract-imports: 3.1.0(postcss@8.5.28)
-      postcss-modules-local-by-default: 4.2.0(postcss@8.5.28)
-      postcss-modules-scope: 3.2.1(postcss@8.5.28)
-      postcss-modules-values: 4.0.0(postcss@8.5.28)
+      icss-utils: 5.1.0(postcss@8.5.29)
+      postcss: 8.5.29
+      postcss-modules-extract-imports: 3.1.0(postcss@8.5.29)
+      postcss-modules-local-by-default: 4.2.0(postcss@8.5.29)
+      postcss-modules-scope: 3.2.1(postcss@8.5.29)
+      postcss-modules-values: 4.0.0(postcss@8.5.29)
       postcss-value-parser: 4.2.0
       semver: 7.8.5
     optionalDependencies:
       '@rspack/core': 1.7.11
-      webpack: 5.105.0(esbuild@0.28.1)(postcss@8.5.28)
+      webpack: 5.105.0(esbuild@0.28.1)(postcss@8.5.29)
 
   cssesc@3.0.0: {}
 
@@ -2568,9 +2568,9 @@ snapshots:
 
   human-signals@2.1.0: {}
 
-  icss-utils@5.1.0(postcss@8.5.28):
+  icss-utils@5.1.0(postcss@8.5.29):
     dependencies:
-      postcss: 8.5.28
+      postcss: 8.5.29
 
   import-fresh@3.3.1:
     dependencies:
@@ -2694,26 +2694,26 @@ snapshots:
 
   picocolors@1.1.1: {}
 
-  postcss-modules-extract-imports@3.1.0(postcss@8.5.28):
+  postcss-modules-extract-imports@3.1.0(postcss@8.5.29):
     dependencies:
-      postcss: 8.5.28
+      postcss: 8.5.29
 
-  postcss-modules-local-by-default@4.2.0(postcss@8.5.28):
+  postcss-modules-local-by-default@4.2.0(postcss@8.5.29):
     dependencies:
-      icss-utils: 5.1.0(postcss@8.5.28)
-      postcss: 8.5.28
+      icss-utils: 5.1.0(postcss@8.5.29)
+      postcss: 8.5.29
       postcss-selector-parser: 7.1.6
       postcss-value-parser: 4.2.0
 
-  postcss-modules-scope@3.2.1(postcss@8.5.28):
+  postcss-modules-scope@3.2.1(postcss@8.5.29):
     dependencies:
-      postcss: 8.5.28
+      postcss: 8.5.29
       postcss-selector-parser: 7.1.6
 
-  postcss-modules-values@4.0.0(postcss@8.5.28):
+  postcss-modules-values@4.0.0(postcss@8.5.29):
     dependencies:
-      icss-utils: 5.1.0(postcss@8.5.28)
-      postcss: 8.5.28
+      icss-utils: 5.1.0(postcss@8.5.29)
+      postcss: 8.5.29
 
   postcss-selector-parser@7.1.6:
     dependencies:
@@ -2722,11 +2722,11 @@ snapshots:
 
   postcss-value-parser@4.2.0: {}
 
-  postcss@8.5.28:
+  postcss@8.5.29:
     dependencies:
       nanoid: 3.3.19
       picocolors: 1.1.1
-      source-map-js: 1.2.1
+      source-map-js: 1.2.2
 
   prismjs@1.30.0: {}
 
@@ -2793,7 +2793,7 @@ snapshots:
       dot-case: 3.0.4
       tslib: 2.8.1
 
-  source-map-js@1.2.1: {}
+  source-map-js@1.2.2: {}
 
   source-map-support@0.5.21:
     dependencies:
@@ -2808,9 +2808,9 @@ snapshots:
 
   strip-final-newline@2.0.0: {}
 
-  style-loader@4.0.0(webpack@5.105.0(esbuild@0.28.1)(postcss@8.5.28)):
+  style-loader@4.0.0(webpack@5.105.0(esbuild@0.28.1)(postcss@8.5.29)):
     dependencies:
-      webpack: 5.105.0(esbuild@0.28.1)(postcss@8.5.28)
+      webpack: 5.105.0(esbuild@0.28.1)(postcss@8.5.29)
 
   supports-color@8.1.1:
     dependencies:
@@ -2820,16 +2820,16 @@ snapshots:
 
   tapable@2.3.3: {}
 
-  terser-webpack-plugin@5.6.1(esbuild@0.28.1)(postcss@8.5.28)(webpack@5.105.0(esbuild@0.28.1)(postcss@8.5.28)):
+  terser-webpack-plugin@5.6.1(esbuild@0.28.1)(postcss@8.5.29)(webpack@5.105.0(esbuild@0.28.1)(postcss@8.5.29)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
       schema-utils: 4.5.0
       terser: 5.51.2
-      webpack: 5.105.0(esbuild@0.28.1)(postcss@8.5.28)
+      webpack: 5.105.0(esbuild@0.28.1)(postcss@8.5.29)
     optionalDependencies:
       esbuild: 0.28.1
-      postcss: 8.5.28
+      postcss: 8.5.29
 
   terser@5.51.2:
     dependencies:
@@ -2883,7 +2883,7 @@ snapshots:
 
   webpack-sources@3.6.0: {}
 
-  webpack@5.105.0(esbuild@0.28.1)(postcss@8.5.28):
+  webpack@5.105.0(esbuild@0.28.1)(postcss@8.5.29):
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.9
@@ -2907,7 +2907,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.5.0
       tapable: 2.3.3
-      terser-webpack-plugin: 5.6.1(esbuild@0.28.1)(postcss@8.5.28)(webpack@5.105.0(esbuild@0.28.1)(postcss@8.5.28))
+      terser-webpack-plugin: 5.6.1(esbuild@0.28.1)(postcss@8.5.29)(webpack@5.105.0(esbuild@0.28.1)(postcss@8.5.29))
       watchpack: 2.5.2
       webpack-sources: 3.6.0
     transitivePeerDependencies:
