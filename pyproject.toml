@@ -30,19 +30,19 @@ classifiers = [
 # 14 tasks import boto3, moto, langchain-core, requests, responses and httpx, and run in
 # the app's own interpreter — an extras group would ship tasks that fail at import
 dependencies = [
-    "basedpyright>=1.39.10",
-    "boto3>=1.43.69",
-    "boto3-stubs[ec2,s3]>=1.43.81",
-    "fastapi>=0.141.1",
+    "basedpyright>=1.40.2",
+    "boto3>=1.43.108",
+    "boto3-stubs[ec2,s3]>=1.43.108",
+    "fastapi>=0.142.2",
     "httpx>=0.28.1",
-    "langchain-core>=1.5.4",
+    "langchain-core>=1.6.6",
     "moto>=5.2.2",
     "pytest>=9.1.1",
     "pytest-timeout>=2.4.0",
     "pyyaml>=6.0.3",
     "requests>=2.34.2",
     "responses>=0.26.2",
-    "uvicorn[standard]>=0.52.4",
+    "uvicorn[standard]>=0.54.0",
 ]
 
 [project.urls]
@@ -88,10 +88,10 @@ exclude = [
 
 [dependency-groups]
 dev = [
-    "ipykernel>=7.3.0",
+    "ipykernel>=7.4.0",
     "pytest-watcher>=0.6.3",
     "pytest-xdist>=3.8.0",
-    "ruff>=0.16.2",
+    "ruff>=0.16.10",
 ]
 
 [tool.ruff]
